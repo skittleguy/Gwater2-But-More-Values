@@ -1,0 +1,27 @@
+GWaterParticleNormals
+{
+	$vertexcolor 1
+	$model 1
+	$envmap "env_cubemap"
+	$radius 1
+}
+// GWater (GPU-Water) Checklist
+// Estimated public release date: unknown
+// Estimated patreon release date: 1-5 months (depends how bad porting shaders will be)
+
+// -make water look... more like water
+// -rewrite shader system (no egsm) (ugh)
+// -fix crash when too many sprites are rendered (ugh)
+// -.bat installer + release to patreon (try linux compile?)
+// -evaporation system where particles are either reused or removed after some time
+// -cloth
+// -rewrite menu
+// -multiplayer support
+// -fix & add option for reaction forces
+// -api: add vram allocation flags
+// -api: improve & add useful functions
+// -api: idiot proof
+// -add fun tools
+// -take (actually feasable) suggestions
+// -workshopify
+// -public release

@@ -1,0 +1,8 @@
+.vs
+/binary_old
+/binary_common_old
+/binary/x86
+/binary/x86_64
+*.vcxproj*
+*.sln
+/binary/premake5.exe
