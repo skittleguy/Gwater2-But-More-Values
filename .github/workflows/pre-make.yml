@@ -25,5 +25,5 @@ jobs:
       run: | 
         sudo apt-get install gmake
     - name: run premake
-      run: | 
+      run: |
         ./premake5 gmake
