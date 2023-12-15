@@ -30,7 +30,7 @@ CreateWorkspace({name = "gwater2", abi_compatible = true, path = ""})
 		IncludeSDKCommon()
 		IncludeSDKTier0()
 		IncludeSDKTier1()
-		--IncludeSDKMathlib()
+		IncludeSDKMathlib()
 
 		includedirs {
 			"FleX/include",
