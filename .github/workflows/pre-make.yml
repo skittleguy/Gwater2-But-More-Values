@@ -27,4 +27,3 @@ jobs:
     - name: run premake
       run: | 
         ./premake5 gmake
-
