@@ -1,0 +1,16 @@
+
+struct PS_INPUT {
+	float2 P 			: VPOS;
+	float2 world_coord	: TEXCOORD0;
+	float3 world_color	: COLOR0;
+};
+
+float4 main(PS_INPUT i) : COLOR {
+	float2 world_offset = (i.world_coord - 0.5) * 2.0;
+
+	// kill pixels outside of sphere
+	float radius2 = dot(world_offset, world_offset);
+	if (radius2 > 1) discard;
+
+	return float4(i.world_color, 1);
+};
