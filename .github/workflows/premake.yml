@@ -10,14 +10,16 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3
-    - name: configure
-      run: ./configure
-    - name: make
-      run: make
-    - name: make check
-      run: make check
-    - name: make distcheck
-      run: make distcheck
+steps:
+  - name: Setup Premake
+    uses: premake/setup-premake@v1
+    with:
+      version: 5.0.0-alpha16
+  - name: Generate project with tests
+    run: premake5 gmake2
+  - name: Build tests
+    run: make config=release tests
+  - name: Run tests
+    run: |
+      cd build/tests
+      ./test_binary
