@@ -20,7 +20,4 @@ jobs:
       run: tar -xf premake-5.0.0-beta2-linux.tar.gz
     - name: premake
       run: | 
-        ./premake5 gmake
-    - name: wtf
-    - run: |
-        ls -r
+        ls -R
