@@ -13,16 +13,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: cd into dir
+    - name: do the shits
     - run: |
         cd binary
-    - name: download premake
-      run: |
         wget https://github.com/premake/premake-core/releases/download/v5.0.0-beta2/premake-5.0.0-beta2-linux.tar.gz          
-    - name: pull it out
-      run: |
         tar -xf premake-5.0.0-beta2-linux.tar.gz
-    - name: install gmake
-      run: | 
         sudo apt-get install gmake
         ./premake5 gmake
