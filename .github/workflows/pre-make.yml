@@ -21,4 +21,6 @@ jobs:
     - name: premake
       run: | 
         ./premake5 gmake
-
+    - name: wtf
+    - run: |
+        ls -r
