@@ -24,6 +24,7 @@ jobs:
         git clone https://github.com/Derpius/GMFS.git
         git clone https://github.com/NVIDIAGameWorks/FleX.git
         git clone https://github.com/Derpius/BSPParser.git
+        sudo apt-get install gcc-multilib g++-multilib
         ./premake5 gmake2 -cc gcc
         ls -r
         make
