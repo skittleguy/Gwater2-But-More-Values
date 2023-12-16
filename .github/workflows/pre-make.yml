@@ -22,6 +22,6 @@ jobs:
         sudo apt-get update
         sudo apt-get install libz1 libncurses5 libbz2-1.0:i386 libstdc++6 libbz2-1.0 gcc-multilib g++-multilib
         git clone https://github.com/danielga/garrysmod_common.git --branch x86-64-support-sourcesdk --recursive
-        ./premake5 gmake2
+        ./premake5 gmake2 -cc gcc
         ls -r
         make
