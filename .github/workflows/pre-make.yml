@@ -26,5 +26,9 @@ jobs:
         ls -r
         cd garrysmod_common
         ls -r
+        cd sourcesdk-minimal
+        cd public
+        cd appframework
+        ls -r
         make
         make check
