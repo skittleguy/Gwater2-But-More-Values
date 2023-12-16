@@ -24,5 +24,6 @@ jobs:
         git clone https://github.com/danielga/garrysmod_common.git --branch x86-64-support-sourcesdk --recursive
         ./premake5 gmake
         ls -r
+        cd garrysmod_common
         make
         make check
