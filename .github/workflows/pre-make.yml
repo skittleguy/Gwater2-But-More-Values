@@ -25,5 +25,6 @@ jobs:
         ./premake5 gmake
         ls -r
         cd garrysmod_common
+        ls -r
         make
         make check
