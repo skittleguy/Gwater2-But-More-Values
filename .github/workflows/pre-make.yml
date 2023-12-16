@@ -16,8 +16,7 @@ jobs:
     - name: do the shits
       run: |
         cd binary
-        ls -r
         wget https://github.com/premake/premake-core/releases/download/v5.0.0-beta2/premake-5.0.0-beta2-linux.tar.gz          
         tar -xf premake-5.0.0-beta2-linux.tar.gz
-        sudo apt-get install build-essential
+        git clone https://github.com/danielga/garrysmod_common.git --branch x86-64-support-sourcesdk --recursive
         ./premake5 gmake
