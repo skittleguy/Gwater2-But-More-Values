@@ -20,9 +20,10 @@ jobs:
         tar -xf premake-5.0.0-beta2-linux.tar.gz
         sudo dpkg --add-architecture i386
         sudo apt-get update
-        sudo apt-get install libz1 libncurses5 libbz2-1.0:i386 libstdc++6 libbz2-1.0 gcc-multilib g++-multilib
         git clone https://github.com/danielga/garrysmod_common.git --branch x86-64-support-sourcesdk --recursive
-        git clone https://github.com/danielga/sourcesdk-minimal
+        git clone https://github.com/Derpius/GMFS.git
+        git clone https://github.com/NVIDIAGameWorks/FleX.git
+        git clone https://github.com/Derpius/BSPParser.git
         ./premake5 gmake2 -cc gcc
         ls -r
         make
