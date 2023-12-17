@@ -32,5 +32,6 @@ jobs:
     
     - name: check if its there
       run: |
+        cd binary
         dir
     
