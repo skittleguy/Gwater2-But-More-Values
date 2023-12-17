@@ -21,7 +21,10 @@ jobs:
         dir
         git clone https://github.com/danielga/garrysmod_common.git --recursive -b x86-64-support-sourcesdk
         ./premake5.exe vs2022
-    - name: Compile Visual Studio project with MSBuild
-      shell: cmd 
-      run: ${{ '"C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat" && msbuild' }}
-      working-directory: D:\a\gwater2\gwater2\binary\gwater2.sln
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.1
+
+    - name: Build app for release
+      run: msbuild src\YourProjectFile.csproj -t:rebuild -verbosity:diag -property:Configuration=Release
+
+
