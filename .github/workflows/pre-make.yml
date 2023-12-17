@@ -30,10 +30,10 @@ jobs:
     - name: Build app for release
       run: msbuild D:\a\gwater2\gwater2\binary\gwater2.sln -t:rebuild -verbosity:diag -property:Configuration=Release
     
-    - name: check if its there
-      run: |
-        cd binary
-        cd x86
-        cd Release
-        dir
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+          name: gmcl_gwater2_win32.dll
+          path: D:\a\gwater2\gwater2\binary\x86\Release\gmcl_gwater2_win32.dll
+          if-no-files-found: error
     
