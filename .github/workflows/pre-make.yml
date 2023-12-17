@@ -29,5 +29,8 @@ jobs:
 
     - name: Build app for release
       run: msbuild D:\a\gwater2\gwater2\binary\gwater2.sln -t:rebuild -verbosity:diag -property:Configuration=Release
-
-
+    
+    - name: check if its there
+      run: |
+        dir
+    
