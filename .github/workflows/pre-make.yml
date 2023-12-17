@@ -34,5 +34,6 @@ jobs:
       run: |
         cd binary
         cd x86
+        cd Release
         dir
     
