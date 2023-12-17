@@ -33,5 +33,6 @@ jobs:
     - name: check if its there
       run: |
         cd binary
+        cd x86
         dir
     
