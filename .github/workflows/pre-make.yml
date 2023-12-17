@@ -20,9 +20,8 @@ jobs:
         tar -xf premake-5.0.0-beta2-linux.tar.gz
         git clone https://github.com/danielga/garrysmod_common.git --recursive -b x86-64-support-sourcesdk
         ./premake5 vs2022
-        ls -r
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v1.1
 
     - name: Build app for release
-      run: msbuild src\YourProjectFile.csproj -t:rebuild -verbosity:diag -property:Configuration=Release
+      run: msbuild gmcl_gwater2.vcxproj -t:rebuild -verbosity:diag -property:Configuration=Release
