@@ -20,6 +20,9 @@ jobs:
         7z x premake-5.0.0-beta2-windows.zip
         dir
         git clone https://github.com/danielga/garrysmod_common.git --recursive -b x86-64-support-sourcesdk
+        git clone https://github.com/NVIDIAGameWorks/FleX.git
+        git clone https://github.com/Derpius/BSPParser.git
+        git clone https://github.com/Derpius/GMFS.git
         ./premake5.exe vs2022
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v1.1
