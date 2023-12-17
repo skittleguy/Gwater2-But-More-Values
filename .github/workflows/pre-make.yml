@@ -17,8 +17,8 @@ jobs:
       run: |
         cd binary
         curl https://github.com/premake/premake-core/releases/download/v5.0.0-beta2/premake-5.0.0-beta2-windows.zip -O -J -L   
-        dir
         7z x premake-5.0.0-beta2-windows.zip
+        dir
         git clone https://github.com/danielga/garrysmod_common.git --recursive -b x86-64-support-sourcesdk
         premake5.exe vs2022
     - name: Add msbuild to PATH
