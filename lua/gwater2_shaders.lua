@@ -4,10 +4,47 @@ end
 
 if !EGSM or !(EGSM.Version > 0) then 
 	print("[GWater2 Internal Error]: Failed to load shader base (is EGSM installed correctly?)")
+	local cache_normals = GetRenderTargetEx("boobs7", ScrW(), ScrH(),
+		RT_SIZE_NO_CHANGE,
+		MATERIAL_RT_DEPTH_NONE,
+		1 + 256 + 32768,
+		0,
+		IMAGE_FORMAT_RGBA16161616F
+	)
+	local cache_bloom = GetRenderTargetEx("boobs103", ScrW() / 16, ScrH() / 16,
+		RT_SIZE_NO_CHANGE,
+		0,
+		1 + 256 + 32768,
+		0,
+		IMAGE_FORMAT_RGBA16161616F
+	)
+
+	local cache_depth = GetRenderTargetEx("farty4", ScrW(), ScrH(),
+		RT_SIZE_NO_CHANGE,
+		0,
+		1 + 256 + 32768,
+		0,
+		IMAGE_FORMAT_RGBA16161616F
+	)
+
+	local cache_cache = GetRenderTarget("boobs69696969", ScrW(), ScrH())
+
+	local mat_blur = CreateMaterial("gwater_particle_smooth2", "GWaterSmooth", {
+		["$ignorez"] = 1
+	})
+	
+	local penismaterial = Material("gwater2/particle2")
 	hook.Add("PreDrawViewModels", "gwater_particle", function()
 		// Render particles (sprites) & calculate normals
 		--render.SetMaterial(gwater2.material)
-		render.SetMaterial(Material("gwater2/particle2"))
+		penismaterial:SetVector("$scr_s", Vector(ScrW(), ScrH()))
+		render.CopyTexture(cache_normals, cache_cache)
+		penismaterial:SetTexture("$basetexture", cache_cache)
+		render.ClearRenderTarget(cache_normals, Color(0, 0, 0, 0))
+		render.ClearRenderTarget(cache_depth, Color(0, 0, 0, 0))
+		render.SetRenderTargetEx(1, cache_normals)
+		render.SetRenderTargetEx(2, cache_depth)
+		render.SetMaterial(penismaterial)
 		local up = EyeAngles():Up()
 		local right = EyeAngles():Right()
 		local scrw = ScrW()
@@ -21,6 +58,35 @@ if !EGSM or !(EGSM.Version > 0) then
 			gwater2.solver:GetParameter("radius") * 0.75	// Radius
 		)
 		render.OverrideDepthEnable(false, false)
+		render.SetRenderTargetEx(1, nil)
+		render.SetRenderTargetEx(2, nil)
+
+		
+		mat_blur:SetTexture("$depthtexture", cache_depth)
+		mat_blur:SetFloat("$radius", gwater2.solver:GetParameter("radius"))
+		/*
+		for i = 1, 1 do
+
+			render.ClearRenderTarget(cache_bloom, Color(0, 0, 0, 0))
+
+			// Blur X
+			mat_blur:SetTexture("$basetexture", cache_normals)	
+			mat_blur:SetVector("$scr_s", Vector(0, 0.1 / ScrH()))
+			render.SetRenderTarget(cache_bloom)	// Bloom texture resolution is significantly lower than screen res, enabling for a faster blur
+			render.SetMaterial(mat_blur)
+			render.DrawScreenQuad()
+			render.SetRenderTarget()
+
+			// Blur Y
+			mat_blur:SetTexture("$basetexture", cache_bloom)
+			mat_blur:SetVector("$scr_s", Vector(0.1 / ScrW(), 0))
+			render.SetRenderTarget(cache_normals)
+			render.SetMaterial(mat_blur)
+			render.DrawScreenQuad()
+			render.SetRenderTarget()
+		end*/
+
+		render.DrawTextureToScreenRect(cache_normals, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
 	end)
 	return 
 else
@@ -47,6 +113,7 @@ end
 
 local cache_dir = GetRenderTargetGWater("gwater_cache_dir")
 local cache_normals = GetRenderTargetGWater("gwater_cache_normals")
+local cache_normals2 = GetRenderTargetGWater("gwater_cache_normals2")
 local cache_bloom = GetRenderTargetGWater("gwater_cache_bloom", 1 / 4)	// quarter resolution for blurring
 local cache_depth = GetRenderTargetGWater("gwater_cache_depth", nil, IMAGE_FORMAT_RGBA16161616)
 
@@ -59,6 +126,8 @@ particle:SetRenderTarget(2, cache_dir:GetName())
 particle:SetRenderTarget(3, cache_depth:GetName())
 local param = particle:AddParam("$radius", SHADER_PARAM_TYPE_FLOAT)
 particle:SetPixelShaderConstantFP(0, param)
+local param = particle:AddParam("$normaltexture", SHADER_PARAM_TYPE_TEXTURE)
+particle:BindTexture(1, param)
 local mat_table = {["$ignorez"] = 1, ["$envmap"] = "env_cubemap"}
 
 // Create smooth shader
@@ -97,10 +166,11 @@ hook.Add("PreRender", "gwater_sky", function()
 	hook.Remove("NeedsDepthPass", "!!!EGSM_ImTooLazy")
 	hook.Remove("PostDraw2DSkybox", "!!!EGSM_ImTooLazy")
 end)
-hook.Add("PreDrawViewModels", "gwater_particle", function()
 
+hook.Add("PreDrawViewModels", "gwater_particle", function()
 	// Update RTs
 	render.UpdateScreenEffectTexture()
+	render.CopyTexture(cache_normals, cache_normals2)
 	render.ClearRenderTarget(cache_normals, black)
 	render.ClearRenderTarget(cache_dir, black)
 	render.ClearRenderTarget(cache_bloom, black)
@@ -108,6 +178,7 @@ hook.Add("PreDrawViewModels", "gwater_particle", function()
 	
 	// Render particles (sprites) & calculate normals
 	render.SetMaterial(gwater2.material)
+	gwater2.material:SetTexture("$normaltexture", cache_normals2)	// smoothed normals
 	gwater2.material:SetFloat("$radius", gwater2.solver:GetParameter("radius"))
 	local up = EyeAngles():Up()
 	local right = EyeAngles():Right()
@@ -119,14 +190,14 @@ hook.Add("PreDrawViewModels", "gwater_particle", function()
 		screen_plane(scrw * 0.5, scrh, -right), // Bottom
 		screen_plane(0, scrh * 0.5, up),	// Left
 		screen_plane(scrw, scrh * 0.5, -up),	// Right
-		gwater2.solver:GetParameter("radius")	// Radius
+		gwater2.solver:GetParameter("radius") * 0.25	// Radius
 	)
 	render.OverrideDepthEnable(false, false)
 
 	// Debug
 	//render.DrawTextureToScreenRect(render.GetScreenEffectTexture(), ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
 	//render.DrawTextureToScreenRect(cache_depth, ScrW() * 0.75, ScrH() * 0.25, ScrW() / 4, ScrH() / 4)
-	//render.DrawTextureToScreenRect(cache_normals, 0, 0, ScrW() / 4, ScrH() / 4)
+	render.DrawTextureToScreenRect(cache_normals, 0, 0, ScrW() / 4, ScrH() / 4)
 	//render.DrawTextureToScreenRect(cache_dir, 0, ScrH() * 0.5, ScrW() / 4, ScrH() / 4)
 
 	
@@ -160,6 +231,6 @@ hook.Add("PreDrawViewModels", "gwater_particle", function()
 	mat_final:SetTexture("$depthtexture", cache_depth)	// depth buffer (including ddx/ddy)
 	mat_final:SetTexture("$normaltexture", cache_normals)	// smoothed normals
 	mat_final:SetTexture("$directiontexture", cache_dir)	// direction of eye to particle
-	render.SetMaterial(mat_final)
-	render.DrawScreenQuad()
+	--render.SetMaterial(mat_final)
+	--render.DrawScreenQuad()
 end)

@@ -16,6 +16,8 @@ struct VS_OUTPUT
 {
 	float4 projPosSetup	: POSITION;
 	float4 world_coord	: TEXCOORD0;
+	float3 world_dir 	: TEXCOORD1;
+	float3x3 world_normal : TEXCOORD2;
 	float4 world_color	: COLOR0;
 };
 
@@ -24,12 +26,35 @@ VS_OUTPUT main( const VS_INPUT v )
 	VS_OUTPUT o = (VS_OUTPUT)0;
 
 	float3 worldNormal, worldPos;
-	SkinPositionAndNormal( 0, v.vPos, v.vNormal, v.vBoneWeights, v.vBoneIndices, worldPos, worldNormal );
+	SkinPositionAndNormal(0, v.vPos, v.vNormal, v.vBoneWeights, v.vBoneIndices, worldPos, worldNormal);
 
 	float4 vProjPos = mul( float4( worldPos, 1 ), cViewProj );
 	//vProjPos.z = dot( float4( worldPos, 1  ), cViewProjZ );
 	o.projPosSetup = vProjPos;
 	o.world_coord = v.vTexCoord;
 	o.world_color = v.vColor;
+	o.world_dir = worldPos - cEyePos;
+
+	float3 right = normalize(cross(worldNormal, float3(0, 0, 1)));
+	float3 up = cross(worldNormal, right);
+
+	// forward up right
+	// up forward right
+	// forward right up
+	// up right forward
+	// right up forward
+	// right forward up
+	//o.world_normal = float3x3(
+	//	0, v.vNormal.x, 0, 
+	//	0, v.vNormal.y, 0, 
+	//	0, v.vNormal.z, 0
+	//);
+
+	o.world_normal = float3x3(
+		right.x, worldNormal.x, up.x,
+		right.y, worldNormal.y, up.y,
+		right.z, worldNormal.z, up.z
+	);
+
 	return o;
 };

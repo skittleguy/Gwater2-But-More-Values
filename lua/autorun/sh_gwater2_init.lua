@@ -165,16 +165,16 @@ hook.Add("HUDPaint", "gwater2_interact", function()
 	if lp:KeyDown(IN_ATTACK2) then
 		local forward = LocalPlayer():EyeAngles():Forward()
 		local sprite_size = gwater2.solver:GetParameter("radius")
-			//gwater2.solver:SpawnCube(LocalPlayer():EyePos() + forward * sprite_size * 4 * 5, forward * 100, Vector(4, 4, 4), sprite_size)
-			gwater2.solver:SpawnParticle(
-				LocalPlayer():EyePos() + forward * sprite_size * 5, 
-				forward * 100, 
-				HSVToColor(CurTime() * 10 % 360, 1, 1),
-				//Color(80, math.random() * 50 + 100, math.random() * 100 + 150, 180), 
-				//Color(math.random() * 20 + 70, math.random() * 20 + 50, 5, 250), 
-				//Color(128, 0, 0, 255),
-				1
-			)
+			gwater2.solver:SpawnCube(LocalPlayer():EyePos() + forward * sprite_size * 4 * 5, forward * 100, Vector(4, 4, 4), sprite_size)
+			//gwater2.solver:SpawnParticle(
+			//	LocalPlayer():EyePos() + forward * sprite_size * 5, 
+			//	forward * 100, 
+			//	HSVToColor(CurTime() * 10 % 360, 1, 1),
+			//	//Color(80, math.random() * 50 + 100, math.random() * 100 + 150, 180), 
+			//	//Color(math.random() * 20 + 70, math.random() * 20 + 50, 5, 250), 
+			//	//Color(128, 0, 0, 255),
+			//	1
+			//)
 	elseif lp:KeyDown(IN_RELOAD) then
 		gwater2.solver:Reset()
 	end

@@ -13,7 +13,8 @@
 // pushes lua flex instance at stack -1
 #define GET_FLEX LUA->GetUserType<FlexSolver>(1, FlexMetaTable)
 #define ADD_FUNCTION(LUA, funcName, tblName) LUA->PushCFunction(funcName); LUA->SetField(-2, tblName);
-#define sqrt2 1.41421356237309504880168872420969807856967187537694
+#define sqrt3 1.7320508075688772935274463415
+#define sqrt2 1.4142135623730950488016887242
 
 using namespace GarrysMod::Lua;
 
@@ -281,7 +282,7 @@ LUA_FUNCTION(GetParameter) {
 	FlexSolver* flex = GET_FLEX;
 
 	float value = flex->get_parameter(LUA->GetString(2));
-	if (value == NAN) LUA->ThrowError(("Attempt to get invalid parameter '" + (std::string)LUA->GetString(2) + "'").c_str());
+	if (isnan(value)) LUA->ThrowError(("Attempt to get invalid parameter '" + (std::string)LUA->GetString(2) + "'").c_str());
 
 	LUA->PushNumber(value);
 	return 1;
@@ -413,7 +414,7 @@ LUA_FUNCTION(RenderParticlesExternal2) {
 	int particle_count = flex->get_active_particles();
 	int particle_index = 0;
 	int max_indices = 10922;	// floor(2^15 / 3)
-	float particle_radius = LUA->GetNumber(7);
+	float particle_radius = LUA->GetNumber(7) * 0.625;	// Magic number 1
 	float3 eye_pos = Vector2float3(LUA->GetVector(2));
 	float3 up = Vector2float3(LUA->GetVector(3));
 	float3 down = Vector2float3(LUA->GetVector(4));
@@ -449,13 +450,12 @@ LUA_FUNCTION(RenderParticlesExternal2) {
 			float3 eye_right = Normalize(Cross(dir, float3(0, 0, 1)));
 			float3 eye_up = Cross(eye_right, dir);
 
-			// TODO: figure out why these upcoming magic numbers work
-
 			// particle positions in local space
-			float3 offset = -eye_up / 2.0;
-			float3 pos1 = eye_up * particle_radius;
-			float3 pos2 = (eye_right * (sqrt2 - 0.5) + offset) * particle_radius;	// Magic number 1
-			float3 pos3 = (-eye_right * (sqrt2 - 0.5) + offset) * particle_radius;	// Magic number 1
+			float tri_mult = 1.0 / ((2.0 * sqrt3 - 2.0) / 2.0);	// Height of equalateral triangle minus length of circle with radius 1
+			float3 offset = -eye_up * 0.8;	// Magic number 2
+			float3 pos1 = (eye_up + eye_up * tri_mult + offset) * particle_radius;
+			float3 pos2 = (eye_right * tri_mult + offset) * particle_radius;	
+			float3 pos3 = (-eye_right * tri_mult + offset) * particle_radius;	
 
 			float4 ani1 = particle_ani1 ? particle_ani1[particle_index] : 0;
 			float4 ani2 = particle_ani2 ? particle_ani2[particle_index] : 0;
@@ -491,21 +491,21 @@ LUA_FUNCTION(RenderParticlesExternal2) {
 			float userdata[4] = { 0.f, 0.f, 0.f, 0.f };
 			float color[4] = { particle_col[particle_index].x , particle_col[particle_index].y, particle_col[particle_index].z, particle_col[particle_index].w };
 
-			meshBuilder.TexCoord2f(0, 0.5, (0.5 - sqrt2) / 2.0);	// Magic number 2
+			meshBuilder.TexCoord2f(0, 0.5, -0.5);
 			meshBuilder.Position3f(pos1.x, pos1.y, pos1.z);
 			meshBuilder.Normal3fv(normal);
 			meshBuilder.UserData(userdata);
 			meshBuilder.Color3fv(color);
 			meshBuilder.AdvanceVertex();
 
-			meshBuilder.TexCoord2f(0, 1.377, 1);	// Magic number 3
+			meshBuilder.TexCoord2f(0, tri_mult, 1);
 			meshBuilder.Position3f(pos2.x, pos2.y, pos2.z);
 			meshBuilder.Normal3fv(normal);
 			meshBuilder.UserData(userdata);
 			meshBuilder.Color3fv(color);
 			meshBuilder.AdvanceVertex();
 
-			meshBuilder.TexCoord2f(0, -0.377, 1);	// Magic number 4
+			meshBuilder.TexCoord2f(0, 1.0 - tri_mult , 1);
 			meshBuilder.Position3f(pos3.x, pos3.y, pos3.z);
 			meshBuilder.Normal3fv(normal);
 			meshBuilder.UserData(userdata);
@@ -729,15 +729,16 @@ GMOD_MODULE_OPEN() {
 	ADD_FUNCTION(LUA, NewFlexSolver, "FlexSolver");
 	LUA->Pop();
 
-	// weird bsp filesystem
-	if (FileSystem::LoadFileSystem() != FILESYSTEM_STATUS::OK) 
-		LUA->ThrowError("[GWater2 Internal Error]: C++ Filesystem failed to load!");
-
 	if (!Sys_LoadInterface("materialsystem", MATERIAL_SYSTEM_INTERFACE_VERSION, NULL, (void**)&materials)) 
 		LUA->ThrowError("[GWater2 Internal Error]: C++ Materialsystem failed to load!");
 
 	// Defined in 'shader_inject.h'
-	detour_shaders();
+	if (!inject_shaders()) 
+		LUA->ThrowError("[GWater2 Internal Error]: C++ Shadersystem failed to load!");
+
+	// weird bsp filesystem
+	if (FileSystem::LoadFileSystem() != FILESYSTEM_STATUS::OK)
+		LUA->ThrowError("[GWater2 Internal Error]: C++ Filesystem failed to load!");
 
 	return 0;
 }
@@ -748,7 +749,7 @@ GMOD_MODULE_CLOSE() {
 	flexLibrary = nullptr;
 
 	// Defined in 'shader_inject.h'
-	undetour_shaders();
+	uninject_shaders();
 
 	return 0;
 }

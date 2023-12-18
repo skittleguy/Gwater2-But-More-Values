@@ -1,5 +1,5 @@
 float radius 		: register(c0);
-
+sampler NormalBuffer 	: register(s1);
 struct PS_INPUT {
 	float2 P 			: VPOS;
 	float2 world_coord	: TEXCOORD0;
@@ -25,7 +25,14 @@ PS_OUTPUT main(PS_INPUT i) {
 
 	// kill pixels outside of sphere
 	float radius2 = dot(world_offset, world_offset);
-	if (radius2 > 1) discard;
+	if (radius2 > 1) {
+		PS_OUTPUT o = (PS_OUTPUT)0;
+		o.rt0 = float4(1, 0, 0, 1);
+		o.rt1 = float4(0, 0, 0, 0);
+		o.rt2 = float4(0, 0, 0, 0);
+		o.rt3 = float4(0, 0, 0, 0);
+		return o;
+	}
 	
 	float3 right = normalize(cross(i.world_normal, float3(0, 0, 1)));
 	float3 up = cross(i.world_normal, right);
@@ -38,8 +45,10 @@ PS_OUTPUT main(PS_INPUT i) {
 
 	float depth = length(i.world_dir);
 
+	//float4 norm = tex2D(NormalBuffer, i.P);
+
 	PS_OUTPUT o = (PS_OUTPUT)0;
-	o.rt0 = float4(i.world_coord.x, i.world_coord.y, 0, 1);
+	o.rt0 = float4(0, 1, 0, 1);
 	o.rt1 = float4(final_normal, 1);
 	o.rt2 = float4(i.world_dir / depth, 1);
 	o.rt3 = float4(sqrt(delta_max_sqr), depth / radius * 0.001, 0, 1);
