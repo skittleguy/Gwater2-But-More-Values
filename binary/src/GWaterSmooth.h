@@ -19,7 +19,7 @@ SHADER_INIT_PARAMS() {
 }
 
 SHADER_INIT{
-	//if (params[BASETEXTURE]) LoadTexture(BASETEXTURE);
+
 }
 
 SHADER_FALLBACK{

@@ -10,9 +10,9 @@ GWaterParticleNormals
 // Estimated patreon release date: 1-5 months (depends how bad porting shaders will be)
 
 // -make water look... more like water
-// -rewrite shader system (no egsm) (ugh)
+// -rewrite lua
 // -fix crash when too many sprites are rendered (ugh)
-// -.bat installer + release to patreon (try linux compile?)
+// -release to patreon (try linux compile?)
 // -evaporation system where particles are either reused or removed after some time
 // -cloth
 // -rewrite menu
@@ -22,6 +22,7 @@ GWaterParticleNormals
 // -api: improve & add useful functions
 // -api: idiot proof
 // -add fun tools
+// -.bat installer
 // -take (actually feasable) suggestions
 // -workshopify
 // -public release

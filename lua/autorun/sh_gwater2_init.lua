@@ -44,11 +44,11 @@ if SERVER then
 end
 
 require("gwater2")	//carrying
-include("gwater2_shaders.lua")
+include("gwater2_shaders.lua")	// also carrying
 
 gwater2 = {
 	solver = FlexSolver(100000),
-	material = Material("gwater2/particle"),//Material("vgui/circle"),//Material("sprites/sent_ball"),
+	material = Material("gwater2/particle2"),//Material("vgui/circle"),//Material("sprites/sent_ball"),
 	particles = 0,
 	meshes = {},
 	update_meshes = function()
@@ -166,15 +166,17 @@ hook.Add("HUDPaint", "gwater2_interact", function()
 		local forward = LocalPlayer():EyeAngles():Forward()
 		local sprite_size = gwater2.solver:GetParameter("radius")
 			gwater2.solver:SpawnCube(LocalPlayer():EyePos() + forward * sprite_size * 4 * 5, forward * 100, Vector(4, 4, 4), sprite_size)
-			//gwater2.solver:SpawnParticle(
-			//	LocalPlayer():EyePos() + forward * sprite_size * 5, 
-			//	forward * 100, 
-			//	HSVToColor(CurTime() * 10 % 360, 1, 1),
-			//	//Color(80, math.random() * 50 + 100, math.random() * 100 + 150, 180), 
-			//	//Color(math.random() * 20 + 70, math.random() * 20 + 50, 5, 250), 
-			//	//Color(128, 0, 0, 255),
-			//	1
-			//)
+			//for _ = 1, 10 do
+			//	gwater2.solver:SpawnParticle(
+			//		LocalPlayer():EyePos() + forward * sprite_size * 5 + VectorRand(-10, 10), 
+			//		forward * 100, 
+			//		HSVToColor(CurTime() * 10 % 360, 1, 1),
+			//		//Color(80, math.random() * 50 + 100, math.random() * 100 + 150, 180), 
+			//		//Color(math.random() * 20 + 70, math.random() * 20 + 50, 5, 250), 
+			//		//Color(128, 0, 0, 255),
+			//		1
+			//	)
+			//end
 	elseif lp:KeyDown(IN_RELOAD) then
 		gwater2.solver:Reset()
 	end

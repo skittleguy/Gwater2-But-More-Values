@@ -11,6 +11,7 @@ BEGIN_SHADER_PARAMS
 	SHADER_PARAM(RADIUS, SHADER_PARAM_TYPE_FLOAT, "1", "Radius of particles")
 	SHADER_PARAM(SCR_S, SHADER_PARAM_TYPE_VEC2, "[1 1]", "Screen Size")
 	SHADER_PARAM(BASETEXTURE, SHADER_PARAM_TYPE_TEXTURE, 0, "Texture of smoothed normals")
+	SHADER_PARAM(SCREENTEXTURE, SHADER_PARAM_TYPE_TEXTURE, 0, "Texture of screen")
 END_SHADER_PARAMS
 
 SHADER_INIT_PARAMS() {
@@ -18,7 +19,7 @@ SHADER_INIT_PARAMS() {
 }
 
 SHADER_INIT{
-	if (params[BASETEXTURE]) LoadTexture(BASETEXTURE);
+
 }
 
 SHADER_FALLBACK{
@@ -32,6 +33,7 @@ SHADER_DRAW {
 		unsigned int flags = VERTEX_POSITION | VERTEX_NORMAL | VERTEX_FORMAT_COMPRESSED | VERTEX_COLOR;
 		pShaderShadow->VertexShaderVertexFormat(flags, 1, 0, 0);
 		pShaderShadow->EnableTexture(SHADER_SAMPLER0, true);	// Smoothed normals texture
+		pShaderShadow->EnableTexture(SHADER_SAMPLER1, true);	// Screen texture
 
 		DECLARE_STATIC_VERTEX_SHADER(GWaterNormals_vs30);
 		SET_STATIC_VERTEX_SHADER_COMBO(VERTEXCOLOR, IS_FLAG_DEFINED(MATERIAL_VAR_VERTEXCOLOR));
@@ -50,6 +52,7 @@ SHADER_DRAW {
 		pShaderAPI->SetPixelShaderConstant(1, &radius);
 
 		BindTexture(SHADER_SAMPLER0, BASETEXTURE);
+		BindTexture(SHADER_SAMPLER1, SCREENTEXTURE);
 		
 		DECLARE_DYNAMIC_VERTEX_SHADER(GWaterNormals_vs30);
 		SET_DYNAMIC_VERTEX_SHADER(GWaterNormals_vs30);

@@ -495,21 +495,21 @@ LUA_FUNCTION(RenderParticlesExternal2) {
 			meshBuilder.Position3f(pos1.x, pos1.y, pos1.z);
 			meshBuilder.Normal3fv(normal);
 			meshBuilder.UserData(userdata);
-			meshBuilder.Color3fv(color);
+			meshBuilder.Color4fv(color);
 			meshBuilder.AdvanceVertex();
 
 			meshBuilder.TexCoord2f(0, tri_mult, 1);
 			meshBuilder.Position3f(pos2.x, pos2.y, pos2.z);
 			meshBuilder.Normal3fv(normal);
 			meshBuilder.UserData(userdata);
-			meshBuilder.Color3fv(color);
+			meshBuilder.Color4fv(color);
 			meshBuilder.AdvanceVertex();
 
 			meshBuilder.TexCoord2f(0, 1.0 - tri_mult , 1);
 			meshBuilder.Position3f(pos3.x, pos3.y, pos3.z);
 			meshBuilder.Normal3fv(normal);
 			meshBuilder.UserData(userdata);
-			meshBuilder.Color3fv(color);
+			meshBuilder.Color4fv(color);
 			meshBuilder.AdvanceVertex();
 
 			particle_index++;
