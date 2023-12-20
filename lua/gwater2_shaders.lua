@@ -60,12 +60,13 @@ hook.Add("PreDrawViewModels", "gwater_particle", function()
 	render.SetRenderTargetEx(2, nil)
 
 	-- Blur normals
+	
 	water_blur:SetTexture("$depthtexture", cache_depth)
 	water_blur:SetFloat("$radius", radius)
 	render.SetMaterial(water_blur)
-	for i = 1, 2 do
+	//for i = 1, 3 do
 		// Blur X
-		local scale = (3 - i) * 0.1
+		local scale = 0.05//(4 - i) * 0.05
 		water_blur:SetTexture("$basetexture", cache_normals)	
 		water_blur:SetVector("$scr_s", Vector(0, scale / ScrH()))
 		render.SetRenderTarget(cache_bloom)	-- Bloom texture resolution is significantly lower than screen res, enabling for a faster blur
@@ -77,7 +78,7 @@ hook.Add("PreDrawViewModels", "gwater_particle", function()
 		render.SetRenderTarget(cache_normals)
 		render.DrawScreenQuad()
 		render.SetRenderTarget()
-	end
+	//end
 	render.CopyTexture(cache_normals, cache_normals2)
 
 	-- Debug Draw

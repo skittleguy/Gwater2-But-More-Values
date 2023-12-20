@@ -45,7 +45,7 @@ bool inject_shaders() {
 	return true;
 }
 
-bool uninject_shaders() {
+bool eject_shaders() {
 	// Dont forget to free shaders or you crash on reload!
 	if (g_pShaderLibDLL) {
 		// Remove inserted shader(s)

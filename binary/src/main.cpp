@@ -749,7 +749,7 @@ GMOD_MODULE_CLOSE() {
 	flexLibrary = nullptr;
 
 	// Defined in 'shader_inject.h'
-	uninject_shaders();
+	eject_shaders();
 
 	return 0;
 }

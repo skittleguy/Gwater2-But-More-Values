@@ -1,8 +1,8 @@
-GWaterNormals
-{
+GWaterNormals {
 	$vertexcolor 1
-	$model 1
 	$envmap "env_cubemap"
 	$radius 1
 	$scr_s "1 1"
+	$basetexture ""	// make console shut up
+	$screentexture ""
 }
