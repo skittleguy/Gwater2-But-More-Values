@@ -12,7 +12,7 @@
 
 // pushes lua flex instance at stack -1
 #define GET_FLEX LUA->GetUserType<FlexSolver>(1, FlexMetaTable)
-#define ADD_FUNCTION(LUA, funcName, tblName) LUA->PushCFunction(funcName); LUA->SetField(-2, tblName);
+#define ADD_FUNCTION(LUA, funcName, tblName) LUA->PushCFunction(funcName); LUA->SetField(-2, tblName)
 #define sqrt3 1.7320508075688772935274463415
 #define sqrt2 1.4142135623730950488016887242
 
@@ -28,12 +28,12 @@ void error(NvFlexErrorSeverity type, const char* message, const char* file, int 
 	GlobalLUA->ThrowError(error.c_str());
 }
 
-float3 Vector2float3(Vector v) {
+float3 VectorTofloat3(Vector v) {
 	return float3(v.x, v.y, v.z);
 }
 
 // Warning: allocates memory which MUST be freed!
-float3* Table2float3(ILuaBase* LUA) {
+float3* TableTofloat3(ILuaBase* LUA) {
 	const int num_vertices = LUA->ObjLen(2);
 	float3* verts = reinterpret_cast<float3*>(malloc(sizeof(float3) * num_vertices));
 	for (int i = 0; i < num_vertices; i++) {
@@ -92,7 +92,7 @@ LUA_FUNCTION(FlexGC) {
 * @param[in] color Float4 that defines the color of the particle. X,Y,Z,W = R,G,B,A
 * @param[in] mass Float which holds the mass of the particle
 */
-LUA_FUNCTION(SpawnParticle) {
+LUA_FUNCTION(AddParticle) {
 	LUA->CheckType(1, FlexMetaTable);
 	LUA->CheckType(2, Type::Vector);	// position
 	LUA->CheckType(3, Type::Vector);	// velocity
@@ -182,7 +182,7 @@ LUA_FUNCTION(AddConcaveMesh) {
 	FlexSolver* flex = GET_FLEX;
 	Mesh mesh = Mesh(flexLibrary);
 	mesh.init_obb(float3(min.x, min.y, min.z), float3(max.x, max.y, max.z));
-	float3* verts = Table2float3(LUA);
+	float3* verts = TableTofloat3(LUA);
 	if (!mesh.init_concave(verts, LUA->ObjLen(2))) {
 		free(verts);
 		LUA->ThrowError("Tried to add concave mesh with invalid data (NumVertices is not a multiple of 3!)");
@@ -220,7 +220,7 @@ LUA_FUNCTION(AddConvexMesh) {
 	FlexSolver* flex = GET_FLEX;
 	Mesh mesh = Mesh(flexLibrary);
 	mesh.init_obb(float3(min.x, min.y, min.z), float3(max.x, max.y, max.z));
-	float3* verts = Table2float3(LUA);
+	float3* verts = TableTofloat3(LUA);
 	if (!mesh.init_convex(verts, LUA->ObjLen(2))) {
 		free(verts);
 		LUA->ThrowError("Tried to add convex mesh with invalid data (NumVertices is not a multiple of 3!)");
@@ -337,68 +337,24 @@ LUA_FUNCTION(GetCount) {
 * Iterates through all particles and calls a lua function with 1 parameter (position) (also does frustrum culling)
 * @param[in] solver The FlexSolver to iterate over
 * @param[in] eyepos Head position
-* @param[in] up Up direction used in frustrum culling
-* @param[in] down Down direction used in frustrum culling
-* @param[in] left Left direction used in frustrum culling
-* @param[in] right Right direction used in frustrum culling
-* @param[in] renderdistance Number representing how far a particle can be before it is ignored in rendering
 */
-/*
+
 LUA_FUNCTION(RenderParticles) {
 	LUA->CheckType(1, FlexMetaTable);
 	LUA->CheckType(2, Type::Function);
-	LUA->CheckType(3, Type::Vector);	// eye pos
-	LUA->CheckType(4, Type::Vector);	// plane up
-	LUA->CheckType(5, Type::Vector);	// plane down
-	LUA->CheckType(6, Type::Vector);	// plane left
-	LUA->CheckType(7, Type::Vector);	// plane right
-	LUA->CheckNumber(8);	// render distance
 
 	FlexSolver* flex = GET_FLEX;
-	float3 eye_pos = float3(LUA->GetVector(3));
 
-	// Planes used in frustrum culling
-	float3 up = float3(LUA->GetVector(4));
-	float3 down = float3(LUA->GetVector(5));
-	float3 left = float3(LUA->GetVector(6));
-	float3 right = float3(LUA->GetVector(7));
-	float render_distance = LUA->GetNumber(8) * LUA->GetNumber(8);	/// we're comparing against DistanceSqr
-
-	Vector particle_pos = Vector();	// reassign do not redeclare
-	float3 particle_dir = float3();	// ^
-
-	int rendered_particles = 0;
 	float4* host = flex->get_host("particle_pos");
 	for (int i = 0; i < flex->get_active_particles(); i++) {
-		float3 particle = float3(host[i]);
-
-		particle_dir = particle - eye_pos;
-
-		// Frustrum culling
-		if (Dot(particle_dir, down)  < 0 || 
-			Dot(particle_dir, up)    < 0 ||
-			Dot(particle_dir, left)  < 0 ||
-			Dot(particle_dir, right) < 0) continue;
-
-		// Distance cutoff remember that Dot(vec, vec) = DistanceSqr(vec)
-		if (Dot(particle_dir, particle_dir) > render_distance) continue;
-
-		particle_pos.x = particle.x;
-		particle_pos.y = particle.y;
-		particle_pos.z = particle.z;
-
 		// render function
 		LUA->Push(2);
-		LUA->PushVector(particle_pos);
+		LUA->PushVector(Vector(host[i].x, host[i].y, host[i].z));
 		LUA->Call(1, 0);
-
-		rendered_particles++;
 	}
 
-	LUA->PushNumber(rendered_particles);
-
-	return 1;
-}*/
+	return 0;
+}
 
 LUA_FUNCTION(RenderParticlesExternal2) {
 	LUA->CheckType(1, FlexMetaTable);
@@ -415,11 +371,11 @@ LUA_FUNCTION(RenderParticlesExternal2) {
 	int particle_index = 0;
 	int max_indices = 10922;	// floor(2^15 / 3)
 	float particle_radius = LUA->GetNumber(7) * 0.625;	// Magic number 1
-	float3 eye_pos = Vector2float3(LUA->GetVector(2));
-	float3 up = Vector2float3(LUA->GetVector(3));
-	float3 down = Vector2float3(LUA->GetVector(4));
-	float3 left = Vector2float3(LUA->GetVector(5));
-	float3 right = Vector2float3(LUA->GetVector(6));
+	float3 eye_pos = VectorTofloat3(LUA->GetVector(2));
+	float3 up = VectorTofloat3(LUA->GetVector(3));
+	float3 down = VectorTofloat3(LUA->GetVector(4));
+	float3 left = VectorTofloat3(LUA->GetVector(5));
+	float3 right = VectorTofloat3(LUA->GetVector(6));
 	CMatRenderContextPtr pRenderContext(materials);
 	CMeshBuilder meshBuilder;
 
@@ -427,8 +383,8 @@ LUA_FUNCTION(RenderParticlesExternal2) {
 		int i = 0;
 		IMesh* pMesh = pRenderContext->GetDynamicMesh();
 
-		float4* particle_pos = flex->get_host("particle_smooth");
-		float4* particle_ani1 = flex->get_host("particle_ani1");
+		float4* particle_pos = flex->get_parameter("smoothing") > 0 ? flex->get_host("particle_smooth") : flex->get_host("particle_pos");
+		float4* particle_ani1 = flex->get_parameter("anisotropy_scale") > 0 ? flex->get_host("particle_ani1") : NULL;	// If ani1 is valid assume the rest also are
 		float4* particle_ani2 = flex->get_host("particle_ani2");
 		float4* particle_ani3 = flex->get_host("particle_ani3");
 		float4* particle_col = flex->get_host("particle_col");
@@ -458,8 +414,8 @@ LUA_FUNCTION(RenderParticlesExternal2) {
 			float3 pos3 = (-eye_right * tri_mult + offset) * particle_radius;	
 
 			float4 ani1 = particle_ani1 ? particle_ani1[particle_index] : 0;
-			float4 ani2 = particle_ani2 ? particle_ani2[particle_index] : 0;
-			float4 ani3 = particle_ani3 ? particle_ani3[particle_index] : 0;
+			float4 ani2 = particle_ani1 ? particle_ani2[particle_index] : 0;
+			float4 ani3 = particle_ani1 ? particle_ani3[particle_index] : 0;
 
 			// Flatten vectors for anisotropy
 			float3 anisotropy_xyz_1 = float3(ani1.x, ani1.y, ani1.z);
@@ -662,19 +618,28 @@ LUA_FUNCTION(GetContacts) {
 }*/
 
 // Original function written by andreweathan
-LUA_FUNCTION(SpawnCube) {
+LUA_FUNCTION(AddCube) {
 	LUA->CheckType(1, FlexMetaTable);
 	LUA->CheckType(2, Type::Vector); // pos
 	LUA->CheckType(3, Type::Vector); // vel
 	LUA->CheckType(4, Type::Vector); // cube size
 	LUA->CheckType(5, Type::Number); // size apart (usually radius)
+	LUA->CheckType(6, Type::Table);	// color (table w/ .r .g .b .a)
 
 	//gmod Vector and fleX float4
 	FlexSolver* flex = GET_FLEX;
-	float3 gmodPos = Vector2float3(LUA->GetVector(2));		//pos
-	float3 gmodVel = Vector2float3(LUA->GetVector(3));		//vel
-	float3 gmodSize = Vector2float3(LUA->GetVector(4));	//size
+	float3 gmodPos = VectorTofloat3(LUA->GetVector(2));		//pos
+	float3 gmodVel = VectorTofloat3(LUA->GetVector(3));		//vel
+	float3 gmodSize = VectorTofloat3(LUA->GetVector(4));	//size
 	float size = LUA->GetNumber(5);			//size apart
+
+	// Push color data onto stack (annoying)
+	LUA->GetField(6, "r");
+	LUA->GetField(6, "g");
+	LUA->GetField(6, "b");
+	LUA->GetField(6, "a");
+
+	float4 rgba = float4(LUA->GetNumber(-4) / 255, LUA->GetNumber(-3) / 255, LUA->GetNumber(-2) / 255, LUA->GetNumber(-1) / 255);
 
 	gmodSize = gmodSize / 2.f;
 	gmodPos = gmodPos + float3(size) / 2.0;
@@ -684,10 +649,28 @@ LUA_FUNCTION(SpawnCube) {
 			for (float x = -gmodSize.x; x < gmodSize.x; x++) {
 				float3 newPos = float3(x, y, z) * size + gmodPos;
 
-				flex->add_particle(float4(newPos.x, newPos.y, newPos.z, 1), gmodVel, float4(1, 1, 1, 1));
+				flex->add_particle(float4(newPos.x, newPos.y, newPos.z, 1), gmodVel, rgba);
 			}
 		}
 	}
+
+	return 0;
+}
+
+// Initializes a box with a mins and maxs for a FlexSolver
+// Inputting nil disables the bounds.
+LUA_FUNCTION(InitBounds) {
+	LUA->CheckType(1, FlexMetaTable);
+	//LUA->CheckType(2, Type::Vector); // mins
+	//LUA->CheckType(3, Type::Vector); // maxs
+
+	FlexSolver* flex = GET_FLEX;
+	if (LUA->GetType(2) == Type::Vector && LUA->GetType(3) == Type::Vector) {
+		flex->enable_bounds(VectorTofloat3(LUA->GetVector(2)), VectorTofloat3(LUA->GetVector(3)));
+	} else {
+		flex->disable_bounds();
+	}
+	
 
 	return 0;
 }
@@ -706,21 +689,22 @@ GMOD_MODULE_OPEN() {
 	LUA->CreateTable();
 	ADD_FUNCTION(LUA, FlexGC, "Destroy");
 	ADD_FUNCTION(LUA, Tick, "Tick");
-	ADD_FUNCTION(LUA, SpawnParticle, "SpawnParticle");
-	ADD_FUNCTION(LUA, SpawnCube, "SpawnCube")
-	ADD_FUNCTION(LUA, GetParticles, "GetPositions");
-	//ADD_FUNCTION(LUA, RenderParticles, "RenderPositions");
+	ADD_FUNCTION(LUA, AddParticle, "AddParticle");
+	ADD_FUNCTION(LUA, AddCube, "AddCube");
+	ADD_FUNCTION(LUA, GetParticles, "GetParticles");
+	ADD_FUNCTION(LUA, RenderParticles, "RenderParticles");
 	//ADD_FUNCTION(LUA, RenderParticlesExternal, "RenderPositionsExternal");
-	ADD_FUNCTION(LUA, RenderParticlesExternal2, "RenderPositionsExternal2");
+	ADD_FUNCTION(LUA, RenderParticlesExternal2, "RenderParticlesExternal2");
 	ADD_FUNCTION(LUA, AddConcaveMesh, "AddConcaveMesh");
 	ADD_FUNCTION(LUA, AddConvexMesh, "AddConvexMesh");
-	ADD_FUNCTION(LUA, SetParameter, "SetParameter");
-	ADD_FUNCTION(LUA, GetParameter, "GetParameter");
 	ADD_FUNCTION(LUA, RemoveMesh, "RemoveMesh");
 	ADD_FUNCTION(LUA, UpdateMesh, "UpdateMesh");
+	ADD_FUNCTION(LUA, SetParameter, "SetParameter");
+	ADD_FUNCTION(LUA, GetParameter, "GetParameter");
 	ADD_FUNCTION(LUA, GetCount, "GetCount");
 	ADD_FUNCTION(LUA, AddMapMesh, "AddMapMesh");
 	//ADD_FUNCTION(LUA, GetContacts, "GetContacts");
+	ADD_FUNCTION(LUA, InitBounds, "InitBounds");
 	ADD_FUNCTION(LUA, Reset, "Reset");
 	LUA->SetField(-2, "__index");
 

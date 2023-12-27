@@ -12,6 +12,7 @@ BEGIN_SHADER_PARAMS
 	SHADER_PARAM(SCR_S, SHADER_PARAM_TYPE_VEC2, "[1 1]", "Screen Size")
 	SHADER_PARAM(BASETEXTURE, SHADER_PARAM_TYPE_TEXTURE, 0, "Texture of smoothed normals")
 	SHADER_PARAM(SCREENTEXTURE, SHADER_PARAM_TYPE_TEXTURE, 0, "Texture of screen")
+	SHADER_PARAM(IOR, SHADER_PARAM_TYPE_FLOAT, "1.333", "Ior of water")
 	SHADER_PARAM(ENVMAP, SHADER_PARAM_TYPE_TEXTURE, "env_cubemap", "envmap")
 END_SHADER_PARAMS
 
@@ -52,6 +53,9 @@ SHADER_DRAW {
 		
 		const float radius = params[RADIUS]->GetFloatValue();
 		pShaderAPI->SetPixelShaderConstant(1, &radius);
+
+		const float ior = params[IOR]->GetFloatValue();
+		pShaderAPI->SetPixelShaderConstant(2, &ior);
 
 		BindTexture(SHADER_SAMPLER0, BASETEXTURE);
 		BindTexture(SHADER_SAMPLER1, SCREENTEXTURE);

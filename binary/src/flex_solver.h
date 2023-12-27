@@ -42,6 +42,8 @@ public:
 	void update_mesh(int index, float3 new_pos, float3 new_ang);
 	bool set_parameter(std::string param, float number);	// Returns true on success, false otherwise
 	float get_parameter(std::string param);	// returns NaN on invalid parameter
+	void enable_bounds(float3 mins, float3 maxs);
+	void disable_bounds();
 
 	FlexSolver(NvFlexLibrary* library, int particles);
 	~FlexSolver();

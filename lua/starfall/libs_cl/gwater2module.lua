@@ -23,9 +23,9 @@ local function main(instance)
 		end
 	end
 
-	function gwater_library.spawnCube(pos, vel, size, apart)
+	function gwater_library.spawnCube(pos, vel, size, apart, color)
 		if LocalPlayer() == instance.player then
-			gwater2.solver:SpawnCube(vunwrap(pos), vunwrap(vel), vunwrap(size), apart)
+			gwater2.solver:SpawnCube(vunwrap(pos), vunwrap(vel), vunwrap(size), apart, vunwrap(color):ToColor())
 		end
 	end
 

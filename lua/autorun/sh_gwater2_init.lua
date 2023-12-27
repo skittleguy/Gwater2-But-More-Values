@@ -51,6 +51,7 @@ gwater2 = {
 	material = Material("gwater2/particle2"),//Material("vgui/circle"),//Material("sprites/sent_ball"),
 	particles = 0,
 	meshes = {},
+	color = Color(209, 237, 255),
 	update_meshes = function()
 		for i = #gwater2.meshes, 1, -1 do
 			local prop = gwater2.meshes[i]
@@ -96,7 +97,7 @@ local function gwater_tick()
 	
 	if gwater2.solver:Tick(average_frametime * cm_2_inch, hang_thread and 0 or 1) then
 	//if gwater2.solver:Tick(1/165 * cm_2_inch, hang_thread and 0 or 1) then
-		average_frametime = average_frametime + ((systime - last_systime) - average_frametime) / 30
+		average_frametime = average_frametime + ((systime - last_systime) - average_frametime) * limit_fps
 		last_systime = systime	// smooth out fps
 	end
 end
@@ -165,22 +166,22 @@ hook.Add("HUDPaint", "gwater2_interact", function()
 	if lp:KeyDown(IN_ATTACK2) then
 		local forward = LocalPlayer():EyeAngles():Forward()
 		local sprite_size = gwater2.solver:GetParameter("radius")
-			//gwater2.solver:SpawnCube(LocalPlayer():EyePos() + forward * sprite_size * 4 * 5, forward * 100, Vector(4, 4, 4), sprite_size)
-			for _ = 1, 10 do
-				gwater2.solver:SpawnParticle(
-					LocalPlayer():EyePos() + forward * sprite_size * 5 + VectorRand(-10, 10), 
+			//gwater2.solver:AddCube(LocalPlayer():EyePos() + forward * sprite_size * 4 * 5, forward * 100, Vector(4, 4, 4), sprite_size)
+			for _ = 1, 20 do
+				gwater2.solver:AddParticle(
+					LocalPlayer():EyePos() + forward * sprite_size * 10 + VectorRand(-10, 10), 
 					forward * 100, 
-					HSVToColor(CurTime() * 10 % 360, 1, 1),
+					//HSVToColor(CurTime() * 50 % 360, 1, 1),
 					//Color(80, math.random() * 50 + 100, math.random() * 100 + 150, 180), 
 					//Color(math.random() * 20 + 70, math.random() * 20 + 50, 5, 250), 
-					//Color(255, 238, 0),
+					gwater2.color,
 					1
 				)
 			end
 	elseif lp:KeyDown(IN_RELOAD) then
 		gwater2.solver:Reset()
 	end
-	draw.DrawText(gwater2.particles, "CloseCaption_Normal", ScrW() * 0.5, ScrH() * 0.5 - 30, color_white, TEXT_ALIGN_CENTER)
+	draw.DrawText(gwater2.particles, "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.85 - 30, color_white, TEXT_ALIGN_RIGHT)
 
 /*
 	surface.SetDrawColor(0, 255, 0, 255)

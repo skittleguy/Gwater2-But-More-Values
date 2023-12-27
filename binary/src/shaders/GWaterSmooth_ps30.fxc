@@ -1,0 +1,85 @@
+sampler NORMALS : register(s0);
+sampler DEPTH	: register(s1);
+float2 SCR_S	: register(c0);
+float RADIUS 	: register(c1);
+
+struct PS_INPUT {
+	float2 P 			: VPOS;
+	float2 coord	: TEXCOORD0;
+};
+
+bool is_zero(float4 i) {
+	return i.x == 0 && i.y == 0 && i.z == 0 && i.w == 0;
+};
+
+float map(float s, float a1, float a2, float b1, float b2) {
+    return b1 + (s - a1) * (b2 - b1) / (a2 - a1);
+};
+
+bool is_inside(float2 coord) {
+	return coord.x > 0 && coord.x < 1 && coord.y > 0 && coord.y < 1;
+};
+
+#define THRESHOLD -1
+#define RESOLUTION 2
+
+float4 main(PS_INPUT i) : COLOR {
+	float4 depth = tex2D(DEPTH, i.coord);
+	if (is_zero(depth)) return float4(0, 0, 0, 0);
+	if (depth.y <= RADIUS * 2.0) return float4(0, 0, 0, 0);	// Dont blur if too close. Causes weird artifacts
+
+	float3 og_normal = tex2D(NORMALS, i.coord).xyz;
+	float3 final_normal = og_normal;
+	[unroll]
+	for (int x = -RESOLUTION; x <= RESOLUTION; x++) {
+		if (x == 0) continue;	// Skip center since we sample it already
+
+		// Is Texcoord outside
+		float2 texcoord_pos = i.coord + float2(x * SCR_S.x, x * SCR_S.y) * depth.x;
+		if (!is_inside(texcoord_pos)) continue;
+
+		// Is particle close enough
+		float neighbor_depth =  abs(tex2D(DEPTH, texcoord_pos).y - depth.y);
+		if (neighbor_depth > RADIUS) continue;
+
+		float3 neighbor_normal = tex2D(NORMALS, texcoord_pos).xyz;
+
+		// Is angle non harsh enough
+		float cosTheta = dot(og_normal, neighbor_normal);
+		if (cosTheta < THRESHOLD) continue;
+
+		final_normal += neighbor_normal * max(0, map(cosTheta, THRESHOLD, 1, 0, 1));
+	}
+	final_normal = normalize(final_normal);
+
+	return float4(final_normal, 1);
+};
+
+/*
+float4 main(PS_INPUT i) : COLOR {
+	float4 depth = tex2D(DEPTH, i.coord);
+	if (is_zero(depth)) return float4(0, 0, 0, 0);
+	//if (depth.y <= RADIUS * 2.0) return float4(0, 0, 0, 0);	// Dont blur if too close. Causes weird artifacts
+
+	float depth_1 = 1.0 / depth.x;
+	float final_normal = 1.0 / depth.x;
+	int count = 1;
+	[unroll]
+	for (int x = -RESOLUTION; x <= RESOLUTION; x++) {
+		if (x == 0) continue;	// Skip center since we sample it already
+
+		// Is Texcoord outside
+		float2 texcoord_pos = i.coord + float2(x * SCR_S.x, x * SCR_S.y) / depth.y;
+		if (!is_inside(texcoord_pos)) continue;
+
+		// Is particle close enough
+		float neighbor_depth = 1.0 / tex2D(DEPTH, texcoord_pos).x;
+		//if (neighbor_depth == 0) continue;
+		if (abs(neighbor_depth - depth_1) > RADIUS) continue;
+
+		final_normal += neighbor_depth;
+		count++;
+	}
+
+	return float4(1.0 / (final_normal / count), depth.y, 0, 1);
+};*/

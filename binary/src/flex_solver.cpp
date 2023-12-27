@@ -241,6 +241,52 @@ float FlexSolver::get_parameter(std::string param) {
 	}
 }
 
+// Initializes a box with a mins and maxs
+void FlexSolver::enable_bounds(float3 mins, float3 maxs) {
+
+	// Right
+	this->params->planes[0][0] = 1.f;
+	this->params->planes[0][1] = 0.f;
+	this->params->planes[0][2] = 0.f;
+	this->params->planes[0][3] = -mins.x;
+
+	// Left
+	this->params->planes[1][0] = -1.f;
+	this->params->planes[1][1] = 0.f;
+	this->params->planes[1][2] = 0.f;
+	this->params->planes[1][3] = maxs.x;
+
+	// Forward
+	this->params->planes[2][0] = 0.f;
+	this->params->planes[2][1] = 1.f;
+	this->params->planes[2][2] = 0.f;
+	this->params->planes[2][3] = -mins.y;
+
+	// Backward
+	this->params->planes[3][0] = 0.f;
+	this->params->planes[3][1] = -1.f;
+	this->params->planes[3][2] = 0.f;
+	this->params->planes[3][3] = maxs.y;
+
+	// Bottom
+	this->params->planes[4][0] = 0.f;
+	this->params->planes[4][1] = 0.f;
+	this->params->planes[4][2] = 1.f;
+	this->params->planes[4][3] = -mins.z;
+
+	// Top
+	this->params->planes[5][0] = 0.f;
+	this->params->planes[5][1] = 0.f;
+	this->params->planes[5][2] = -1.f;
+	this->params->planes[5][3] = maxs.z;
+
+	this->params->numPlanes = 6;
+}
+
+void FlexSolver::disable_bounds() {
+	this->params->numPlanes = 0;
+}
+
 // Initializes a solver in a FleX library
 FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	if (library == nullptr) return;		// Panic
@@ -305,7 +351,7 @@ void FlexSolver::default_parameters() {
 	this->params = new NvFlexParams();
 	this->params->gravity[0] = 0.0f;
 	this->params->gravity[1] = 0.0f;
-	this->params->gravity[2] = -15.24f;	// Source gravity (600 inch^2) in m/s
+	this->params->gravity[2] = -15.24f;	// Source gravity (600 inch^2) in m/s^2
 
 	this->params->wind[0] = 0.0f;
 	this->params->wind[1] = 0.0f;
@@ -323,9 +369,9 @@ void FlexSolver::default_parameters() {
 	this->params->fluidRestDistance = 7.f;
 	this->params->solidRestDistance = 7.f;
 
-	this->params->anisotropyScale = 0.25f;
+	this->params->anisotropyScale = 2.f;
 	this->params->anisotropyMin = 0.0f;
-	this->params->anisotropyMax = 0.25f;
+	this->params->anisotropyMax = 0.15f;
 	this->params->smoothing = 1.0f;
 
 	this->params->dissipation = 0.f;
@@ -343,8 +389,8 @@ void FlexSolver::default_parameters() {
 	this->params->relaxationFactor = 0.0f;
 	this->params->solidPressure = 0.5f;
 	this->params->adhesion = 0.0f;
-	this->params->cohesion = 0.005f;
-	this->params->surfaceTension = 0.f;
+	this->params->cohesion = 0.01f;
+	this->params->surfaceTension = 0.000001f;
 	this->params->vorticityConfinement = 0.0f;
 	this->params->buoyancy = 1.0f;
 
@@ -355,12 +401,15 @@ void FlexSolver::default_parameters() {
 	this->params->diffuseLifetime = 30.0f;
 
 	// planes created after particles
+	/*
 	this->params->planes[0][0] = 0.f;
 	this->params->planes[0][1] = 0.f;
 	this->params->planes[0][2] = 1.f;
 	this->params->planes[0][3] = 16384.f;
 
 	this->params->numPlanes = 1;
+	*/
+	this->params->numPlanes = 0;
 };
 
 void FlexSolver::map_parameters(NvFlexParams* buffer) {
