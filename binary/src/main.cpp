@@ -114,7 +114,7 @@ LUA_FUNCTION(AddParticle) {
 	flex->add_particle(
 		float4(pos.x, pos.y, pos.z, inv_mass), 
 		float3(vel.x, vel.y, vel.z), 
-		float4(LUA->GetNumber(-4) / 255, LUA->GetNumber(-3) / 255, LUA->GetNumber(-2) / 255, LUA->GetNumber(-1) / 255)	// color
+		float4(LUA->GetNumber(-4) / 255.f, LUA->GetNumber(-3) / 255.f, LUA->GetNumber(-2) / 255.f, LUA->GetNumber(-1) / 255.f)	// color
 	);
 
 	return 0;
@@ -384,9 +384,9 @@ LUA_FUNCTION(RenderParticlesExternal2) {
 		IMesh* pMesh = pRenderContext->GetDynamicMesh();
 
 		float4* particle_pos = flex->get_parameter("smoothing") > 0 ? flex->get_host("particle_smooth") : flex->get_host("particle_pos");
-		float4* particle_ani1 = flex->get_parameter("anisotropy_scale") > 0 ? flex->get_host("particle_ani1") : NULL;	// If ani1 is valid assume the rest also are
-		float4* particle_ani2 = flex->get_host("particle_ani2");
-		float4* particle_ani3 = flex->get_host("particle_ani3");
+		float4* particle_ani1 = flex->get_parameter("anisotropy_scale") > 0 ? flex->get_host("particle_ani1") : NULL;
+		float4* particle_ani2 = flex->get_parameter("anisotropy_scale") > 0 ? flex->get_host("particle_ani2") : NULL;
+		float4* particle_ani3 = flex->get_parameter("anisotropy_scale") > 0 ? flex->get_host("particle_ani3") : NULL;
 		float4* particle_col = flex->get_host("particle_col");
 		meshBuilder.Begin(pMesh, MATERIAL_TRIANGLES, max_indices);
 		while (particle_index < particle_count && i < max_indices) {
@@ -414,8 +414,8 @@ LUA_FUNCTION(RenderParticlesExternal2) {
 			float3 pos3 = (-eye_right * tri_mult + offset) * particle_radius;	
 
 			float4 ani1 = particle_ani1 ? particle_ani1[particle_index] : 0;
-			float4 ani2 = particle_ani1 ? particle_ani2[particle_index] : 0;
-			float4 ani3 = particle_ani1 ? particle_ani3[particle_index] : 0;
+			float4 ani2 = particle_ani2 ? particle_ani2[particle_index] : 0;
+			float4 ani3 = particle_ani3 ? particle_ani3[particle_index] : 0;
 
 			// Flatten vectors for anisotropy
 			float3 anisotropy_xyz_1 = float3(ani1.x, ani1.y, ani1.z);

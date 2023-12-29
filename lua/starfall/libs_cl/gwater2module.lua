@@ -16,16 +16,16 @@ local function main(instance)
 	-- @param Vector pos
 	-- @param Vector vel
 	-- @param number mass
-	function gwater_library.spawnParticle(pos, vel, color, mass)
+	function gwater_library.addParticle(pos, vel, color, mass)
 		if LocalPlayer() == instance.player then
 			mass = mass ~= nil and mass or 1
-			gwater2.solver:SpawnParticle(vunwrap(pos), vunwrap(vel), vunwrap(color):ToColor(), mass)
+			gwater2.solver:AddParticle(vunwrap(pos), vunwrap(vel), color, mass)
 		end
 	end
 
-	function gwater_library.spawnCube(pos, vel, size, apart, color)
+	function gwater_library.addCube(pos, vel, size, apart, color)
 		if LocalPlayer() == instance.player then
-			gwater2.solver:SpawnCube(vunwrap(pos), vunwrap(vel), vunwrap(size), apart, vunwrap(color):ToColor())
+			gwater2.solver:AddCube(vunwrap(pos), vunwrap(vel), vunwrap(size), apart, color)
 		end
 	end
 

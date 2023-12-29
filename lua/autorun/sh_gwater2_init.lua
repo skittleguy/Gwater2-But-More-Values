@@ -51,7 +51,8 @@ gwater2 = {
 	material = Material("gwater2/particle2"),//Material("vgui/circle"),//Material("sprites/sent_ball"),
 	particles = 0,
 	meshes = {},
-	color = Color(209, 237, 255),
+	color = Color(209, 237, 255, 25),
+	blur_passes = 2,
 	update_meshes = function()
 		for i = #gwater2.meshes, 1, -1 do
 			local prop = gwater2.meshes[i]
@@ -66,6 +67,7 @@ gwater2 = {
 		end
 	end,
 }
+gwater2.solver:InitBounds(Vector(-16384, -16384, -16384), Vector(16384, 16384, 16384))	-- source bounds
 
 // Draw particles
 local draw_sprite = render.DrawSprite
@@ -80,9 +82,9 @@ end
 // Simulate particles
 local cm_2_inch = 2.54 * 2.54
 local last_systime = os.clock()
-local average_frametime = 0
 local hang_thread = false
 local limit_fps = 1 / 60
+local average_frametime = limit_fps
 local function gwater_tick()
 	local systime = os.clock()
 	local delta_time = systime - last_systime
@@ -97,7 +99,7 @@ local function gwater_tick()
 	
 	if gwater2.solver:Tick(average_frametime * cm_2_inch, hang_thread and 0 or 1) then
 	//if gwater2.solver:Tick(1/165 * cm_2_inch, hang_thread and 0 or 1) then
-		average_frametime = average_frametime + ((systime - last_systime) - average_frametime) * limit_fps
+		average_frametime = average_frametime + ((systime - last_systime) - average_frametime) * 0.03
 		last_systime = systime	// smooth out fps
 	end
 end
@@ -166,10 +168,11 @@ hook.Add("HUDPaint", "gwater2_interact", function()
 	if lp:KeyDown(IN_ATTACK2) then
 		local forward = LocalPlayer():EyeAngles():Forward()
 		local sprite_size = gwater2.solver:GetParameter("radius")
-			//gwater2.solver:AddCube(LocalPlayer():EyePos() + forward * sprite_size * 4 * 5, forward * 100, Vector(4, 4, 4), sprite_size)
+			gwater2.solver:AddCube(LocalPlayer():EyePos() + forward * sprite_size * 4 * 5, forward * 100, Vector(4, 4, 4), sprite_size, gwater2.color)
+			/*
 			for _ = 1, 20 do
 				gwater2.solver:AddParticle(
-					LocalPlayer():EyePos() + forward * sprite_size * 10 + VectorRand(-10, 10), 
+					LocalPlayer():EyePos() + forward * sprite_size * 10 + VectorRand(-sprite_size, sprite_size), 
 					forward * 100, 
 					//HSVToColor(CurTime() * 50 % 360, 1, 1),
 					//Color(80, math.random() * 50 + 100, math.random() * 100 + 150, 180), 
@@ -177,7 +180,7 @@ hook.Add("HUDPaint", "gwater2_interact", function()
 					gwater2.color,
 					1
 				)
-			end
+			end*/
 	elseif lp:KeyDown(IN_RELOAD) then
 		gwater2.solver:Reset()
 	end

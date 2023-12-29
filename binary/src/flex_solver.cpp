@@ -389,7 +389,7 @@ void FlexSolver::default_parameters() {
 	this->params->relaxationFactor = 0.0f;
 	this->params->solidPressure = 0.5f;
 	this->params->adhesion = 0.0f;
-	this->params->cohesion = 0.01f;
+	this->params->cohesion = 0.005f;
 	this->params->surfaceTension = 0.000001f;
 	this->params->vorticityConfinement = 0.0f;
 	this->params->buoyancy = 1.0f;

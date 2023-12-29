@@ -19,7 +19,7 @@ struct PS_OUTPUT {
 	float4 rt0		: COLOR0;
 	float4 rt1      : COLOR1;
 	float4 rt2		: COLOR2;
-	float depth		: DEPTH0;
+	//float depth		: DEPTH0;
 };
 
 float3 flatten_float3(float3 dir, float3 norm) {
@@ -61,17 +61,18 @@ PS_OUTPUT main(const PS_INPUT i) {
 
 	// Lighting calculations
 	float3 sun_dir = float3(-0.377821, 0.520026, 0.766044);
+	bool is_translucent = i.color.w < 0.9999;	// rounding errors
 	float3 view_dir = normalize(i.pos - i.eyepos.xyz);
 	float3 reflected = reflect(view_dir, smoothed_normal);
-	float diffuse = 1.0;//dot(smoothed_normal, float3(-0.377821, 0.520026, 0.766044)) * 0.45 + 0.55;
+	float diffuse = is_translucent ? 1.0 : dot(smoothed_normal, float3(-0.377821, 0.520026, 0.766044)) * 0.45 + 0.55;
 	float phong = pow(max(0, dot(reflected, sun_dir)), 100);
 	float3 specular = texCUBE(CUBEMAP, reflected).xyz * fresnelSchlicks(view_dir, smoothed_normal, IOR);
-	float3 absorption = exp((float3(1, 1, 1) - i.color.xyz) * (pow(dot(smoothed_normal, view_dir), 3) * 2.0 - 0.5));
+	float3 absorption = is_translucent ? exp((float3(1, 1, 1) - i.color.xyz) * -pow(dot(smoothed_normal, view_dir), 2) * i.color.w * 20) : i.color.xyz;	// 20 = absorption multiplier
 
 	// Calculate refraction vector in 3d space and project it to screen
 	float3 uv_offset = i.eyepos.w > RADIUS * 2.0 ? smoothed_normal * -RADIUS * IOR : float3(0, 0, 0);
 	float4 uv = mul(float4(i.pos + uv_offset, 1), i.proj); uv.xy /= uv.w;
-	float3 refracted = tex2D(SCREEN, float2(uv.x / 2.0 + 0.5, 0.5 - uv.y / 2.0)).xyz;
+	float3 refracted = is_translucent ? tex2D(SCREEN, float2(uv.x / 2.0 + 0.5, 0.5 - uv.y / 2.0)).xyz : float3(1, 1, 1);
 
 	// Calculate final color
 	float3 final_color = absorption * refracted * diffuse + float3(phong, phong, phong) + specular;
@@ -85,7 +86,7 @@ PS_OUTPUT main(const PS_INPUT i) {
 	o.rt1 = float4(world_normal, 1);
 	//o.rt1 = float4(smoothed_normal * 0.75 + world_normal * 0.25, 1);
 	o.rt2 = float4(uvdmax, i.eyepos.w - bulge * RADIUS, 0, 1);
-	o.depth = max(bulge_pos.z / bulge_pos.w, 0.03);	// 0.03 = default znear plane
+	//o.depth = max(bulge_pos.z / bulge_pos.w, 0.03);	// 0.03 = default znear plane
 
 	return o;
 };
@@ -95,6 +96,13 @@ float3 project_pos(float3 eyepos, float3 dir, float depth) {
 	return eyepos + dir * depth;
 }
 
+float2 split_depth(float depth) {
+	return float2(floor(depth), depth % 1);
+}
+
+float join_depth(float2 depth) {
+	return depth.x + depth.y;
+}
 
 PS_OUTPUT main(const PS_INPUT i) {
 	float2 offset = (i.coord - 0.5) * 2.0;
@@ -105,10 +113,9 @@ PS_OUTPUT main(const PS_INPUT i) {
 
 	// Calculate normal from texture coords
 	float bulge = sqrt(1 - radius2);
-
+	float depth = i.eyepos.w - bulge * RADIUS / 2.0;
 	// Depth calculations
 	float3 view_dir = normalize(i.pos - i.eyepos.xyz);
-	float depth = i.eyepos.w - bulge * RADIUS / 2.0;
 
 	// Depth information for normals smoothing
 	float2 uvdx = ddx(i.coord);
@@ -118,7 +125,8 @@ PS_OUTPUT main(const PS_INPUT i) {
 	float4 bulge_pos = mul(float4(project_pos(i.eyepos.xyz, view_dir, depth), 1), i.proj);
 
 	// extracted normal from depth
-	float3 bulge_pos2 = project_pos(i.eyepos.xyz, view_dir, 1.0 / tex2D(NORMALS, i.P / SCR_S).x);
+	float3 depth2 = tex2D(NORMALS, i.P / SCR_S).xyz;
+	float3 bulge_pos2 = project_pos(i.eyepos.xyz, view_dir, depth2.z != 0 ? join_depth(depth2.xy) : depth);
 	//float3 bulge_pos2 = project_pos(i.eyepos.xyz, view_dir, depth);
 	float3 smoothed_normal = normalize(cross(-ddx(bulge_pos2), ddy(bulge_pos2)));
 
@@ -128,7 +136,9 @@ PS_OUTPUT main(const PS_INPUT i) {
 	float diffuse = 1.0;//dot(smoothed_normal, float3(-0.377821, 0.520026, 0.766044)) * 0.45 + 0.55;
 	float phong = pow(max(0, dot(reflected, sun_dir)), 100);
 	float3 specular = texCUBE(CUBEMAP, reflected).xyz * fresnelSchlicks(view_dir, smoothed_normal, IOR);
-	float3 absorption = exp((float3(1, 1, 1) - i.color.xyz) * (pow(dot(smoothed_normal, view_dir), 3) * 2.0 - 0.5));
+	//float3 absorption = lerp(i.color.xyz, i.color.xyz * 0.5, pow(-dot(view_dir, smoothed_normal), 3));
+	//float3 absorption = exp((float3(1, 1, 1) - i.color.xyz) * (pow(dot(smoothed_normal, view_dir), 3) * 2.0 - 0.5));
+	float3 absorption = exp((float3(1, 1, 1) - i.color.xyz) * -pow(dot(smoothed_normal, view_dir), 2) * i.color.w * 20);	// 20 = absorption multiplier. number is arbetrary
 
 	// Calculate refraction vector in 3d space and project it to screen
 	float3 uv_offset = i.eyepos.w > RADIUS * 2.0 ? smoothed_normal * -RADIUS * IOR : float3(0, 0, 0);
@@ -143,7 +153,7 @@ PS_OUTPUT main(const PS_INPUT i) {
 	o.rt0 = float4(final_color, 1);
 	o.rt1 = float4(0, 0, 0, 1);
 	//o.rt1 = float4(smoothed_normal * 0.75 + world_normal * 0.25, 1);
-	o.rt2 = float4(1.0 / depth, uvdmax, 0, 1);
+	o.rt2 = float4(split_depth(depth), uvdmax, 1);
 	o.depth = max(bulge_pos.z / bulge_pos.w, 0.03);	// 0.03 = default znear plane
 
 	return o;

@@ -13,10 +13,10 @@ local function GetRenderTargetGWater(name, mult, format)
 	)
 end
 
-local cache_depth = GetRenderTargetGWater("gwater_cache_depth")
+local cache_depth = GetRenderTargetGWater("1gwater_cache_depth")
 local cache_normals = GetRenderTargetGWater("gwater_cache_normals")
-local cache_normals2 = GetRenderTargetGWater("gwater_cache_normals2")
-local cache_bloom = GetRenderTargetGWater("gwater_cache_bloom", 1 / 2)	// quarter resolution for blurring
+local cache_normals2 = GetRenderTargetGWater("1gwater_cache_normals2")
+local cache_bloom = GetRenderTargetGWater("1gwater_cache_bloom", 1 / 1)	// quarter resolution for blurring
 
 local water_blur = CreateMaterial("gwater_smooth", "GWaterSmooth", {
 	["$ignorez"] = 1,
@@ -65,10 +65,10 @@ hook.Add("PreDrawViewModels", "gwater_particle", function()
 	water_blur:SetTexture("$depthtexture", cache_depth)
 	water_blur:SetFloat("$radius", radius)
 	render.SetMaterial(water_blur)
-	for i = 1, 3 do
+	for i = 1, gwater2.blur_passes do
 		// Blur X
-		local scale = (4 - i) * 0.05
-		--local scale = 0.2
+		local scale = (5 - i) * 0.04
+		--local scale = 0.1
 		water_blur:SetTexture("$basetexture", cache_normals)	
 		--water_blur:SetTexture("$depthtexture", cache_depth)
 		water_blur:SetVector("$scr_s", Vector(0, scale / ScrH()))
@@ -80,6 +80,7 @@ hook.Add("PreDrawViewModels", "gwater_particle", function()
 		--water_blur:SetTexture("$depthtexture", cache_bloom)
 		water_blur:SetVector("$scr_s", Vector(scale / ScrW(), 0))
 		render.SetRenderTarget(cache_normals)
+		--render.SetRenderTarget(cache_depth)
 		render.DrawScreenQuad()
 		render.SetRenderTarget()
 	end
@@ -87,7 +88,7 @@ hook.Add("PreDrawViewModels", "gwater_particle", function()
 	render.CopyTexture(cache_normals, cache_normals2)
 
 	-- Debug Draw
-	render.DrawTextureToScreenRect(cache_depth, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
+	render.DrawTextureToScreenRect(cache_normals2, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
 end)
 
 --hook.Add("NeedsDepthPass", "gwater2_depth", function()
