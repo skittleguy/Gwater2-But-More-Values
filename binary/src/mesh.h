@@ -8,8 +8,6 @@ private:
 	NvFlexBuffer* vertices = nullptr;
 	NvFlexBuffer* indices = nullptr;
 	NvFlexTriangleMeshId id;
-	float* min = nullptr;
-	float* max = nullptr;
 
 public:
 	float4 pos = float4{};
@@ -21,7 +19,6 @@ public:
 
 	bool init_concave(float3* verts, int num_verts); // Initializes mesh with concave data. True on success, false otherwise
 	bool init_convex(float3* verts, int num_verts);	// Initializes mesh with convex data. True on success, false otherwise
-	void init_obb(float3 min, float3 max);
 	void update(float3 pos, float3 ang);
 	void destroy();
 };

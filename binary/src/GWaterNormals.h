@@ -3,6 +3,7 @@
 
 #include "shaders/GWaterNormals_vs30.inc"
 #include "shaders/GWaterNormals_ps30.inc"
+#include "shaders/GWaterNormalsCheap_ps30.inc"
 
 BEGIN_VS_SHADER(GWaterNormals, "gwater2 helper")
 
@@ -13,6 +14,7 @@ BEGIN_SHADER_PARAMS
 	SHADER_PARAM(BASETEXTURE, SHADER_PARAM_TYPE_TEXTURE, 0, "Texture of smoothed normals")
 	SHADER_PARAM(SCREENTEXTURE, SHADER_PARAM_TYPE_TEXTURE, 0, "Texture of screen")
 	SHADER_PARAM(IOR, SHADER_PARAM_TYPE_FLOAT, "1.333", "Ior of water")
+	SHADER_PARAM(CHEAP, SHADER_PARAM_TYPE_FLOAT, "1", "Cheapness Enabled/Disabled")
 	SHADER_PARAM(ENVMAP, SHADER_PARAM_TYPE_TEXTURE, "env_cubemap", "envmap")
 END_SHADER_PARAMS
 
@@ -41,9 +43,15 @@ SHADER_DRAW {
 		DECLARE_STATIC_VERTEX_SHADER(GWaterNormals_vs30);
 		SET_STATIC_VERTEX_SHADER_COMBO(VERTEXCOLOR, IS_FLAG_DEFINED(MATERIAL_VAR_VERTEXCOLOR));
 		SET_STATIC_VERTEX_SHADER(GWaterNormals_vs30);
-		
-		DECLARE_STATIC_PIXEL_SHADER(GWaterNormals_ps30);
-		SET_STATIC_PIXEL_SHADER(GWaterNormals_ps30);
+
+		if (params[CHEAP]->GetFloatValue() == 0) {
+			DECLARE_STATIC_PIXEL_SHADER(GWaterNormals_ps30);
+			SET_STATIC_PIXEL_SHADER(GWaterNormals_ps30);
+		}
+		else {
+			DECLARE_STATIC_PIXEL_SHADER(GWaterNormalsCheap_ps30);
+			SET_STATIC_PIXEL_SHADER(GWaterNormalsCheap_ps30);
+		}
 	}
 
 	DYNAMIC_STATE {
@@ -64,17 +72,17 @@ SHADER_DRAW {
 		DECLARE_DYNAMIC_VERTEX_SHADER(GWaterNormals_vs30);
 		SET_DYNAMIC_VERTEX_SHADER(GWaterNormals_vs30);
 
-		DECLARE_DYNAMIC_PIXEL_SHADER(GWaterNormals_ps30);
-		SET_DYNAMIC_PIXEL_SHADER(GWaterNormals_ps30);
+		if (params[CHEAP]->GetFloatValue() == 0) {
+			DECLARE_DYNAMIC_PIXEL_SHADER(GWaterNormals_ps30);
+			SET_DYNAMIC_PIXEL_SHADER(GWaterNormals_ps30);
+		}
+		else {
+			DECLARE_DYNAMIC_PIXEL_SHADER(GWaterNormalsCheap_ps30);
+			SET_DYNAMIC_PIXEL_SHADER(GWaterNormalsCheap_ps30);
+		}
 	}
 	
-	//IMatRenderContext* pMatRenderContext = g_pMaterialSystem->GetRenderContext();
-
-	//for (int i = 0; i < 4; i++) pMatRenderContext->SetRenderTargetEx(i, GWaterNormals_rts[i]);
-	
 	Draw();
-
-	//for (int i = 0; i < 4; i++) pMatRenderContext->SetRenderTargetEx(i, NULL);
 
 }
 

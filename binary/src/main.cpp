@@ -171,8 +171,6 @@ LUA_FUNCTION(AddConcaveMesh) {
 	LUA->CheckType(2, Type::Table);		// Mesh data
 	LUA->CheckType(3, Type::Vector);	// Initial Pos
 	LUA->CheckType(4, Type::Angle);		// Initial Angle
-	LUA->CheckType(5, Type::Vector);	// OBBMin
-	LUA->CheckType(6, Type::Vector);	// OBBMax
 
 	Vector pos = LUA->GetVector(3);
 	QAngle ang = LUA->GetAngle(4);
@@ -181,7 +179,6 @@ LUA_FUNCTION(AddConcaveMesh) {
 
 	FlexSolver* flex = GET_FLEX;
 	Mesh mesh = Mesh(flexLibrary);
-	mesh.init_obb(float3(min.x, min.y, min.z), float3(max.x, max.y, max.z));
 	float3* verts = TableTofloat3(LUA);
 	if (!mesh.init_concave(verts, LUA->ObjLen(2))) {
 		free(verts);
@@ -209,8 +206,6 @@ LUA_FUNCTION(AddConvexMesh) {
 	LUA->CheckType(2, Type::Table);		// Mesh data
 	LUA->CheckType(3, Type::Vector);	// Initial Pos
 	LUA->CheckType(4, Type::Angle);		// Initial Angle
-	LUA->CheckType(5, Type::Vector);	// OBBMin
-	LUA->CheckType(6, Type::Vector);	// OBBMax
 
 	Vector pos = LUA->GetVector(3);
 	QAngle ang = LUA->GetAngle(4);
@@ -219,7 +214,6 @@ LUA_FUNCTION(AddConvexMesh) {
 
 	FlexSolver* flex = GET_FLEX;
 	Mesh mesh = Mesh(flexLibrary);
-	mesh.init_obb(float3(min.x, min.y, min.z), float3(max.x, max.y, max.z));
 	float3* verts = TableTofloat3(LUA);
 	if (!mesh.init_convex(verts, LUA->ObjLen(2))) {
 		free(verts);
@@ -510,7 +504,6 @@ LUA_FUNCTION(AddMapMesh) {
 
 	BSPMap map = BSPMap(data, filesize);
 	Mesh mesh = Mesh(flexLibrary);
-	mesh.init_obb(float3(-16384), float3(16384));
 	if (!mesh.init_concave((float3*)map.GetVertices(), map.GetNumTris() * 3)) {
 		free(data);
 		LUA->ThrowError("Tried to add map mesh with invalid data (NumVertices is 0 or not a multiple of 3!)");
@@ -661,8 +654,6 @@ LUA_FUNCTION(AddCube) {
 // Inputting nil disables the bounds.
 LUA_FUNCTION(InitBounds) {
 	LUA->CheckType(1, FlexMetaTable);
-	//LUA->CheckType(2, Type::Vector); // mins
-	//LUA->CheckType(3, Type::Vector); // maxs
 
 	FlexSolver* flex = GET_FLEX;
 	if (LUA->GetType(2) == Type::Vector && LUA->GetType(3) == Type::Vector) {

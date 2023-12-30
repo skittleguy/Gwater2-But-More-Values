@@ -63,7 +63,6 @@ SHADER_DRAW {
 
 	Draw();
 
-
 }
 
 END_SHADER

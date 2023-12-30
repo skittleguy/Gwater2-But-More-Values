@@ -1,9 +1,0 @@
-GWaterNormals {
-	$vertexcolor 1
-	$envmap "env_cubemap"
-	$radius 10
-	$scr_s "1 1"
-	$ior 1.333
-	$basetexture ""	// make console shut up
-	$screentexture ""
-}

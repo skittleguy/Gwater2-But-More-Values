@@ -35,11 +35,6 @@ Mesh::Mesh(NvFlexLibrary* lib) {
 	update(float3(), float3());
 }
 
-void Mesh::init_obb(float3 min, float3 max) {
-	this->min = new float[3] { min.x, min.y, min.z };
-	this->max = new float[3] { max.x, max.y, max.z };
-}
-
 bool Mesh::init_concave(float3* verts, int num_verts) {
 	if (num_verts == 0 || num_verts % 3 != 0) {
 		return false;
@@ -52,15 +47,26 @@ bool Mesh::init_concave(float3* verts, int num_verts) {
 	float4* hostVerts = (float4*)NvFlexMap(this->vertices, eNvFlexMapWait);
 	int* hostIndices = (int*)NvFlexMap(this->indices, eNvFlexMapWait);
 
+	float min[3] = { verts[0].x, verts[0].y, verts[0].z };
+	float max[3] = { verts[0].x, verts[0].y, verts[0].z };
 	for (int i = 0; i < num_verts; i++) {
 		hostVerts[i] = float4(verts[i].x, verts[i].y, verts[i].z, 0);
 		hostIndices[i] = i + (i % 3 < 2 ? (i % 3 == 0 ? 1 : -1) : 0);    // flip triangle winding
+
+		min[0] = fmin(min[0], verts[i].x); 
+		min[1] = fmin(min[1], verts[i].y);
+		min[2] = fmin(min[2], verts[i].z);
+
+		max[0] = fmax(max[0], verts[i].x);
+		max[1] = fmax(max[1], verts[i].y);
+		max[2] = fmax(max[2], verts[i].z);
 	}
 	NvFlexUnmap(this->vertices);
 	NvFlexUnmap(this->indices);
 
 	this->id = NvFlexCreateTriangleMesh(library);
-	NvFlexUpdateTriangleMesh(this->library, this->id, this->vertices, this->indices, num_verts, num_verts / 3, this->min, this->max);
+
+	NvFlexUpdateTriangleMesh(this->library, this->id, this->vertices, this->indices, num_verts, num_verts / 3, min, max);
 
 	return true;
 }
@@ -73,6 +79,9 @@ bool Mesh::init_convex(float3* verts, int num_verts) {
 	// Allocate buffers
 	this->vertices = NvFlexAllocBuffer(this->library, num_verts / 3, sizeof(float4), eNvFlexBufferHost);
 	float4* hostVerts = (float4*)NvFlexMap(this->vertices, eNvFlexMapWait);
+
+	float min[3] = { verts[0].x, verts[0].y, verts[0].z };
+	float max[3] = { verts[0].x, verts[0].y, verts[0].z };
 	for (int i = 0; i < num_verts; i += 3) {
 		float3 tri[3] = {verts[i], verts[i + 1], verts[i + 2]};
 
@@ -80,11 +89,19 @@ bool Mesh::init_convex(float3* verts, int num_verts) {
 		float3 plane_dir = Normalize(Cross(tri[1] - tri[0], tri[0] - tri[2]));
 		float plane_height = Dot(plane_dir, tri[0]);
 		hostVerts[i / 3] = float4(plane_dir.x, plane_dir.y, plane_dir.z, -plane_height);
+
+		min[0] = fmin(min[0], verts[i].x);
+		min[1] = fmin(min[1], verts[i].y);
+		min[2] = fmin(min[2], verts[i].z);
+
+		max[0] = fmax(max[0], verts[i].x);
+		max[1] = fmax(max[1], verts[i].y);
+		max[2] = fmax(max[2], verts[i].z);
 	}
 	NvFlexUnmap(this->vertices);
 
 	this->id = NvFlexCreateConvexMesh(library);
-	NvFlexUpdateConvexMesh(this->library, this->id, this->vertices, num_verts / 3, this->min, this->max);
+	NvFlexUpdateConvexMesh(this->library, this->id, this->vertices, num_verts / 3, min, max);
 
 	return true;
 }
@@ -103,7 +120,4 @@ void Mesh::destroy() {
 		NvFlexFreeBuffer(indices);
 		NvFlexDestroyTriangleMesh(library, id);
 	}
-
-	delete this->min;
-	delete this->max;
 }

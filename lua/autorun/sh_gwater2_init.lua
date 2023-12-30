@@ -48,11 +48,10 @@ include("gwater2_shaders.lua")	// also carrying
 
 gwater2 = {
 	solver = FlexSolver(100000),
-	material = Material("gwater2/particle2"),//Material("vgui/circle"),//Material("sprites/sent_ball"),
+	material = Material("gwater2/particle"),//Material("vgui/circle"),//Material("sprites/sent_ball"),
 	particles = 0,
 	meshes = {},
 	color = Color(209, 237, 255, 25),
-	blur_passes = 2,
 	update_meshes = function()
 		for i = #gwater2.meshes, 1, -1 do
 			local prop = gwater2.meshes[i]
@@ -114,8 +113,8 @@ hook.Add("Think", "gwater_tick", gwater_tick)
 // Add mesh colliders
 local function add_prop(ent)
 	//do return end
-	//if !IsValid(ent) or !ent:IsSolid() or ent:IsWeapon() or ent:IsPlayer() then return end
-	if !IsValid(ent) or (ent:GetClass() != "prop_physics" and !ent:IsPlayer()) then return end
+	if !IsValid(ent) or !ent:IsSolid() or ent:IsWeapon() then return end
+	//if !IsValid(ent) or (ent:GetClass() != "prop_physics" and !ent:IsPlayer()) then return end
 	local phys = ent:GetPhysicsObject()
 	if !phys:IsValid() then
 		ent:PhysicsInit(SOLID_VPHYSICS)
@@ -130,16 +129,16 @@ local function add_prop(ent)
 
 		if !invalid then
 			for k, v in ipairs(convexes) do
-				gwater2.solver:AddConvexMesh(v, ent:GetPos(), ent:GetAngles(), ent:OBBMins(), ent:OBBMaxs())
+				gwater2.solver:AddConvexMesh(v, ent:GetPos(), ent:GetAngles())
 				table.insert(gwater2.meshes, ent)
 			end
 		else
-			gwater2.solver:AddConcaveMesh(phys:GetMesh(), ent:GetPos(), ent:GetAngles(), ent:OBBMins(), ent:OBBMaxs())
+			gwater2.solver:AddConcaveMesh(phys:GetMesh(), ent:GetPos(), ent:GetAngles())
 			table.insert(gwater2.meshes, ent)
 		end
 		ent:PhysicsDestroy()
 	else
-		gwater2.solver:AddConcaveMesh(phys:GetMesh(), ent:GetPos(), ent:GetAngles(), ent:OBBMins(), ent:OBBMaxs())
+		gwater2.solver:AddConcaveMesh(phys:GetMesh(), ent:GetPos(), ent:GetAngles())
 		table.insert(gwater2.meshes, ent)
 	end
 end

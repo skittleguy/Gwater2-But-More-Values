@@ -1,3 +1,5 @@
+do return end
+/*
 AddCSLuaFile()
 --[[{name = "Physics Iterations", min = 1, value = 3, max = 10, advanced = true, integer = true,
     description = "Sets how accurate the simulation is. This helps with particles clipping through objects and other particles."
@@ -538,6 +540,6 @@ local function OpenMenu()
     advSettingsScrollPanel.Think = UpdateDescriptions
 end
 
-concommand.Add("gwater2_menu", function()
+concommand.Add("gwater2_menu_old", function()
     OpenMenu()
-end)
+end)*/

@@ -35,7 +35,6 @@ float4* FlexSolver::get_host(std::string name) {
 	return this->hosts[name];
 }
 
-// Adds a particle in the solver
 void FlexSolver::add_particle(float4 pos, float3 vel, float4 col) {
 	if (this->solver == nullptr) return;
 
@@ -65,6 +64,8 @@ void FlexSolver::add_particle(float4 pos, float3 vel, float4 col) {
 	NvFlexUnmap(get_buffer("particle_active"));
 }
 
+
+// Handles transfer of FleX buffers to hosts & updates mesh positions/angles
 bool FlexSolver::pretick(NvFlexMapFlags wait) {
 	if (this->solver == nullptr) return false;
 
@@ -105,7 +106,7 @@ bool FlexSolver::pretick(NvFlexMapFlags wait) {
 	return true;
 }
 
-// Updates the particles in the solver
+// ticks the solver
 void FlexSolver::tick(float dt) {
 	if (this->solver == nullptr) return;
 	// write to device (async)
@@ -209,6 +210,7 @@ void FlexSolver::remove_mesh(int index) {
 	NvFlexUnmap(get_buffer("geometry_flags"));
 }
 
+// sets the position and angles of a mesh object. The inputted angle is Eular
 void FlexSolver::update_mesh(int index, float3 new_pos, float3 new_ang) {
 	if (this->solver == nullptr) return;
 
@@ -221,7 +223,7 @@ bool FlexSolver::set_parameter(std::string param, float number) {
 		return true;
 	}
 	catch (std::exception e) {
-		if (param == "iterations") {	// defined as int not float, so needs to be seperate
+		if (param == "iterations") {	// defined as an int instead of a float, so it needs to be seperate
 			this->params->numIterations = (int)number;
 			return true;
 		}
@@ -229,19 +231,20 @@ bool FlexSolver::set_parameter(std::string param, float number) {
 	}
 }
 
+// Returns NaN on failure
 float FlexSolver::get_parameter(std::string param) {
 	try {
 		return *this->param_map.at(param);
 	}
 	catch (std::exception e) {
-		if (param == "iterations") {	// defined as int not float, so needs to be seperate
+		if (param == "iterations") {	// ^
 			return (float)this->params->numIterations;
 		}
 		return NAN;
 	}
 }
 
-// Initializes a box with a mins and maxs
+// Initializes a box around a FleX solver with a mins and maxs
 void FlexSolver::enable_bounds(float3 mins, float3 maxs) {
 
 	// Right
@@ -400,15 +403,6 @@ void FlexSolver::default_parameters() {
 	this->params->diffuseBallistic = 0;
 	this->params->diffuseLifetime = 30.0f;
 
-	// planes created after particles
-	/*
-	this->params->planes[0][0] = 0.f;
-	this->params->planes[0][1] = 0.f;
-	this->params->planes[0][2] = 1.f;
-	this->params->planes[0][3] = 16384.f;
-
-	this->params->numPlanes = 1;
-	*/
 	this->params->numPlanes = 0;
 };
 

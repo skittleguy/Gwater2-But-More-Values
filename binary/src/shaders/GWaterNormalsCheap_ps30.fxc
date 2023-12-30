@@ -1,0 +1,87 @@
+float2 SCR_S		: register(c0);
+float RADIUS		: register(c1);
+float IOR 			: register(c2);
+sampler NORMALS 	: register(s0);
+sampler SCREEN 		: register(s1);
+samplerCUBE CUBEMAP	: register(s2);
+
+struct PS_INPUT {
+	float2 P 		: VPOS;
+	float2 coord	: TEXCOORD0;
+	float4 eyepos	: TEXCOORD1;
+	float3 pos		: TEXCOORD2;
+	float4x4 proj	: TEXCOORD3;
+	float3 normal	: NORMAL0;
+	float4 color	: COLOR0;
+};
+
+struct PS_OUTPUT {
+	float4 rt0		: COLOR0;
+	float4 rt1      : COLOR1;
+	float4 rt2		: COLOR2;
+};
+
+float3 flatten_float3(float3 dir, float3 norm) {
+	return dir - norm * dot(dir, norm);
+}
+
+bool is_zero(float3 i) {
+	return i.x == 0 && i.y == 0 && i.z == 0;
+};
+
+float fresnelSchlicks(float3 incident, float3 normal, float ior) {
+    float f0 = (ior - 1.0) / (ior + 1.0); f0 *= f0;
+    return f0 + (1.0 - f0) * pow(1.0 - max(dot(incident, -normal), 0), 5.0);
+}
+
+PS_OUTPUT main(const PS_INPUT i) {
+	float2 offset = (i.coord - 0.5) * 2.0;
+
+	// kill pixels outside of sphere
+	float radius2 = dot(offset, offset);
+	if (radius2 > 1) discard;
+
+	// Calculate rotated matrix from normal
+	float3 right = normalize(cross(i.normal, float3(0, 0, 1)));
+	float3 up = cross(i.normal, right);
+
+	// Calculate normal from texture coords
+	float bulge = sqrt(1 - radius2);
+	float3 world_normal = -right * offset.x + i.normal * bulge + up * offset.y;
+
+	// Depth information for normals smoothing
+	float2 uvdx = ddx(i.coord);
+	float2 uvdy = ddy(i.coord);
+	float uvdmax = 1.0 / sqrt(max(dot(uvdx, uvdx), dot(uvdy, uvdy)));
+
+	// Get smoothed normals if available. Use projected normal otherwise
+	float3 smoothed_normal = tex2D(NORMALS, i.P / SCR_S).xyz;
+	smoothed_normal = is_zero(smoothed_normal) ? world_normal : smoothed_normal;
+
+	// Lighting calculations
+	float3 sun_dir = float3(-0.377821, 0.520026, 0.766044);
+	float3 view_dir = normalize(i.pos - i.eyepos.xyz);
+	bool is_translucent = i.color.w < 0.9999;	// rounding errors
+	float3 reflected = reflect(view_dir, smoothed_normal);
+	float diffuse = is_translucent ? 1.0 : dot(smoothed_normal, float3(-0.377821, 0.520026, 0.766044)) * 0.45 + 0.55;
+	float phong = pow(max(0, dot(reflected, sun_dir)), 100);
+	float3 specular = texCUBE(CUBEMAP, reflected).xyz * fresnelSchlicks(view_dir, smoothed_normal, IOR);
+	float3 absorption = is_translucent ? exp((float3(1, 1, 1) - i.color.xyz) * -pow(dot(smoothed_normal, view_dir), 2) * i.color.w * 20) : i.color.xyz;	// 20 = absorption multiplier
+
+	// Calculate refraction vector in 3d space and project it to screen
+	float3 uv_offset = i.eyepos.w > RADIUS * 2.0 ? smoothed_normal * -RADIUS * IOR : float3(0, 0, 0);
+	float4 uv = mul(float4(i.pos + uv_offset, 1), i.proj); uv.xy /= uv.w;
+	float3 refracted = is_translucent ? tex2D(SCREEN, float2(uv.x / 2.0 + 0.5, 0.5 - uv.y / 2.0)).xyz : float3(1, 1, 1);
+
+	// Calculate final color
+	float3 final_color = absorption * refracted * diffuse + float3(phong, phong, phong) + specular;
+
+	// Output colors to rendertargets
+	PS_OUTPUT o = (PS_OUTPUT)0;
+	o.rt0 = float4(final_color, 1);
+	o.rt1 = float4(world_normal, 1);
+	//o.rt1 = float4(smoothed_normal * 0.75 + world_normal * 0.25, 1);
+	o.rt2 = float4(uvdmax, i.eyepos.w - bulge * RADIUS, 0, 1);
+
+	return o;
+};
