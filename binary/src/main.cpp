@@ -7,12 +7,14 @@
 #include "BSPParser.h"
 
 #include <materialsystem/imesh.h>
+#include <istudiorender.h>
 #include "meshutils_x64fix.cpp"
 #include "shader_inject.h"
 
 // pushes lua flex instance at stack -1
 #define GET_FLEX LUA->GetUserType<FlexSolver>(1, FlexMetaTable)
 #define ADD_FUNCTION(LUA, funcName, tblName) LUA->PushCFunction(funcName); LUA->SetField(-2, tblName)
+#define MAX_INDICES 10922	// floor(2^15 / 3)
 #define sqrt3 1.7320508075688772935274463415
 #define sqrt2 1.4142135623730950488016887242
 
@@ -363,7 +365,6 @@ LUA_FUNCTION(RenderParticlesExternal2) {
 	FlexSolver* flex = GET_FLEX;
 	int particle_count = flex->get_active_particles();
 	int particle_index = 0;
-	int max_indices = 10922;	// floor(2^15 / 3)
 	float particle_radius = LUA->GetNumber(7) * 0.625;	// Magic number 1
 	float3 eye_pos = VectorTofloat3(LUA->GetVector(2));
 	float3 up = VectorTofloat3(LUA->GetVector(3));
@@ -376,14 +377,15 @@ LUA_FUNCTION(RenderParticlesExternal2) {
 	while (particle_index < particle_count) {
 		int i = 0;
 		IMesh* pMesh = pRenderContext->GetDynamicMesh();
+		//IMesh* pMesh = pRenderContext->CreateStaticMesh(MATERIAL_VERTEX_FORMAT_MODEL_SKINNED, "");	// This function needs istudiorender.h to be included!
 
 		float4* particle_pos = flex->get_parameter("smoothing") > 0 ? flex->get_host("particle_smooth") : flex->get_host("particle_pos");
 		float4* particle_ani1 = flex->get_parameter("anisotropy_scale") > 0 ? flex->get_host("particle_ani1") : NULL;
 		float4* particle_ani2 = flex->get_parameter("anisotropy_scale") > 0 ? flex->get_host("particle_ani2") : NULL;
 		float4* particle_ani3 = flex->get_parameter("anisotropy_scale") > 0 ? flex->get_host("particle_ani3") : NULL;
 		float4* particle_col = flex->get_host("particle_col");
-		meshBuilder.Begin(pMesh, MATERIAL_TRIANGLES, max_indices);
-		while (particle_index < particle_count && i < max_indices) {
+		meshBuilder.Begin(pMesh, MATERIAL_TRIANGLES, MAX_INDICES);
+		while (particle_index < particle_count && i < MAX_INDICES) {
 			float3 particle = float3(particle_pos[particle_index].x, particle_pos[particle_index].y, particle_pos[particle_index].z);
 
 			// Frustrum culling
@@ -466,6 +468,7 @@ LUA_FUNCTION(RenderParticlesExternal2) {
 			i++;
 		}
 		meshBuilder.End(false, true);	// Draws and uncaches mesh
+		//pRenderContext->DestroyStaticMesh(pMesh);
 		meshBuilder.Reset();
 	}
 

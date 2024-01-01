@@ -19,14 +19,31 @@ local cache_normals2 = GetRenderTargetGWater("gwater_cache_normals2")
 local cache_bloom = GetRenderTargetGWater("4gwater_cache_bloom", 1 / 4)	-- quarter resolution for blurring
 
 local water_blur = Material("gwater2/smooth")
+local rt_mat = CreateMaterial("gwater2_rtmat", "UnlitGeneric", {
+	["$ignorez"] = 1,
+})
+
+-- used because normals are a frame behind
+local screen_planes = {vector_origin, vector_origin, vector_origin, vector_origin}
+local function s2v(x, y)	-- screen to vector + eye position
+	return EyePos() + gui.ScreenToVector(x, y) * 1000
+end
 
 local blur_passes = CreateClientConVar("gwater2_blur_passes", "3", true)
 hook.Add("PreDrawViewModels", "gwater_particle", function()
 	-- Clear render targets
 	render.ClearRenderTarget(cache_normals, Color(0, 0, 0, 0))
-	render.ClearRenderTarget(cache_depth, Color(0, 0, 0, 0))
-	
 	render.UpdateScreenEffectTexture()
+
+	-- temporal reproject normals from last frame, incase we have moved in that time..
+	rt_mat:SetTexture("$basetexture", cache_normals2)
+	render.SetRenderTarget(cache_normals)
+	render.SetMaterial(rt_mat)
+	render.DrawQuad(unpack(screen_planes))
+	render.SetRenderTarget()
+
+	render.CopyTexture(cache_normals, cache_normals2)
+	render.ClearRenderTarget(cache_normals, Color(0, 0, 0, 0))
 
 	-- cached variables
 	local scrw = ScrW()
@@ -88,8 +105,10 @@ hook.Add("PreDrawViewModels", "gwater_particle", function()
 	--render.CopyTexture(cache_depth, cache_normals2)
 	render.CopyTexture(cache_normals, cache_normals2)
 
+	-- for temporal reprojection
+	screen_planes = {s2v(0, 0), s2v(ScrW(), 0), s2v(ScrW(), ScrH()), s2v(0, ScrH())}
+
 	-- Debug Draw
-	--render.DrawTextureToScreenRect(cache_normals2, 0, 0, ScrW(), ScrH())
 	render.DrawTextureToScreenRect(cache_normals2, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
 end)
 

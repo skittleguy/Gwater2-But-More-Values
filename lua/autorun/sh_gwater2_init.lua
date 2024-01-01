@@ -68,16 +68,6 @@ gwater2 = {
 }
 gwater2.solver:InitBounds(Vector(-16384, -16384, -16384), Vector(16384, 16384, 16384))	-- source bounds
 
-// Draw particles
-local draw_sprite = render.DrawSprite
-local sprite_size = 10
-local function draw_particles(pos)
-	draw_sprite(pos, sprite_size, sprite_size, color_white)
-end
-local function screen_plane(x, y, c)
-	return gui.ScreenToVector(x, y):Cross(c)
-end
-
 // Simulate particles
 local cm_2_inch = 2.54 * 2.54
 local last_systime = os.clock()
@@ -88,7 +78,7 @@ local function gwater_tick()
 	local systime = os.clock()
 	local delta_time = systime - last_systime
 
-	if gwater2.solver:GetCount() == 0 then 
+	if gwater2.solver:GetCount() == 0 or gwater2.solver:GetParameter("timescale") <= 0 then 
 		last_systime = systime
 		average_frametime = RealFrameTime() 
 		return 
@@ -143,59 +133,14 @@ local function add_prop(ent)
 	end
 end
 
-//hook.Add("InitPostEntity", "gwater2_addprop", function()
+hook.Add("InitPostEntity", "gwater2_addprop", function()
 	gwater2.solver:AddMapMesh(game.GetMap())
 	for k, ent in ipairs(ents.GetAll()) do
 		add_prop(ent)
 	end
-//end)
+end)
 hook.Add("OnEntityCreated", "gwater2_addprop", function(ent) timer.Simple(0, function() add_prop(ent) end) end)	// timer.0 so data values are setup correctly
 
 for k, ent in ipairs(ents.GetAll()) do
 	add_prop(ent)
 end
-
-// Simple interface
-local avg = 0
-local line = 0
-local lines = {}
-hook.Add("HUDPaint", "gwater2_interact", function()
-	local lp = LocalPlayer()
-	local active = lp:GetActiveWeapon()
-	if !IsValid(active) or active:GetClass() != "weapon_crowbar" then return end
-
-	if lp:KeyDown(IN_ATTACK2) then
-		local forward = LocalPlayer():EyeAngles():Forward()
-		local sprite_size = gwater2.solver:GetParameter("radius")
-			gwater2.solver:AddCube(LocalPlayer():EyePos() + forward * sprite_size * 4 * 5, forward * 100, Vector(4, 4, 4), sprite_size, gwater2.color)
-			/*
-			for _ = 1, 20 do
-				gwater2.solver:AddParticle(
-					LocalPlayer():EyePos() + forward * sprite_size * 10 + VectorRand(-sprite_size, sprite_size), 
-					forward * 100, 
-					//HSVToColor(CurTime() * 50 % 360, 1, 1),
-					//Color(80, math.random() * 50 + 100, math.random() * 100 + 150, 180), 
-					//Color(math.random() * 20 + 70, math.random() * 20 + 50, 5, 250), 
-					gwater2.color,
-					1
-				)
-			end*/
-	elseif lp:KeyDown(IN_RELOAD) then
-		gwater2.solver:Reset()
-	end
-	draw.DrawText(gwater2.particles, "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.85 - 30, color_white, TEXT_ALIGN_RIGHT)
-
-/*
-	surface.SetDrawColor(0, 255, 0, 255)
-	avg = avg + (RealFrameTime() - avg) * 0.01
-
-	lines[line] = -(6 / avg) + 1080
-	for i = 0, 1920 do
-
-		if !lines[i - 1] or !lines[i] then continue end
-		surface.DrawLine(i * 1, lines[i - 1], i * 1 + 1, lines[i])
-	end
-	
-	
-	line = (line + 1) % 1920*/
-end)

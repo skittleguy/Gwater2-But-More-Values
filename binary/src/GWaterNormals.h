@@ -14,6 +14,7 @@ BEGIN_SHADER_PARAMS
 	SHADER_PARAM(BASETEXTURE, SHADER_PARAM_TYPE_TEXTURE, 0, "Texture of smoothed normals")
 	SHADER_PARAM(SCREENTEXTURE, SHADER_PARAM_TYPE_TEXTURE, 0, "Texture of screen")
 	SHADER_PARAM(IOR, SHADER_PARAM_TYPE_FLOAT, "1.333", "Ior of water")
+	SHADER_PARAM(REFLECTANCE, SHADER_PARAM_TYPE_FLOAT, "0.01", "Reflectance of water")
 	SHADER_PARAM(CHEAP, SHADER_PARAM_TYPE_FLOAT, "1", "Cheapness Enabled/Disabled")
 	SHADER_PARAM(ENVMAP, SHADER_PARAM_TYPE_TEXTURE, "env_cubemap", "envmap")
 END_SHADER_PARAMS
@@ -64,6 +65,9 @@ SHADER_DRAW {
 
 		const float ior = params[IOR]->GetFloatValue();
 		pShaderAPI->SetPixelShaderConstant(2, &ior);
+
+		const float reflectance = params[REFLECTANCE]->GetFloatValue();
+		pShaderAPI->SetPixelShaderConstant(3, &reflectance);
 
 		BindTexture(SHADER_SAMPLER0, BASETEXTURE);
 		BindTexture(SHADER_SAMPLER1, SCREENTEXTURE);

@@ -10,11 +10,11 @@ local options = {
 	tab = CreateClientConVar("gwater2_tab0", "1", true),
 	blur_passes = CreateClientConVar("gwater2_blur_passes", "3", true),
 	depth_fix = CreateClientConVar("gwater2_depth_fix", "0", true),
-	frame_pos = {ScrW() / 2 - 400, ScrH() / 2 - 200},
+	menu_key = CreateClientConVar("gwater2_menukey", KEY_G, true),
 	parameter_tab_header = "Parameter Tab",
 	parameter_tab_text = "This tab is where you can change how the water interacts with itself and the environment.\n\nHover over a parameter to reveal its functionality.\n\nScroll down for presets!",
 	about_tab_header = "About Tab",
-	about_tab_text = "On each tab, this area will contain useful information.\n\nFor example:\nClicking anywhere outside the menu will close it.\n\nMake sure to read this area!",
+	about_tab_text = "On each tab, this area will contain useful information.\n\nFor example:\nClicking anywhere outside the menu, or re-pressing the menu button will close it.\n\nMake sure to read this area!",
 	performance_tab_header = "Performance Tab",
 	performance_tab_text = "This tab has options which can help and alter your performance.\n\nEach option is colored between green and red to indicate its performance hit.\n\nAll parameters directly impact the GPU.",
 	
@@ -207,6 +207,7 @@ local function create_label(self, text, subtext, dock, size)
 end
 
 -- color picker
+local function copy_color(c) return Color(c.r, c.g, c.b, c.a) end
 local function create_picker(self, text, dock, size)
 	local label = vgui.Create("DLabel", self)
 	label:SetPos(10, dock)
@@ -217,7 +218,7 @@ local function create_picker(self, text, dock, size)
 	label:SetContentAlignment(7)
 
 	if options[text] then 
-		options[text].default = options[text].default or gwater2.color
+		options[text].default = options[text].default or copy_color(gwater2.color)	-- copy, dont reference
 	else
 		print("Undefined parameter '" .. text .. "'!") 
 	end
@@ -231,7 +232,7 @@ local function create_picker(self, text, dock, size)
 	mixer:SetWangs(false)
 	mixer:SetColor(gwater2.color) 
 	function mixer:ValueChanged(col)
-		gwater2.color = Color(col.r, col.g, col.b, col.a)	-- color returned by ValueChanged doesnt have any metatables
+		gwater2.color = copy_color(col)	-- color returned by ValueChanged doesnt have any metatables
 	end
 
 	local button = vgui.Create("DButton", self)
@@ -241,7 +242,8 @@ local function create_picker(self, text, dock, size)
 	button:SetImage("icon16/arrow_refresh.png")
 	button.Paint = nil
 	function button:DoClick()
-		mixer:SetColor(options[text].default)
+		local copy = copy_color(options[text].default)
+		mixer:SetColor(copy)
 		surface.PlaySound("buttons/button15.wav")
 	end
 
@@ -262,6 +264,7 @@ end
 --------------------------------------------------------
 
 local mainFrame = nil
+local just_closed = false
 concommand.Add("gwater2_menu", function()
 	local average_fps = 1 / 60
 	local particle_material = CreateMaterial("gwater2_menu_material", "UnlitGeneric", {
@@ -274,7 +277,7 @@ concommand.Add("gwater2_menu", function()
     -- start creating visual design
     mainFrame = vgui.Create("DFrame")
     mainFrame:SetSize(800, 400)
-    mainFrame:SetPos(unpack(options.frame_pos))
+    mainFrame:SetPos(ScrW() / 2 - 400, ScrH() / 2 - 200)
 	mainFrame:SetTitle("gwater2 (v" .. version .. ")")
     mainFrame:MakePopup()
 	mainFrame:SetScreenLock(true)
@@ -289,7 +292,7 @@ concommand.Add("gwater2_menu", function()
 		local x, y = mainFrame:LocalToScreen()
 		options.solver:InitBounds(Vector(x, 0, y + 25), Vector(x + 192, options.solver:GetParameter("radius"), y + 390))
 		options.solver:Tick(math.max(average_fps, 1 / 9999))
-		options.solver:AddCube(Vector(x + 60, 0, y + 50), Vector(0, 0, 70), Vector(4, 1, 1), options.solver:GetParameter("radius") * 0.7, color_white)
+		options.solver:AddCube(Vector(x + 60, 0, y + 50), Vector(0, 0, 50), Vector(4, 1, 1), options.solver:GetParameter("radius") * 0.7, color_white)
 		
 		surface.SetMaterial(particle_material)
 		local radius = options.solver:GetParameter("radius")
@@ -313,8 +316,12 @@ concommand.Add("gwater2_menu", function()
 		draw.DrawText("gwater2 Preview", "GWater2Title", 100, 40, Color(255, 255, 255), TEXT_ALIGN_CENTER)
 	end
 
-	function mainFrame:OnRemove()
-		options.frame_pos = {self:GetPos()}
+	-- close menu if menu button is pressed
+	function mainFrame:OnKeyCodePressed(key)
+		if key == options.menu_key:GetInt() then
+			mainFrame:Remove()
+			just_closed = true
+		end
 	end
 
 	-- menu "center" button
@@ -329,7 +336,7 @@ concommand.Add("gwater2_menu", function()
 		surface.PlaySound("buttons/button15.wav")
 	end
 
-	input.SetCursorPos(options.frame_pos[1] + 320, options.frame_pos[2] + 12)
+	input.SetCursorPos(ScrW() / 2 - 80, ScrH() / 2 - 188)
 
 	-- 2d simulation
 	options.solver:Reset()
@@ -492,7 +499,7 @@ concommand.Add("gwater2_menu", function()
 			surface.PlaySound("buttons/button15.wav")
 		end
 		
-		local label = vgui.Create("DLabel", scrollPanel)
+		local label = vgui.Create("DLabel", scrollPanel)	
 		label:SetPos(10, 140)
 		label:SetSize(100, 100)
 		label:SetFont("GWater2Param")
@@ -504,10 +511,10 @@ concommand.Add("gwater2_menu", function()
 		box:SetPos(132, 140)
 		box:SetSize(20, 20)
 		box:SetChecked(options.depth_fix:GetBool())
-		gwater2.material:SetInt("$cheap", box:GetChecked() and 1 or 0)
+		gwater2.material:SetInt("$cheap", box:GetChecked() and 0 or 1)
 		function box:OnChange(val)
 			options.depth_fix:SetBool(val)
-			gwater2.material:SetInt("$cheap", val and 1 or 0)
+			gwater2.material:SetInt("$cheap", val and 0 or 1)
 		end
 
 		function scrollPanel:AnimationThink()
@@ -622,8 +629,25 @@ hook.Add("GUIMousePressed", "gwater2_menuclose", function(mouse_code, aim_vector
 	local frame_x, frame_y = mainFrame:GetPos()
 	if x < frame_x or x > frame_x + mainFrame:GetWide() or y < frame_y or y > frame_y + mainFrame:GetTall() then
 		mainFrame:Remove()
-		mainFrame = nil
 	end
 
 	options.mouse_pos = {x, y}
+end)
+
+hook.Add("PopulateToolMenu", "gwater2_menu", function()
+    spawnmenu.AddToolMenuOption("Utilities", "gwater2", "gwater2_menu", "Menu Options", "", "", function(panel)
+		panel:ClearControls()
+		panel:Button("Open Menu", "gwater2_menu")
+        panel:KeyBinder("Menu Key", "gwater2_menukey")
+	end)
+end)
+
+hook.Add("PlayerButtonDown", "gwater2_menu", function(ply, key)
+	if key == options.menu_key:GetInt() then
+		if just_closed then 
+			just_closed = false
+		else
+			RunConsoleCommand("gwater2_menu")
+		end
+	end
 end)
