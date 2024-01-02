@@ -5,6 +5,7 @@
 #include <string>
 #include "types.h"	// float3 & float4
 #include "mesh.h"
+#include <materialsystem/imesh.h>	// needed for imeshes
 
 // Struct that holds FleX solver data
 class FlexSolver {
@@ -25,6 +26,8 @@ private:
 	void map_parameters(NvFlexParams* buffer);
 
 public:
+	std::vector<IMesh*> imeshes;		// This is mainly used in main.cpp since the FlexSolver class is specifically for data management
+
 	void set_active_particles(int n);
 	int get_active_particles();
 	int get_max_particles();

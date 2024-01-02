@@ -338,6 +338,12 @@ FlexSolver::~FlexSolver() {
 		mesh.destroy();
 	}
 
+	// Might cause crashing
+	CMatRenderContextPtr pRenderContext(materials);
+	for (IMesh* mesh : this->imeshes) {
+		pRenderContext->DestroyStaticMesh(mesh);
+	}
+
 	delete this->param_map["substeps"];		// Seperate since its externally stored & not a default parameter
 	delete this->param_map["timescale"];		// ^
 

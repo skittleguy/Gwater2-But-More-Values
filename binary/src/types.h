@@ -1,5 +1,6 @@
 #pragma once
-#include <math.h>
+#include <math.h>	// for sqrt in Normalize function
+
 // Float structures originally provided by AndrewEathan (https://mariluu.hehe.moe/)
 
 //Float4 structure, holds 4 floats, X, Y, Z, and W

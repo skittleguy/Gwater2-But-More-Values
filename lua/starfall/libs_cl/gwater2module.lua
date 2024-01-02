@@ -23,6 +23,13 @@ local function main(instance)
 		end
 	end
 
+	--- Spawns a GWater particle cube
+	-- @client
+	-- @param Vector pos
+	-- @param Vector vel
+	-- @param Vector size
+	-- @param number apart
+	-- @param Color color
 	function gwater_library.addCube(pos, vel, size, apart, color)
 		if LocalPlayer() == instance.player then
 			gwater2.solver:AddCube(vunwrap(pos), vunwrap(vel), vunwrap(size), apart, color)

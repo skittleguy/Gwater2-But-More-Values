@@ -162,7 +162,7 @@ local function create_slider(self, text, min, max, decimals, dock)
 	slider:SetDecimals(decimals)
 	
 	function slider:OnValueChanged(val)
-		if val != math.Round(val, decimals) then 
+		if decimals == 0 and val != math.Round(val, decimals) then 
 			self:SetValue(math.Round(val, decimals))
 			return
 		end

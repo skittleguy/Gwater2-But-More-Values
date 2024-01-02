@@ -1,0 +1,8 @@
+GWaterVolumetric {
+	$additive 1
+	$alphatest 1
+	$alpha 0.006
+	$ignorez 0
+	$scr_s "[1920 1080 1]"
+	$radius 10
+}

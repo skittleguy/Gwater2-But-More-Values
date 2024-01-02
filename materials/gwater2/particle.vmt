@@ -4,6 +4,6 @@ GWaterNormals {
 	$radius 10
 	$scr_s "1 1"
 	$ior 1.333
-	$reflectance 0.01
+	$reflectance 0.1
 	$cheap 1
 }

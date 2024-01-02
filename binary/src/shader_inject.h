@@ -1,6 +1,7 @@
 #pragma once
 #include "GWaterNormals.h"
 #include "GWaterSmooth.h"
+#include "GWaterVolumetric.h"
 #include "IShaderSystem.h"
 
 // all of these externals MUST be defined (NOT NULL) BEFORE inserting shaders into the materialsystem or you WILL crash!
@@ -37,10 +38,11 @@ bool inject_shaders() {
 	//g_pShaderLibDLL->m_pFileName = strdup("gwater_shaders.dll");
 	//g_pShaderLibDLL->m_bModShaderDLL = true;
 
-	// Insert our shader into the materialsystem
+	// Insert our shaders into the materialsystem
 	// you need the COMPILED .vcs shaders in GarrysMod/garrysmod/shaders/fxc for the shaders to appear ingame!
 	g_pShaderLibDLL->m_ShaderDict.Insert(GWaterNormals::s_Name, &GWaterNormals::s_ShaderInstance);
 	g_pShaderLibDLL->m_ShaderDict.Insert(GWaterSmooth::s_Name, &GWaterSmooth::s_ShaderInstance);
+	g_pShaderLibDLL->m_ShaderDict.Insert(GWaterVolumetric::s_Name, &GWaterVolumetric::s_ShaderInstance);
 
 	return true;
 }
@@ -51,6 +53,7 @@ bool eject_shaders() {
 		// Remove inserted shader(s)
 		g_pShaderLibDLL->m_ShaderDict.Remove(GWaterNormals::s_Name);
 		g_pShaderLibDLL->m_ShaderDict.Remove(GWaterSmooth::s_Name);
+		g_pShaderLibDLL->m_ShaderDict.Remove(GWaterVolumetric::s_Name);
 
 		// Remove our added shader directory (dll?) in material system
 		//g_pCShaderSystem->m_ShaderDLLs.Remove(m_ShaderDLLs_index);

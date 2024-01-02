@@ -2,7 +2,7 @@ AddCSLuaFile()
 
 //do return end
 if SERVER then 
-	local valid_materials = {
+	/*local valid_materials = {
         ["floating_metal_barrel"] = true,
         ["wood"] = true,
         ["wood_crate"] = true,
@@ -38,7 +38,7 @@ if SERVER then
 			//phys:SetAngleVelocity(phys:GetAngleVelocity() * 0.9)
 			//phys:SetVelocity(phys:GetVelocity() * 0.99)
 		end
-	end)
+	end)*/
 
 	return 
 end
@@ -49,7 +49,6 @@ include("gwater2_shaders.lua")	// also carrying
 gwater2 = {
 	solver = FlexSolver(100000),
 	material = Material("gwater2/particle"),//Material("vgui/circle"),//Material("sprites/sent_ball"),
-	particles = 0,
 	meshes = {},
 	color = Color(209, 237, 255, 25),
 	update_meshes = function()
@@ -133,14 +132,29 @@ local function add_prop(ent)
 	end
 end
 
-hook.Add("InitPostEntity", "gwater2_addprop", function()
-	gwater2.solver:AddMapMesh(game.GetMap())
+local function get_map_vertices()
+	local all_vertices = {}
+	for _, brush in ipairs(game.GetWorld():GetBrushSurfaces()) do
+		local vertices = brush:GetVertices()
+		for i = 3, #vertices do
+			all_vertices[#all_vertices + 1] = vertices[1]
+			all_vertices[#all_vertices + 1] = vertices[i - 1]
+			all_vertices[#all_vertices + 1] = vertices[i]
+		end
+	end
+
+	return all_vertices
+end
+
+//hook.Add("InitPostEntity", "gwater2_addprop", function()
+	xpcall(function()
+		gwater2.solver:AddMapMesh(game.GetMap())
+	end, function(e)
+		gwater2.solver:AddConcaveMesh(get_map_vertices(), Vector(), Angle())
+		ErrorNoHaltWithStack("[GWater2]: Map BSP structure is unsupported. Reverting to brushes. Collision WILL have holes!")
+	end)
 	for k, ent in ipairs(ents.GetAll()) do
 		add_prop(ent)
 	end
-end)
+//end)
 hook.Add("OnEntityCreated", "gwater2_addprop", function(ent) timer.Simple(0, function() add_prop(ent) end) end)	// timer.0 so data values are setup correctly
-
-for k, ent in ipairs(ents.GetAll()) do
-	add_prop(ent)
-end

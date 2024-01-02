@@ -70,7 +70,9 @@ function SWEP:SecondaryAttack()
 end
 
 function SWEP:DrawHUD()
-	draw.DrawText("Particles: " .. format_int(gwater2.particles) .. "/100,000", "CloseCaption_Normal", 0, 0, color_white, TEXT_ALIGN_LEFT)
+	draw.DrawText("Left-Click to Spawn Particles", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.75, color_white, TEXT_ALIGN_RIGHT)
+	draw.DrawText("Right-Click to Spawn a Cube", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.78, color_white, TEXT_ALIGN_RIGHT)
+	draw.DrawText("Reload to Remove All", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.81, color_white, TEXT_ALIGN_RIGHT)
 end
 
 function format_int(i)
@@ -81,8 +83,9 @@ function SWEP:PostDrawViewModel(vm, weapon, ply)
 	ang = ang + Angle(180, 0, -ang[3] * 2)
 	pos = pos - ang:Right() * 1.5
 	cam.Start3D2D(pos, ang, 0.03)
-		draw.DrawText("Particles: " .. format_int(gwater2.particles) .. "/100,000", "CloseCaption_Normal", 2, 2, Color(0, 0, 0, 255), TEXT_ALIGN_CENTER)
-		draw.DrawText("Particles: " .. format_int(gwater2.particles) .. "/100,000", "CloseCaption_Normal", 0, 0, color_white, TEXT_ALIGN_CENTER)
+		local num_particles = gwater2.solver:GetCount()
+		draw.DrawText("Particles: " .. format_int(num_particles) .. "/100,000", "CloseCaption_Normal", 2, 2, Color(0, 0, 0, 255), TEXT_ALIGN_CENTER)
+		draw.DrawText("Particles: " .. format_int(num_particles) .. "/100,000", "CloseCaption_Normal", 0, 0, color_white, TEXT_ALIGN_CENTER)
 	cam.End3D2D()
 end
 

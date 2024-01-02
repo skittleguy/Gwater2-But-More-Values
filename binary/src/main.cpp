@@ -176,8 +176,6 @@ LUA_FUNCTION(AddConcaveMesh) {
 
 	Vector pos = LUA->GetVector(3);
 	QAngle ang = LUA->GetAngle(4);
-	Vector min = LUA->GetVector(5);
-	Vector max = LUA->GetVector(6);
 
 	FlexSolver* flex = GET_FLEX;
 	Mesh mesh = Mesh(flexLibrary);
@@ -211,8 +209,6 @@ LUA_FUNCTION(AddConvexMesh) {
 
 	Vector pos = LUA->GetVector(3);
 	QAngle ang = LUA->GetAngle(4);
-	Vector min = LUA->GetVector(5);
-	Vector max = LUA->GetVector(6);
 
 	FlexSolver* flex = GET_FLEX;
 	Mesh mesh = Mesh(flexLibrary);
@@ -334,7 +330,6 @@ LUA_FUNCTION(GetCount) {
 * @param[in] solver The FlexSolver to iterate over
 * @param[in] eyepos Head position
 */
-
 LUA_FUNCTION(RenderParticles) {
 	LUA->CheckType(1, FlexMetaTable);
 	LUA->CheckType(2, Type::Function);
@@ -352,32 +347,37 @@ LUA_FUNCTION(RenderParticles) {
 	return 0;
 }
 
-LUA_FUNCTION(RenderParticlesExternal2) {
+LUA_FUNCTION(BuildIMeshes) {
 	LUA->CheckType(1, FlexMetaTable);
 	LUA->CheckType(2, Type::Vector);	// eye pos
 	LUA->CheckType(3, Type::Vector);	// plane up
 	LUA->CheckType(4, Type::Vector);	// plane down
 	LUA->CheckType(5, Type::Vector);	// plane left
 	LUA->CheckType(6, Type::Vector);	// plane right
-	LUA->CheckNumber(7);	// radius
+	LUA->CheckNumber(7);				// radius
 
 	// Defines
 	FlexSolver* flex = GET_FLEX;
-	int particle_count = flex->get_active_particles();
-	int particle_index = 0;
-	float particle_radius = LUA->GetNumber(7) * 0.625;	// Magic number 1
 	float3 eye_pos = VectorTofloat3(LUA->GetVector(2));
 	float3 up = VectorTofloat3(LUA->GetVector(3));
 	float3 down = VectorTofloat3(LUA->GetVector(4));
 	float3 left = VectorTofloat3(LUA->GetVector(5));
 	float3 right = VectorTofloat3(LUA->GetVector(6));
+	float particle_radius = LUA->GetNumber(7) * 0.625;	// Magic number 1 (also equal to 1/8?)
+
 	CMatRenderContextPtr pRenderContext(materials);
 	CMeshBuilder meshBuilder;
 
+	// destroy our stored imeshes since they are being replaced with new ones
+	for (IMesh* mesh : flex->imeshes) pRenderContext->DestroyStaticMesh(mesh);
+	flex->imeshes.clear();
+
+	int particle_count = flex->get_active_particles();
+	int particle_index = 0;
 	while (particle_index < particle_count) {
 		int i = 0;
-		IMesh* pMesh = pRenderContext->GetDynamicMesh();
-		//IMesh* pMesh = pRenderContext->CreateStaticMesh(MATERIAL_VERTEX_FORMAT_MODEL_SKINNED, "");	// This function needs istudiorender.h to be included!
+		//IMesh* pMesh = pRenderContext->GetDynamicMesh();
+		IMesh* pMesh = pRenderContext->CreateStaticMesh(MATERIAL_VERTEX_FORMAT_MODEL_SKINNED, "");	// This function needs istudiorender.h to be included!
 
 		float4* particle_pos = flex->get_parameter("smoothing") > 0 ? flex->get_host("particle_smooth") : flex->get_host("particle_pos");
 		float4* particle_ani1 = flex->get_parameter("anisotropy_scale") > 0 ? flex->get_host("particle_ani1") : NULL;
@@ -467,12 +467,21 @@ LUA_FUNCTION(RenderParticlesExternal2) {
 			particle_index++;
 			i++;
 		}
-		meshBuilder.End(false, true);	// Draws and uncaches mesh
+		meshBuilder.End(false, false);
+		flex->imeshes.push_back(pMesh);
 		//pRenderContext->DestroyStaticMesh(pMesh);
 		meshBuilder.Reset();
 	}
 
-	LUA->PushNumber(particle_index);
+	return 0;
+}
+
+LUA_FUNCTION(RenderIMeshes) {
+	LUA->CheckType(1, FlexMetaTable);
+	FlexSolver* flex = GET_FLEX;
+	for (IMesh* mesh : flex->imeshes) mesh->Draw();
+
+	LUA->PushNumber(flex->imeshes.size() * MAX_INDICES);
 	return 1;
 }
 
@@ -510,6 +519,8 @@ LUA_FUNCTION(AddMapMesh) {
 	if (!mesh.init_concave((float3*)map.GetVertices(), map.GetNumTris() * 3)) {
 		free(data);
 		LUA->ThrowError("Tried to add map mesh with invalid data (NumVertices is 0 or not a multiple of 3!)");
+
+		return 0;
 	}
 
 	free(data);
@@ -665,7 +676,6 @@ LUA_FUNCTION(InitBounds) {
 		flex->disable_bounds();
 	}
 	
-
 	return 0;
 }
 
@@ -688,7 +698,8 @@ GMOD_MODULE_OPEN() {
 	ADD_FUNCTION(LUA, GetParticles, "GetParticles");
 	ADD_FUNCTION(LUA, RenderParticles, "RenderParticles");
 	//ADD_FUNCTION(LUA, RenderParticlesExternal, "RenderPositionsExternal");
-	ADD_FUNCTION(LUA, RenderParticlesExternal2, "RenderParticlesExternal2");
+	ADD_FUNCTION(LUA, BuildIMeshes, "BuildIMeshes");
+	ADD_FUNCTION(LUA, RenderIMeshes, "RenderIMeshes");
 	ADD_FUNCTION(LUA, AddConcaveMesh, "AddConcaveMesh");
 	ADD_FUNCTION(LUA, AddConvexMesh, "AddConvexMesh");
 	ADD_FUNCTION(LUA, RemoveMesh, "RemoveMesh");
