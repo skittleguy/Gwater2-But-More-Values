@@ -663,12 +663,20 @@ hook.Add("PopulateToolMenu", "gwater2_menu", function()
 	end)
 end)
 
-hook.Add("PlayerButtonDown", "gwater2_menu", function(ply, key)
-	if key == options.menu_key:GetInt() then
+-- of course playerbutton down (the only hook which runs when a button is pressed) doesnt work in singleplayer.
+local changed = false
+hook.Add("Think", "gwater2_menu", function()
+	if input.IsKeyDown(options.menu_key:GetInt()) then
+		if changed then return end
+		
 		if just_closed then 
 			just_closed = false
 		else
 			RunConsoleCommand("gwater2_menu")
 		end
+
+		changed = true
+	else
+		changed = false
 	end
 end)

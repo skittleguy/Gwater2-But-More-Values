@@ -69,10 +69,10 @@ hook.Add("PreDrawViewModels", "gwater_particle", function()
 	-- Depth absorption
 	if gwater2.material:GetFloat("$alpha") != 0 then
 		render.SetMaterial(water_volumetric)
-		--render.SetRenderTarget(cache_absorption)
+		render.SetRenderTarget(cache_absorption)
 		gwater2.solver:RenderIMeshes()
-		--render.SetRenderTarget()
-		render.UpdateScreenEffectTexture()
+		render.SetRenderTarget()
+		--render.UpdateScreenEffectTexture()
 	end
 
 	
