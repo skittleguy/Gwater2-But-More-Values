@@ -9,7 +9,8 @@ local options = {
 	solver = FlexSolver(1000),
 	tab = CreateClientConVar("gwater2_tab0", "1", true),
 	blur_passes = CreateClientConVar("gwater2_blur_passes", "3", true),
-	depth_fix = CreateClientConVar("gwater2_depth_fix", "0", true),
+	cheap = CreateClientConVar("gwater2_cheap", "1", true),
+	absorption = CreateClientConVar("gwater2_absorption", "1", true),
 	menu_key = CreateClientConVar("gwater2_menukey", KEY_G, true),
 	parameter_tab_header = "Parameter Tab",
 	parameter_tab_text = "This tab is where you can change how the water interacts with itself and the environment.\n\nHover over a parameter to reveal its functionality.\n\nScroll down for presets!",
@@ -25,9 +26,10 @@ local options = {
 	Radius = {text = "Controls the size of each particle. In the preview it is clamped to 15 to avoid weirdness.\n\nRadius is measured in source units (aka inches) and is the same for all particles."},
 	Color = {text = "Controls what color the fluid is.\n\nUnlike all other parameters, color is separate, and per-particle.\n\nThe alpha channel controls the amount of color absorbsion."},
 	Iterations = {text = "Controls how many times the physics solver attempts to converge to a solution.\n\nLight performance impact."},
-	Substeps = {text = "Controls the number of physics steps done per tick.\n\nParameters may not be properly tuned for different substeps!\n\nMedium-high performance impact."},
+	Substeps = {text = "Controls the number of physics steps done per tick.\n\nParameters may not be properly tuned for different substeps!\n\nMedium-High performance impact."},
 	["Blur Passes"] = {text = "Controls the number of blur passes done per frame. More passes creates a smoother water surface. Zero passes will do no blurring.\n\nMedium performance impact."},
-	["Depth Fix"] = {text = "Changes particles to look spherical instead of flat, causes shader redraw and is pretty expensive.\n\n(Set blur passes to 0 to see the effect better!)\n\nHigh performance impact."}
+	["Depth Fix"] = {text = "Changes particles to look spherical instead of flat, causes shader redraw and is pretty expensive.\n\n(Set blur passes to 0 to see the effect better!)\n\nHigh performance impact."},
+	["Absorption"] = {text = "Enables absorption of light over distance inside of fluid\n\n(aka. more depth = darker color).\n\nMedium-High performance impact."}
 }
 
 options.solver:SetParameter("gravity", 15.24)	-- flip gravity because y axis positive is down
@@ -312,8 +314,8 @@ concommand.Add("gwater2_menu", function()
 		surface.DrawOutlinedRect(0, 0, w, h)
 		surface.DrawOutlinedRect(5, 30, 192, h - 35)
 
-		draw.RoundedBox(5, 18, 35, 165, 30, Color(10, 10, 10, 230))
-		draw.DrawText("gwater2 Preview", "GWater2Title", 100, 40, Color(255, 255, 255), TEXT_ALIGN_CENTER)
+		draw.RoundedBox(5, 36, 35, 125, 30, Color(10, 10, 10, 230))
+		draw.DrawText("Fluid Preview", "GWater2Title", 100, 40, Color(255, 255, 255), TEXT_ALIGN_CENTER)
 	end
 
 	-- close menu if menu button is pressed
@@ -457,6 +459,7 @@ concommand.Add("gwater2_menu", function()
 			Color(255, 127, 0),
 			Color(255, 255, 0),
 			Color(255, 0, 0),
+			Color(255, 127, 0),
 		}
 
 		local labels = {}
@@ -499,6 +502,7 @@ concommand.Add("gwater2_menu", function()
 			surface.PlaySound("buttons/button15.wav")
 		end
 		
+		-- Depth fix checkbox & label
 		local label = vgui.Create("DLabel", scrollPanel)	
 		label:SetPos(10, 140)
 		label:SetSize(100, 100)
@@ -510,11 +514,28 @@ concommand.Add("gwater2_menu", function()
 		local box = vgui.Create("DCheckBox", scrollPanel)
 		box:SetPos(132, 140)
 		box:SetSize(20, 20)
-		box:SetChecked(options.depth_fix:GetBool())
-		gwater2.material:SetInt("$cheap", box:GetChecked() and 0 or 1)
+		box:SetChecked(!options.cheap:GetBool())
 		function box:OnChange(val)
-			options.depth_fix:SetBool(val)
+			options.cheap:SetBool(!val)
 			gwater2.material:SetInt("$cheap", val and 0 or 1)
+		end
+
+		-- Absorption checkbox & label
+		local label = vgui.Create("DLabel", scrollPanel)	
+		label:SetPos(10, 170)
+		label:SetSize(100, 100)
+		label:SetFont("GWater2Param")
+		label:SetText("Absorption")
+		label:SetContentAlignment(7)
+		labels[5] = label
+
+		local box = vgui.Create("DCheckBox", scrollPanel)
+		box:SetPos(132, 170)
+		box:SetSize(20, 20)
+		box:SetChecked(options.absorption:GetBool())
+		function box:OnChange(val)
+			options.absorption:SetBool(val)
+			gwater2.material:SetFloat("$alpha", val and 0.025 or 0)
 		end
 
 		function scrollPanel:AnimationThink()

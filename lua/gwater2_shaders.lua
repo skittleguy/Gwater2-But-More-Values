@@ -14,11 +14,13 @@ local function GetRenderTargetGWater(name, mult, format)
 end
 
 local cache_depth = GetRenderTargetGWater("gwater_cache_depth")
+local cache_absorption = GetRenderTargetGWater("gwater_cache_absorption")
 local cache_normals = GetRenderTargetGWater("gwater_cache_normals")
 local cache_normals2 = GetRenderTargetGWater("gwater_cache_normals2")
 local cache_bloom = GetRenderTargetGWater("4gwater_cache_bloom", 1 / 4)	-- quarter resolution for blurring
 
 local water_blur = Material("gwater2/smooth")
+local water_volumetric = Material("gwater2/volumetric")
 local rt_mat = CreateMaterial("gwater2_rtmat", "UnlitGeneric", {
 	["$ignorez"] = 1,
 })
@@ -45,6 +47,7 @@ hook.Add("PreDrawViewModels", "gwater_particle", function()
 	render.CopyTexture(cache_normals, cache_normals2)
 	render.ClearRenderTarget(cache_normals, Color(0, 0, 0, 0))
 	render.ClearRenderTarget(cache_depth, Color(0, 0, 0, 0))
+	render.ClearRenderTarget(cache_absorption, Color(0, 0, 0, 0))
 
 	-- cached variables
 	local scrw = ScrW()
@@ -63,27 +66,26 @@ hook.Add("PreDrawViewModels", "gwater_particle", function()
 		radius * 0.5
 	)
 
-	--render.SetMaterial(Material("gwater2/volumetric"))
-	//Material("gwater2/volumetric"):SetTexture("$depthtexture", cache_depth)
-	//render.SetRenderTarget(cache_depth)
-	--gwater2.solver:RenderIMeshes()
-	//render.SetRenderTarget()
-	//render.DrawTextureToScreenRect(cache_depth, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
+	-- Depth absorption
+	if gwater2.material:GetFloat("$alpha") != 0 then
+		render.SetMaterial(water_volumetric)
+		--render.SetRenderTarget(cache_absorption)
+		gwater2.solver:RenderIMeshes()
+		--render.SetRenderTarget()
+		render.UpdateScreenEffectTexture()
+	end
 
-	--render.UpdateScreenEffectTexture()
-
+	
 	-- Setup water material parameters
 	water:SetFloat("$radius", radius)
-	water:SetVector("$scr_s", Vector(scrw, scrh))
+	water:SetVector("$scrs", Vector(scrw, scrh))
 	water:SetTexture("$normaltexture", cache_normals2)
 	water:SetTexture("$screentexture", render.GetScreenEffectTexture())
-	--water:SetTexture("$depthtexture", render.GetFullScreenDepthTexture())
+	water:SetTexture("$depthtexture", cache_absorption)
 	render.SetRenderTargetEx(1, cache_normals)
 	render.SetRenderTargetEx(2, cache_depth)
 	render.SetMaterial(water)
 	gwater2.solver:RenderIMeshes()
-
-	--render.OverrideDepthEnable(false, false)
 	render.SetRenderTargetEx(1, nil)
 	render.SetRenderTargetEx(2, nil)
 
@@ -98,7 +100,7 @@ hook.Add("PreDrawViewModels", "gwater_particle", function()
 		--local scale = 0.05
 		water_blur:SetTexture("$normaltexture", cache_normals)	
 		--water_blur:SetTexture("$depthtexture", cache_depth)
-		water_blur:SetVector("$scr_s", Vector(scale / scrw, 0))
+		water_blur:SetVector("$scrs", Vector(scale / scrw, 0))
 		render.SetRenderTarget(cache_bloom)	-- Bloom texture resolution is significantly lower than screen res, enabling for a faster blur
 		render.DrawScreenQuad()
 		render.SetRenderTarget()
@@ -106,7 +108,7 @@ hook.Add("PreDrawViewModels", "gwater_particle", function()
 		-- Blur Y
 		water_blur:SetTexture("$normaltexture", cache_bloom)
 		--water_blur:SetTexture("$depthtexture", cache_bloom)
-		water_blur:SetVector("$scr_s", Vector(0, scale / scrh))
+		water_blur:SetVector("$scrs", Vector(0, scale / scrh))
 		render.SetRenderTarget(cache_normals)
 		--render.SetRenderTarget(cache_depth)
 		render.DrawScreenQuad()
@@ -119,6 +121,7 @@ hook.Add("PreDrawViewModels", "gwater_particle", function()
 	screen_planes = {s2v(0, 0), s2v(scrw, 0), s2v(scrw, scrh), s2v(0, scrh)}
 
 	-- Debug Draw
+	render.DrawTextureToScreenRect(cache_absorption, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
 	--render.DrawTextureToScreenRect(cache_normals2, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
 end)
 

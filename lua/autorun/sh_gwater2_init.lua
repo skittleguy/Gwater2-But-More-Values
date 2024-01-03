@@ -55,7 +55,7 @@ gwater2 = {
 		for i = #gwater2.meshes, 1, -1 do
 			local prop = gwater2.meshes[i]
 			if !prop:IsValid() then
-				gwater2.solver:RemoveMesh(i)	// C++ is 0 indexed, but World is at 1
+				gwater2.solver:RemoveMesh(i)
 				table.remove(gwater2.meshes, i)
 				continue
 			end
@@ -67,7 +67,13 @@ gwater2 = {
 }
 gwater2.solver:InitBounds(Vector(-16384, -16384, -16384), Vector(16384, 16384, 16384))	-- source bounds
 
-// Simulate particles
+local cheap = CreateClientConVar("gwater2_cheap", "1", true)
+-- garry, sincerely... fuck you
+timer.Simple(0, function() 
+	gwater2.material:SetInt("$cheap", cheap:GetInt()) 
+end)
+
+-- tick particle solver
 local cm_2_inch = 2.54 * 2.54
 local last_systime = os.clock()
 local hang_thread = false

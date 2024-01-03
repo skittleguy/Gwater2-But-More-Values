@@ -1,5 +1,4 @@
 #include <BaseVSShader.h>
-#include <map>
 
 #include "shaders/GWaterVolumetric_vs30.inc"
 #include "shaders/GWaterSmooth_ps30.inc"
@@ -9,9 +8,9 @@ BEGIN_VS_SHADER(GWaterSmooth, "gwater2 helper")
 // Shader parameters
 BEGIN_SHADER_PARAMS
 	SHADER_PARAM(RADIUS, SHADER_PARAM_TYPE_FLOAT, "1", "Radius of particles")
-	SHADER_PARAM(SCR_S, SHADER_PARAM_TYPE_VEC2, "[1 1]", "Screen Size")
-	SHADER_PARAM(NORMALTEXTURE, SHADER_PARAM_TYPE_TEXTURE, "shadertest/BaseTexture", "Texture of normals")
-	SHADER_PARAM(DEPTHTEXTURE, SHADER_PARAM_TYPE_TEXTURE, "shadertest/BaseTexture", "Texture of depth")
+	SHADER_PARAM(SCRS, SHADER_PARAM_TYPE_VEC2, "[1 1]", "Screen Size")
+	SHADER_PARAM(NORMALTEXTURE, SHADER_PARAM_TYPE_TEXTURE, "lights/white", "Texture of normals")
+	SHADER_PARAM(DEPTHTEXTURE, SHADER_PARAM_TYPE_TEXTURE, "lights/white", "Texture of depth")
 END_SHADER_PARAMS
 
 SHADER_INIT_PARAMS() {
@@ -45,10 +44,10 @@ SHADER_DRAW {
 
 	DYNAMIC_STATE {
 		// constants
-		const float* scr_s = params[SCR_S]->GetVecValue();
-		pShaderAPI->SetPixelShaderConstant(0, scr_s);
-		
+		const float* scr_s = params[SCRS]->GetVecValue();
 		const float radius = params[RADIUS]->GetFloatValue();
+
+		pShaderAPI->SetPixelShaderConstant(0, scr_s);
 		pShaderAPI->SetPixelShaderConstant(1, &radius);
 
 		BindTexture(SHADER_SAMPLER0, NORMALTEXTURE, FRAME);
