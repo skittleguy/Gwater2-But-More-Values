@@ -27,7 +27,7 @@ bool is_zero(float3 i) {
 float fresnelSchlicks(float3 incident, float3 normal, float ior) {
     float r0 = (1.0 - ior) / (1.0 + ior); 
 	r0 *= r0;
-	float cosX = -dot(incident, normal);
+	float cosX = abs(dot(incident, normal));
     float x = 1.0 - cosX;
     float ret = r0 + (1.0 - r0) * x * x * x * x * x;
 
@@ -47,7 +47,6 @@ float4 main(const PS_INPUT i) : COLOR {
 
 	// Get smoothed normals if available. Use projected normal otherwise
 	float3 smoothed_normal = tex2D(NORMALS, i.P / SCR_S).xyz;
-	smoothed_normal = is_zero(smoothed_normal) ? float3(0, 0, 1) : smoothed_normal;
 
 	// Lighting calculations
 	float3 sun_dir = float3(-0.377821, 0.520026, 0.766044);	// TODO: get from map OR get lighting data
