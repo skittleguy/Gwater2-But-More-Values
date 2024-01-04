@@ -19,16 +19,16 @@ local options = {
 	performance_tab_text = "This tab has options which can help and alter your performance.\n\nEach option is colored between green and red to indicate its performance hit.\n\nAll parameters directly impact the GPU.",
 	
 	Cohesion = {text = "Controls how well particles hold together.\n\nHigher values make the fluid more solid/rigid, while lower values make it more fluid and loose."},
-	Adhesion = {text = "Controls how well particles stick to surfaces.\n\nNote that this specific parameter doesn't reflect changes in the preview very well and may need to be viewed externally."},
-	Gravity = {text = "Controls how strongly fluid is pulled down. This value is measured in meters per second.\n\nNote that the default source gravity is -15.48 which is NOT the same as Earths gravity of -9.81."},
+	Adhesion = {text = "Controls how well particles stick to surfaces.\n\nNote: This specific parameter doesn't reflect changes in the preview very well and may need to be viewed externally."},
+	Gravity = {text = "Controls how strongly fluid is pulled down. This value is measured in meters per second.\n\nNote: The default source gravity is -15.24 which is NOT the same as Earths gravity of -9.81."},
 	Viscosity = {text = "Controls how much particles resist movement.\n\nHigher values look more like honey or syrup, while lower values look like water or oil.\n\nUsually bundled with cohesion."},
 	Radius = {text = "Controls the size of each particle. In the preview it is clamped to 15 to avoid weirdness.\n\nRadius is measured in source units (aka inches) and is the same for all particles."},
 	Color = {text = "Controls what color the fluid is.\n\nUnlike all other parameters, color is separate, and per-particle.\n\nThe alpha channel controls the amount of color absorbsion."},
 	Iterations = {text = "Controls how many times the physics solver attempts to converge to a solution.\n\nLight performance impact."},
-	Substeps = {text = "Controls the number of physics steps done per tick.\n\nParameters may not be properly tuned for different substeps!\n\nMedium-High performance impact."},
+	Substeps = {text = "Controls the number of physics steps done per tick.\n\nNote: Parameters may not be properly tuned for different substeps!\n\nMedium-High performance impact."},
 	["Blur Passes"] = {text = "Controls the number of blur passes done per frame. More passes creates a smoother water surface. Zero passes will do no blurring.\n\nMedium performance impact."},
 	["Depth Fix"] = {text = "Changes particles to look spherical instead of flat, causes shader redraw and is pretty expensive.\n\n(Set blur passes to 0 to see the effect better!)\n\nHigh performance impact."},
-	["Absorption"] = {text = "Enables absorption of light over distance inside of fluid\n\n(aka. more depth = darker color).\n\nMedium-High performance impact."}
+	["Absorption"] = {text = "Enables absorption of light over distance inside of fluid.\n\n(more depth = darker color)\n\nMedium-High performance impact."}
 }
 
 options.solver:SetParameter("gravity", 15.24)	-- flip gravity because y axis positive is down
@@ -457,7 +457,6 @@ concommand.Add("gwater2_menu", function()
 			Color(127, 255, 0),
 			Color(255, 127, 0),
 			Color(255, 255, 0),
-			Color(255, 0, 0),
 			Color(255, 127, 0),
 		}
 
@@ -508,7 +507,7 @@ concommand.Add("gwater2_menu", function()
 		label:SetFont("GWater2Param")
 		label:SetText("Absorption")
 		label:SetContentAlignment(7)
-		labels[5] = label
+		labels[4] = label
 
 		local box = vgui.Create("DCheckBox", scrollPanel)
 		box:SetPos(132, 140)

@@ -1,4 +1,3 @@
 GWaterNormals {
 	$radius 10
-	$cheap 1
 }
