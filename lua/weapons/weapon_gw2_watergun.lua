@@ -55,7 +55,7 @@ function SWEP:PrimaryAttack()
 
 	local owner = self:GetOwner()
 	local forward = owner:EyeAngles():Forward()
-	local sprite_size = gwater2.solver:GetParameter("radius")
+	local sprite_size = gwater2.solver:GetParameter("radius") * math.Rand(0.95, 1.05)
 	local amb = render.GetAmbientLightColor(owner:EyePos())
 	gwater2.solver:AddCube(owner:EyePos() + forward * 200, forward * 100, Vector(4, 4, 4), sprite_size * 0.9, gwater2.color)
 end

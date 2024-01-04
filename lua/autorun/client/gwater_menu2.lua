@@ -666,9 +666,9 @@ end)
 -- of course playerbutton down (the only hook which runs when a button is pressed) doesnt work in singleplayer.
 local changed = false
 hook.Add("Think", "gwater2_menu", function()
-	if input.IsKeyDown(options.menu_key:GetInt()) then
+	if input.IsKeyDown(options.menu_key:GetInt()) and !IsValid(mainFrame) then
 		if changed then return end
-		
+
 		if just_closed then 
 			just_closed = false
 		else
