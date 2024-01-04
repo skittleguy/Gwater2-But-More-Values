@@ -10,6 +10,7 @@ local options = {
 	tab = CreateClientConVar("gwater2_tab0", "1", true),
 	blur_passes = CreateClientConVar("gwater2_blur_passes", "3", true),
 	absorption = CreateClientConVar("gwater2_absorption", "1", true),
+	visual_mesh_creation = CreateClientConVar("gwater2_visual_mesh_creation", "1", true),
 	menu_key = CreateClientConVar("gwater2_menukey", KEY_G, true),
 	parameter_tab_header = "Parameter Tab",
 	parameter_tab_text = "This tab is where you can change how the water interacts with itself and the environment.\n\nHover over a parameter to reveal its functionality.\n\nScroll down for presets!",
@@ -27,8 +28,8 @@ local options = {
 	Iterations = {text = "Controls how many times the physics solver attempts to converge to a solution.\n\nLight performance impact."},
 	Substeps = {text = "Controls the number of physics steps done per tick.\n\nNote: Parameters may not be properly tuned for different substeps!\n\nMedium-High performance impact."},
 	["Blur Passes"] = {text = "Controls the number of blur passes done per frame. More passes creates a smoother water surface. Zero passes will do no blurring.\n\nMedium performance impact."},
-	["Depth Fix"] = {text = "Changes particles to look spherical instead of flat, causes shader redraw and is pretty expensive.\n\n(Set blur passes to 0 to see the effect better!)\n\nHigh performance impact."},
-	["Absorption"] = {text = "Enables absorption of light over distance inside of fluid.\n\n(more depth = darker color)\n\nMedium-High performance impact."}
+	["Absorption"] = {text = "Enables absorption of light over distance inside of fluid.\n\n(more depth = darker color)\n\nMedium-High performance impact."},
+	["Visual Mesh Building"] = {text = "Enables creation of visuals to every visual frame instead of physical.\n\nHelps with low bandwidth GPUs\n\nHigh performance impact (Depending on your GPU)"}
 }
 
 options.solver:SetParameter("gravity", 15.24)	-- flip gravity because y axis positive is down
@@ -458,6 +459,7 @@ concommand.Add("gwater2_menu", function()
 			Color(255, 127, 0),
 			Color(255, 255, 0),
 			Color(255, 127, 0),
+			Color(255, 0, 0),
 		}
 
 		local labels = {}
@@ -517,6 +519,24 @@ concommand.Add("gwater2_menu", function()
 		function box:OnChange(val)
 			options.absorption:SetBool(val)
 			water_volumetric:SetFloat("$alpha", val and 0.025 or 0)
+		end
+
+		
+		-- Mesh building label
+		local label = vgui.Create("DLabel", scrollPanel)	
+		label:SetPos(10, 170)
+		label:SetSize(400, 100)
+		label:SetFont("GWater2Param")
+		label:SetText("Visual Mesh Building")
+		label:SetContentAlignment(7)
+		labels[5] = label
+
+		local box = vgui.Create("DCheckBox", scrollPanel)
+		box:SetPos(200, 170)
+		box:SetSize(20, 20)
+		box:SetChecked(options.visual_mesh_creation:GetBool())
+		function box:OnChange(val)
+			options.visual_mesh_creation:SetBool(val)
 		end
 
 		function scrollPanel:AnimationThink()

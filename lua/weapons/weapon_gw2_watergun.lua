@@ -51,13 +51,14 @@ local function fuckgarry(w, s)
 end
 
 function SWEP:PrimaryAttack()
+	--self:SetNextPrimaryFire(CurTime() + self.Primary.Delay)
 	if fuckgarry(self, "PrimaryAttack") then return end
 
 	local owner = self:GetOwner()
 	local forward = owner:EyeAngles():Forward()
-	local sprite_size = gwater2.solver:GetParameter("radius") * math.Rand(0.95, 1.05)
+	local sprite_size = gwater2.solver:GetParameter("radius") * math.Rand(1, 1.05)
 	local amb = render.GetAmbientLightColor(owner:EyePos())
-	gwater2.solver:AddCube(owner:EyePos() + forward * 200, forward * 100, Vector(4, 4, 4), sprite_size * 0.9, gwater2.color)
+	gwater2.solver:AddCube(owner:EyePos() + forward * 20 * sprite_size, forward * 100, Vector(4, 4, 4), sprite_size * 0.9, gwater2.color)
 end
 
 function SWEP:SecondaryAttack()
@@ -65,8 +66,8 @@ function SWEP:SecondaryAttack()
 
 	local owner = self:GetOwner()
 	local forward = owner:EyeAngles():Forward()
-	local sprite_size = gwater2.solver:GetParameter("radius")
-	gwater2.solver:AddCube(owner:EyePos() + forward * 400, forward * 100, Vector(33, 33, 33), sprite_size * 0.9, gwater2.color)
+	local sprite_size = gwater2.solver:GetParameter("fluid_rest_distance")
+	gwater2.solver:AddCube(owner:EyePos() + forward * 40 * sprite_size, forward * 100, Vector(33, 33, 33), sprite_size * 0.9, gwater2.color)
 end
 
 function SWEP:DrawHUD()

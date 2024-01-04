@@ -73,6 +73,30 @@ timer.Simple(0, function()
 	Material("gwater2/volumetric"):SetFloat("$alpha", absorption and 0.025 or 0)
 end)
 
+local function screen_plane(x, y, c)
+	return gui.ScreenToVector(x, y):Cross(c)
+end
+
+-- quick function
+local visual_mesh_creation = CreateClientConVar("gwater2_visual_mesh_creation", "1", true)
+local function build_meshes_easy()
+	if visual_mesh_creation:GetBool() then return end
+
+	local scrw = ScrW()
+	local scrh = ScrH()
+
+	-- Build imeshes for multiple passes
+	local up = EyeAngles():Up()
+	local right = EyeAngles():Right()
+	gwater2.solver:BuildIMeshes(EyePos(),
+		screen_plane(scrw * 0.5, 0, right), 	-- Top
+		screen_plane(scrw * 0.5, scrh, -right), -- Bottom
+		screen_plane(0, scrh * 0.5, up),		--Left
+		screen_plane(scrw, scrh * 0.5, -up),	-- Right
+		gwater2.solver:GetParameter("radius") * 0.5
+	)
+end
+
 -- tick particle solver
 local cm_2_inch = 2.54 * 2.54
 local last_systime = os.clock()
@@ -86,6 +110,7 @@ local function gwater_tick()
 	if gwater2.solver:GetCount() == 0 or gwater2.solver:GetParameter("timescale") <= 0 then 
 		last_systime = systime
 		average_frametime = RealFrameTime() 
+		build_meshes_easy()
 		return 
 	elseif hang_thread and delta_time < limit_fps then
 		return
@@ -95,6 +120,8 @@ local function gwater_tick()
 	//if gwater2.solver:Tick(1/165 * cm_2_inch, hang_thread and 0 or 1) then
 		average_frametime = average_frametime + ((systime - last_systime) - average_frametime) * 0.03
 		last_systime = systime	// smooth out fps
+
+		build_meshes_easy()
 	end
 end
 
