@@ -1,3 +1,5 @@
+#include "common_ps_fxc.h"
+
 float2 SCR_S				: register(c0);
 float RADIUS				: register(c1);
 float IOR 					: register(c2);
@@ -51,7 +53,7 @@ float4 main(const PS_INPUT i) : COLOR {
 	float3 sun_dir = float3(-0.377821, 0.520026, 0.766044);	// TODO: get from map OR get lighting data
 	float3 view_dir = normalize(i.pos - i.eyepos.xyz);
 	float3 reflected = reflect(view_dir, smoothed_normal);
-	float phong = pow(max(0, dot(reflected, sun_dir)), 100);
+	float phong = min(pow(max(0, dot(reflected, sun_dir)), 100), 1);
 	float fresnel = fresnelSchlicks(view_dir, smoothed_normal, IOR);
 	float3 specular = texCUBE(CUBEMAP, reflected).xyz * fresnel;
 	
@@ -69,7 +71,8 @@ float4 main(const PS_INPUT i) : COLOR {
 
 	// Calculate final color & return
 	float3 final_color = absorption * refracted * diffuse + float3(phong, phong, phong) + specular;
-	return float4(final_color, 1);
+	//return float4(final_color, 1);
+	return FinalOutput(float4(final_color, 1), 0, 0, TONEMAP_SCALE_LINEAR, false, 0);	// For HDR
 };
 
 /*
