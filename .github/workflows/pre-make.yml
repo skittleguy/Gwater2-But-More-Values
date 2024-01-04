@@ -27,7 +27,7 @@ jobs:
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v1.1
       with: 
-          msbuildArchitecture: 'x64'
+          msbuild-architecture: 'x64'
 
     - name: Build app for release
       run: msbuild D:\a\gwater2\gwater2\binary\gwater2.sln -t:rebuild -verbosity:diag -property:Configuration=Release 
