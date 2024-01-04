@@ -16,7 +16,6 @@
 #define ADD_FUNCTION(LUA, funcName, tblName) LUA->PushCFunction(funcName); LUA->SetField(-2, tblName)
 #define MAX_INDICES 10922	// floor(2^15 / 3)
 #define sqrt3 1.7320508075688772935274463415
-#define sqrt2 1.4142135623730950488016887242
 
 using namespace GarrysMod::Lua;
 

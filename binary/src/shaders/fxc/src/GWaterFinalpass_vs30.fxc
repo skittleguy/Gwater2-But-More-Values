@@ -14,13 +14,13 @@ struct VS_OUTPUT
 {
 	float4 projPosSetup	: POSITION;
 	float4 coord		: TEXCOORD0;
-	float4 pos			: TEXCOORD1;
-	float4x4 proj		: TEXCOORD2;
-	float3x3 normal		: NORMAL0;
+	float4 eyepos		: TEXCOORD1;
+	float3 pos			: TEXCOORD2;
+	float4x4 proj		: TEXCOORD3;
+	float4 color		: COLOR0;
 };
 
-VS_OUTPUT main( const VS_INPUT v ) 
-{
+VS_OUTPUT main(const VS_INPUT v) {
 	VS_OUTPUT o = (VS_OUTPUT)0;
 
 	float3 normal, worldPos;
@@ -31,16 +31,10 @@ VS_OUTPUT main( const VS_INPUT v )
 
 	o.projPosSetup = vProjPos;
 	o.coord = v.vTexCoord;
-	o.pos = float4(worldPos, length(worldPos - cEyePos));
+	o.eyepos = float4(cEyePos, length(worldPos - cEyePos));
 	o.proj = cViewProj;
-
-	float3 right = normalize(cross(normal, float3(0, 0, 1)));
-	float3 up = cross(normal, right);
-	o.normal = float3x3(
-		-right.x, -right.y, -right.z,
-		normal.x, normal.y, normal.z,
-		up.x, up.y, up.z
-	);
+	o.color = v.vColor;
+	o.pos = worldPos;
 
 	return o;
 };

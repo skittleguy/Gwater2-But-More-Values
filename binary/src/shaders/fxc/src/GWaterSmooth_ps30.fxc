@@ -22,7 +22,7 @@ bool is_inside(float2 coord) {
 float4 main(PS_INPUT i) : COLOR {
 	float4 depth = tex2D(DEPTH, i.coord);
 	//if (is_zero(depth)) return float4(0, 0, 0, 0);
-	if (depth.y <= RADIUS * 2.0) return float4(0, 0, 0, 0);	// Dont blur if too close. Causes weird artifacts
+	if (depth.y <= RADIUS * 2.0) discard;	// Dont blur if too close. Causes weird artifacts
 
 	float3 og_normal = tex2D(NORMALS, i.coord).xyz;
 	float3 final_normal = og_normal;

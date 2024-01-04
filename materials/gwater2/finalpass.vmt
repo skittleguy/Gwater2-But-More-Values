@@ -1,10 +1,9 @@
-GWaterNormals {
+GWaterFinalpass {
 	$vertexcolor 1
 	$envmap "env_cubemap"
 	$radius 10
 	$ior 1.333
 	$reflectance 0.1
-	$cheap 1
 	$normaltexture "lights/white"
 	$screentexture "lights/white"
 }

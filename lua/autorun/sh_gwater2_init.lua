@@ -48,7 +48,7 @@ include("gwater2_shaders.lua")	// also carrying
 
 gwater2 = {
 	solver = FlexSolver(100000),
-	material = Material("gwater2/particle"),//Material("vgui/circle"),//Material("sprites/sent_ball"),
+	material = Material("gwater2/finalpass"),//Material("vgui/circle"),//Material("sprites/sent_ball"),
 	meshes = {},
 	color = Color(209, 237, 255, 25),
 	update_meshes = function()
@@ -67,10 +67,10 @@ gwater2 = {
 }
 gwater2.solver:InitBounds(Vector(-16384, -16384, -16384), Vector(16384, 16384, 16384))	-- source bounds
 
-local cheap = CreateClientConVar("gwater2_cheap", "1", true)
+local absorption = CreateClientConVar("gwater2_absorption", "1", true)
 -- garry, sincerely... fuck you
 timer.Simple(0, function() 
-	gwater2.material:SetInt("$cheap", cheap:GetInt()) 
+	Material("gwater2/volumetric"):SetFloat("$alpha", absorption and 0.025 or 0)
 end)
 
 -- tick particle solver

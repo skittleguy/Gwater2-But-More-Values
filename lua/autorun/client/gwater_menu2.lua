@@ -9,7 +9,6 @@ local options = {
 	solver = FlexSolver(1000),
 	tab = CreateClientConVar("gwater2_tab0", "1", true),
 	blur_passes = CreateClientConVar("gwater2_blur_passes", "3", true),
-	cheap = CreateClientConVar("gwater2_cheap", "1", true),
 	absorption = CreateClientConVar("gwater2_absorption", "1", true),
 	menu_key = CreateClientConVar("gwater2_menukey", KEY_G, true),
 	parameter_tab_header = "Parameter Tab",
@@ -501,28 +500,10 @@ concommand.Add("gwater2_menu", function()
 			slider:SetValue(3)
 			surface.PlaySound("buttons/button15.wav")
 		end
-		
-		-- Depth fix checkbox & label
-		local label = vgui.Create("DLabel", scrollPanel)	
-		label:SetPos(10, 140)
-		label:SetSize(100, 100)
-		label:SetFont("GWater2Param")
-		label:SetText("Depth Fix")
-		label:SetContentAlignment(7)
-		labels[4] = label
-
-		local box = vgui.Create("DCheckBox", scrollPanel)
-		box:SetPos(132, 140)
-		box:SetSize(20, 20)
-		box:SetChecked(!options.cheap:GetBool())
-		function box:OnChange(val)
-			options.cheap:SetBool(!val)
-			gwater2.material:SetInt("$cheap", val and 0 or 1)
-		end
 
 		-- Absorption checkbox & label
 		local label = vgui.Create("DLabel", scrollPanel)	
-		label:SetPos(10, 170)
+		label:SetPos(10, 140)
 		label:SetSize(100, 100)
 		label:SetFont("GWater2Param")
 		label:SetText("Absorption")
@@ -530,12 +511,13 @@ concommand.Add("gwater2_menu", function()
 		labels[5] = label
 
 		local box = vgui.Create("DCheckBox", scrollPanel)
-		box:SetPos(132, 170)
+		box:SetPos(132, 140)
 		box:SetSize(20, 20)
 		box:SetChecked(options.absorption:GetBool())
+		local water_volumetric = Material("gwater2/volumetric")
 		function box:OnChange(val)
 			options.absorption:SetBool(val)
-			gwater2.material:SetFloat("$alpha", val and 0.025 or 0)
+			water_volumetric:SetFloat("$alpha", val and 0.025 or 0)
 		end
 
 		function scrollPanel:AnimationThink()

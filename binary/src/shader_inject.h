@@ -2,6 +2,7 @@
 #include "GWaterNormals.h"
 #include "GWaterSmooth.h"
 #include "GWaterVolumetric.h"
+#include "GWaterFinalpass.h"
 #include "IShaderSystem.h"
 
 // all of these externals MUST be defined (NOT NULL) BEFORE inserting shaders into the materialsystem or you WILL crash!
@@ -43,6 +44,7 @@ bool inject_shaders() {
 	g_pShaderLibDLL->m_ShaderDict.Insert(GWaterNormals::s_Name, &GWaterNormals::s_ShaderInstance);
 	g_pShaderLibDLL->m_ShaderDict.Insert(GWaterSmooth::s_Name, &GWaterSmooth::s_ShaderInstance);
 	g_pShaderLibDLL->m_ShaderDict.Insert(GWaterVolumetric::s_Name, &GWaterVolumetric::s_ShaderInstance);
+	g_pShaderLibDLL->m_ShaderDict.Insert(GWaterFinalpass::s_Name, &GWaterFinalpass::s_ShaderInstance);
 
 	return true;
 }
@@ -54,6 +56,7 @@ bool eject_shaders() {
 		g_pShaderLibDLL->m_ShaderDict.Remove(GWaterNormals::s_Name);
 		g_pShaderLibDLL->m_ShaderDict.Remove(GWaterSmooth::s_Name);
 		g_pShaderLibDLL->m_ShaderDict.Remove(GWaterVolumetric::s_Name);
+		g_pShaderLibDLL->m_ShaderDict.Remove(GWaterFinalpass::s_Name);
 
 		// Remove our added shader directory (dll?) in material system
 		//g_pCShaderSystem->m_ShaderDLLs.Remove(m_ShaderDLLs_index);
