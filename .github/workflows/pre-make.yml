@@ -34,7 +34,7 @@ jobs:
       
     - name: check if the shits is there
       run: |
-        cd D:\a\gwater2\gwater2\binary\x86\Release\
+        cd D:\a\gwater2\gwater2\binary\
         dir    
     - name: Upload artifact
       uses: actions/upload-artifact@v2
