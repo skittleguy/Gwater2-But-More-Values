@@ -26,10 +26,16 @@ jobs:
         ./premake5.exe vs2022
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v1.1
+      with: 
+          msbuild-architecture: x64
 
     - name: Build app for release
-      run: msbuild D:\a\gwater2\gwater2\binary\gwater2.sln -t:rebuild -verbosity:diag -property:Configuration=Release
-    
+      run: msbuild D:\a\gwater2\gwater2\binary\gwater2.sln -t:rebuild -verbosity:diag -property:Configuration=Release 
+      
+    - name: check if the shits is there
+      run: |
+        cd D:\a\gwater2\gwater2\binary\
+        dir    
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
