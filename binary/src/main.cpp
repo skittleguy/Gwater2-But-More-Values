@@ -346,6 +346,7 @@ LUA_FUNCTION(RenderParticles) {
 	return 0;
 }
 
+
 LUA_FUNCTION(BuildIMeshes) {
 	LUA->CheckType(1, FlexMetaTable);
 	LUA->CheckType(2, Type::Vector);	// eye pos
@@ -362,7 +363,7 @@ LUA_FUNCTION(BuildIMeshes) {
 	float3 down = VectorTofloat3(LUA->GetVector(4));
 	float3 left = VectorTofloat3(LUA->GetVector(5));
 	float3 right = VectorTofloat3(LUA->GetVector(6));
-	float particle_radius = LUA->GetNumber(7) * 0.625;	// Magic number 1 (also equal to 1/8?)
+	float radius = LUA->GetNumber(7) * 0.625;	// Magic number 1 (also equal to 5/8?)
 
 	CMatRenderContextPtr pRenderContext(materials);
 	CMeshBuilder meshBuilder;
@@ -372,9 +373,7 @@ LUA_FUNCTION(BuildIMeshes) {
 	flex->imeshes.clear();
 
 	int particle_count = flex->get_active_particles();
-	int particle_index = 0;
-	while (particle_index < particle_count) {
-		int i = 0;
+	for (int particle_index = 0; particle_index < particle_count;) {
 		//IMesh* pMesh = pRenderContext->GetDynamicMesh();
 		IMesh* pMesh = pRenderContext->CreateStaticMesh(MATERIAL_VERTEX_FORMAT_MODEL_SKINNED, "");	// This function needs istudiorender.h to be included!
 
@@ -384,15 +383,15 @@ LUA_FUNCTION(BuildIMeshes) {
 		float4* particle_ani3 = flex->get_parameter("anisotropy_scale") > 0 ? flex->get_host("particle_ani3") : NULL;
 		float4* particle_col = flex->get_host("particle_col");
 		meshBuilder.Begin(pMesh, MATERIAL_TRIANGLES, MAX_INDICES);
-		while (particle_index < particle_count && i < MAX_INDICES) {
+		for (int indice = 0; particle_index < particle_count && indice < MAX_INDICES;) {
 			float3 particle = float3(particle_pos[particle_index].x, particle_pos[particle_index].y, particle_pos[particle_index].z);
 
 			// Frustrum culling
 			float3 dir = particle - eye_pos;
-			if (Dot(dir, down) < -particle_radius ||
-				Dot(dir, up) < -particle_radius ||
-				Dot(dir, left) < -particle_radius ||
-				Dot(dir, right) < -particle_radius) {
+			if (Dot(dir, down) < -radius ||
+				Dot(dir, up) < -radius ||
+				Dot(dir, left) < -radius ||
+				Dot(dir, right) < -radius) {
 				particle_index++;
 				continue;
 			}
@@ -404,9 +403,9 @@ LUA_FUNCTION(BuildIMeshes) {
 			// particle positions in local space
 			float tri_mult = 1.0 / ((2.0 * sqrt3 - 2.0) / 2.0);	// Height of equalateral triangle minus length of circle with radius 1
 			float3 offset = -eye_up * 0.8;	// Magic number 2
-			float3 pos1 = (eye_up + eye_up * tri_mult + offset) * particle_radius;
-			float3 pos2 = (eye_right * tri_mult + offset) * particle_radius;	
-			float3 pos3 = (-eye_right * tri_mult + offset) * particle_radius;	
+			float3 pos1 = (eye_up + eye_up * tri_mult + offset) * radius;
+			float3 pos2 = (eye_right * tri_mult + offset) * radius;
+			float3 pos3 = (-eye_right * tri_mult + offset) * radius;
 
 			float4 ani1 = particle_ani1 ? particle_ani1[particle_index] : 0;
 			float4 ani2 = particle_ani2 ? particle_ani2[particle_index] : 0;
@@ -456,7 +455,7 @@ LUA_FUNCTION(BuildIMeshes) {
 			meshBuilder.Color4fv(color);
 			meshBuilder.AdvanceVertex();
 
-			meshBuilder.TexCoord2f(0, 1.0 - tri_mult , 1);
+			meshBuilder.TexCoord2f(0, 1.0 - tri_mult, 1);
 			meshBuilder.Position3f(pos3.x, pos3.y, pos3.z);
 			meshBuilder.Normal3fv(normal);
 			meshBuilder.UserData(userdata);
@@ -464,11 +463,10 @@ LUA_FUNCTION(BuildIMeshes) {
 			meshBuilder.AdvanceVertex();
 
 			particle_index++;
-			i++;
+			indice++;
 		}
 		meshBuilder.End(false, false);
 		flex->imeshes.push_back(pMesh);
-		//pRenderContext->DestroyStaticMesh(pMesh);
 		meshBuilder.Reset();
 	}
 

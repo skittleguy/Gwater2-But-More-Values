@@ -10,7 +10,6 @@ local options = {
 	tab = CreateClientConVar("gwater2_tab0", "1", true),
 	blur_passes = CreateClientConVar("gwater2_blur_passes", "3", true),
 	absorption = CreateClientConVar("gwater2_absorption", "1", true),
-	visual_mesh_creation = CreateClientConVar("gwater2_visual_mesh_creation", "1", true),
 	menu_key = CreateClientConVar("gwater2_menukey", KEY_G, true),
 	parameter_tab_header = "Parameter Tab",
 	parameter_tab_text = "This tab is where you can change how the water interacts with itself and the environment.\n\nHover over a parameter to reveal its functionality.\n\nScroll down for presets!",
@@ -519,24 +518,6 @@ concommand.Add("gwater2_menu", function()
 		function box:OnChange(val)
 			options.absorption:SetBool(val)
 			water_volumetric:SetFloat("$alpha", val and 0.025 or 0)
-		end
-
-		
-		-- Mesh building label
-		local label = vgui.Create("DLabel", scrollPanel)	
-		label:SetPos(10, 170)
-		label:SetSize(400, 100)
-		label:SetFont("GWater2Param")
-		label:SetText("Visual Mesh Building")
-		label:SetContentAlignment(7)
-		labels[5] = label
-
-		local box = vgui.Create("DCheckBox", scrollPanel)
-		box:SetPos(200, 170)
-		box:SetSize(20, 20)
-		box:SetChecked(options.visual_mesh_creation:GetBool())
-		function box:OnChange(val)
-			options.visual_mesh_creation:SetBool(val)
 		end
 
 		function scrollPanel:AnimationThink()

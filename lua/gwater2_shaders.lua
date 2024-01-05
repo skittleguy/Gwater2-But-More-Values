@@ -23,8 +23,8 @@ local water_normals = Material("gwater2/normals")
 
 -- The code below is the very complicated gwater2 shader pipeline since source doesn't support multiple shaders for one material
 local blur_passes = CreateClientConVar("gwater2_blur_passes", "3", true)
-local visual_mesh_creation = CreateClientConVar("gwater2_visual_mesh_creation", "1", true)
-hook.Add("PreDrawViewModels", "gwater_particle", function()
+hook.Add("PreDrawViewModels", "gwater2_render", function()
+	
 	-- Clear render targets
 	render.ClearRenderTarget(cache_normals, Color(0, 0, 0, 0))
 	render.ClearRenderTarget(cache_depth, Color(0, 0, 0, 0))
@@ -39,18 +39,16 @@ hook.Add("PreDrawViewModels", "gwater_particle", function()
 	local radius = gwater2.solver:GetParameter("radius")
 
 	-- Build imeshes for multiple passes
-	if visual_mesh_creation:GetBool() then
-		local up = EyeAngles():Up()
-		local right = EyeAngles():Right()
-		gwater2.solver:BuildIMeshes(EyePos(),
-			screen_plane(scrw * 0.5, 0, right), 	-- Top
-			screen_plane(scrw * 0.5, scrh, -right), -- Bottom
-			screen_plane(0, scrh * 0.5, up),		--Left
-			screen_plane(scrw, scrh * 0.5, -up),	-- Right
-			radius * 0.5
-		)
-	end
-	
+	local up = EyeAngles():Up()
+	local right = EyeAngles():Right()
+	gwater2.solver:BuildIMeshes(EyePos(),
+		screen_plane(scrw * 0.5, 0, right), 	-- Top
+		screen_plane(scrw * 0.5, scrh, -right), -- Bottom
+		screen_plane(0, scrh * 0.5, up),		--Left
+		screen_plane(scrw, scrh * 0.5, -up),	-- Right
+		gwater2.solver:GetParameter("radius") * 0.5
+	)
+
 	-- Depth absorption
 	if water_volumetric:GetFloat("$alpha") != 0 then
 		render.SetMaterial(water_volumetric)
