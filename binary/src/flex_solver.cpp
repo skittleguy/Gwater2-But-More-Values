@@ -3,6 +3,8 @@
 
 #define MAX_COLLIDERS 8192	// source can't go over this number of props so.. might as well just have it as the limit
 
+extern IMaterialSystem* materials = NULL;	// stop main branch compile from bitching
+
 //FIXME: ADD SMARTCOMMENTS
 
 // Struct that holds FleX solver data

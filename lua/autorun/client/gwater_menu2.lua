@@ -2,9 +2,7 @@ AddCSLuaFile()
 
 if SERVER then return end
 
-require("gwater2")
-
-local version = "0.1a"
+local version = "0.1b"
 local options = {
 	solver = FlexSolver(1000),
 	tab = CreateClientConVar("gwater2_tab0", "1", true),
@@ -295,13 +293,13 @@ concommand.Add("gwater2_menu", function()
 		options.solver:Tick(math.max(average_fps, 1 / 9999))
 		options.solver:AddCube(Vector(x + 60, 0, y + 50), Vector(0, 0, 50), Vector(4, 1, 1), options.solver:GetParameter("radius") * 0.7, color_white)
 		
-		surface.SetMaterial(particle_material)
 		local radius = options.solver:GetParameter("radius")
 		local function exp(v) return Vector(math.exp(v[1]), math.exp(v[2]), math.exp(v[3])) end
+		local is_translucent = gwater2.color.a < 255
+		surface.SetMaterial(particle_material)
 		options.solver:RenderParticles(function(pos)
-			local depth = math.max((pos[3] - y) / 390, 0) * 20
-			local is_translucent = gwater2.color.a < 255
-			local absorption = is_translucent and exp((Vector(1, 1, 1) - gwater2.color:ToVector()) * -1 * gwater2.color.a / 255 * depth) or gwater2.color:ToVector()
+			local depth = math.max((pos[3] - y) / 390, 0) * 20	-- ranges from 0 to 20 down
+			local absorption = is_translucent and exp((gwater2.color:ToVector() - Vector(1, 1, 1)) * gwater2.color.a / 255 * depth) or gwater2.color:ToVector()
 			surface.SetDrawColor(absorption[1] * 255, absorption[2] * 255, absorption[3] * 255, 255)
 			surface.DrawTexturedRect(pos[1] - x, pos[3] - y, radius, radius)
 		end)

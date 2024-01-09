@@ -42,7 +42,7 @@ if SERVER then
 	return 
 end
 
-require("gwater2")	//carrying
+require((BRANCH == "x86-64" or BRANCH == "chromium" ) and "gwater2" or "gwater2_main")	//carrying
 include("gwater2_shaders.lua")	// also carrying
 
 gwater2 = {
@@ -156,7 +156,7 @@ local function get_map_vertices()
 	return all_vertices
 end
 
-//hook.Add("InitPostEntity", "gwater2_addprop", function()
+hook.Add("InitPostEntity", "gwater2_addprop", function()
 	xpcall(function()
 		gwater2.solver:AddMapMesh(game.GetMap())
 	end, function(e)
@@ -166,5 +166,5 @@ end
 	for k, ent in ipairs(ents.GetAll()) do
 		add_prop(ent)
 	end
-//end)
+end)
 hook.Add("OnEntityCreated", "gwater2_addprop", function(ent) timer.Simple(0, function() add_prop(ent) end) end)	// timer.0 so data values are setup correctly
