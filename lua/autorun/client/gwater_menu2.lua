@@ -27,7 +27,7 @@ local options = {
 	Iterations = {text = "Controls how many times the physics solver attempts to converge to a solution.\n\nLight performance impact."},
 	Substeps = {text = "Controls the number of physics steps done per tick.\n\nNote: Parameters may not be properly tuned for different substeps!\n\nMedium-High performance impact."},
 	["Blur Passes"] = {text = "Controls the number of blur passes done per frame. More passes creates a smoother water surface. Zero passes will do no blurring.\n\nMedium performance impact."},
-	["Absorption"] = {text = "Enables absorption of light over distance inside of fluid.\n\n(more depth = darker color)\n\nMedium-High performance impact."},
+	["Absorption"] = {text = "Enables absorption of light over distance inside of fluid.\n\n(more depth = darker color)\n\nHigh performance impact."},
 	["Visual Mesh Building"] = {text = "Enables creation of visuals to every visual frame instead of physical.\n\nHelps with low bandwidth GPUs\n\nHigh performance impact (Depending on your GPU)"}
 }
 
@@ -314,7 +314,7 @@ concommand.Add("gwater2_menu", function()
 		surface.DrawOutlinedRect(5, 30, 192, h - 35)
 
 		draw.RoundedBox(5, 36, 35, 125, 30, Color(10, 10, 10, 230))
-		draw.DrawText("Fluid Preview", "GWater2Title", 100, 40, Color(255, 255, 255), TEXT_ALIGN_CENTER)
+		draw.DrawText("Fluid Preview", "GWater2Title", 100, 40, color_white, TEXT_ALIGN_CENTER)
 	end
 
 	-- close menu if menu button is pressed
@@ -457,7 +457,6 @@ concommand.Add("gwater2_menu", function()
 			Color(127, 255, 0),
 			Color(255, 127, 0),
 			Color(255, 255, 0),
-			Color(255, 127, 0),
 			Color(255, 0, 0),
 		}
 
@@ -648,6 +647,8 @@ end)
 -- of course playerbutton down (the only hook which runs when a button is pressed) doesnt work in singleplayer.
 local changed = false
 hook.Add("Think", "gwater2_menu", function()
+	if IsValid(LocalPlayer()) and LocalPlayer():IsTyping() then return end
+
 	if input.IsKeyDown(options.menu_key:GetInt()) and !IsValid(mainFrame) then
 		if changed then return end
 

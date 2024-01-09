@@ -76,9 +76,10 @@ function SWEP:DrawHUD()
 	draw.DrawText("Reload to Remove All", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.81, color_white, TEXT_ALIGN_RIGHT)
 end
 
-function format_int(i)
+local function format_int(i)
 	return tostring(i):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
 end
+
 function SWEP:PostDrawViewModel(vm, weapon, ply)
 	local pos, ang = vm:GetBonePosition(39)--self:GetOwner():GetViewModel():GetBonePosition(0)
 	ang = ang + Angle(180, 0, -ang[3] * 2)

@@ -1,6 +1,5 @@
 AddCSLuaFile()
 
-//do return end
 if SERVER then 
 	/*local valid_materials = {
         ["floating_metal_barrel"] = true,
