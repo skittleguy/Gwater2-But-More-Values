@@ -3,7 +3,7 @@
 
 #define MAX_COLLIDERS 8192	// source can't go over this number of props so.. might as well just have it as the limit
 
-extern IMaterialSystem* materials = NULL;	// stop main branch compile from bitching
+//extern IMaterialSystem* materials = NULL;	// stops main branch compile from bitching
 
 //FIXME: ADD SMARTCOMMENTS
 
@@ -424,7 +424,7 @@ void FlexSolver::map_parameters(NvFlexParams* buffer) {
 	this->param_map["free_surface_drag"] = &buffer->freeSurfaceDrag;
 	this->param_map["drag"] = &buffer->drag;
 	this->param_map["lift"] = &buffer->lift;
-	//this->param_map["num_iterations"] = &buffer->numIterations;
+	//this->param_map["num_iterations"] = &buffer->numIterations;		// integer, cant map
 	this->param_map["fluid_rest_distance"] = &buffer->fluidRestDistance;
 	this->param_map["solid_rest_distance"] = &buffer->solidRestDistance;
 	this->param_map["anisotropy_scale"] = &buffer->anisotropyScale;
@@ -439,8 +439,8 @@ void FlexSolver::map_parameters(NvFlexParams* buffer) {
 	this->param_map["shock_propagation"] = &buffer->shockPropagation;
 	this->param_map["restitution"] = &buffer->restitution;
 	this->param_map["max_speed"] = &buffer->maxSpeed;
-	this->param_map["max_acceleration"] = &buffer->maxAcceleration;
-	//this->param_map["relaxation_mode"] = &buffer->relaxationMode;
+	this->param_map["max_acceleration"] = &buffer->maxAcceleration;	
+	//this->param_map["relaxation_mode"] = &buffer->relaxationMode;		// ^
 	this->param_map["relaxation_factor"] = &buffer->relaxationFactor;
 	this->param_map["solid_pressure"] = &buffer->solidPressure;
 	this->param_map["adhesion"] = &buffer->adhesion;

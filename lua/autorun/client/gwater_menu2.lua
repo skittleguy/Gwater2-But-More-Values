@@ -552,13 +552,13 @@ concommand.Add("gwater2_menu", function()
 		label:SetPos(0, 0)
 		label:SetSize(383, 400)
 		label:SetText([[
-			Thank you for downloading gwater2 alpha! This menu is the interface that you will be using to control everything about gwater. So get used to it! :D
+			Thank you for downloading gwater2 beta! This menu is the interface that you will be using to control everything about gwater. So get used to it! :D
 
 			This tab will contain updates and info about the addon when it is updated. 
 
 			Since this is the first release, I don't have any changelogs or much to report, so feel free to play around with the settings!
 
-			Changelog (v0.1a): 
+			Changelog (v0.1b): 
 			- Initial release
 		]])
 		label:SetColor(Color(255, 255, 255))
