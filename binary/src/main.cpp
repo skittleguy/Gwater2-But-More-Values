@@ -21,6 +21,7 @@ using namespace GarrysMod::Lua;
 
 NvFlexLibrary* flexLibrary;	// Main FleX library, handles all solvers. ("The heart of all that is FleX" - andreweathan)
 ILuaBase* GlobalLUA;	// LUA base used for error handling
+IShaderDevice* shaderDevice = NULL;
 int FlexMetaTable = 0;
 
 // Error callback function used if an internal issue happens in FleX
@@ -526,6 +527,12 @@ LUA_FUNCTION(AddMapMesh) {
 	return 0;
 }
 
+// ShaderDevice is assumed to exist since if it didnt, this function wouldn't be accessable by lua
+LUA_FUNCTION(IsMSAAEnabled) {
+	LUA->PushBool(shaderDevice->IsAAEnabled());
+	return 1;
+}
+
 /*
 * Returns a table of contact data. The table isnt sequential (do NOT use ipairs!) and in the format {[MeshIndex] = {ind1, cont1, pos1, vel1, ind2, cont2, pos2, vel2, ind3, cont3, pos3, vel3, etc...}
 * Note that this function is quite expensive! It is a large table being generated.
@@ -710,13 +717,11 @@ GMOD_MODULE_OPEN() {
 	ADD_FUNCTION(LUA, Reset, "Reset");
 	LUA->SetField(-2, "__index");
 
-	// _G.FlexSolver = NewFlexSolver
-	LUA->PushSpecial(SPECIAL_GLOB);
-	ADD_FUNCTION(LUA, NewFlexSolver, "FlexSolver");
-	LUA->Pop();
-
 	if (!Sys_LoadInterface("materialsystem", MATERIAL_SYSTEM_INTERFACE_VERSION, NULL, (void**)&materials)) 
 		LUA->ThrowError("[GWater2 Internal Error]: C++ Materialsystem failed to load!");
+
+	if (!Sys_LoadInterface("shaderapidx9", SHADER_DEVICE_INTERFACE_VERSION, NULL, (void**)&shaderDevice))
+		LUA->ThrowError("[GWater2 Internal Error]: C++ Shaderdevice failed to load!");
 
 	// Defined in 'shader_inject.h'
 	if (!inject_shaders()) 
@@ -725,6 +730,12 @@ GMOD_MODULE_OPEN() {
 	// weird bsp filesystem
 	if (FileSystem::LoadFileSystem() != FILESYSTEM_STATUS::OK)
 		LUA->ThrowError("[GWater2 Internal Error]: C++ Filesystem failed to load!");
+
+	// _G.FlexSolver = NewFlexSolver
+	LUA->PushSpecial(SPECIAL_GLOB);
+	ADD_FUNCTION(LUA, NewFlexSolver, "FlexSolver");
+	ADD_FUNCTION(LUA, IsMSAAEnabled, "IsMSAAEnabled");
+	LUA->Pop();
 
 	return 0;
 }

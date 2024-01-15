@@ -18,7 +18,7 @@ bool is_inside(float2 coord) {
 
 #define THRESHOLD -1
 #define RESOLUTION 1
-
+/*
 float4 main(PS_INPUT i) : COLOR {
 	float4 depth = tex2D(DEPTH, i.coord);
 	//if (is_zero(depth)) return float4(0, 0, 0, 0);
@@ -50,11 +50,12 @@ float4 main(PS_INPUT i) : COLOR {
 	final_normal = normalize(final_normal);
 
 	return float4(final_normal, 1);
-};
+};*/
 
-/*
+
 float2 split_depth(float depth) {
-	return float2(floor(depth), depth % 1);
+	int level = pow(2, floor(depth / 512));	// we are splitting a 32 bit float into two 16 bit floats. 16 bit floats have a 10 bit mantessa. 2^(10-1) = 512
+	return float2(floor(depth / level) * level, depth % level);
 }
 
 float join_depth(float2 depth) {
@@ -62,39 +63,49 @@ float join_depth(float2 depth) {
 }
 
 float4 main(PS_INPUT i) : COLOR {
-	float4 depth = tex2D(DEPTH, i.coord);
-	if (depth.z == 0) discard;	// Not even blurring water
+	float4 depth = tex2D(NORMALS, i.coord);
 
 	float depth_1 = join_depth(depth.xy);
-	if (depth.z > 1000) return depth;	// Dont blur if too close. Causes weird artifacts
+	if (depth_1 <= RADIUS * 2.0) discard;	// Dont blur if too close. Causes weird artifacts
 
 	float final_normal = depth_1;
-	int count = 1;
+	float count = 1.0;
 	[unroll]
 	for (int x = -RESOLUTION; x <= RESOLUTION; x++) {
 		if (x == 0) continue;	// Skip center since we sample it already
 
+
 		// Is Texcoord outside
-		float2 texcoord_pos = i.coord + float2(x * SCR_S.x, x * SCR_S.y) * depth.z;
+		float2 texcoord_pos = i.coord + float2(x * SCR_S.x, x * SCR_S.y) * min(depth.z, 300);
 		//texcoord_pos = clamp(texcoord_pos, 0, 1);
-		if (!is_inside(texcoord_pos)) continue;
+		//if (!is_inside(texcoord_pos)) continue;
 
 		// Is particle close enough
-		float neighbor_depth = join_depth(tex2D(DEPTH, texcoord_pos).xy);
-		if (neighbor_depth == 0) {
+		float neighbor_depth = join_depth(tex2D(NORMALS, texcoord_pos).xy);
+		//if (neighbor_depth == 0) {
 			//final_normal += depth_1 + RADIUS * 4.0;
 			//count++;
 			//depth.z = depth.z * 0.5;
-		} else {
+		//} else {
 			//if (neighbor_depth == 0) continue;
 			float distance = abs(neighbor_depth - depth_1);
 			if (distance > RADIUS) continue;
 
 			final_normal += neighbor_depth;
 			count++;
-		}
+		//}
+		/*
+		float2 texcoord_pos = i.coord + float2(x * SCR_S.x, x * SCR_S.y) * depth.z;
+		float sample = join_depth(tex2D(NORMALS, texcoord_pos).xy);
+		// spatial domain
+		float r = x / RESOLUTION;
+		float w = exp(-r * r);
+		// range domain
+		float r2 = (sample - depth_1) * RADIUS;
+		float g = w * exp(-r2 * r2);
+		final_normal += sample * g;
+		count += g;*/
 	}
 
 	return float4(split_depth(final_normal / count), depth.z, 1);
 };
-*/

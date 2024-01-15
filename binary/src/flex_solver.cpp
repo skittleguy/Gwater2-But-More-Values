@@ -136,9 +136,9 @@ void FlexSolver::tick(float dt) {
 	NvFlexGetVelocities(this->solver, get_buffer("particle_vel"), this->copy_description);
 	NvFlexGetPhases(this->solver, get_buffer("particle_phase"), this->copy_description);
 	NvFlexGetActive(this->solver, get_buffer("particle_active"), this->copy_description);
-	NvFlexGetContacts(this->solver, get_buffer("contact_planes"), get_buffer("contact_vel"), get_buffer("contact_indices"), get_buffer("contact_count"));
-	NvFlexGetAnisotropy(this->solver, get_buffer("particle_ani1"), get_buffer("particle_ani2"), get_buffer("particle_ani3"), this->copy_description);
-	NvFlexGetSmoothParticles(this->solver, get_buffer("particle_smooth"), this->copy_description);
+	//NvFlexGetContacts(this->solver, get_buffer("contact_planes"), get_buffer("contact_vel"), get_buffer("contact_indices"), get_buffer("contact_count"));
+	if (get_parameter("anisotropy_scale") != 0) NvFlexGetAnisotropy(this->solver, get_buffer("particle_ani1"), get_buffer("particle_ani2"), get_buffer("particle_ani3"), this->copy_description);
+	if (get_parameter("smoothing") != 0) NvFlexGetSmoothParticles(this->solver, get_buffer("particle_smooth"), this->copy_description);
 }
 
 void FlexSolver::add_mesh(Mesh mesh, NvFlexCollisionShapeType mesh_type, bool dynamic) {

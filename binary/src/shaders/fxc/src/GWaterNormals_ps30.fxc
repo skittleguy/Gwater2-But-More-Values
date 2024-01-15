@@ -3,9 +3,10 @@ float RADIUS				: register(c0);
 struct PS_INPUT {
 	float2 P 		: VPOS;
 	float2 coord	: TEXCOORD0;
-	float4 pos  	: TEXCOORD1;
+	float3 pos  	: TEXCOORD1;
 	float4x4 proj	: TEXCOORD2;
-	float3x3 normal	: NORMAL0;
+	float3 eye_pos	: NORMAL0;
+	//float3x3 normal	: NORMAL0;
 };
 
 struct PS_OUTPUT {
@@ -13,7 +14,7 @@ struct PS_OUTPUT {
 	float4 rt1      : COLOR1;
 	//float depth	: DEPTH0;
 };
-
+/*
 PS_OUTPUT main(const PS_INPUT i) {
 	float2 offset = (i.coord - 0.5) * 2.0;
 
@@ -40,55 +41,38 @@ PS_OUTPUT main(const PS_INPUT i) {
 	//o.depth = max(bulge_pos.z / bulge_pos.w, 0.03);	// 0.03 = default znear plane
 
 	return o;
-};
+};*/
 
-/*
+
 float3 project_pos(float3 eyepos, float3 dir, float depth) {
 	return eyepos + dir * depth;
 }
 
 float2 split_depth(float depth) {
-	return float2(floor(depth), depth % 1);
+	int level = pow(2, floor(depth / 512));	// we are splitting a 32 bit float into two 16 bit floats. 16 bit floats have a 10 bit mantessa. 2^(10-1) = 512
+	return float2(floor(depth / level) * level, depth % level);
 }
 
 float join_depth(float2 depth) {
 	return depth.x + depth.y;
 }
 
-PS_OUTPUT main(const PS_INPUT i) {
+float4 main(const PS_INPUT i) : COLOR {
 	float2 offset = (i.coord - 0.5) * 2.0;
 
 	// kill pixels outside of sphere
 	float radius2 = dot(offset, offset);
 	if (radius2 > 1) discard;
 
-	// Calculate normal from texture coords
+	// Calculate depth from texture coords
 	float bulge = sqrt(1 - radius2);
-	float depth = i.eyepos.w - bulge * RADIUS / 2.0;
-	// Depth calculations
-	float3 view_dir = normalize(i.pos - i.eyepos.xyz);
+	float depth = distance(i.pos, i.eye_pos) + radius2 * RADIUS;//i.pos.w - bulge * RADIUS;
 
 	// Depth information for normals smoothing
 	float2 uvdx = ddx(i.coord);
 	float2 uvdy = ddy(i.coord);
 	float uvdmax = 1.0 / sqrt(max(dot(uvdx, uvdx), dot(uvdy, uvdy)));
-	
-	float4 bulge_pos = mul(float4(project_pos(i.eyepos.xyz, view_dir, depth), 1), i.proj);
-
-	// extracted normal from depth
-	float depth2 = join_depth(tex2D(NORMALS, i.P / SCR_S).xy);
-
-	float3 bulge_pos2 = project_pos(i.eyepos.xyz, view_dir, depth2 != 0 ? depth2 : depth);
-	//float3 bulge_pos2 = project_pos(i.eyepos.xyz, view_dir, depth);
-	float3 smoothed_normal = normalize(cross(-ddx(bulge_pos2), ddy(bulge_pos2)));
 
 	// Output colors to rendertargets
-	PS_OUTPUT o = (PS_OUTPUT)0;
-	o.rt0 = float4(smoothed_normal * 0.5 + 0.5, 1);
-	o.rt1 = float4(0, 0, 0, 1);
-	//o.rt1 = float4(smoothed_normal * 0.75 + world_normal * 0.25, 1);
-	o.rt2 = float4(split_depth(depth), uvdmax, 1);
-	o.depth = max(bulge_pos.z / bulge_pos.w, 0.03);	// 0.03 = default znear plane
-
-	return o;
-};*/
+	return float4(split_depth(depth), uvdmax, 1);
+};

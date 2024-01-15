@@ -16,7 +16,7 @@ end
 local cache_depth = GetRenderTargetGWater("gwater_cache_depth")
 local cache_absorption = GetRenderTargetGWater("gwater_cache_absorption")
 local cache_normals = GetRenderTargetGWater("gwater_cache_normals")
-local cache_bloom = GetRenderTargetGWater("4gwater_cache_bloom", 1 / 4)	-- for blurring
+local cache_bloom = GetRenderTargetGWater("1gwater_cache_bloom", 1 / 1)	-- for blurring
 local water_blur = Material("gwater2/smooth")
 local water_volumetric = Material("gwater2/volumetric")
 local water_normals = Material("gwater2/normals")
@@ -24,6 +24,7 @@ local water_normals = Material("gwater2/normals")
 -- The code below is the very complicated gwater2 shader pipeline since source doesn't support multiple shaders for one material
 local blur_passes = CreateClientConVar("gwater2_blur_passes", "3", true)
 hook.Add("PreDrawViewModels", "gwater2_render", function()
+
 	if gwater2.solver:GetCount() < 1 then return end
 	
 	-- Clear render targets
@@ -61,27 +62,31 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 	end
 
 	-- grab normals
-	water_normals:SetFloat("$radius", radius * 0.5)
+	water_normals:SetFloat("$radius", radius * 0.25)
 	render.SetMaterial(water_normals)
-	render.SetRenderTargetEx(0, cache_normals)
-	render.SetRenderTargetEx(1, cache_depth)
+	render.SetRenderTarget(cache_normals)
+	--render.ClearDepth()
+	--render.SetRenderTargetEx(1, cache_depth)
 	gwater2.solver:RenderIMeshes()
-	render.SetRenderTargetEx(0, nil)
-	render.SetRenderTargetEx(1, nil)
+	render.SetRenderTarget()
+	
+	--render.SetRenderTargetEx(1, nil)
 	
 	-- Blur normals
 	water_blur:SetTexture("$depthtexture", cache_depth)
 	water_blur:SetFloat("$radius", radius)
 	render.SetMaterial(water_blur)
-	for i = 1, blur_passes:GetInt() do
+	for i = 1, blur_passes:GetInt() * 3 do
 		-- Blur X
-		local scale = (5 - i) * 0.05
-		--local scale = 0.05
+		--local scale = (5 - i) * 0.1
+		local scale = 0.2 / i
 		water_blur:SetTexture("$normaltexture", cache_normals)	
 		water_blur:SetVector("$scrs", Vector(scale / scrw, 0))
 		render.SetRenderTarget(cache_bloom)	-- Bloom texture resolution is significantly lower than screen res, enabling for a faster blur
 		render.DrawScreenQuad()
-		--render.SetRenderTarget()
+		render.SetRenderTarget()
+
+		--render.CopyTexture(cache_bloom, cache_normals)
 		
 		-- Blur Y
 		water_blur:SetTexture("$normaltexture", cache_bloom)
@@ -95,7 +100,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 	--render.ClearDepth()
 	
 	-- Setup water material parameters
-	water:SetFloat("$radius", radius * 0.5)
+	water:SetFloat("$radius", radius)
 	water:SetVector("$scrs", Vector(scrw, scrh))
 	water:SetTexture("$normaltexture", cache_normals)
 	water:SetTexture("$screentexture", render.GetScreenEffectTexture())
@@ -105,7 +110,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 
 	-- Debug Draw
 	--render.DrawTextureToScreenRect(cache_absorption, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
-	--render.DrawTextureToScreenRect(cache_normals, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
+	render.DrawTextureToScreenRect(cache_normals, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
 end)
 
 --hook.Add("NeedsDepthPass", "gwater2_depth", function()

@@ -1,6 +1,7 @@
 AddCSLuaFile()
 
 if SERVER then 
+	util.AddNetworkString("gwater2_offsetprop")
 	/*local valid_materials = {
         ["floating_metal_barrel"] = true,
         ["wood"] = true,
@@ -157,7 +158,7 @@ local function get_map_vertices()
 	return all_vertices
 end
 
-hook.Add("InitPostEntity", "gwater2_addprop", function()
+--hook.Add("InitPostEntity", "gwater2_addprop", function()
 	xpcall(function()
 		gwater2.solver:AddMapMesh(game.GetMap())
 	end, function(e)
@@ -167,5 +168,5 @@ hook.Add("InitPostEntity", "gwater2_addprop", function()
 	for k, ent in ipairs(ents.GetAll()) do
 		add_prop(ent)
 	end
-end)
+--end)
 hook.Add("OnEntityCreated", "gwater2_addprop", function(ent) timer.Simple(0, function() add_prop(ent) end) end)	// timer.0 so data values are setup correctly
