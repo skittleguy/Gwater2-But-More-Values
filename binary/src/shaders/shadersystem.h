@@ -1,22 +1,96 @@
-#ifndef ISHADERSYSTEM_HA
-#define ISHADERSYSTEM_HA
-#include "tier1/utldict.h"
-#include "tier1/KeyValues.h"
-#include "tier1/strtools.h"
-#include "tier1/utlstack.h"
-#include "tier1/utlbuffer.h"
-#include <materialsystem/itexture.h>
-#include <materialsystem/imaterialvar.h>
-#include <materialsystem/imaterial.h>
-#include <materialsystem/IShader.h>
-#include <shaderapi/ishadershadow.h>
-#include <shaderapi/ishaderdynamic.h>
-#include "shaderapi/IShaderDevice.h"
-#include "shaderapi/ishaderapi.h"
+//========= Copyright Valve Corporation, All rights reserved. ============//
+//
+// Purpose: 
+//
+// $Header: $
+// $NoKeywords: $
+//
+// Shader system:
+//	The shader system makes a few fundamental assumptions about when 
+//	certain types of state get set.
+//
+// 1) Anything that can potentially affect vertex format must be set up
+//		during the shader shadow/snapshot phase
+// 2) Anything that we can dynamically mess with (through a material var)
+//		should happen in the dynamic/render phase
+// 3) In general, we try to cache off expensive state pre-processing in
+//		the shader shadow phase (like texture stage pipeline).
+//
+//=============================================================================//
 
-typedef int ShaderAPITextureHandle_t;
-typedef int ShaderDLL_t;
-typedef short StateSnapshot_t;
+#ifndef SHADERSYSTEM_H
+#define SHADERSYSTEM_H
+
+#ifdef _WIN32
+#pragma once
+#endif
+
+#include "IShaderSystem.h"
+//#include "shaderlib/BaseShader.h"
+//#include "materialsystem/materialsystem_config.h"
+#include "shaderapi/ishaderapi.h"
+#include "imaterialinternal.h"
+//#include "materialsystem_global.h"
+#include "tier1/utldict.h"
+
+
+//-----------------------------------------------------------------------------
+// forward declarations
+//-----------------------------------------------------------------------------
+class IMaterialVar;
+class TextureManager_t;
+class ITextureInternal;
+class ShaderSystem_t;
+class IMesh;
+class IVertexBuffer;
+class IIndexBuffer;
+class Vector;
+enum MaterialPrimitiveType_t;
+enum MaterialPropertyTypes_t;
+enum MaterialIndexFormat_t;
+enum ShaderParamType_t;
+
+
+//-----------------------------------------------------------------------------
+// for ShaderRenderState_t::m_flags
+//-----------------------------------------------------------------------------
+enum
+{
+	// The flags up here are computed from the shaders themselves
+
+/*
+	// lighting flags
+	SHADER_UNLIT					= 0x0000,
+	SHADER_VERTEX_LIT				= 0x0001,
+	SHADER_NEEDS_LIGHTMAP			= 0x0002,
+	SHADER_NEEDS_BUMPED_LIGHTMAPS	= 0x0004,
+	SHADER_LIGHTING_MASK			= 0x0007,
+*/
+
+// opacity flags
+	SHADER_OPACITY_ALPHATEST = 0x0010,
+	SHADER_OPACITY_OPAQUE = 0x0020,
+	SHADER_OPACITY_TRANSLUCENT = 0x0040,
+	SHADER_OPACITY_MASK = 0x0070,
+};
+
+
+enum
+{
+	MAX_RENDER_PASSES = 4
+};
+
+
+//-----------------------------------------------------------------------------
+// Information for a single render pass
+//-----------------------------------------------------------------------------
+struct RenderPassList_t
+{
+	int m_nPassCount;
+	StateSnapshot_t	m_Snapshot[MAX_RENDER_PASSES];
+	// per material shader-defined state
+	CBasePerMaterialContextData* m_pContextData[MAX_RENDER_PASSES];
+};
 
 struct ShaderRenderState_t
 {
@@ -27,41 +101,63 @@ struct ShaderRenderState_t
 	MorphFormat_t	m_MorphFormat;
 
 	// List of all snapshots
-	void* m_pSnapshots; // RenderPassList_t *m_pSnapshots;
+	RenderPassList_t* m_pSnapshots;
+
 
 };
 
+
+//-----------------------------------------------------------------------------
+// Used to get the snapshot count
+//-----------------------------------------------------------------------------
 enum
 {
-	SHADER_USING_COLOR_MODULATION = 0x1,
-	SHADER_USING_ALPHA_MODULATION = 0x2,
-	SHADER_USING_FLASHLIGHT = 0x4,
-	SHADER_USING_FIXED_FUNCTION_BAKED_LIGHTING = 0x8,
-	SHADER_USING_EDITOR = 0x10,
+	SNAPSHOT_COUNT_NORMAL = 16,
+	SNAPSHOT_COUNT_EDITOR = 32,
 };
 
-abstract_class IShaderSystem
+//-----------------------------------------------------------------------------
+// Utility methods
+//-----------------------------------------------------------------------------
+inline void SetFlags(IMaterialVar** params, MaterialVarFlags_t _flag)
 {
-public:
-	virtual ShaderAPITextureHandle_t GetShaderAPITextureBindHandle(ITexture * pTexture, int nFrameVar, int nTextureChannel = 0) = 0;
+	params[FLAGS]->SetIntValue(params[FLAGS]->GetIntValueFast() | (_flag));
+}
 
-	// Binds a texture
-	virtual void BindTexture(Sampler_t sampler1, ITexture* pTexture, int nFrameVar = 0) = 0;
-	virtual void BindTexture(Sampler_t sampler1, Sampler_t sampler2, ITexture* pTexture, int nFrameVar = 0) = 0;
+inline void SetFlags2(IMaterialVar** params, MaterialVarFlags2_t _flag)
+{
+	params[FLAGS2]->SetIntValue(params[FLAGS2]->GetIntValueFast() | (_flag));
+}
 
-	// Takes a snapshot
-	virtual void TakeSnapshot() = 0;
+inline bool IsFlagSet(IMaterialVar** params, MaterialVarFlags_t _flag)
+{
+	return ((params[FLAGS]->GetIntValueFast() & (_flag)) != 0);
+}
 
-	// Draws a snapshot
-	virtual void DrawSnapshot(bool bMakeActualDrawCall = true) = 0;
+inline bool IsFlag2Set(IMaterialVar** params, MaterialVarFlags2_t _flag)
+{
+	return ((params[FLAGS2]->GetIntValueFast() & (_flag)) != 0);
+}
 
-	// Are we using graphics?
-	virtual bool IsUsingGraphics() const = 0;
 
-	// Are we using graphics?
-	virtual bool CanUseEditorMaterials() const = 0;
-};
 
+//-----------------------------------------------------------------------------
+// Poll params + renderstate
+//-----------------------------------------------------------------------------
+inline bool	IsTranslucent(const ShaderRenderState_t* pRenderState)
+{
+	return (pRenderState->m_Flags & SHADER_OPACITY_TRANSLUCENT) != 0;
+}
+
+inline bool	IsAlphaTested(ShaderRenderState_t* pRenderState)
+{
+	return (pRenderState->m_Flags & SHADER_OPACITY_ALPHATEST) != 0;
+}
+
+
+//-----------------------------------------------------------------------------
+// The shader system (a singleton)
+//-----------------------------------------------------------------------------
 abstract_class IShaderSystemInternal : public IShaderInit, public IShaderSystem
 {
 public:
@@ -112,119 +208,23 @@ public:
 	virtual int  GetShaders(int nFirstShader, int nCount, IShader** ppShaderList) const = 0;
 };
 
-abstract_class IMaterialInternal : public IMaterial
+// Meetric: I just shoved the CShadersystem class in here... hope thats fine
+
+// Meetric: Added this since its not defined in tier0/dbg EVEN THOUGH IT SHOULD BE
+enum SpewType_t
 {
-public:
-	// class factory methods
-	static IMaterialInternal * CreateMaterial(char const* pMaterialName, const char* pTextureGroupName, KeyValues * pKeyValues = NULL);
-	static void DestroyMaterial(IMaterialInternal* pMaterial);
+	SPEW_MESSAGE = 0,
+	SPEW_WARNING,
+	SPEW_ASSERT,
+	SPEW_ERROR,
+	SPEW_LOG,
 
-	// If supplied, pKeyValues and pPatchKeyValues should come from LoadVMTFile()
-	static IMaterialInternal* CreateMaterialSubRect(char const* pMaterialName, const char* pTextureGroupName,
-													KeyValues* pKeyValues = NULL, KeyValues* pPatchKeyValues = NULL, bool bAssumeCreateFromFile = false);
-	static void DestroyMaterialSubRect(IMaterialInternal* pMaterial);
-
-	// refcount
-	virtual int		GetReferenceCount() const = 0;
-
-	// enumeration id
-	virtual void	SetEnumerationID(int id) = 0;
-
-	// White lightmap methods
-	virtual void	SetNeedsWhiteLightmap(bool val) = 0;
-	virtual bool	GetNeedsWhiteLightmap() const = 0;
-
-	// load/unload 
-	virtual void	Uncache(bool bPreserveVars = false) = 0;
-	virtual void	Precache() = 0;
-	// If supplied, pKeyValues and pPatchKeyValues should come from LoadVMTFile()
-	virtual bool	PrecacheVars(KeyValues* pKeyValues = NULL, KeyValues* pPatchKeyValues = NULL, CUtlVector<FileNameHandle_t>* pIncludes = NULL, int nFindContext = MATERIAL_FINDCONTEXT_NONE) = 0;
-
-	// reload all textures used by this materals
-	virtual void	ReloadTextures() = 0;
-
-	// lightmap pages associated with this material
-	virtual void	SetMinLightmapPageID(int pageID) = 0;
-	virtual void	SetMaxLightmapPageID(int pageID) = 0;;
-	virtual int		GetMinLightmapPageID() const = 0;
-	virtual int		GetMaxLightmapPageID() const = 0;
-
-	virtual IShader* GetShader() const = 0;
-
-	// Can we use it?
-	virtual bool	IsPrecached() const = 0;
-	virtual bool	IsPrecachedVars() const = 0;
-
-	// main draw method
-	virtual void	DrawMesh(VertexCompressionType_t vertexCompression) = 0;
-
-	// Gets the vertex format
-	virtual VertexFormat_t GetVertexFormat() const = 0;
-	virtual VertexFormat_t GetVertexUsage() const = 0;
-
-	// Performs a debug trace on this material
-	virtual bool PerformDebugTrace() const = 0;
-
-	// Can we override this material in debug?
-	virtual bool NoDebugOverride() const = 0;
-
-	// Should we draw?
-	virtual void ToggleSuppression() = 0;
-
-	// Are we suppressed?
-	virtual bool IsSuppressed() const = 0;
-
-	// Should we debug?
-	virtual void ToggleDebugTrace() = 0;
-
-	// Do we use fog?
-	virtual bool UseFog() const = 0;
-
-	// Adds a material variable to the material
-	virtual void AddMaterialVar(IMaterialVar* pMaterialVar) = 0;
-
-	// Gets the renderstate
-	virtual ShaderRenderState_t* GetRenderState() = 0;
-
-	// Was this manually created (not read from a file?)
-	virtual bool IsManuallyCreated() const = 0;
-
-	virtual bool NeedsFixedFunctionFlashlight() const = 0;
-
-	virtual bool IsUsingVertexID() const = 0;
-
-	// Identifies a material mounted through the preload path
-	virtual void MarkAsPreloaded(bool bSet) = 0;
-	virtual bool IsPreloaded() const = 0;
-
-	// Conditonally increments the refcount
-	virtual void ArtificialAddRef(void) = 0;
-	virtual void ArtificialRelease(void) = 0;
-
-	virtual void			ReportVarChanged(IMaterialVar* pVar) = 0;
-	virtual uint32			GetChangeID() const = 0;
-
-	virtual bool			IsTranslucentInternal(float fAlphaModulation) const = 0;
-
-	//Is this the queue friendly or realtime version of the material?
-	virtual bool IsRealTimeVersion(void) const = 0;
-
-	virtual void ClearContextData(void)
-	{
-	}
-
-	//easy swapping between the queue friendly and realtime versions of the material
-	virtual IMaterialInternal* GetRealTimeVersion(void) = 0;
-	virtual IMaterialInternal* GetQueueFriendlyVersion(void) = 0;
-
-	virtual void PrecacheMappingDimensions(void) = 0;
-	virtual void FindRepresentativeTexture(void) = 0;
-
-	// These are used when a new whitelist is passed in. First materials to be reloaded are flagged, then they are reloaded.
-	virtual void DecideShouldReloadFromWhitelist(IFileList* pFileList) = 0;
-	virtual void ReloadFromWhitelistIfMarked() = 0;
+	SPEW_TYPE_COUNT
 };
 
+//-----------------------------------------------------------------------------
+// Implementation of the shader system
+//-----------------------------------------------------------------------------
 class CShaderSystem : public IShaderSystemInternal
 {
 public:
@@ -273,15 +273,14 @@ public:
 	virtual void		LoadCubeMap(IMaterialVar** ppParams, IMaterialVar* pTextureVar, int nAdditionalCreationFlags = 0);
 
 	// Used to prevent re-entrant rendering from warning messages
-	typedef int SpewType_t;
 	void				BufferSpew(SpewType_t spewType, const Color& c, const char* pMsg);
 
-public:
+public:	// Meetric: Made this public :)
 	struct ShaderDLLInfo_t
 	{
 		char* m_pFileName;
 		CSysModule* m_hInstance;
-		void* m_pShaderDLL;
+		IShaderDLLInternal* m_pShaderDLL;
 		ShaderDLL_t m_hShaderDLL;
 
 		// True if this is a mod's shader DLL, in which case it's not allowed to 
@@ -290,7 +289,7 @@ public:
 		CUtlDict< IShader*, unsigned short >	m_ShaderDict;
 	};
 
-public:
+public:	// Meetric: Made this public :)
 	// hackhack: remove this when VAC2 is online.
 	void VerifyBaseShaderDLL(CSysModule* pModule);
 
@@ -351,7 +350,7 @@ public:
 
 	int GetModulationSnapshotCount(IMaterialVar** params);
 
-public:
+public:	// Meetric: made this public :)
 	// List of all DLLs containing shaders
 	CUtlVector< ShaderDLLInfo_t > m_ShaderDLLs;
 
@@ -387,67 +386,4 @@ public:
 	bool			m_bForceUsingGraphicsReturnTrue;
 };
 
-typedef intp VertexShader_t;
-typedef intp PixelShader_t;
-
-abstract_class IShaderManager
-{
-public:
-
-	// The current vertex and pixel shader index
-	int m_nVertexShaderIndex;
-	int m_nPixelShaderIndex;
-
-public:
-	// Initialize, shutdown
-	virtual void Init() = 0;
-	virtual void Shutdown() = 0;
-
-	// Compiles vertex shaders
-	virtual IShaderBuffer* CompileShader(const char* pProgram, size_t nBufLen, const char* pShaderVersion) = 0;
-
-	// New version of these methods	[dx10 port]
-	virtual VertexShaderHandle_t CreateVertexShader(IShaderBuffer* pShaderBuffer) = 0;
-	virtual void DestroyVertexShader(VertexShaderHandle_t hShader) = 0;
-	virtual PixelShaderHandle_t CreatePixelShader(IShaderBuffer* pShaderBuffer) = 0;
-	virtual void DestroyPixelShader(PixelShaderHandle_t hShader) = 0;
-
-	// Creates vertex, pixel shaders
-	virtual VertexShader_t CreateVertexShader(const char* pVertexShaderFile, int nStaticVshIndex = 0, char* debugLabel = NULL) = 0;
-	virtual PixelShader_t CreatePixelShader(const char* pPixelShaderFile, int nStaticPshIndex = 0, char* debugLabel = NULL) = 0;
-
-	// Sets which dynamic version of the vertex + pixel shader to use
-	FORCEINLINE void SetVertexShaderIndex(int vshIndex);
-	FORCEINLINE void SetPixelShaderIndex(int pshIndex);
-
-	// Sets the vertex + pixel shader render state
-	virtual void SetVertexShader(VertexShader_t shader) = 0;
-	virtual void SetPixelShader(PixelShader_t shader) = 0;
-
-	// Resets the vertex + pixel shader state
-	virtual void ResetShaderState() = 0;
-
-	// Returns the current vertex + pixel shaders
-	virtual void* GetCurrentVertexShader() = 0;
-	virtual void* GetCurrentPixelShader() = 0;
-
-	virtual void ClearVertexAndPixelShaderRefCounts() = 0;
-	virtual void PurgeUnusedVertexAndPixelShaders() = 0;
-
-	// The low-level dx call to set the vertex shader state
-	virtual void BindVertexShader(VertexShaderHandle_t shader) = 0;
-	virtual void BindPixelShader(PixelShaderHandle_t shader) = 0;
-
-#if defined( _X360 )
-	virtual const char* GetActiveVertexShaderName() = 0;
-	virtual const char* GetActivePixelShaderName() = 0;
-#endif
-
-#if defined( DX_TO_GL_ABSTRACTION )
-	virtual void DoStartupShaderPreloading() = 0;
-#endif
-};
-
-
-
-#endif
+#endif // SHADERSYSTEM_H

@@ -1,4 +1,4 @@
-#include <BaseVSShader.h>
+#include <shaders/BaseVSShader.h>
 
 #include "shaders/GWaterFinalpass_vs30.inc"
 #include "shaders/GWaterFinalpass_ps30.inc"

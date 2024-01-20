@@ -1,4 +1,4 @@
-#include <BaseVSShader.h>
+#include <shaders/BaseVSShader.h>
 
 #include "shaders/GWaterNormals_vs30.inc"
 #include "shaders/GWaterNormals_ps30.inc"

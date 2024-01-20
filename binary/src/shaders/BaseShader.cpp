@@ -1,25 +1,14 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
 //=====================================================================================//
-//#include "f_imaterialsystemhardwareconfig.h"
+
 #include "shaderlib/BaseShader.h"
 #include "shaderlib/ShaderDLL.h"
-#include <IShaderSystem.h>
 #include "tier0/dbg.h"
-
-//-----------------------------------------------------------------------------
-// forward declarations
-//-----------------------------------------------------------------------------
-
-IShaderSystem* g_pSLShaderSystem = NULL;
-
-inline IShaderSystem* GetShaderSystem()
-{
-	return g_pSLShaderSystem;
-}
-
+#include "shaderDLL_Global.h"
+#include "IShaderSystem.h"
 #include "materialsystem/imaterial.h"
 #include "materialsystem/itexture.h"
 #include "materialsystem/ishaderapi.h"
@@ -46,14 +35,12 @@ int CBaseShader::s_nModulationFlags;
 CMeshBuilder* CBaseShader::s_pMeshBuilder;
 static ConVar mat_fullbright("mat_fullbright", "0", FCVAR_CHEAT);
 
-bool g_shaderConfigDumpEnable = false; //true;		//DO NOT CHECK IN ENABLED FIXME
-
 //-----------------------------------------------------------------------------
 // constructor
 //-----------------------------------------------------------------------------
 CBaseShader::CBaseShader()
 {
-	//GetShaderDLL()->InsertShader( this );
+	//GetShaderDLL()->InsertShader(this);	// Meetric: commented this out
 }
 
 
@@ -153,7 +140,7 @@ void CBaseShader::InitShaderInstance(IMaterialVar** ppParams, IShaderInit* pShad
 void CBaseShader::DrawElements(IMaterialVar** ppParams, int nModulationFlags,
 	IShaderShadow* pShaderShadow, IShaderDynamicAPI* pShaderAPI, VertexCompressionType_t vertexCompression, CBasePerMaterialContextData** pContextDataPtr)
 {
-	//VPROF("CBaseShader::DrawElements");
+	VPROF("CBaseShader::DrawElements");
 	// Re-entrancy check
 	Assert(!s_ppParams);
 
@@ -296,7 +283,7 @@ CMeshBuilder* CBaseShader::MeshBuilder()
 //-----------------------------------------------------------------------------
 // Loads a texture
 //-----------------------------------------------------------------------------
-void CBaseShader::LoadTexture(int nTextureVar, int nAdditionalCreationFlags /* = 0 */)
+void CBaseShader::LoadTexture(int nTextureVar, int nAdditionalCreationFlags)	// Meetric: This constructor was edited to conform with the new decleration
 {
 	if ((!s_ppParams) || (nTextureVar == -1))
 		return;
@@ -304,7 +291,7 @@ void CBaseShader::LoadTexture(int nTextureVar, int nAdditionalCreationFlags /* =
 	IMaterialVar* pNameVar = s_ppParams[nTextureVar];
 	if (pNameVar && pNameVar->IsDefined())
 	{
-		s_pShaderInit->LoadTexture(pNameVar, s_pTextureGroupName, nAdditionalCreationFlags);
+		s_pShaderInit->LoadTexture(pNameVar, s_pTextureGroupName);
 	}
 }
 
@@ -328,7 +315,7 @@ void CBaseShader::LoadBumpMap(int nTextureVar)
 //-----------------------------------------------------------------------------
 // Loads a cubemap
 //-----------------------------------------------------------------------------
-void CBaseShader::LoadCubeMap(int nTextureVar, int nAdditionalCreationFlags /* = 0 */)
+void CBaseShader::LoadCubeMap(int nTextureVar, int nAdditionalCreationFlags)	// Meetric: This constructor was edited to conform with the new decleration
 {
 	if ((!s_ppParams) || (nTextureVar == -1))
 		return;
@@ -336,14 +323,14 @@ void CBaseShader::LoadCubeMap(int nTextureVar, int nAdditionalCreationFlags /* =
 	IMaterialVar* pNameVar = s_ppParams[nTextureVar];
 	if (pNameVar && pNameVar->IsDefined())
 	{
-		s_pShaderInit->LoadCubeMap(s_ppParams, pNameVar, nAdditionalCreationFlags);
+		s_pShaderInit->LoadCubeMap(s_ppParams, pNameVar);
 	}
 }
 
 
 ShaderAPITextureHandle_t CBaseShader::GetShaderAPITextureBindHandle(int nTextureVar, int nFrameVar, int nTextureChannel)
 {
-	//	Assert( !IsSnapshotting() );
+	Assert(!IsSnapshotting());
 	Assert(nTextureVar != -1);
 	Assert(s_ppParams);
 
@@ -377,7 +364,7 @@ void CBaseShader::BindTexture(Sampler_t sampler1, Sampler_t sampler2, int nTextu
 	{
 		int nFrame = pFrameVar ? pFrameVar->GetIntValue() : 0;
 
-		if (sampler2 == Sampler_t(-1))
+		if (sampler2 == -1)
 		{
 			GetShaderSystem()->BindTexture(sampler1, pTextureVar->GetTextureValue(), nFrame);
 		}
@@ -398,27 +385,13 @@ void CBaseShader::BindTexture(Sampler_t sampler1, Sampler_t sampler2, ITexture* 
 {
 	Assert(!IsSnapshotting());
 
-	if (sampler2 == Sampler_t(-1))
+	if (sampler2 == -1)
 	{
 		GetShaderSystem()->BindTexture(sampler1, pTexture, nFrame);
 	}
 	else
 	{
 		GetShaderSystem()->BindTexture(sampler1, sampler2, pTexture, nFrame);
-	}
-}
-
-void CBaseShader::GetTextureDimensions(float* pOutWidth, float* pOutHeight, int nTextureVar)
-{
-	Assert(pOutWidth && pOutHeight); // Outputs must be provided.
-	Assert(nTextureVar != -1);
-
-	IMaterialVar* pTextureVar = s_ppParams[nTextureVar];
-
-	if (pTextureVar && pTextureVar->GetTextureValue())
-	{
-		*pOutWidth = (float)(pTextureVar->GetTextureValue()->GetActualWidth());
-		*pOutHeight = (float)(pTextureVar->GetTextureValue()->GetActualHeight());
 	}
 }
 
@@ -1372,6 +1345,8 @@ void CBaseShader::FixedFunctionBaseTimesDetailPass(int baseTextureVar,
 
 	if (IsSnapshotting())
 	{
+		IMaterialVar** params = s_ppParams;
+
 		s_pShaderShadow->EnableTexGen(SHADER_TEXTURE_STAGE0, false);
 		s_pShaderShadow->EnableTexGen(SHADER_TEXTURE_STAGE1, false);
 

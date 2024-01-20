@@ -1,62 +1,66 @@
 #pragma once
-#include "GWaterNormals.h"
-#include "GWaterSmooth.h"
-#include "GWaterVolumetric.h"
-#include "GWaterFinalpass.h"
-#include "IShaderSystem.h"
+#include "shaders/GWaterNormals.h"
+#include "shaders/GWaterSmooth.h"
+#include "shaders/GWaterVolumetric.h"
+#include "shaders/GWaterFinalpass.h"
+#include "shaders/shadersystem.h"	// A conglomeration of valve structs shoved into a file.
+// ^ This file gives us access to CShaderSystem
+// CShaderSystem has privated variables (which we edit and make public) to get access to the internal shader DLLs
+// With these 'DLLs' made public, we can add our own shaders into the materialsystem without having to go through valves fucked up API
 
-// all of these externals MUST be defined (NOT NULL) BEFORE inserting shaders into the materialsystem or you WILL crash!
-extern const MaterialSystem_Config_t* g_pConfig = NULL;
+// these externals MUST be defined (NOT NULL) BEFORE inserting shaders into the materialsystem or you WILL crash!
 extern IMaterialSystemHardwareConfig* g_pHardwareConfig = NULL;
-extern IShaderSystem* g_pSLShaderSystem;
-//extern IVEngineClient* engine = NULL;
+extern const MaterialSystem_Config_t* g_pConfig = NULL;
 
-CShaderSystem::ShaderDLLInfo_t* g_pShaderLibDLL;	// our shader directory
-CShaderSystem* g_pCShaderSystem;
+IShaderSystem* g_pSLShaderSystem;
+CShaderSystem* cshadersystem;	// our unfucked (public) shadersystem struct
+CShaderSystem::ShaderDLLInfo_t* shaderlibdll;	// our shader directory
 //int m_ShaderDLLs_index;		// index in materialsystem of our added shader directory (unused)
 
 // returns true if successful, false otherwise
 bool inject_shaders() {
-	// Load source system variables for personal use
-	if (!Sys_LoadInterface("materialsystem", "ShaderSystem002", NULL, (void**)&g_pSLShaderSystem)) return false;
-	if (!Sys_LoadInterface("materialsystem", "VMaterialSystemConfig002", NULL, (void**)&g_pConfig)) return false;
-	if (!Sys_LoadInterface("materialsystem", "MaterialSystemHardwareConfig012", NULL, (void**)&g_pHardwareConfig)) return false;
+	// Load source interfaces for personal use
+	if (!Sys_LoadInterface("materialsystem", MATERIALSYSTEM_HARDWARECONFIG_INTERFACE_VERSION, NULL, (void**)&g_pHardwareConfig)) return false;
+	if (!Sys_LoadInterface("materialsystem", MATERIALSYSTEM_CONFIG_VERSION, NULL, (void**)&g_pConfig)) return false;
+	if (!Sys_LoadInterface("materialsystem", SHADERSYSTEM_INTERFACE_VERSION, NULL, (void**)&g_pSLShaderSystem)) return false;
 
 	// imagine not being able to run dx9
 	if (g_pHardwareConfig->GetDXSupportLevel() < 90) return false;
 	// ^this check isnt technically required, but I only compiled my shaders for dx9 and above
-	
-	g_pCShaderSystem = (CShaderSystem*)g_pSLShaderSystem;
-	
+
+	// this will cast the memory given by the valve interfaces to a custom CShaderSystem class which allows us to use privated variables which otherwise would be hidden
+	// This cast overall makes 0 sense, and shouldn't work. but im not complaining :)
+	cshadersystem = (CShaderSystem*)g_pSLShaderSystem;
+
 	// Create new shader directory (dll?)
 	//m_ShaderDLLs_index = g_pCShaderSystem->m_ShaderDLLs.AddToTail();	// WARNING: Adding more than 1 shader dll crashes the game!!!
 	
 	// if the above code is uncommented, m_ShaderDLLs_index ends up being equal to 7
 	// im not sure what indexes 0-6 actually mean in terms of the gmod source code but ive found 0 to be the most stable
 	// in theory you could have an infinite amount of shaders on this index, you just need to make sure to remove them on unload
-	g_pShaderLibDLL = &g_pCShaderSystem->m_ShaderDLLs[0];
+	shaderlibdll = &cshadersystem->m_ShaderDLLs[0];
 
-	//g_pShaderLibDLL->m_pFileName = strdup("gwater_shaders.dll");
+	//g_pShaderLibDLL->m_pFileName = strdup("gwater_shaders.dll");	// likely doesnt matter
 	//g_pShaderLibDLL->m_bModShaderDLL = true;
 
 	// Insert our shaders into the materialsystem
 	// you need the COMPILED .vcs shaders in GarrysMod/garrysmod/shaders/fxc for the shaders to appear ingame!
-	g_pShaderLibDLL->m_ShaderDict.Insert(GWaterNormals::s_Name, &GWaterNormals::s_ShaderInstance);
-	g_pShaderLibDLL->m_ShaderDict.Insert(GWaterSmooth::s_Name, &GWaterSmooth::s_ShaderInstance);
-	g_pShaderLibDLL->m_ShaderDict.Insert(GWaterVolumetric::s_Name, &GWaterVolumetric::s_ShaderInstance);
-	g_pShaderLibDLL->m_ShaderDict.Insert(GWaterFinalpass::s_Name, &GWaterFinalpass::s_ShaderInstance);
+	shaderlibdll->m_ShaderDict.Insert(GWaterNormals::s_Name, &GWaterNormals::s_ShaderInstance);
+	shaderlibdll->m_ShaderDict.Insert(GWaterSmooth::s_Name, &GWaterSmooth::s_ShaderInstance);
+	shaderlibdll->m_ShaderDict.Insert(GWaterVolumetric::s_Name, &GWaterVolumetric::s_ShaderInstance);
+	shaderlibdll->m_ShaderDict.Insert(GWaterFinalpass::s_Name, &GWaterFinalpass::s_ShaderInstance);
 
 	return true;
 }
 
 bool eject_shaders() {
 	// Dont forget to free shaders or you crash on reload!
-	if (g_pShaderLibDLL) {
+	if (shaderlibdll) {
 		// Remove inserted shader(s)
-		g_pShaderLibDLL->m_ShaderDict.Remove(GWaterNormals::s_Name);
-		g_pShaderLibDLL->m_ShaderDict.Remove(GWaterSmooth::s_Name);
-		g_pShaderLibDLL->m_ShaderDict.Remove(GWaterVolumetric::s_Name);
-		g_pShaderLibDLL->m_ShaderDict.Remove(GWaterFinalpass::s_Name);
+		shaderlibdll->m_ShaderDict.Remove(GWaterNormals::s_Name);
+		shaderlibdll->m_ShaderDict.Remove(GWaterSmooth::s_Name);
+		shaderlibdll->m_ShaderDict.Remove(GWaterVolumetric::s_Name);
+		shaderlibdll->m_ShaderDict.Remove(GWaterFinalpass::s_Name);
 
 		// Remove our added shader directory (dll?) in material system
 		//g_pCShaderSystem->m_ShaderDLLs.Remove(m_ShaderDLLs_index);

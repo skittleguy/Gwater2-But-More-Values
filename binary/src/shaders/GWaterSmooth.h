@@ -1,4 +1,4 @@
-#include <BaseVSShader.h>
+#include <shaders/BaseVSShader.h>
 
 #include "shaders/GWaterVolumetric_vs30.inc"	// vertex shader is reused because I don't feel like recompiling another one
 #include "shaders/GWaterSmooth_ps30.inc"

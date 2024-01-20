@@ -14,8 +14,6 @@
 // pushes lua flex instance at stack -1
 #define GET_FLEX LUA->GetUserType<FlexSolver>(1, FlexMetaTable)
 #define ADD_FUNCTION(LUA, funcName, tblName) LUA->PushCFunction(funcName); LUA->SetField(-2, tblName)
-#define MAX_INDICES 10922	// floor(2^15 / 3)
-#define sqrt3 1.7320508075688772935274463415
 
 using namespace GarrysMod::Lua;
 
@@ -347,7 +345,7 @@ LUA_FUNCTION(RenderParticles) {
 	return 0;
 }
 
-
+#define MAX_INDICES 10922	// floor(2^15 / 3)
 LUA_FUNCTION(BuildIMeshes) {
 	LUA->CheckType(1, FlexMetaTable);
 	LUA->CheckType(2, Type::Vector);	// eye pos
@@ -402,7 +400,7 @@ LUA_FUNCTION(BuildIMeshes) {
 			float3 eye_up = Cross(eye_right, dir);
 
 			// particle positions in local space
-			float tri_mult = 1.0 / ((2.0 * sqrt3 - 2.0) / 2.0);	// Height of equalateral triangle minus length of circle with radius 1
+			float tri_mult = 1.3660254; //1.0 / ((2.0 * sqrt(3) - 2.0) / 2.0);	// Inverse Height of equalateral triangle minus length of circle with radius 1
 			float3 offset = -eye_up * 0.8;	// Magic number 2
 			float3 pos1 = (eye_up + eye_up * tri_mult + offset) * radius;
 			float3 pos2 = (eye_right * tri_mult + offset) * radius;

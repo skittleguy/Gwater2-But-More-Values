@@ -1,4 +1,4 @@
-#include <BaseVSShader.h>
+#include <shaders/BaseVSShader.h>
 
 #include "shaders/GWaterVolumetric_vs30.inc"
 #include "shaders/GWaterVolumetric_ps30.inc"
