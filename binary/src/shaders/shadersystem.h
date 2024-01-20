@@ -17,16 +17,6 @@
 //		the shader shadow phase (like texture stage pipeline).
 //
 //=============================================================================//
-enum SpewType_t
-{
-    SPEW_MESSAGE = 0,
-    SPEW_WARNING,
-    SPEW_ASSERT,
-    SPEW_ERROR,
-    SPEW_LOG,
-
-    SPEW_TYPE_COUNT
-};
 
 #ifndef SHADERSYSTEM_H
 #define SHADERSYSTEM_H
@@ -221,6 +211,16 @@ public:
 // Meetric: I just shoved the CShadersystem class in here... hope thats fine
 
 // Meetric: Added this since its not defined in tier0/dbg EVEN THOUGH IT SHOULD BE
+enum SpewType_t
+{
+	SPEW_MESSAGE = 0,
+	SPEW_WARNING,
+	SPEW_ASSERT,
+	SPEW_ERROR,
+	SPEW_LOG,
+
+	SPEW_TYPE_COUNT
+};
 
 //-----------------------------------------------------------------------------
 // Implementation of the shader system
