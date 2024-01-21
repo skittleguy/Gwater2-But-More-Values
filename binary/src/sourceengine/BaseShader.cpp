@@ -40,7 +40,7 @@ static ConVar mat_fullbright("mat_fullbright", "0", FCVAR_CHEAT);
 //-----------------------------------------------------------------------------
 CBaseShader::CBaseShader()
 {
-	//GetShaderDLL()->InsertShader(this);	// Meetric: commented this out
+	//GetShaderDLL()->InsertShader(this);	// Meetric: commented this out since it is unused
 }
 
 

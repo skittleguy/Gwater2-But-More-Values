@@ -3,19 +3,22 @@
 #include "shaders/GWaterSmooth.h"
 #include "shaders/GWaterVolumetric.h"
 #include "shaders/GWaterFinalpass.h"
+
+// This file is intentionally overcommented because of how undocumented source shaders are
+
 #include "shadersystem.h"	// A conglomeration of valve structs shoved into a file.
-// ^ This file gives us access to CShaderSystem
-// CShaderSystem has privated variables (which we edit and make public) to get access to the internal shader DLLs
+// ^ This file gives us access to CShaderSystem..
+// CShaderSystem has privated variables (which we edit and make public) to get access to the internal shader DLLs (directories)
 // With these 'DLLs' made public, we can add our own shaders into the materialsystem without having to go through valves fucked up API
 
 // these externals MUST be defined (NOT NULL) BEFORE inserting shaders into the materialsystem or you WILL crash!
 extern IMaterialSystemHardwareConfig* g_pHardwareConfig = NULL;
 extern const MaterialSystem_Config_t* g_pConfig = NULL;
-
 IShaderSystem* g_pSLShaderSystem;
+
 CShaderSystem* cshadersystem;	// our unfucked (public) shadersystem struct
-CShaderSystem::ShaderDLLInfo_t* shaderlibdll;	// our shader directory
-//int m_ShaderDLLs_index;		// index in materialsystem of our added shader directory (unused)
+CShaderSystem::ShaderDLLInfo_t* shaderlibdll;	// our shader "directory"
+//int m_ShaderDLLs_index;		// index in materialsystem of our added shader directory (unused here)
 
 // returns true if successful, false otherwise
 bool inject_shaders() {
@@ -28,22 +31,23 @@ bool inject_shaders() {
 	if (g_pHardwareConfig->GetDXSupportLevel() < 90) return false;
 	// ^this check isnt technically required, but I only compiled my shaders for dx9 and above
 
-	// this will cast the memory given by the valve interfaces to a custom CShaderSystem class which allows us to use privated variables which otherwise would be hidden
+	// this will cast the memory given by the valve interfaces to an edited CShaderSystem class which allows us to use privated variables which otherwise would be hidden
 	// This cast overall makes 0 sense, and shouldn't work. but im not complaining :)
 	cshadersystem = (CShaderSystem*)g_pSLShaderSystem;
 
-	// Create new shader directory (dll?)
-	//m_ShaderDLLs_index = g_pCShaderSystem->m_ShaderDLLs.AddToTail();	// WARNING: Adding more than 1 shader dll crashes the game!!!
-	
-	// if the above code is uncommented, m_ShaderDLLs_index ends up being equal to 7
-	// im not sure what indexes 0-6 actually mean in terms of the gmod source code but ive found 0 to be the most stable
-	// in theory you could have an infinite amount of shaders on this index, you just need to make sure to remove them on unload
+	// Create new shader directory (dll)
+	//m_ShaderDLLs_index = g_pCShaderSystem->m_ShaderDLLs.AddToTail();	// WARNING: Having more than 8 total shader dlls crashes the game!!!
+	//shaderlibdll = &cshadersystem->m_ShaderDLLs[m_ShaderDLLs_index];
+
+	// if the above code is uncommented, m_ShaderDLLs_index ends up being equal to 7 (the maximum allowed number of shader directories)
+	// im not sure what indexes 0-6 actually mean in terms of the gmod source code but ive found injecting into 0 tends to be the most stable
+	// in theory you could have an infinite amount of shaders on this index, you just need to make sure to remove them on module unload
 	shaderlibdll = &cshadersystem->m_ShaderDLLs[0];
 
-	//g_pShaderLibDLL->m_pFileName = strdup("gwater_shaders.dll");	// likely doesnt matter
-	//g_pShaderLibDLL->m_bModShaderDLL = true;
+	//shaderlibdll->m_pFileName = strdup("gwater_shaders.dll");	// name likely doesnt matter
+	//shaderlibdll->m_bModShaderDLL = true;	
 
-	// Insert our shaders into the materialsystem
+	// Insert our shaders into the shader directory
 	// you need the COMPILED .vcs shaders in GarrysMod/garrysmod/shaders/fxc for the shaders to appear ingame!
 	shaderlibdll->m_ShaderDict.Insert(GWaterNormals::s_Name, &GWaterNormals::s_ShaderInstance);
 	shaderlibdll->m_ShaderDict.Insert(GWaterSmooth::s_Name, &GWaterSmooth::s_ShaderInstance);

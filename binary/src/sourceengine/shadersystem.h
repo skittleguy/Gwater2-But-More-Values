@@ -209,8 +209,7 @@ public:
 };
 
 // Meetric: I just shoved the CShadersystem class in here... hope thats fine
-
-// Meetric: Added this since its not defined in tier0/dbg EVEN THOUGH IT SHOULD BE
+// Meetric: Also added this since its not defined in tier0/dbg EVEN THOUGH IT SHOULD BE
 enum SpewType_t
 {
 	SPEW_MESSAGE = 0,
