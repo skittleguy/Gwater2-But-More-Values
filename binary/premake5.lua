@@ -35,12 +35,15 @@ CreateWorkspace({name = "gwater2", abi_compatible = true, path = ""})
 		includedirs {
 			"FleX/include",
 			"BSPParser",
-			"GMFS"
+			"GMFS",
+			"src/sourceengine"
 		}
 
 		files {
 			"BSPParser/**",
-			"GMFS/**"
+			"GMFS/**",
+			"src/sourceengine/*",
+			"src/shaders/*"
 		}
 
 		filter({"system:windows", "platforms:x86"})
@@ -71,7 +74,7 @@ CreateWorkspace({name = "gwater2", abi_compatible = true, path = ""})
 				"FleX/lib/linux64"
 			}
 			links { 
-				"NvFlexReleaseD3D_x64",
+				"NvFlexReleaseCUDA_x64",
 				"NvFlexDeviceRelease_x64",
-				"NvFlexExtReleaseD3D_x64"
+				"NvFlexExtReleaseCUDA_x64"
 			}

@@ -3,7 +3,7 @@
 #include "shaders/GWaterSmooth.h"
 #include "shaders/GWaterVolumetric.h"
 #include "shaders/GWaterFinalpass.h"
-#include "shaders/shadersystem.h"	// A conglomeration of valve structs shoved into a file.
+#include "shadersystem.h"	// A conglomeration of valve structs shoved into a file.
 // ^ This file gives us access to CShaderSystem
 // CShaderSystem has privated variables (which we edit and make public) to get access to the internal shader DLLs
 // With these 'DLLs' made public, we can add our own shaders into the materialsystem without having to go through valves fucked up API

@@ -1,7 +1,7 @@
-#include <shaders/BaseVSShader.h>
+#include <BaseVSShader.h>
 
-#include "shaders/GWaterFinalpass_vs30.inc"
-#include "shaders/GWaterFinalpass_ps30.inc"
+#include "shaders/inc/GWaterFinalpass_vs30.inc"
+#include "shaders/inc/GWaterFinalpass_ps30.inc"
 
 BEGIN_VS_SHADER(GWaterFinalpass, "gwater2 helper")
 

@@ -1,7 +1,7 @@
-#include <shaders/BaseVSShader.h>
+#include <BaseVSShader.h>
 
-#include "shaders/GWaterVolumetric_vs30.inc"
-#include "shaders/GWaterVolumetric_ps30.inc"
+#include "shaders/inc/GWaterVolumetric_vs30.inc"
+#include "shaders/inc/GWaterVolumetric_ps30.inc"
 
 BEGIN_VS_SHADER(GWaterVolumetric, "gwater2 helper")
 

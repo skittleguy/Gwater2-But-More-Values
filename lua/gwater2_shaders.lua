@@ -62,7 +62,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 	end
 
 	-- grab normals
-	water_normals:SetFloat("$radius", radius * 0.25)
+	water_normals:SetFloat("$radius", radius * 1)
 	render.SetMaterial(water_normals)
 	render.SetRenderTarget(cache_normals)
 	--render.ClearDepth()

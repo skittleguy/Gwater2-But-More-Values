@@ -1,7 +1,7 @@
-#include <shaders/BaseVSShader.h>
+#include <BaseVSShader.h>
 
-#include "shaders/GWaterVolumetric_vs30.inc"	// vertex shader is reused because I don't feel like recompiling another one
-#include "shaders/GWaterSmooth_ps30.inc"
+#include "shaders/inc/GWaterVolumetric_vs30.inc"	// vertex shader is reused because I don't feel like recompiling another one
+#include "shaders/inc/GWaterSmooth_ps30.inc"
 
 BEGIN_VS_SHADER(GWaterSmooth, "gwater2 helper")
 

@@ -26,7 +26,7 @@
 #endif
 
 #include "IShaderSystem.h"
-//#include "shaderlib/BaseShader.h"
+//#include "shaderlib/BaseShader.h" // Meetric: Commented these out, appears to be unused
 //#include "materialsystem/materialsystem_config.h"
 #include "shaderapi/ishaderapi.h"
 #include "imaterialinternal.h"
