@@ -2,7 +2,7 @@
 #include <NvFlex.h>
 #include "types.h"
 
-struct Mesh {
+class Mesh {
 private:
 	NvFlexLibrary* library = nullptr;
 	NvFlexBuffer* vertices = nullptr;
@@ -14,11 +14,9 @@ public:
 	float4 ang = float4{};
 	
 	Mesh(NvFlexLibrary* lib);
-	// Returns the FleX internal ID associated with the mesh
+	~Mesh();
 	NvFlexTriangleMeshId get_id() { return this->id; }
-
-	bool init_concave(float3* verts, int num_verts); // Initializes mesh with concave data. True on success, false otherwise
-	bool init_convex(float3* verts, int num_verts);	// Initializes mesh with convex data. True on success, false otherwise
+	bool init_concave(float3* verts, int num_verts); // returns true on success, false otherwise
+	bool init_convex(float3* verts, int num_verts);	// ^
 	void update(float3 pos, float3 ang);
-	void destroy();
 };

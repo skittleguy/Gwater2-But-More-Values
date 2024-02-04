@@ -26,12 +26,11 @@
 #endif
 
 #include "IShaderSystem.h"
-//#include "shaderlib/BaseShader.h" // Meetric: Commented these out, appears to be unused
-//#include "materialsystem/materialsystem_config.h"
+#include "shaderlib/BaseShader.h"
+#include "materialsystem/materialsystem_config.h"
 #include "shaderapi/ishaderapi.h"
-#include "imaterialinternal.h"
-//#include "materialsystem_global.h"
-#include "tier1/utldict.h"
+#include "materialsystem_global.h"
+#include "tier1/utldict.h"	// Needed for CShaderSystem
 
 
 //-----------------------------------------------------------------------------

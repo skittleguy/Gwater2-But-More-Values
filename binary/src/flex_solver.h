@@ -5,7 +5,6 @@
 #include <string>
 #include "types.h"	// float3 & float4
 #include "mesh.h"
-#include <materialsystem/imesh.h>	// needed for imeshes
 
 // Struct that holds FleX solver data
 class FlexSolver {
@@ -18,7 +17,7 @@ private:
 	std::map<std::string, NvFlexBuffer*> buffers;
 	std::map<std::string, float*> param_map;
 	std::map<std::string, float4*> hosts;
-	std::vector<Mesh> meshes;
+	std::vector<Mesh*> meshes;	// physmeshes
 
 	void add_buffer(std::string name, int type, int count);
 	NvFlexBuffer* get_buffer(std::string name);
@@ -26,8 +25,6 @@ private:
 	void map_parameters(NvFlexParams* buffer);
 
 public:
-	std::vector<IMesh*> imeshes;		// This is mainly used in main.cpp since the FlexSolver class is specifically for data management
-
 	void set_active_particles(int n);
 	int get_active_particles();
 	int get_max_particles();
@@ -40,7 +37,7 @@ public:
 	void add_particle(float4 pos, float3 vel, float4 col);
 	bool pretick(NvFlexMapFlags wait);	// Handles transfer of FleX buffers to hosts & updates mesh positions/angles
 	void tick(float dt);
-	void add_mesh(Mesh mesh, NvFlexCollisionShapeType mesh_type, bool dynamic);
+	void add_mesh(Mesh* mesh, NvFlexCollisionShapeType mesh_type, bool dynamic);
 	void remove_mesh(int index);
 	void update_mesh(int index, float3 new_pos, float3 new_ang);
 	bool set_parameter(std::string param, float number);	// Returns true on success, false otherwise

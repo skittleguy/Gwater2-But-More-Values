@@ -66,6 +66,7 @@ gwater2 = {
 	end,
 }
 gwater2.solver:InitBounds(Vector(-16384, -16384, -16384), Vector(16384, 16384, 16384))	-- source bounds
+gwater2.renderer = FlexRenderer(gwater2.solver)
 
 local volumetric = Material("gwater2/volumetric")
 local absorption = CreateClientConVar("gwater2_absorption", "1", true)
@@ -158,7 +159,7 @@ local function get_map_vertices()
 	return all_vertices
 end
 
---hook.Add("InitPostEntity", "gwater2_addprop", function()
+hook.Add("InitPostEntity", "gwater2_addprop", function()
 	xpcall(function()
 		gwater2.solver:AddMapMesh(game.GetMap())
 	end, function(e)
@@ -168,5 +169,5 @@ end
 	for k, ent in ipairs(ents.GetAll()) do
 		add_prop(ent)
 	end
---end)
+end)
 hook.Add("OnEntityCreated", "gwater2_addprop", function(ent) timer.Simple(0, function() add_prop(ent) end) end)	// timer.0 so data values are setup correctly
