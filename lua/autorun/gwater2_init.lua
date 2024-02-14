@@ -66,7 +66,7 @@ gwater2 = {
 	end,
 }
 gwater2.solver:InitBounds(Vector(-16384, -16384, -16384), Vector(16384, 16384, 16384))	-- source bounds
-gwater2.renderer = FlexRenderer(gwater2.solver)
+gwater2.renderer = FlexRenderer()
 
 local volumetric = Material("gwater2/volumetric")
 local absorption = CreateClientConVar("gwater2_absorption", "1", true)

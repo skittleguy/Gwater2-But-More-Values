@@ -5,7 +5,7 @@
 
 //extern IMaterialSystem* materials = NULL;	// stops main branch compile from bitching
 
-//FIXME: ADD SMARTCOMMENTS
+// todo: add smartcomments
 
 // Struct that holds FleX solver data
 void FlexSolver::add_buffer(std::string name, int type, int count) {

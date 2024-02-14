@@ -16,9 +16,11 @@ ILuaBase* GLOBAL_LUA;			// used for flex error handling
 int FLEXSOLVER_METATABLE = 0;
 int FLEXRENDERER_METATABLE = 0;
 
+//#define GET_FLEX(type, stack_pos) LUA->GetUserType<type>(stack_pos, type == FlexSolver ? FLEXSOLVER_METATABLE : FLEXRENDERER_METATABLE)
+
 /************************** Flex Solver LUA Interface *******************************/
 
-#define GET_FLEXSOLVER LUA->GetUserType<FlexSolver>(1, FLEXSOLVER_METATABLE)
+#define GET_FLEXSOLVER(stack_pos) LUA->GetUserType<FlexSolver>(stack_pos, FLEXSOLVER_METATABLE)
 
 // todo: probably need to move these defines somewhere else or remove them
 float3 VectorTofloat3(Vector v) {
@@ -48,7 +50,7 @@ float3* TableTofloat3(ILuaBase* LUA) {
 LUA_FUNCTION(FLEXSOLVER_GarbageCollect) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 
-	FlexSolver* flex = GET_FLEXSOLVER;
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 
 	LUA->PushNil();
 	LUA->SetMetaTable(-2);
@@ -65,7 +67,7 @@ LUA_FUNCTION(FLEXSOLVER_AddParticle) {
 	LUA->CheckType(4, Type::Table);		// color
 	LUA->CheckNumber(5);				// mass
 
-	FlexSolver* flex = GET_FLEXSOLVER;
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 	Vector pos = LUA->GetVector(2);
 	Vector vel = LUA->GetVector(3);
 	float inv_mass = 1.f / (float)LUA->GetNumber(5);	// FleX uses inverse mass for their calculations
@@ -88,7 +90,7 @@ LUA_FUNCTION(FLEXSOLVER_AddParticle) {
 LUA_FUNCTION(FLEXSOLVER_Tick) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckNumber(2);
-	FlexSolver* flex = GET_FLEXSOLVER;
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 	float dt = (float)LUA->GetNumber(2);
 	bool succ = flex->pretick((NvFlexMapFlags)LUA->GetNumber(3));
 	if (succ) flex->tick(dt);
@@ -100,7 +102,7 @@ LUA_FUNCTION(FLEXSOLVER_Tick) {
 // Gets all the particle positions in a FlexSolver. Originally used for debugging
 LUA_FUNCTION(FLEXSOLVER_GetParticles) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	FlexSolver* flex = GET_FLEXSOLVER;
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 
 	LUA->CreateTable();
 	for (int i = 0; i < flex->get_active_particles(); i++) {
@@ -123,7 +125,7 @@ LUA_FUNCTION(FLEXSOLVER_AddConcaveMesh) {
 	Vector pos = LUA->GetVector(3);
 	QAngle ang = LUA->GetAngle(4);
 
-	FlexSolver* flex = GET_FLEXSOLVER;
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 	Mesh* mesh = new Mesh(FLEX_LIBRARY);
 	float3* verts = TableTofloat3(LUA);
 	if (!mesh->init_concave(verts, LUA->ObjLen(2))) {
@@ -148,7 +150,7 @@ LUA_FUNCTION(FLEXSOLVER_AddConvexMesh) {
 	Vector pos = LUA->GetVector(3);
 	QAngle ang = LUA->GetAngle(4);
 
-	FlexSolver* flex = GET_FLEXSOLVER;
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 	Mesh* mesh = new Mesh(FLEX_LIBRARY);
 	float3* verts = TableTofloat3(LUA);
 	if (!mesh->init_convex(verts, LUA->ObjLen(2))) {
@@ -168,7 +170,7 @@ LUA_FUNCTION(FLEXSOLVER_RemoveMesh) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckNumber(2); // Mesh ID
 
-	FlexSolver* flex = GET_FLEXSOLVER;
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 	flex->remove_mesh(LUA->GetNumber(2));
 
 	return 0;
@@ -179,7 +181,7 @@ LUA_FUNCTION(FLEXSOLVER_SetParameter) {
 	LUA->CheckString(2); // Param
 	LUA->CheckNumber(3); // Number
 
-	FlexSolver* flex = GET_FLEXSOLVER;
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 
 	bool succ = flex->set_parameter(LUA->GetString(2), LUA->GetNumber(3));
 	if (!succ) LUA->ThrowError(("Attempt to set invalid parameter '" + (std::string)LUA->GetString(2) + "'").c_str());
@@ -191,7 +193,7 @@ LUA_FUNCTION(FLEXSOLVER_GetParameter) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckString(2); // Param
 
-	FlexSolver* flex = GET_FLEXSOLVER;
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 	float value = flex->get_parameter(LUA->GetString(2));
 
 	if (isnan(value)) LUA->ThrowError(("Attempt to get invalid parameter '" + (std::string)LUA->GetString(2) + "'").c_str());
@@ -207,7 +209,7 @@ LUA_FUNCTION(FLEXSOLVER_UpdateMesh) {
 	LUA->CheckType(3, Type::Vector);	// Prop Pos
 	LUA->CheckType(4, Type::Angle);		// Prop Angle
 
-	FlexSolver* flex = GET_FLEXSOLVER;
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 	Vector pos = LUA->GetVector(3);
 	QAngle ang = LUA->GetAngle(4);
 
@@ -219,7 +221,7 @@ LUA_FUNCTION(FLEXSOLVER_UpdateMesh) {
 // removes all particles in a flex solver
 LUA_FUNCTION(FLEXSOLVER_Reset) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	FlexSolver* flex = GET_FLEXSOLVER;
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 	flex->set_active_particles(0);
 
 	return 0;
@@ -227,7 +229,7 @@ LUA_FUNCTION(FLEXSOLVER_Reset) {
 
 LUA_FUNCTION(FLEXSOLVER_GetCount) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	FlexSolver* flex = GET_FLEXSOLVER;
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 	LUA->PushNumber(flex->get_active_particles());
 	return 1;
 }
@@ -237,7 +239,7 @@ LUA_FUNCTION(FLEXSOLVER_RenderParticles) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckType(2, Type::Function);
 
-	FlexSolver* flex = GET_FLEXSOLVER;
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 
 	float4* host = flex->get_host("particle_pos");
 	for (int i = 0; i < flex->get_active_particles(); i++) {
@@ -392,7 +394,7 @@ LUA_FUNCTION(FLEXSOLVER_AddMapMesh) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckString(2);
 
-	FlexSolver* flex = GET_FLEXSOLVER;
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 
 	// Get path, check if it exists
 	std::string path = "maps/" + (std::string)LUA->GetString(2) + ".bsp";
@@ -532,7 +534,7 @@ LUA_FUNCTION(FLEXSOLVER_AddCube) {
 	LUA->CheckType(6, Type::Table);	// color (table w/ .r .g .b .a)
 
 	//gmod Vector and fleX float4
-	FlexSolver* flex = GET_FLEXSOLVER;
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 	float3 gmodPos = VectorTofloat3(LUA->GetVector(2));		//pos
 	float3 gmodVel = VectorTofloat3(LUA->GetVector(3));		//vel
 	float3 gmodSize = VectorTofloat3(LUA->GetVector(4));	//size
@@ -566,7 +568,7 @@ LUA_FUNCTION(FLEXSOLVER_AddCube) {
 // Inputting nil disables the bounds.
 LUA_FUNCTION(FLEXSOLVER_InitBounds) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	FlexSolver* flex = GET_FLEXSOLVER;
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 
 	if (LUA->GetType(2) == Type::Vector && LUA->GetType(3) == Type::Vector) {
 		flex->enable_bounds(VectorTofloat3(LUA->GetVector(2)), VectorTofloat3(LUA->GetVector(3)));
@@ -580,12 +582,12 @@ LUA_FUNCTION(FLEXSOLVER_InitBounds) {
 
 /*********************************** Flex Renderer LUA Interface *******************************************/
 
-#define GET_FLEXRENDERER LUA->GetUserType<FlexRenderer>(1, FLEXRENDERER_METATABLE )
+#define GET_FLEXRENDERER(stack_pos) LUA->GetUserType<FlexRenderer>(stack_pos, FLEXRENDERER_METATABLE)
 
 // Frees the flex renderer and its allocated meshes from memory
 LUA_FUNCTION(FLEXRENDERER_GarbageCollect) {
 	LUA->CheckType(1, FLEXRENDERER_METATABLE);
-	FlexRenderer* flex = GET_FLEXRENDERER;
+	FlexRenderer* flex = GET_FLEXRENDERER(1);
 
 	LUA->PushNil();
 	LUA->SetMetaTable(-2);
@@ -597,18 +599,17 @@ LUA_FUNCTION(FLEXRENDERER_GarbageCollect) {
 
 LUA_FUNCTION(FLEXRENDERER_BuildIMeshes) {
 	LUA->CheckType(1, FLEXRENDERER_METATABLE);
-	LUA->CheckNumber(2);
-	FlexRenderer* flex = GET_FLEXRENDERER;
+	LUA->CheckType(2, FLEXSOLVER_METATABLE);
+	LUA->CheckNumber(3);
 
-	flex->build_imeshes(LUA->GetNumber(2));
+	GET_FLEXRENDERER(1)->build_imeshes(GET_FLEXSOLVER(2), LUA->GetNumber(3));
 
 	return 0;
 }
 
-LUA_FUNCTION(FLEXRENDERER_RenderIMeshes) {
+LUA_FUNCTION(FLEXRENDERER_DrawIMeshes) {
 	LUA->CheckType(1, FLEXRENDERER_METATABLE);
-	FlexRenderer* flex = GET_FLEXRENDERER;
-	flex->render_imeshes();
+	GET_FLEXRENDERER(1)->draw_imeshes();
 
 	return 0;
 }
@@ -633,9 +634,7 @@ LUA_FUNCTION(NewFlexSolver) {
 
 // ^
 LUA_FUNCTION(NewFlexRenderer) {
-	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	FlexSolver* flex_solver = GET_FLEXSOLVER;
-	FlexRenderer* flex_renderer = new FlexRenderer(flex_solver);
+	FlexRenderer* flex_renderer = new FlexRenderer();
 
 	LUA->PushUserType(flex_renderer, FLEXRENDERER_METATABLE);
 	LUA->PushMetaTable(FLEXRENDERER_METATABLE);
@@ -715,7 +714,7 @@ GMOD_MODULE_OPEN() {
 	LUA->CreateTable();
 	ADD_FUNCTION(LUA, FLEXRENDERER_GarbageCollect, "Destroy");
 	ADD_FUNCTION(LUA, FLEXRENDERER_BuildIMeshes, "BuildIMeshes");
-	ADD_FUNCTION(LUA, FLEXRENDERER_RenderIMeshes, "RenderIMeshes");
+	ADD_FUNCTION(LUA, FLEXRENDERER_DrawIMeshes, "DrawIMeshes");
 	LUA->SetField(-2, "__index");
 
 	// _G.FlexSolver = NewFlexSolver

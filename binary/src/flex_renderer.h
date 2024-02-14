@@ -3,20 +3,20 @@
 #include <istudiorender.h>
 #include "meshutils.h"		// Fixes linker errors
 #include "flex_solver.h"
+#include <vector>
 
-#define MAX_INDICES 65536
+#define MAX_PRIMATIVES 16384
 
 class FlexRenderer {
 private:
-	FlexSolver* solver;
-	IMesh** imeshes;
-	int num_imeshes = 0;
+	std::vector<IMesh*> imeshes;
+	void destroy_imeshes();
 
 public:
 	int get_total_imeshes();
-	void build_imeshes(float radius);
-	void render_imeshes();
+	void build_imeshes(FlexSolver* solver, float radius);
+	void draw_imeshes();
 
-	FlexRenderer(FlexSolver* s);
+	FlexRenderer();
 	~FlexRenderer();
 };

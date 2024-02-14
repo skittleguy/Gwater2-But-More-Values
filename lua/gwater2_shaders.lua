@@ -43,19 +43,14 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 	local up = EyeAngles():Up()
 	local right = EyeAngles():Right()
 	render.SetMaterial(Material("models/props_combine/combine_interface_disp"))
-	gwater2.renderer:BuildIMeshes(radius * 0.5,
-		screen_plane(scrw * 0.5, 0, right), 	-- Top
-		screen_plane(scrw * 0.5, scrh, -right), -- Bottom
-		screen_plane(0, scrh * 0.5, up),		--Left
-		screen_plane(scrw, scrh * 0.5, -up),	-- Right
-		radius * 0.5
-	)
+	gwater2.renderer:BuildIMeshes(gwater2.solver, radius)
+	gwater2.renderer:DrawIMeshes()
 /*
 	-- Depth absorption
 	if water_volumetric:GetFloat("$alpha") != 0 then
 		render.SetMaterial(water_volumetric)
 		render.SetRenderTarget(cache_absorption)
-		gwater2.solver:RenderIMeshes()
+		gwater2.renderer:DrawIMeshes()
 		render.SetRenderTarget()
 		--render.UpdateScreenEffectTexture()
 	end
@@ -66,7 +61,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 	
 	render.SetRenderTarget(cache_normals)
 	render.ClearDepth()			-- fixes msaa breaking visuals
-	gwater2.solver:RenderIMeshes()
+	gwater2.renderer:DrawIMeshes()
 	render.SetRenderTarget()
 	
 	-- Blur normals
@@ -103,7 +98,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 	water:SetTexture("$screentexture", render.GetScreenEffectTexture())
 	water:SetTexture("$depthtexture", cache_absorption)
 	render.SetMaterial(water)
-	gwater2.solver:RenderIMeshes()
+	gwater2.renderer:DrawIMeshes()*/
 
 	-- Debug Draw
 	--render.DrawTextureToScreenRect(cache_absorption, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
