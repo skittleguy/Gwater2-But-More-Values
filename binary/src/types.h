@@ -3,21 +3,6 @@
 
 // Float structures originally provided by AndrewEathan (https://mariluu.hehe.moe/)
 
-//Float4 structure, holds 4 floats, X, Y, Z, and W
-struct float4 {
-	float x, y, z, w;
-	float4(float x1, float y1, float z1, float w1) : x(x1), y(y1), z(z1), w(w1) {};
-	float4() : x(0), y(0), z(0), w(0) {};
-	float4(float l) : x(l), y(l), z(l), w(l) {};
-	//float4(Vector l, float w1) : x(l.x), y(l.y), z(l.z), w(w1) {};
-	float4 operator+(float4 e) {
-		return { x + e.x, y + e.y, z + e.z, w + e.w };
-	}
-	float4 operator*(float e) {
-		return { x * e, y * e, z * e, w * e };
-	}
-};
-
 //Float3 structure, holds 3 floats, X, Y, and Z
 struct float3 {
 	float x, y, z;
@@ -46,6 +31,24 @@ struct float3 {
 	}
 	bool operator!=(float3 e) {
 		return (x != e.x || y != e.y || z != e.z);
+	}
+};
+
+//Float4 structure, holds 4 floats, X, Y, Z, and W
+struct float4 {
+	float x, y, z, w;
+	float4(float x1, float y1, float z1, float w1) : x(x1), y(y1), z(z1), w(w1) {};
+	float4() : x(0), y(0), z(0), w(0) {};
+	float4(float l) : x(l), y(l), z(l), w(l) {};
+	//float4(Vector l, float w1) : x(l.x), y(l.y), z(l.z), w(w1) {};
+	float4 operator+(float4 e) {
+		return { x + e.x, y + e.y, z + e.z, w + e.w };
+	}
+	float4 operator*(float e) {
+		return { x * e, y * e, z * e, w * e };
+	}
+	float3 xyz() {
+		return { x, y, z };
 	}
 };
 

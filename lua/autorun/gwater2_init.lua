@@ -48,6 +48,7 @@ include("gwater2_shaders.lua")	// also carrying
 
 gwater2 = {
 	solver = FlexSolver(100000),
+	renderer = FlexRenderer(),
 	material = Material("gwater2/finalpass"),//Material("vgui/circle"),//Material("sprites/sent_ball"),
 	meshes = {},
 	color = Color(209, 237, 255, 25),
@@ -66,7 +67,6 @@ gwater2 = {
 	end,
 }
 gwater2.solver:InitBounds(Vector(-16384, -16384, -16384), Vector(16384, 16384, 16384))	-- source bounds
-gwater2.renderer = FlexRenderer()
 
 local volumetric = Material("gwater2/volumetric")
 local absorption = CreateClientConVar("gwater2_absorption", "1", true)

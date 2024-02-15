@@ -389,7 +389,7 @@ LUA_FUNCTION(RenderIMeshes) {
 	return 1;
 }*/
 
-// rewrite this shit
+// todo: rewrite this shit
 LUA_FUNCTION(FLEXSOLVER_AddMapMesh) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckString(2);
