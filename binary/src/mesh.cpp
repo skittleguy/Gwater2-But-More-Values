@@ -97,8 +97,8 @@ bool Mesh::init_convex(float3* verts, int num_verts) {
 		float3 tri[3] = {verts[i], verts[i + 1], verts[i + 2]};
 
 		// Turn triangle into normalized plane & add to vertex buffer
-		float3 plane_dir = Normalize(Cross(tri[1] - tri[0], tri[0] - tri[2]));
-		float plane_height = Dot(plane_dir, tri[0]);
+		float3 plane_dir = Normalize((tri[1] - tri[0]).cross(tri[0] - tri[2]));
+		float plane_height = plane_dir.dot(tri[0]);
 		hostVerts[i / 3] = float4(plane_dir.x, plane_dir.y, plane_dir.z, -plane_height);
 
 		min[0] = fmin(min[0], verts[i].x);

@@ -5,7 +5,7 @@
 #include "flex_solver.h"
 #include <vector>
 
-#define MAX_PRIMATIVES 16384
+#define MAX_PRIMATIVES 21845
 
 class FlexRenderer {
 private:

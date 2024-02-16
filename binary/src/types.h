@@ -32,6 +32,16 @@ struct float3 {
 	bool operator!=(float3 e) {
 		return (x != e.x || y != e.y || z != e.z);
 	}
+	float dot(float3 b) {
+		return x * b.x + y * b.y + z * b.z;
+	}
+	float3 cross(float3 b) {
+		return float3(
+			y * b.z - z * b.y,
+			z * b.x - x * b.z,
+			x * b.y - y * b.x
+		);
+	}
 };
 
 //Float4 structure, holds 4 floats, X, Y, Z, and W
@@ -52,20 +62,8 @@ struct float4 {
 	}
 };
 
-inline float Dot(float3 a, float3 b) {
-	return a.x * b.x + a.y * b.y + a.z * b.z;
-}
-
-inline float3 Cross(float3 A, float3 B) {
-	return float3(
-		A.y * B.z - A.z * B.y,
-		A.z * B.x - A.x * B.z,
-		A.x * B.y - A.y * B.x
-	);
-}
-
 inline float3 Normalize(float3 a) {
-	return a / sqrt(Dot(a, a));
+	return a / sqrt(a.dot(a));
 }
 
 /*

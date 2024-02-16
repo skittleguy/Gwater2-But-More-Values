@@ -45,7 +45,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 	gwater2.renderer:BuildIMeshes(gwater2.solver, radius * 0.5)
 	--render.SetMaterial(Material("models/props_combine/combine_interface_disp"))
 	--gwater2.renderer:DrawIMeshes()
-
+	
 	-- Depth absorption
 	if water_volumetric:GetFloat("$alpha") != 0 then
 		render.SetMaterial(water_volumetric)
