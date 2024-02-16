@@ -46,7 +46,7 @@ void FlexRenderer::build_imeshes(FlexSolver* solver, float radius) {
 		IMesh* imesh = render_context->CreateStaticMesh(MATERIAL_VERTEX_FORMAT_MODEL_DX7, "");
 		mesh_builder.Begin(imesh, MATERIAL_QUADS, MAX_PRIMATIVES);
 			for (int primative = 0; primative < MAX_PRIMATIVES && particle_index < solver->get_active_particles(); particle_index++) {
-				float3 particle_pos = float3(particle_positions[particle_index].x, particle_positions[particle_index].y, particle_positions[particle_index].z);
+				float3 particle_pos = particle_positions[particle_index].xyz();
 
 				// Frustrum culling
 				Vector4D dst;
@@ -78,8 +78,8 @@ void FlexRenderer::build_imeshes(FlexSolver* solver, float radius) {
 						pos_ani = pos_ani + ani2.xyz() * (Dot(ani2.xyz(), pos_ani) * ani2.w);
 						pos_ani = pos_ani + ani3.xyz() * (Dot(ani3.xyz(), pos_ani) * ani3.w);
 					}
-					float3 world_pos = particle_pos + pos_ani;
 
+					float3 world_pos = particle_pos + pos_ani;
 					mesh_builder.TexCoord2f(0, i == 1 || i == 2, i > 1);
 					mesh_builder.Position3f(world_pos.x, world_pos.y, world_pos.z);
 					mesh_builder.Normal3f(0, 0, 1);

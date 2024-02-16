@@ -43,9 +43,9 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 	local up = EyeAngles():Up()
 	local right = EyeAngles():Right()
 	gwater2.renderer:BuildIMeshes(gwater2.solver, radius * 0.5)
-	render.SetMaterial(Material("models/props_combine/combine_interface_disp"))
-	gwater2.renderer:DrawIMeshes()
-/*
+	--render.SetMaterial(Material("models/props_combine/combine_interface_disp"))
+	--gwater2.renderer:DrawIMeshes()
+
 	-- Depth absorption
 	if water_volumetric:GetFloat("$alpha") != 0 then
 		render.SetMaterial(water_volumetric)
@@ -98,7 +98,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 	water:SetTexture("$screentexture", render.GetScreenEffectTexture())
 	water:SetTexture("$depthtexture", cache_absorption)
 	render.SetMaterial(water)
-	gwater2.renderer:DrawIMeshes()*/
+	gwater2.renderer:DrawIMeshes()
 
 	-- Debug Draw
 	--render.DrawTextureToScreenRect(cache_absorption, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
