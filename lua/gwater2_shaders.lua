@@ -5,7 +5,7 @@ end
 local function GetRenderTargetGWater(name, mult, format) 
 	mult = mult or 1
 	return GetRenderTargetEx(name, ScrW() * mult, ScrH() * mult,
-		RT_SIZE_LITERAL,
+		RT_SIZE_DEFAULT,
 		0,
 		2 + 256,
 		0,
@@ -25,7 +25,18 @@ local water_normals = Material("gwater2/normals")
 local blur_passes = CreateClientConVar("gwater2_blur_passes", "3", true)
 hook.Add("PreDrawViewModels", "gwater2_render", function()
 	if gwater2.solver:GetCount() < 1 then return end
-	--SetMSAAEnabled()
+
+	-- A rendertargets depth is not written to when anti-aliasing is enabled
+	-- I have tried for *weeks* fighting this issue by setting flags, calling C++ functions, and using EVERY cam. function, to no avail.
+	-- 'render.ClearDepth()' does not work well in this case as it makes particles render through walls
+	-- My solution at the moment is just force disabling it. I don't have enough time to figure out this problem and frankly I would like to work on other things
+	-- Related gmod issues: 
+	-- https://github.com/Facepunch/garrysmod-issues/issues/4662
+	-- https://github.com/Facepunch/garrysmod-issues/issues/5039
+	if GetMSAAEnabled() then
+		print("[GWater2]: Force disabling MSAA due to RT Depth issues")
+		RunConsoleCommand("mat_antialias", 0)
+	end
 	
 	-- Clear render targets
 	render.ClearRenderTarget(cache_normals, Color(0, 0, 0, 0))
@@ -88,7 +99,6 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 		render.DrawScreenQuad()
 		render.SetRenderTarget()
 	end
-
 	-- for some ungodly reason fixes water dissapearing when depth fix is enabled from normals pass (wtf?)
 	--render.ClearDepth()
 	

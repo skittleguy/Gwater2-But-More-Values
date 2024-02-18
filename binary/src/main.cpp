@@ -509,18 +509,21 @@ LUA_FUNCTION(GetMSAAEnabled) {
 	return 1;
 }
 
-LUA_FUNCTION(SetMSAAEnabled) {
+/*LUA_FUNCTION(SetMSAAEnabled) {
 	MaterialSystem_Config_t config = materials->GetCurrentConfigForVideoCard();
 	config.m_nAAQuality = 0;
-	config.m_nAASamples = 1;
-	config.m_nForceAnisotropicLevel = 0;
-	config.m_bShadowDepthTexture = false;
-	config.SetFlag(MATSYS_VIDCFG_FLAGS_FORCE_TRILINEAR, false);
+	config.m_nAASamples = 0;
+	//config.m_nForceAnisotropicLevel = 1;
+	//config.m_bShadowDepthTexture = false;
+	//config.SetFlag(MATSYS_VIDCFG_FLAGS_FORCE_TRILINEAR, false);
 	MaterialSystem_Config_t config_default = MaterialSystem_Config_t();
-	materials->OverrideConfig(config, true);
-
+	//config.m_Flags = config_default.m_Flags;
+	//config.m_DepthBias_ShadowMap = config_default.m_DepthBias_ShadowMap;
+	//config.dxSupportLevel = config_default.dxSupportLevel;
+	//config.m_SlopeScaleDepthBias_ShadowMap = config_default.m_SlopeScaleDepthBias_ShadowMap;
+	materials->OverrideConfig(config, false);
 	return 0;
-}
+}*/
 
 GMOD_MODULE_OPEN() {
 	GLOBAL_LUA = LUA;
@@ -595,7 +598,6 @@ GMOD_MODULE_OPEN() {
 	ADD_FUNCTION(LUA, NewFlexSolver, "FlexSolver");
 	ADD_FUNCTION(LUA, NewFlexRenderer, "FlexRenderer");
 	ADD_FUNCTION(LUA, GetMSAAEnabled, "GetMSAAEnabled");
-	ADD_FUNCTION(LUA, SetMSAAEnabled, "SetMSAAEnabled");
 	LUA->Pop();
 
 	return 0;
