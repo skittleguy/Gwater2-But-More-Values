@@ -6,7 +6,6 @@ void FlexRenderer::draw_imeshes() {
 
 };
 
-#define SQRT3 1.73205081
 void FlexRenderer::build_imeshes(FlexSolver* solver, float radius) {
 	if (solver == nullptr) return;
 

@@ -34,7 +34,7 @@ VS_OUTPUT main(const VS_INPUT v) {
 	o.projPosSetup = vProjPos;
 	o.coord = v.vTexCoord;
 	o.eyepos = float4(cEyePos, length(worldPos - cEyePos));
-	o.proj = cModelViewProj;	// in C++ forced to be inverse of cViewProj, NOT ACTUALLY cModelViewProj!
+	o.proj = cViewProj;	// in C++ forced to be inverse of cViewProj, NOT ACTUALLY cModelViewProj!
 	o.color = v.vColor;
 	o.pos = worldPos;
 

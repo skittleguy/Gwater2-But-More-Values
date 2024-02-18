@@ -3,7 +3,7 @@ float RADIUS				: register(c0);
 struct PS_INPUT {
 	float2 P 		: VPOS;
 	float2 coord	: TEXCOORD0;
-	float3 pos  	: TEXCOORD1;
+	float4 pos  	: TEXCOORD1;
 	float4x4 proj	: TEXCOORD2;
 	float3 eye_pos	: NORMAL0;
 	//float3x3 normal	: NORMAL0;
@@ -65,8 +65,8 @@ float4 main(const PS_INPUT i) : COLOR {
 	if (radius2 > 1) discard;
 
 	// Calculate depth from texture coords
-	float bulge = sqrt(1 - radius2);
-	float depth = distance(i.pos, i.eye_pos) + radius2 * RADIUS;//i.pos.w - bulge * RADIUS;
+	float bulge = sqrt(1 - radius2) - 1.0;
+	float depth = i.pos.w - bulge * RADIUS;
 
 	// Depth information for normals smoothing
 	float2 uvdx = ddx(i.coord);

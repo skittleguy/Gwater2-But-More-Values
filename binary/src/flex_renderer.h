@@ -6,6 +6,7 @@
 #include <vector>
 
 #define MAX_PRIMATIVES 21845
+#define SQRT3 1.73205081
 
 class FlexRenderer {
 private:

@@ -487,7 +487,6 @@ LUA_FUNCTION(NewFlexSolver) {
 	if (LUA->GetNumber(1) <= 0) LUA->ThrowError("Max Particles must be a positive number!");
 
 	FlexSolver* flex = new FlexSolver(FLEX_LIBRARY, LUA->GetNumber(1));
-
 	LUA->PushUserType(flex, FLEXSOLVER_METATABLE);
 	LUA->PushMetaTable(FLEXSOLVER_METATABLE);	// Add our meta functions
 	LUA->SetMetaTable(-2);
@@ -495,10 +494,8 @@ LUA_FUNCTION(NewFlexSolver) {
 	return 1;
 }
 
-// ^
 LUA_FUNCTION(NewFlexRenderer) {
 	FlexRenderer* flex_renderer = new FlexRenderer();
-
 	LUA->PushUserType(flex_renderer, FLEXRENDERER_METATABLE);
 	LUA->PushMetaTable(FLEXRENDERER_METATABLE);
 	LUA->SetMetaTable(-2);
@@ -507,9 +504,22 @@ LUA_FUNCTION(NewFlexRenderer) {
 }
 
 // ShaderDevice is assumed to exist since if it didnt, this function wouldn't be accessable by lua
-LUA_FUNCTION(IsMSAAEnabled) {
-	LUA->PushBool(g_pShaderDevice->IsAAEnabled());
+LUA_FUNCTION(GetMSAAEnabled) {
+	LUA->PushBool(g_pHardwareConfig->IsAAEnabled());
 	return 1;
+}
+
+LUA_FUNCTION(SetMSAAEnabled) {
+	MaterialSystem_Config_t config = materials->GetCurrentConfigForVideoCard();
+	config.m_nAAQuality = 0;
+	config.m_nAASamples = 1;
+	config.m_nForceAnisotropicLevel = 0;
+	config.m_bShadowDepthTexture = false;
+	config.SetFlag(MATSYS_VIDCFG_FLAGS_FORCE_TRILINEAR, false);
+	MaterialSystem_Config_t config_default = MaterialSystem_Config_t();
+	materials->OverrideConfig(config, true);
+
+	return 0;
 }
 
 GMOD_MODULE_OPEN() {
@@ -528,8 +538,8 @@ GMOD_MODULE_OPEN() {
 	if (!Sys_LoadInterface("materialsystem", MATERIAL_SYSTEM_INTERFACE_VERSION, NULL, (void**)&materials))
 		LUA->ThrowError("[GWater2 Internal Error]: C++ Materialsystem failed to load!");
 
-	if (!Sys_LoadInterface("shaderapidx9", SHADER_DEVICE_INTERFACE_VERSION, NULL, (void**)&g_pShaderDevice))
-		LUA->ThrowError("[GWater2 Internal Error]: C++ Shaderdevice failed to load!");
+	//if (!Sys_LoadInterface("shaderapidx9", SHADER_DEVICE_INTERFACE_VERSION, NULL, (void**)&g_pShaderDevice))
+	//	LUA->ThrowError("[GWater2 Internal Error]: C++ Shaderdevice failed to load!");
 
 	//if (!Sys_LoadInterface("shaderapidx9", SHADERAPI_INTERFACE_VERSION, NULL, (void**)&g_pShaderAPI))
 	//	LUA->ThrowError("[GWater2 Internal Error]: C++ Shaderapi failed to load!");
@@ -584,7 +594,8 @@ GMOD_MODULE_OPEN() {
 	LUA->PushSpecial(SPECIAL_GLOB);
 	ADD_FUNCTION(LUA, NewFlexSolver, "FlexSolver");
 	ADD_FUNCTION(LUA, NewFlexRenderer, "FlexRenderer");
-	ADD_FUNCTION(LUA, IsMSAAEnabled, "IsMSAAEnabled");
+	ADD_FUNCTION(LUA, GetMSAAEnabled, "GetMSAAEnabled");
+	ADD_FUNCTION(LUA, SetMSAAEnabled, "SetMSAAEnabled");
 	LUA->Pop();
 
 	return 0;

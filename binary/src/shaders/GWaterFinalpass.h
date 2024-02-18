@@ -62,6 +62,7 @@ SHADER_DRAW {
 		pShaderAPI->SetPixelShaderConstant(2, &ior);
 		pShaderAPI->SetPixelShaderConstant(3, &reflectance);
 
+		/*
 		CMatRenderContextPtr pRenderContext(materials);
 
 		// Yoinked from viewrender.cpp (in a water detection function of all things, ironic..)
@@ -76,7 +77,7 @@ SHADER_DRAW {
 			int x = i % 4;
 			int y = i / 4;
 			matrix[i] = inverseViewProjectionMatrix[y][x];
-		}
+		}*/
 
 		BindTexture(SHADER_SAMPLER0, NORMALTEXTURE);
 		BindTexture(SHADER_SAMPLER1, SCREENTEXTURE);
@@ -89,7 +90,7 @@ SHADER_DRAW {
 		DECLARE_DYNAMIC_PIXEL_SHADER(GWaterFinalpass_ps30);
 		SET_DYNAMIC_PIXEL_SHADER(GWaterFinalpass_ps30);
 
-		pShaderAPI->SetVertexShaderConstant(4, matrix, 4, true);	// FORCE into cModelViewProj!
+		//pShaderAPI->SetVertexShaderConstant(4, matrix, 4, true);	// FORCE into cModelViewProj!
 	}
 	
 	Draw();
