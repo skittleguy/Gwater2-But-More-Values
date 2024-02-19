@@ -5,7 +5,7 @@ end
 local function GetRenderTargetGWater(name, mult, format) 
 	mult = mult or 1
 	return GetRenderTargetEx(name, ScrW() * mult, ScrH() * mult,
-		RT_SIZE_NO_CHANGE,
+		RT_SIZE_DEFAULT,
 		0,
 		2 + 256,
 		0,
@@ -16,16 +16,28 @@ end
 local cache_depth = GetRenderTargetGWater("gwater_cache_depth")
 local cache_absorption = GetRenderTargetGWater("gwater_cache_absorption")
 local cache_normals = GetRenderTargetGWater("gwater_cache_normals")
-local cache_bloom = GetRenderTargetGWater("1gwater_cache_bloom", 1 / 1)	-- for blurring
+local cache_bloom = GetRenderTargetGWater("2gwater_cache_bloom", 1 / 2)	-- for blurring
 local water_blur = Material("gwater2/smooth")
 local water_volumetric = Material("gwater2/volumetric")
 local water_normals = Material("gwater2/normals")
 
 -- The code below is the very complicated gwater2 shader pipeline since source doesn't support multiple shaders for one material
 local blur_passes = CreateClientConVar("gwater2_blur_passes", "3", true)
+local antialias = GetConVar("mat_antialias")
 hook.Add("PreDrawViewModels", "gwater2_render", function()
-
 	if gwater2.solver:GetCount() < 1 then return end
+
+	-- A rendertargets depth is not written to when anti-aliasing is enabled
+	-- I have tried for *weeks* fighting this issue by setting flags, calling C++ functions, and using everything in the cam. library, to no avail.
+	-- 'render.ClearDepth()' does not work well in this case as it makes particles render through walls
+	-- My solution at the moment is just force disabling it. I don't have enough time to figure out this problem and frankly I would like to work on other things
+	-- Related gmod issues: 
+	-- https://github.com/Facepunch/garrysmod-issues/issues/4662
+	-- https://github.com/Facepunch/garrysmod-issues/issues/5039
+	if antialias:GetInt() > 0 then
+		print("[GWater2]: Force disabling MSAA due to RT Depth issues")
+		RunConsoleCommand("mat_antialias", 0)
+	end
 	
 	-- Clear render targets
 	render.ClearRenderTarget(cache_normals, Color(0, 0, 0, 0))
@@ -43,43 +55,35 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 	-- Build imeshes for multiple passes
 	local up = EyeAngles():Up()
 	local right = EyeAngles():Right()
-
-	gwater2.solver:BuildIMeshes(EyePos(),
-		screen_plane(scrw * 0.5, 0, right), 	-- Top
-		screen_plane(scrw * 0.5, scrh, -right), -- Bottom
-		screen_plane(0, scrh * 0.5, up),		--Left
-		screen_plane(scrw, scrh * 0.5, -up),	-- Right
-		radius * 0.5
-	)
-
+	gwater2.renderer:BuildIMeshes(gwater2.solver, radius * 0.5)
+	--render.SetMaterial(Material("models/props_combine/combine_interface_disp"))
+	--gwater2.renderer:DrawIMeshes()
+	
 	-- Depth absorption
 	if water_volumetric:GetFloat("$alpha") != 0 then
 		render.SetMaterial(water_volumetric)
 		render.SetRenderTarget(cache_absorption)
-		gwater2.solver:RenderIMeshes()
+		gwater2.renderer:DrawIMeshes()
 		render.SetRenderTarget()
 		--render.UpdateScreenEffectTexture()
 	end
 
 	-- grab normals
-	water_normals:SetFloat("$radius", radius * 1)
+	water_normals:SetFloat("$radius", radius * 0.5)
 	render.SetMaterial(water_normals)
 	render.SetRenderTarget(cache_normals)
-	--render.ClearDepth()
-	--render.SetRenderTargetEx(1, cache_depth)
-	gwater2.solver:RenderIMeshes()
+	--render.ClearDepth()			-- "fixes" msaa breaking visuals
+	gwater2.renderer:DrawIMeshes()
 	render.SetRenderTarget()
-	
-	--render.SetRenderTargetEx(1, nil)
 	
 	-- Blur normals
 	water_blur:SetTexture("$depthtexture", cache_depth)
 	water_blur:SetFloat("$radius", radius)
 	render.SetMaterial(water_blur)
-	for i = 1, blur_passes:GetInt() * 3 do
+	for i = 1, blur_passes:GetInt() do
 		-- Blur X
-		--local scale = (5 - i) * 0.1
-		local scale = 0.2 / i
+		--local scale = (5 - i) * 0.005
+		local scale = 0.04 / i
 		water_blur:SetTexture("$normaltexture", cache_normals)	
 		water_blur:SetVector("$scrs", Vector(scale / scrw, 0))
 		render.SetRenderTarget(cache_bloom)	-- Bloom texture resolution is significantly lower than screen res, enabling for a faster blur
@@ -95,9 +99,6 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 		render.DrawScreenQuad()
 		render.SetRenderTarget()
 	end
-
-	-- for some ungodly reason fixes water dissapearing when depth fix is enabled from normals pass (wtf?)
-	--render.ClearDepth()
 	
 	-- Setup water material parameters
 	water:SetFloat("$radius", radius)
@@ -106,11 +107,11 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 	water:SetTexture("$screentexture", render.GetScreenEffectTexture())
 	water:SetTexture("$depthtexture", cache_absorption)
 	render.SetMaterial(water)
-	gwater2.solver:RenderIMeshes()
+	gwater2.renderer:DrawIMeshes()
 
 	-- Debug Draw
-	--render.DrawTextureToScreenRect(cache_absorption, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
-	render.DrawTextureToScreenRect(cache_normals, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
+	render.DrawTextureToScreenRect(cache_absorption, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
+	--render.DrawTextureToScreenRect(cache_normals, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
 end)
 
 --hook.Add("NeedsDepthPass", "gwater2_depth", function()

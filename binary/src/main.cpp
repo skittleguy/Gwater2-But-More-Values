@@ -1,38 +1,34 @@
 #include "GarrysMod/Lua/Interface.h"
-#include "flex_solver.h"
 
 // bsp parser requirements
 // this MUST BE included before shader_inject.h because of conflicting source defines
 #include "GMFS.h"
 #include "BSPParser.h"
 
-#include <materialsystem/imesh.h>
-#include <istudiorender.h>
-#include "meshutils_x64fix.cpp"
+#include "flex_solver.h"
+#include "flex_renderer.h"
 #include "shader_inject.h"
-
-// pushes lua flex instance at stack -1
-#define GET_FLEX LUA->GetUserType<FlexSolver>(1, FlexMetaTable)
-#define ADD_FUNCTION(LUA, funcName, tblName) LUA->PushCFunction(funcName); LUA->SetField(-2, tblName)
 
 using namespace GarrysMod::Lua;
 
-NvFlexLibrary* flexLibrary;	// Main FleX library, handles all solvers. ("The heart of all that is FleX" - andreweathan)
-ILuaBase* GlobalLUA;	// LUA base used for error handling
-IShaderDevice* shaderDevice = NULL;
-int FlexMetaTable = 0;
+NvFlexLibrary* FLEX_LIBRARY;	// Main FleX library, handles all solvers. ("The heart of all that is FleX" - andreweathan)
+ILuaBase* GLOBAL_LUA;			// used for flex error handling
+int FLEXSOLVER_METATABLE = 0;
+int FLEXRENDERER_METATABLE = 0;
 
-// Error callback function used if an internal issue happens in FleX
-void error(NvFlexErrorSeverity type, const char* message, const char* file, int line) {
-	std::string error = "[GWater2 Internal Error]: " + (std::string)message;
-	GlobalLUA->ThrowError(error.c_str());
-}
+//#define GET_FLEX(type, stack_pos) LUA->GetUserType<type>(stack_pos, type == FlexSolver ? FLEXSOLVER_METATABLE : FLEXRENDERER_METATABLE)
 
+/************************** Flex Solver LUA Interface *******************************/
+
+#define GET_FLEXSOLVER(stack_pos) LUA->GetUserType<FlexSolver>(stack_pos, FLEXSOLVER_METATABLE)
+
+// todo: probably need to move these defines somewhere else or remove them
 float3 VectorTofloat3(Vector v) {
 	return float3(v.x, v.y, v.z);
 }
 
 // Warning: allocates memory which MUST be freed!
+// todo: this is shit. the physics mesh library should be rewritten
 float3* TableTofloat3(ILuaBase* LUA) {
 	const int num_vertices = LUA->ObjLen(2);
 	float3* verts = reinterpret_cast<float3*>(malloc(sizeof(float3) * num_vertices));
@@ -49,87 +45,44 @@ float3* TableTofloat3(ILuaBase* LUA) {
 	return verts;
 }
 
-/*
-Creates a new flex solver instance
-* @return solver The new FlexSolver
-*/
-LUA_FUNCTION(NewFlexSolver) {
-	LUA->CheckNumber(1);
+// Frees the flex solver instance from memory
+// For some reason the vram only gets freed when the LIBRARY is shut down
+LUA_FUNCTION(FLEXSOLVER_GarbageCollect) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 
-	int particles = LUA->GetNumber(1);
-	if (particles <= 0) LUA->ThrowError("Max Particles must be a positive number!");
-
-	FlexSolver* flex = new FlexSolver(flexLibrary, particles);
-	LUA->PushUserType(flex, FlexMetaTable);
-	LUA->PushMetaTable(FlexMetaTable);	// Add our meta functions
-	LUA->SetMetaTable(-2);
-
-	return 1;
-}
-
-/*
-* Frees the flex solver instance from memory. Note: This only frees the memory when the flex library is shut down, otherwise it is cached for later use
-* @param[in] solver The FlexSolver to free memory from
-*/
-LUA_FUNCTION(FlexGC) {
-	LUA->CheckType(1, FlexMetaTable);
-
-	FlexSolver* flex = GET_FLEX;
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 
 	LUA->PushNil();
 	LUA->SetMetaTable(-2);
 
 	delete flex;
+	flex = nullptr;
 	return 0;
 }
 
-/*
-* Adds a particle to a Flex Solver with a given position and velocity.
-* Note: The particle will not be added if the max particle count is reached
-* @param[in] solver The FlexSolver to add the particle to
-* @param[in] position Float3 which holds position X,Y,Z
-* @param[in] velocity Float3 that defines the particles initial velocity X,Y,Z
-* @param[in] color Float4 that defines the color of the particle. X,Y,Z,W = R,G,B,A
-* @param[in] mass Float which holds the mass of the particle
-*/
-LUA_FUNCTION(AddParticle) {
-	LUA->CheckType(1, FlexMetaTable);
+LUA_FUNCTION(FLEXSOLVER_AddParticle) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckType(2, Type::Vector);	// position
 	LUA->CheckType(3, Type::Vector);	// velocity
-	LUA->CheckType(4, Type::Table);		// color
-	LUA->CheckNumber(5);				// mass
+	LUA->CheckNumber(4);				// mass
 
-	FlexSolver* flex = GET_FLEX;
-	
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 	Vector pos = LUA->GetVector(2);
 	Vector vel = LUA->GetVector(3);
 	float inv_mass = 1.f / (float)LUA->GetNumber(5);	// FleX uses inverse mass for their calculations
-
-	// Push color data onto stack (annoying)
-	LUA->GetField(4, "r");
-	LUA->GetField(4, "g");
-	LUA->GetField(4, "b");
-	LUA->GetField(4, "a");
 	
 	flex->add_particle(
 		float4(pos.x, pos.y, pos.z, inv_mass), 
-		float3(vel.x, vel.y, vel.z), 
-		float4(LUA->GetNumber(-4) / 255.f, LUA->GetNumber(-3) / 255.f, LUA->GetNumber(-2) / 255.f, LUA->GetNumber(-1) / 255.f)	// color
+		float3(vel.x, vel.y, vel.z)
 	);
 
 	return 0;
 }
 
-/*
-* Ticks the simulation in a FlexSolver
-* @param[in] solver The FlexSolver to tick
-* @param[in] dt Time elapsed since the last tick (delta time)
-* @return success True if ticker succeeded. False otherwise
-*/
-LUA_FUNCTION(Tick) {
-	LUA->CheckType(1, FlexMetaTable);
+LUA_FUNCTION(FLEXSOLVER_Tick) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckNumber(2);
-	FlexSolver* flex = GET_FLEX;
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 	float dt = (float)LUA->GetNumber(2);
 	bool succ = flex->pretick((NvFlexMapFlags)LUA->GetNumber(3));
 	if (succ) flex->tick(dt);
@@ -138,18 +91,15 @@ LUA_FUNCTION(Tick) {
 	return 1;
 }
 
-/*
-* Gets all the particle positions in a FlexSolver. Originally used for debugging
-* @return positions Table of all particle positions
-*/
-LUA_FUNCTION(GetParticles) {
-	LUA->CheckType(1, FlexMetaTable);
-	FlexSolver* flex = GET_FLEX;
+// Gets all the particle positions in a FlexSolver. Originally used for debugging
+LUA_FUNCTION(FLEXSOLVER_GetParticles) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 
 	LUA->CreateTable();
 	for (int i = 0; i < flex->get_active_particles(); i++) {
-		LUA->PushNumber(i + 1);
 		float4 pos = flex->get_host("particle_pos")[i];
+		LUA->PushNumber(i + 1);
 		LUA->PushVector(Vector(pos.x, pos.y, pos.z));
 		LUA->SetTable(-3);
 	}
@@ -157,17 +107,9 @@ LUA_FUNCTION(GetParticles) {
 	return 1;
 }
 
-/*
-* Adds a triangle collision mesh to a FlexSolver
-* @param[in] solver The FlexSolver to add a mesh to
-* @param[in] table A table of MeshVertexes, must be length triCount*3
-* @param[in] pos Initial position of the mesh
-* @param[in] ang Initial angle of the mesh
-* @param[in] min Minimum OBB bounds of the mesh
-* @param[in] max Maximum OBB bounds of the mesh
-*/
-LUA_FUNCTION(AddConcaveMesh) {
-	LUA->CheckType(1, FlexMetaTable);
+// Adds a triangle collision mesh to a FlexSolver
+LUA_FUNCTION(FLEXSOLVER_AddConcaveMesh) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckType(2, Type::Table);		// Mesh data
 	LUA->CheckType(3, Type::Vector);	// Initial Pos
 	LUA->CheckType(4, Type::Angle);		// Initial Angle
@@ -175,32 +117,24 @@ LUA_FUNCTION(AddConcaveMesh) {
 	Vector pos = LUA->GetVector(3);
 	QAngle ang = LUA->GetAngle(4);
 
-	FlexSolver* flex = GET_FLEX;
-	Mesh mesh = Mesh(flexLibrary);
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+	Mesh* mesh = new Mesh(FLEX_LIBRARY);
 	float3* verts = TableTofloat3(LUA);
-	if (!mesh.init_concave(verts, LUA->ObjLen(2))) {
+	if (!mesh->init_concave(verts, LUA->ObjLen(2))) {
 		free(verts);
 		LUA->ThrowError("Tried to add concave mesh with invalid data (NumVertices is not a multiple of 3!)");
 		return 0;
 	}
 	free(verts);
-	mesh.update(float3(pos.x, pos.y, pos.z), float3(ang.x, ang.y, ang.z));
+	mesh->update(float3(pos.x, pos.y, pos.z), float3(ang.x, ang.y, ang.z));
 	flex->add_mesh(mesh, eNvFlexShapeTriangleMesh, true);
 
 	return 0;
 }
 
-/*
-* Adds a convex collision mesh to a FlexSolver
-* @param[in] solver The FlexSolver to add a mesh to
-* @param[in] table A table of MeshVertexes, must be length triCount*3 and be convex
-* @param[in] pos Initial position of the mesh
-* @param[in] ang Initial angle of the mesh
-* @param[in] min Minimum OBB bounds of the mesh
-* @param[in] max Maximum OBB bounds of the mesh
-*/
-LUA_FUNCTION(AddConvexMesh) {
-	LUA->CheckType(1, FlexMetaTable);
+// Adds a convex collision mesh to a FlexSolver
+LUA_FUNCTION(FLEXSOLVER_AddConvexMesh) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckType(2, Type::Table);		// Mesh data
 	LUA->CheckType(3, Type::Vector);	// Initial Pos
 	LUA->CheckType(4, Type::Angle);		// Initial Angle
@@ -208,50 +142,38 @@ LUA_FUNCTION(AddConvexMesh) {
 	Vector pos = LUA->GetVector(3);
 	QAngle ang = LUA->GetAngle(4);
 
-	FlexSolver* flex = GET_FLEX;
-	Mesh mesh = Mesh(flexLibrary);
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+	Mesh* mesh = new Mesh(FLEX_LIBRARY);
 	float3* verts = TableTofloat3(LUA);
-	if (!mesh.init_convex(verts, LUA->ObjLen(2))) {
+	if (!mesh->init_convex(verts, LUA->ObjLen(2))) {
 		free(verts);
 		LUA->ThrowError("Tried to add convex mesh with invalid data (NumVertices is not a multiple of 3!)");
 		return 0;
 	}
 	free(verts);
 
-	mesh.update(float3(pos.x, pos.y, pos.z), float3(ang.x, ang.y, ang.z));
+	mesh->update(float3(pos.x, pos.y, pos.z), float3(ang.x, ang.y, ang.z));
 	flex->add_mesh(mesh, eNvFlexShapeConvexMesh, true);
 
 	return 0;
 }
 
-
-/*
-* Removes a triangle collision mesh in a FlexSolver
-* @param[in] solver The FlexSolver to remove a mesh from
-* @param[in] id The index of the mesh to remove
-*/
-LUA_FUNCTION(RemoveMesh) {
-	LUA->CheckType(1, FlexMetaTable);
+LUA_FUNCTION(FLEXSOLVER_RemoveMesh) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckNumber(2); // Mesh ID
 
-	FlexSolver* flex = GET_FLEX;
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 	flex->remove_mesh(LUA->GetNumber(2));
 
 	return 0;
 }
 
-/*
-* Edits a parameter in a FlexSolver
-* @param[in] solver The FlexSolver to use
-* @param[in] param String of the parameter to edit
-* @param[in] num New number of new parameter
-*/
-LUA_FUNCTION(SetParameter) {
-	LUA->CheckType(1, FlexMetaTable);
+LUA_FUNCTION(FLEXSOLVER_SetParameter) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckString(2); // Param
 	LUA->CheckNumber(3); // Number
 
-	FlexSolver* flex = GET_FLEX;
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 
 	bool succ = flex->set_parameter(LUA->GetString(2), LUA->GetNumber(3));
 	if (!succ) LUA->ThrowError(("Attempt to set invalid parameter '" + (std::string)LUA->GetString(2) + "'").c_str());
@@ -259,80 +181,57 @@ LUA_FUNCTION(SetParameter) {
 	return 0;
 }
 
-/*
-* Returns the value of a parameter in a FlexSolver
-* @param[in] solver solver The FlexSolver to use
-* @param[in] param String of the parameter to get
-* @return value Float value of parameter
-*/
-LUA_FUNCTION(GetParameter) {
-	LUA->CheckType(1, FlexMetaTable);
+LUA_FUNCTION(FLEXSOLVER_GetParameter) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckString(2); // Param
 
-	FlexSolver* flex = GET_FLEX;
-
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 	float value = flex->get_parameter(LUA->GetString(2));
+
 	if (isnan(value)) LUA->ThrowError(("Attempt to get invalid parameter '" + (std::string)LUA->GetString(2) + "'").c_str());
 
 	LUA->PushNumber(value);
 	return 1;
 }
 
-/*
-* Updates position and angles of a mesh
-* @param[in] solver The FlexSolver to add a prop to
-* @param[in] id The index of the mesh to update
-* @param[in] pos The new position
-* @param[in] ang The new angle
-*/
-LUA_FUNCTION(UpdateMesh) {
-	LUA->CheckType(1, FlexMetaTable);
+// Updates position and angles of a mesh collider
+LUA_FUNCTION(FLEXSOLVER_UpdateMesh) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckNumber(2);				// Mesh ID
 	LUA->CheckType(3, Type::Vector);	// Prop Pos
 	LUA->CheckType(4, Type::Angle);		// Prop Angle
 
-	FlexSolver* flex = GET_FLEX;
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 	Vector pos = LUA->GetVector(3);
 	QAngle ang = LUA->GetAngle(4);
+
 	flex->update_mesh(LUA->GetNumber(2), float3(pos.x, pos.y, pos.z), float3(ang.x, ang.y, ang.z));
 
 	return 0;
 }
 
-
-/*
-* Removes all particles from a FlexSolver
-* @param[in] solver The FlexSolver to reset
-*/
-LUA_FUNCTION(Reset) {
-	LUA->CheckType(1, FlexMetaTable);
-	FlexSolver* flex = GET_FLEX;
+// removes all particles in a flex solver
+LUA_FUNCTION(FLEXSOLVER_Reset) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 	flex->set_active_particles(0);
 
 	return 0;
 }
 
-/*
-* Gets the amount of particles in a FlexSolver
-* @param[in] solver The FlexSolver
-*/
-LUA_FUNCTION(GetCount) {
-	LUA->CheckType(1, FlexMetaTable);
-	FlexSolver* flex = GET_FLEX;
+LUA_FUNCTION(FLEXSOLVER_GetCount) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 	LUA->PushNumber(flex->get_active_particles());
 	return 1;
 }
 
-/*
-* Iterates through all particles and calls a lua function with 1 parameter (position) (also does frustrum culling)
-* @param[in] solver The FlexSolver to iterate over
-* @param[in] eyepos Head position
-*/
-LUA_FUNCTION(RenderParticles) {
-	LUA->CheckType(1, FlexMetaTable);
+// Iterates through all particles and calls a lua function with 1 parameter (position) (also does frustrum culling)
+LUA_FUNCTION(FLEXSOLVER_RenderParticles) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckType(2, Type::Function);
 
-	FlexSolver* flex = GET_FLEX;
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 
 	float4* host = flex->get_host("particle_pos");
 	for (int i = 0; i < flex->get_active_particles(); i++) {
@@ -345,152 +244,12 @@ LUA_FUNCTION(RenderParticles) {
 	return 0;
 }
 
-#define MAX_INDICES 10922	// floor(2^15 / 3)
-LUA_FUNCTION(BuildIMeshes) {
-	LUA->CheckType(1, FlexMetaTable);
-	LUA->CheckType(2, Type::Vector);	// eye pos
-	LUA->CheckType(3, Type::Vector);	// plane up
-	LUA->CheckType(4, Type::Vector);	// plane down
-	LUA->CheckType(5, Type::Vector);	// plane left
-	LUA->CheckType(6, Type::Vector);	// plane right
-	LUA->CheckNumber(7);				// radius
-
-	// Defines
-	FlexSolver* flex = GET_FLEX;
-	float3 eye_pos = VectorTofloat3(LUA->GetVector(2));
-	float3 up = VectorTofloat3(LUA->GetVector(3));
-	float3 down = VectorTofloat3(LUA->GetVector(4));
-	float3 left = VectorTofloat3(LUA->GetVector(5));
-	float3 right = VectorTofloat3(LUA->GetVector(6));
-	float radius = LUA->GetNumber(7) * 0.625;	// Magic number 1 (also equal to 5/8?)
-
-	CMatRenderContextPtr pRenderContext(materials);
-	CMeshBuilder meshBuilder;
-
-	// destroy our stored imeshes since they are being replaced with new ones
-	for (IMesh* mesh : flex->imeshes) pRenderContext->DestroyStaticMesh(mesh);
-	flex->imeshes.clear();
-
-	int particle_count = flex->get_active_particles();
-	for (int particle_index = 0; particle_index < particle_count;) {
-		//IMesh* pMesh = pRenderContext->GetDynamicMesh();
-		IMesh* pMesh = pRenderContext->CreateStaticMesh(MATERIAL_VERTEX_FORMAT_MODEL_SKINNED, "");	// This function needs istudiorender.h to be included!
-
-		float4* particle_pos = flex->get_parameter("smoothing") > 0 ? flex->get_host("particle_smooth") : flex->get_host("particle_pos");
-		float4* particle_ani1 = flex->get_parameter("anisotropy_scale") > 0 ? flex->get_host("particle_ani1") : NULL;
-		float4* particle_ani2 = flex->get_parameter("anisotropy_scale") > 0 ? flex->get_host("particle_ani2") : NULL;
-		float4* particle_ani3 = flex->get_parameter("anisotropy_scale") > 0 ? flex->get_host("particle_ani3") : NULL;
-		float4* particle_col = flex->get_host("particle_col");
-		meshBuilder.Begin(pMesh, MATERIAL_TRIANGLES, MAX_INDICES);
-		for (int indice = 0; particle_index < particle_count && indice < MAX_INDICES;) {
-			float3 particle = float3(particle_pos[particle_index].x, particle_pos[particle_index].y, particle_pos[particle_index].z);
-
-			// Frustrum culling
-			float3 dir = particle - eye_pos;
-			if (Dot(dir, down) < -radius ||
-				Dot(dir, up) < -radius ||
-				Dot(dir, left) < -radius ||
-				Dot(dir, right) < -radius) {
-				particle_index++;
-				continue;
-			}
-
-			dir = Normalize(dir);
-			float3 eye_right = Normalize(Cross(dir, float3(0, 0, 1)));
-			float3 eye_up = Cross(eye_right, dir);
-
-			// particle positions in local space
-			float tri_mult = 1.3660254; //1.0 / ((2.0 * sqrt(3) - 2.0) / 2.0);	// Inverse Height of equalateral triangle minus length of circle with radius 1
-			float3 offset = -eye_up * 0.8;	// Magic number 2
-			float3 pos1 = (eye_up + eye_up * tri_mult + offset) * radius;
-			float3 pos2 = (eye_right * tri_mult + offset) * radius;
-			float3 pos3 = (-eye_right * tri_mult + offset) * radius;
-
-			float4 ani1 = particle_ani1 ? particle_ani1[particle_index] : 0;
-			float4 ani2 = particle_ani2 ? particle_ani2[particle_index] : 0;
-			float4 ani3 = particle_ani3 ? particle_ani3[particle_index] : 0;
-
-			// Flatten vectors for anisotropy
-			float3 anisotropy_xyz_1 = float3(ani1.x, ani1.y, ani1.z);
-			float3 anisotropy_xyz_2 = float3(ani2.x, ani2.y, ani2.z);
-			float3 anisotropy_xyz_3 = float3(ani3.x, ani3.y, ani3.z);
-
-			float anisotropy_w1 = ani1.w;
-			float anisotropy_w2 = ani2.w;
-			float anisotropy_w3 = ani3.w;
-
-			pos1 = pos1 + anisotropy_xyz_1 * Dot(anisotropy_xyz_1, pos1) * anisotropy_w1;
-			pos1 = pos1 + anisotropy_xyz_2 * Dot(anisotropy_xyz_2, pos1) * anisotropy_w2;
-			pos1 = pos1 + anisotropy_xyz_3 * Dot(anisotropy_xyz_3, pos1) * anisotropy_w3;
-
-			pos2 = pos2 + anisotropy_xyz_1 * Dot(anisotropy_xyz_1, pos2) * anisotropy_w1;
-			pos2 = pos2 + anisotropy_xyz_2 * Dot(anisotropy_xyz_2, pos2) * anisotropy_w2;
-			pos2 = pos2 + anisotropy_xyz_3 * Dot(anisotropy_xyz_3, pos2) * anisotropy_w3;
-
-			pos3 = pos3 + anisotropy_xyz_1 * Dot(anisotropy_xyz_1, pos3) * anisotropy_w1;
-			pos3 = pos3 + anisotropy_xyz_2 * Dot(anisotropy_xyz_2, pos3) * anisotropy_w2;
-			pos3 = pos3 + anisotropy_xyz_3 * Dot(anisotropy_xyz_3, pos3) * anisotropy_w3;
-
-			// translate to particle position
-			pos1 = pos1 + particle;
-			pos2 = pos2 + particle;
-			pos3 = pos3 + particle;
-
-			float normal[3] = { -(dir.x), -(dir.y), -(dir.z) };
-			float userdata[4] = { 0.f, 0.f, 0.f, 0.f };
-			float color[4] = { particle_col[particle_index].x , particle_col[particle_index].y, particle_col[particle_index].z, particle_col[particle_index].w };
-
-			meshBuilder.TexCoord2f(0, 0.5, -0.5);
-			meshBuilder.Position3f(pos1.x, pos1.y, pos1.z);
-			meshBuilder.Normal3fv(normal);
-			meshBuilder.UserData(userdata);
-			meshBuilder.Color4fv(color);
-			meshBuilder.AdvanceVertex();
-
-			meshBuilder.TexCoord2f(0, tri_mult, 1);
-			meshBuilder.Position3f(pos2.x, pos2.y, pos2.z);
-			meshBuilder.Normal3fv(normal);
-			meshBuilder.UserData(userdata);
-			meshBuilder.Color4fv(color);
-			meshBuilder.AdvanceVertex();
-
-			meshBuilder.TexCoord2f(0, 1.0 - tri_mult, 1);
-			meshBuilder.Position3f(pos3.x, pos3.y, pos3.z);
-			meshBuilder.Normal3fv(normal);
-			meshBuilder.UserData(userdata);
-			meshBuilder.Color4fv(color);
-			meshBuilder.AdvanceVertex();
-
-			particle_index++;
-			indice++;
-		}
-		meshBuilder.End(false, false);
-		flex->imeshes.push_back(pMesh);
-		meshBuilder.Reset();
-	}
-
-	return 0;
-}
-
-LUA_FUNCTION(RenderIMeshes) {
-	LUA->CheckType(1, FlexMetaTable);
-	FlexSolver* flex = GET_FLEX;
-	for (IMesh* mesh : flex->imeshes) mesh->Draw();
-
-	LUA->PushNumber(flex->imeshes.size() * MAX_INDICES);
-	return 1;
-}
-
-/*
-* Adds map collision to a flex solver
-* @param[in] solver The FlexSolver to add map collision to
-* @param[in] path The maps filepath
-*/
-LUA_FUNCTION(AddMapMesh) {
-	LUA->CheckType(1, FlexMetaTable);
+// todo: rewrite this shit
+LUA_FUNCTION(FLEXSOLVER_AddMapMesh) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckString(2);
 
-	FlexSolver* flex = GET_FLEX;
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 
 	// Get path, check if it exists
 	std::string path = "maps/" + (std::string)LUA->GetString(2) + ".bsp";
@@ -511,8 +270,8 @@ LUA_FUNCTION(AddMapMesh) {
 	FileSystem::Close(file);
 
 	BSPMap map = BSPMap(data, filesize);
-	Mesh mesh = Mesh(flexLibrary);
-	if (!mesh.init_concave((float3*)map.GetVertices(), map.GetNumTris() * 3)) {
+	Mesh* mesh = new Mesh(FLEX_LIBRARY);
+	if (!mesh->init_concave((float3*)map.GetVertices(), map.GetNumTris() * 3)) {
 		free(data);
 		LUA->ThrowError("Tried to add map mesh with invalid data (NumVertices is 0 or not a multiple of 3!)");
 
@@ -523,12 +282,6 @@ LUA_FUNCTION(AddMapMesh) {
 	flex->add_mesh(mesh, eNvFlexShapeTriangleMesh, false);
 
 	return 0;
-}
-
-// ShaderDevice is assumed to exist since if it didnt, this function wouldn't be accessable by lua
-LUA_FUNCTION(IsMSAAEnabled) {
-	LUA->PushBool(shaderDevice->IsAAEnabled());
-	return 1;
 }
 
 /*
@@ -627,28 +380,19 @@ LUA_FUNCTION(GetContacts) {
 }*/
 
 // Original function written by andreweathan
-LUA_FUNCTION(AddCube) {
-	LUA->CheckType(1, FlexMetaTable);
+LUA_FUNCTION(FLEXSOLVER_AddCube) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckType(2, Type::Vector); // pos
 	LUA->CheckType(3, Type::Vector); // vel
 	LUA->CheckType(4, Type::Vector); // cube size
 	LUA->CheckType(5, Type::Number); // size apart (usually radius)
-	LUA->CheckType(6, Type::Table);	// color (table w/ .r .g .b .a)
 
 	//gmod Vector and fleX float4
-	FlexSolver* flex = GET_FLEX;
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 	float3 gmodPos = VectorTofloat3(LUA->GetVector(2));		//pos
 	float3 gmodVel = VectorTofloat3(LUA->GetVector(3));		//vel
 	float3 gmodSize = VectorTofloat3(LUA->GetVector(4));	//size
 	float size = LUA->GetNumber(5);			//size apart
-
-	// Push color data onto stack (annoying)
-	LUA->GetField(6, "r");
-	LUA->GetField(6, "g");
-	LUA->GetField(6, "b");
-	LUA->GetField(6, "a");
-
-	float4 rgba = float4(LUA->GetNumber(-4) / 255, LUA->GetNumber(-3) / 255, LUA->GetNumber(-2) / 255, LUA->GetNumber(-1) / 255);
 
 	gmodSize = gmodSize / 2.f;
 	gmodPos = gmodPos + float3(size) / 2.0;
@@ -658,7 +402,7 @@ LUA_FUNCTION(AddCube) {
 			for (float x = -gmodSize.x; x < gmodSize.x; x++) {
 				float3 newPos = float3(x, y, z) * size + gmodPos;
 
-				flex->add_particle(float4(newPos.x, newPos.y, newPos.z, 1), gmodVel, rgba);
+				flex->add_particle(float4(newPos.x, newPos.y, newPos.z, 1), gmodVel);
 			}
 		}
 	}
@@ -666,12 +410,12 @@ LUA_FUNCTION(AddCube) {
 	return 0;
 }
 
-// Initializes a box with a mins and maxs for a FlexSolver
+// Initializes a box (6 planes) with a mins and maxs on a FlexSolver
 // Inputting nil disables the bounds.
-LUA_FUNCTION(InitBounds) {
-	LUA->CheckType(1, FlexMetaTable);
+LUA_FUNCTION(FLEXSOLVER_InitBounds) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	FlexSolver* flex = GET_FLEXSOLVER(1);
 
-	FlexSolver* flex = GET_FLEX;
 	if (LUA->GetType(2) == Type::Vector && LUA->GetType(3) == Type::Vector) {
 		flex->enable_bounds(VectorTofloat3(LUA->GetVector(2)), VectorTofloat3(LUA->GetVector(3)));
 	} else {
@@ -681,58 +425,162 @@ LUA_FUNCTION(InitBounds) {
 	return 0;
 }
 
+
+/*********************************** Flex Renderer LUA Interface *******************************************/
+
+#define GET_FLEXRENDERER(stack_pos) LUA->GetUserType<FlexRenderer>(stack_pos, FLEXRENDERER_METATABLE)
+
+// Frees the flex renderer and its allocated meshes from memory
+LUA_FUNCTION(FLEXRENDERER_GarbageCollect) {
+	LUA->CheckType(1, FLEXRENDERER_METATABLE);
+	FlexRenderer* flex = GET_FLEXRENDERER(1);
+
+	LUA->PushNil();
+	LUA->SetMetaTable(-2);
+
+	delete flex;
+	flex = nullptr;
+	return 0;
+}
+
+LUA_FUNCTION(FLEXRENDERER_BuildIMeshes) {
+	LUA->CheckType(1, FLEXRENDERER_METATABLE);
+	LUA->CheckType(2, FLEXSOLVER_METATABLE);
+	LUA->CheckNumber(3);
+
+	GET_FLEXRENDERER(1)->build_imeshes(GET_FLEXSOLVER(2), LUA->GetNumber(3));
+
+	return 0;
+}
+
+LUA_FUNCTION(FLEXRENDERER_DrawIMeshes) {
+	LUA->CheckType(1, FLEXRENDERER_METATABLE);
+	GET_FLEXRENDERER(1)->draw_imeshes();
+
+	return 0;
+}
+
+/************************************* Global LUA Interface **********************************************/
+
+#define ADD_FUNCTION(LUA, funcName, tblName) LUA->PushCFunction(funcName); LUA->SetField(-2, tblName)
+
+// must be freed from memory
+LUA_FUNCTION(NewFlexSolver) {
+	LUA->CheckNumber(1);
+	if (LUA->GetNumber(1) <= 0) LUA->ThrowError("Max Particles must be a positive number!");
+
+	FlexSolver* flex = new FlexSolver(FLEX_LIBRARY, LUA->GetNumber(1));
+	LUA->PushUserType(flex, FLEXSOLVER_METATABLE);
+	LUA->PushMetaTable(FLEXSOLVER_METATABLE);	// Add our meta functions
+	LUA->SetMetaTable(-2);
+
+	return 1;
+}
+
+LUA_FUNCTION(NewFlexRenderer) {
+	FlexRenderer* flex_renderer = new FlexRenderer();
+	LUA->PushUserType(flex_renderer, FLEXRENDERER_METATABLE);
+	LUA->PushMetaTable(FLEXRENDERER_METATABLE);
+	LUA->SetMetaTable(-2);
+
+	return 1;
+}
+
+// ShaderDevice is assumed to exist since if it didnt, this function wouldn't be accessable by lua
+LUA_FUNCTION(GetMSAAEnabled) {
+	LUA->PushBool(g_pHardwareConfig->IsAAEnabled());
+	return 1;
+}
+
+/*LUA_FUNCTION(SetMSAAEnabled) {
+	MaterialSystem_Config_t config = materials->GetCurrentConfigForVideoCard();
+	config.m_nAAQuality = 0;
+	config.m_nAASamples = 0;
+	//config.m_nForceAnisotropicLevel = 1;
+	//config.m_bShadowDepthTexture = false;
+	//config.SetFlag(MATSYS_VIDCFG_FLAGS_FORCE_TRILINEAR, false);
+	MaterialSystem_Config_t config_default = MaterialSystem_Config_t();
+	//config.m_Flags = config_default.m_Flags;
+	//config.m_DepthBias_ShadowMap = config_default.m_DepthBias_ShadowMap;
+	//config.dxSupportLevel = config_default.dxSupportLevel;
+	//config.m_SlopeScaleDepthBias_ShadowMap = config_default.m_SlopeScaleDepthBias_ShadowMap;
+	materials->OverrideConfig(config, false);
+	return 0;
+}*/
+
 GMOD_MODULE_OPEN() {
-	GlobalLUA = LUA;
-	flexLibrary = NvFlexInit(NV_FLEX_VERSION, error);
-	if (!flexLibrary) 
+	GLOBAL_LUA = LUA;
+	FLEX_LIBRARY = NvFlexInit(
+		NV_FLEX_VERSION, 
+		[](NvFlexErrorSeverity type, const char* message, const char* file, int line) {
+			std::string error = "[GWater2 Internal Error]: " + (std::string)message;
+			GLOBAL_LUA->ThrowError(error.c_str());
+		}
+	);
+
+	if (!FLEX_LIBRARY) 
 		LUA->ThrowError("[GWater2 Internal Error]: Nvidia FleX Failed to load! (Does your GPU meet the minimum requirements to run FleX?)");
 
-	// FlexMetaTable.__gc = FlexGC
-	FlexMetaTable = LUA->CreateMetaTable("FlexSolver");
-	ADD_FUNCTION(LUA, FlexGC, "__gc");
-
-	// FlexMetaTable.__index = {func1, func2, ...}
-	LUA->CreateTable();
-	ADD_FUNCTION(LUA, FlexGC, "Destroy");
-	ADD_FUNCTION(LUA, Tick, "Tick");
-	ADD_FUNCTION(LUA, AddParticle, "AddParticle");
-	ADD_FUNCTION(LUA, AddCube, "AddCube");
-	ADD_FUNCTION(LUA, GetParticles, "GetParticles");
-	ADD_FUNCTION(LUA, RenderParticles, "RenderParticles");
-	//ADD_FUNCTION(LUA, RenderParticlesExternal, "RenderPositionsExternal");
-	ADD_FUNCTION(LUA, BuildIMeshes, "BuildIMeshes");
-	ADD_FUNCTION(LUA, RenderIMeshes, "RenderIMeshes");
-	ADD_FUNCTION(LUA, AddConcaveMesh, "AddConcaveMesh");
-	ADD_FUNCTION(LUA, AddConvexMesh, "AddConvexMesh");
-	ADD_FUNCTION(LUA, RemoveMesh, "RemoveMesh");
-	ADD_FUNCTION(LUA, UpdateMesh, "UpdateMesh");
-	ADD_FUNCTION(LUA, SetParameter, "SetParameter");
-	ADD_FUNCTION(LUA, GetParameter, "GetParameter");
-	ADD_FUNCTION(LUA, GetCount, "GetCount");
-	ADD_FUNCTION(LUA, AddMapMesh, "AddMapMesh");
-	//ADD_FUNCTION(LUA, GetContacts, "GetContacts");
-	ADD_FUNCTION(LUA, InitBounds, "InitBounds");
-	ADD_FUNCTION(LUA, Reset, "Reset");
-	LUA->SetField(-2, "__index");
-
-	if (!Sys_LoadInterface("materialsystem", MATERIAL_SYSTEM_INTERFACE_VERSION, NULL, (void**)&materials)) 
+	if (!Sys_LoadInterface("materialsystem", MATERIAL_SYSTEM_INTERFACE_VERSION, NULL, (void**)&materials))
 		LUA->ThrowError("[GWater2 Internal Error]: C++ Materialsystem failed to load!");
 
-	if (!Sys_LoadInterface("shaderapidx9", SHADER_DEVICE_INTERFACE_VERSION, NULL, (void**)&shaderDevice))
-		LUA->ThrowError("[GWater2 Internal Error]: C++ Shaderdevice failed to load!");
+	//if (!Sys_LoadInterface("shaderapidx9", SHADER_DEVICE_INTERFACE_VERSION, NULL, (void**)&g_pShaderDevice))
+	//	LUA->ThrowError("[GWater2 Internal Error]: C++ Shaderdevice failed to load!");
+
+	//if (!Sys_LoadInterface("shaderapidx9", SHADERAPI_INTERFACE_VERSION, NULL, (void**)&g_pShaderAPI))
+	//	LUA->ThrowError("[GWater2 Internal Error]: C++ Shaderapi failed to load!");
+
+	//if (!Sys_LoadInterface("studiorender", STUDIO_RENDER_INTERFACE_VERSION, NULL, (void**)&g_pStudioRender)) 
+	//	LUA->ThrowError("[GWater2 Internal Error]: C++ Studiorender failed to load!");
 
 	// Defined in 'shader_inject.h'
-	if (!inject_shaders()) 
+	if (!inject_shaders())
 		LUA->ThrowError("[GWater2 Internal Error]: C++ Shadersystem failed to load!");
 
 	// weird bsp filesystem
 	if (FileSystem::LoadFileSystem() != FILESYSTEM_STATUS::OK)
 		LUA->ThrowError("[GWater2 Internal Error]: C++ Filesystem failed to load!");
+	
+	FLEXSOLVER_METATABLE = LUA->CreateMetaTable("FlexSolver");
+	ADD_FUNCTION(LUA, FLEXSOLVER_GarbageCollect, "__gc");	// FlexMetaTable.__gc = FlexGC
+
+	// FlexMetaTable.__index = {func1, func2, ...}
+	LUA->CreateTable();
+	ADD_FUNCTION(LUA, FLEXSOLVER_GarbageCollect, "Destroy");
+	ADD_FUNCTION(LUA, FLEXSOLVER_Tick, "Tick");
+	ADD_FUNCTION(LUA, FLEXSOLVER_AddParticle, "AddParticle");
+	ADD_FUNCTION(LUA, FLEXSOLVER_AddCube, "AddCube");
+	ADD_FUNCTION(LUA, FLEXSOLVER_GetParticles, "GetParticles");
+	ADD_FUNCTION(LUA, FLEXSOLVER_RenderParticles, "RenderParticles");
+	//ADD_FUNCTION(LUA, RenderParticlesExternal, "RenderPositionsExternal");
+	ADD_FUNCTION(LUA, FLEXSOLVER_AddConcaveMesh, "AddConcaveMesh");
+	ADD_FUNCTION(LUA, FLEXSOLVER_AddConvexMesh, "AddConvexMesh");
+	ADD_FUNCTION(LUA, FLEXSOLVER_RemoveMesh, "RemoveMesh");
+	ADD_FUNCTION(LUA, FLEXSOLVER_UpdateMesh, "UpdateMesh");
+	ADD_FUNCTION(LUA, FLEXSOLVER_SetParameter, "SetParameter");
+	ADD_FUNCTION(LUA, FLEXSOLVER_GetParameter, "GetParameter");
+	ADD_FUNCTION(LUA, FLEXSOLVER_GetCount, "GetCount");
+	ADD_FUNCTION(LUA, FLEXSOLVER_AddMapMesh, "AddMapMesh");
+	//ADD_FUNCTION(LUA, GetContacts, "GetContacts");
+	ADD_FUNCTION(LUA, FLEXSOLVER_InitBounds, "InitBounds");
+	ADD_FUNCTION(LUA, FLEXSOLVER_Reset, "Reset");
+	LUA->SetField(-2, "__index");
+
+	FLEXRENDERER_METATABLE = LUA->CreateMetaTable("FlexRenderer");
+	ADD_FUNCTION(LUA, FLEXRENDERER_GarbageCollect, "__gc");	// FlexMetaTable.__gc = FlexGC
+
+	// FlexMetaTable.__index = {func1, func2, ...}
+	LUA->CreateTable();
+	ADD_FUNCTION(LUA, FLEXRENDERER_GarbageCollect, "Destroy");
+	ADD_FUNCTION(LUA, FLEXRENDERER_BuildIMeshes, "BuildIMeshes");
+	ADD_FUNCTION(LUA, FLEXRENDERER_DrawIMeshes, "DrawIMeshes");
+	LUA->SetField(-2, "__index");
 
 	// _G.FlexSolver = NewFlexSolver
 	LUA->PushSpecial(SPECIAL_GLOB);
 	ADD_FUNCTION(LUA, NewFlexSolver, "FlexSolver");
-	ADD_FUNCTION(LUA, IsMSAAEnabled, "IsMSAAEnabled");
+	ADD_FUNCTION(LUA, NewFlexRenderer, "FlexRenderer");
+	ADD_FUNCTION(LUA, GetMSAAEnabled, "GetMSAAEnabled");
 	LUA->Pop();
 
 	return 0;
@@ -740,8 +588,8 @@ GMOD_MODULE_OPEN() {
 
 // Called when the module is unloaded
 GMOD_MODULE_CLOSE() {
-	NvFlexShutdown(flexLibrary);
-	flexLibrary = nullptr;
+	NvFlexShutdown(FLEX_LIBRARY);
+	FLEX_LIBRARY = nullptr;
 
 	// Defined in 'shader_inject.h'
 	eject_shaders();

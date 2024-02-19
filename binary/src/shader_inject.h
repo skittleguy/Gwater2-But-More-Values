@@ -32,7 +32,7 @@ bool inject_shaders() {
 	// ^this check isnt technically required, but I only compiled my shaders for dx9 and above
 
 	// this will cast the memory given by the valve interfaces to an edited CShaderSystem class which allows us to use privated variables which otherwise would be hidden
-	// This cast overall makes 0 sense, and shouldn't work. but im not complaining :)
+	// This cast overall makes 0 sense, and shouldn't work.
 	cshadersystem = (CShaderSystem*)g_pSLShaderSystem;
 
 	// Create new shader directory (dll)

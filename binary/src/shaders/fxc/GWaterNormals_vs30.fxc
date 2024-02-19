@@ -14,7 +14,7 @@ struct VS_OUTPUT
 {
 	float4 projPosSetup	: POSITION;
 	float4 coord		: TEXCOORD0;
-	float3 pos			: TEXCOORD1;
+	float4 pos			: TEXCOORD1;
 	float4x4 proj		: TEXCOORD2;
 	float3 eye_pos		: NORMAL0;
 	//float3x3 normal		: NORMAL0;
@@ -32,7 +32,7 @@ VS_OUTPUT main( const VS_INPUT v )
 
 	o.projPosSetup = vProjPos;
 	o.coord = v.vTexCoord;
-	o.pos = worldPos;//float4(worldPos, length(worldPos - cEyePos));
+	o.pos = float4(worldPos, length(worldPos - cEyePos));
 	o.eye_pos = cEyePos;
 	o.proj = cViewProj;
 

@@ -43,12 +43,13 @@ if SERVER then
 	return 
 end
 
-require((BRANCH == "x86-64" or BRANCH == "chromium" ) and "gwater2" or "gwater2_main")	//carrying
-include("gwater2_shaders.lua")	// also carrying
+require((BRANCH == "x86-64" or BRANCH == "chromium" ) and "gwater2" or "gwater2_main")	-- carrying
+include("gwater2_shaders.lua")	-- also carrying
 
 gwater2 = {
 	solver = FlexSolver(100000),
-	material = Material("gwater2/finalpass"),//Material("vgui/circle"),//Material("sprites/sent_ball"),
+	renderer = FlexRenderer(),
+	material = Material("gwater2/finalpass"),--Material("vgui/circle"),--Material("sprites/sent_ball"),
 	meshes = {},
 	color = Color(209, 237, 255, 25),
 	update_meshes = function()
@@ -158,7 +159,7 @@ local function get_map_vertices()
 	return all_vertices
 end
 
---hook.Add("InitPostEntity", "gwater2_addprop", function()
+hook.Add("InitPostEntity", "gwater2_addprop", function()
 	xpcall(function()
 		gwater2.solver:AddMapMesh(game.GetMap())
 	end, function(e)
@@ -168,5 +169,5 @@ end
 	for k, ent in ipairs(ents.GetAll()) do
 		add_prop(ent)
 	end
---end)
+end)
 hook.Add("OnEntityCreated", "gwater2_addprop", function(ent) timer.Simple(0, function() add_prop(ent) end) end)	// timer.0 so data values are setup correctly

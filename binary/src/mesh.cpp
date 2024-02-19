@@ -35,6 +35,17 @@ Mesh::Mesh(NvFlexLibrary* lib) {
 	update(float3(), float3());
 }
 
+Mesh::~Mesh() {
+	NvFlexFreeBuffer(vertices);
+	if (indices == nullptr) {
+		NvFlexDestroyConvexMesh(library, id);
+	}
+	else {	// Convex meshes dont have an indices buffer, so the mesh must be concave
+		NvFlexFreeBuffer(indices);
+		NvFlexDestroyTriangleMesh(library, id);
+	}
+}
+
 bool Mesh::init_concave(float3* verts, int num_verts) {
 	if (num_verts == 0 || num_verts % 3 != 0) {
 		return false;
@@ -86,8 +97,8 @@ bool Mesh::init_convex(float3* verts, int num_verts) {
 		float3 tri[3] = {verts[i], verts[i + 1], verts[i + 2]};
 
 		// Turn triangle into normalized plane & add to vertex buffer
-		float3 plane_dir = Normalize(Cross(tri[1] - tri[0], tri[0] - tri[2]));
-		float plane_height = Dot(plane_dir, tri[0]);
+		float3 plane_dir = Normalize((tri[1] - tri[0]).cross(tri[0] - tri[2]));
+		float plane_height = plane_dir.dot(tri[0]);
 		hostVerts[i / 3] = float4(plane_dir.x, plane_dir.y, plane_dir.z, -plane_height);
 
 		min[0] = fmin(min[0], verts[i].x);
@@ -109,15 +120,4 @@ bool Mesh::init_convex(float3* verts, int num_verts) {
 void Mesh::update(float3 pos, float3 ang) {
 	this->pos = float4(pos.x, pos.y, pos.z, 0);	// unsure what the last number is for. FleX requires it to exist
 	this->ang = quatFromAngle(ang);
-}
-
-void Mesh::destroy() {
-	NvFlexFreeBuffer(vertices);
-	if (indices == nullptr) {
-		NvFlexDestroyConvexMesh(library, id);
-	}
-	else {	// Convex meshes dont have an indices buffer, so the mesh must be concave
-		NvFlexFreeBuffer(indices);
-		NvFlexDestroyTriangleMesh(library, id);
-	}
 }
