@@ -39,12 +39,11 @@ void FlexRenderer::build_imeshes(FlexSolver* solver, float radius) {
 	float4* particle_ani1 = solver->get_parameter("anisotropy_scale") > 0 ? solver->get_host("particle_ani1") : NULL;
 	float4* particle_ani2 = solver->get_parameter("anisotropy_scale") > 0 ? solver->get_host("particle_ani2") : NULL;
 	float4* particle_ani3 = solver->get_parameter("anisotropy_scale") > 0 ? solver->get_host("particle_ani3") : NULL;
-	float4* particle_colors = solver->get_host("particle_col");
 	bool anisotropy_enabled = particle_ani1 && particle_ani2 && particle_ani3;
 
 	CMeshBuilder mesh_builder;
 	for (int particle_index = 0; particle_index < solver->get_active_particles();) {
-		IMesh* imesh = render_context->CreateStaticMesh(MATERIAL_VERTEX_FORMAT_MODEL_DX7, "");
+		IMesh* imesh = render_context->CreateStaticMesh(VERTEX_POSITION | VERTEX_TEXCOORD0_2D | VERTEX_NORMAL, "");
 		mesh_builder.Begin(imesh, MATERIAL_TRIANGLES, MAX_PRIMATIVES);
 			for (int primative = 0; primative < MAX_PRIMATIVES && particle_index < solver->get_active_particles(); particle_index++) {
 				float3 particle_pos = particle_positions[particle_index].xyz();
@@ -55,13 +54,6 @@ void FlexRenderer::build_imeshes(FlexSolver* solver, float radius) {
 				if (dst.z < 0 || -dst.x - dst.w > radius || dst.x - dst.w > radius || -dst.y - dst.w > radius || dst.y - dst.w > radius) {
 					continue;
 				}
-
-				const float color[4] = {
-					particle_colors[particle_index].x,
-					particle_colors[particle_index].y,
-					particle_colors[particle_index].z,
-					particle_colors[particle_index].w
-				};
 
 				float4 ani1 = float4();
 				float4 ani2 = float4();
@@ -83,8 +75,7 @@ void FlexRenderer::build_imeshes(FlexSolver* solver, float radius) {
 					float3 world_pos = particle_pos + pos_ani;
 					mesh_builder.TexCoord2f(0, u[i], v[i]);
 					mesh_builder.Position3f(world_pos.x, world_pos.y, world_pos.z);
-					mesh_builder.Normal3f(0, 0, 1);
-					mesh_builder.Color4fv(color);
+					mesh_builder.Normal3f(0, 0, 0);
 					mesh_builder.AdvanceVertex();
 				}
 

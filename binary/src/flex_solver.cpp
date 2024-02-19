@@ -37,7 +37,7 @@ float4* FlexSolver::get_host(std::string name) {
 	return this->hosts[name];
 }
 
-void FlexSolver::add_particle(float4 pos, float3 vel, float4 col) {
+void FlexSolver::add_particle(float4 pos, float3 vel) {
 	if (this->solver == nullptr) return;
 
 	if (get_active_particles() >= get_max_particles()) return;
@@ -53,7 +53,6 @@ void FlexSolver::add_particle(float4 pos, float3 vel, float4 col) {
 	int n = this->copy_description->elementCount++;	// increment
 	this->hosts["particle_pos"][n] = pos;
 	this->hosts["particle_smooth"][n] = pos;
-	this->hosts["particle_col"][n] = col;
 	velocities[n] = vel;
 	phases[n] = NvFlexMakePhase(0, eNvFlexPhaseSelfCollide | eNvFlexPhaseFluid);
 	active[n] = n;
@@ -327,8 +326,6 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	add_buffer("particle_ani1", sizeof(float4), particles);
 	add_buffer("particle_ani2", sizeof(float4), particles);
 	add_buffer("particle_ani3", sizeof(float4), particles);
-
-	this->hosts["particle_col"] = (float4*)malloc(sizeof(float4) * particles);
 };
 
 // Free memory
@@ -348,7 +345,6 @@ FlexSolver::~FlexSolver() {
 		NvFlexFreeBuffer(buffer.second);
 
 	NvFlexDestroySolver(this->solver);	// bye bye solver
-	free(this->hosts["particle_col"]);	// color buffer is manually allocated
 	this->solver = nullptr;
 }
 

@@ -34,7 +34,7 @@ public:
 	// If the FleX buffer is never used, it may return NULL
 	float4* get_host(std::string name);
 
-	void add_particle(float4 pos, float3 vel, float4 col);
+	void add_particle(float4 pos, float3 vel);
 	bool pretick(NvFlexMapFlags wait);	// Handles transfer of FleX buffers to hosts & updates mesh positions/angles
 	void tick(float dt);
 	void add_mesh(Mesh* mesh, NvFlexCollisionShapeType mesh_type, bool dynamic);

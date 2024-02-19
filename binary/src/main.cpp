@@ -64,24 +64,16 @@ LUA_FUNCTION(FLEXSOLVER_AddParticle) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckType(2, Type::Vector);	// position
 	LUA->CheckType(3, Type::Vector);	// velocity
-	LUA->CheckType(4, Type::Table);		// color
-	LUA->CheckNumber(5);				// mass
+	LUA->CheckNumber(4);				// mass
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 	Vector pos = LUA->GetVector(2);
 	Vector vel = LUA->GetVector(3);
 	float inv_mass = 1.f / (float)LUA->GetNumber(5);	// FleX uses inverse mass for their calculations
-
-	// Push color data onto stack (annoying)
-	LUA->GetField(4, "r");
-	LUA->GetField(4, "g");
-	LUA->GetField(4, "b");
-	LUA->GetField(4, "a");
 	
 	flex->add_particle(
 		float4(pos.x, pos.y, pos.z, inv_mass), 
-		float3(vel.x, vel.y, vel.z), 
-		float4(LUA->GetNumber(-4) / 255.f, LUA->GetNumber(-3) / 255.f, LUA->GetNumber(-2) / 255.f, LUA->GetNumber(-1) / 255.f)	// color
+		float3(vel.x, vel.y, vel.z)
 	);
 
 	return 0;
@@ -394,7 +386,6 @@ LUA_FUNCTION(FLEXSOLVER_AddCube) {
 	LUA->CheckType(3, Type::Vector); // vel
 	LUA->CheckType(4, Type::Vector); // cube size
 	LUA->CheckType(5, Type::Number); // size apart (usually radius)
-	LUA->CheckType(6, Type::Table);	// color (table w/ .r .g .b .a)
 
 	//gmod Vector and fleX float4
 	FlexSolver* flex = GET_FLEXSOLVER(1);
@@ -402,14 +393,6 @@ LUA_FUNCTION(FLEXSOLVER_AddCube) {
 	float3 gmodVel = VectorTofloat3(LUA->GetVector(3));		//vel
 	float3 gmodSize = VectorTofloat3(LUA->GetVector(4));	//size
 	float size = LUA->GetNumber(5);			//size apart
-
-	// Push color data onto stack (annoying)
-	LUA->GetField(6, "r");
-	LUA->GetField(6, "g");
-	LUA->GetField(6, "b");
-	LUA->GetField(6, "a");
-
-	float4 rgba = float4(LUA->GetNumber(-4) / 255, LUA->GetNumber(-3) / 255, LUA->GetNumber(-2) / 255, LUA->GetNumber(-1) / 255);
 
 	gmodSize = gmodSize / 2.f;
 	gmodPos = gmodPos + float3(size) / 2.0;
@@ -419,7 +402,7 @@ LUA_FUNCTION(FLEXSOLVER_AddCube) {
 			for (float x = -gmodSize.x; x < gmodSize.x; x++) {
 				float3 newPos = float3(x, y, z) * size + gmodPos;
 
-				flex->add_particle(float4(newPos.x, newPos.y, newPos.z, 1), gmodVel, rgba);
+				flex->add_particle(float4(newPos.x, newPos.y, newPos.z, 1), gmodVel);
 			}
 		}
 	}

@@ -26,7 +26,7 @@ SHADER_DRAW {
 	SHADOW_STATE {
 
 		// Note: Removing VERTEX_COLOR makes the shader work on all objects (Like props)
-		unsigned int flags = VERTEX_POSITION | VERTEX_NORMAL | VERTEX_FORMAT_COMPRESSED;
+		unsigned int flags = VERTEX_POSITION | VERTEX_NORMAL | VERTEX_TEXCOORD0_2D;
 		pShaderShadow->VertexShaderVertexFormat(flags, 1, 0, 0);
 
 		DECLARE_STATIC_VERTEX_SHADER(GWaterNormals_vs30);

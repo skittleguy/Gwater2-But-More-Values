@@ -43,13 +43,13 @@ if SERVER then
 	return 
 end
 
-require((BRANCH == "x86-64" or BRANCH == "chromium" ) and "gwater2" or "gwater2_main")	//carrying
-include("gwater2_shaders.lua")	// also carrying
+require((BRANCH == "x86-64" or BRANCH == "chromium" ) and "gwater2" or "gwater2_main")	-- carrying
+include("gwater2_shaders.lua")	-- also carrying
 
 gwater2 = {
 	solver = FlexSolver(100000),
 	renderer = FlexRenderer(),
-	material = Material("gwater2/finalpass"),//Material("vgui/circle"),//Material("sprites/sent_ball"),
+	material = Material("gwater2/finalpass"),--Material("vgui/circle"),--Material("sprites/sent_ball"),
 	meshes = {},
 	color = Color(209, 237, 255, 25),
 	update_meshes = function()
