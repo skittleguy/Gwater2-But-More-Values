@@ -6,10 +6,10 @@ struct VS_INPUT
 {
 	float4 vPos			: POSITION;		// Position
 	float4 vNormal		: NORMAL;		// Normal
-	float4 vBoneWeights	: BLENDWEIGHT;	// Skin weights
-	float4 vBoneIndices	: BLENDINDICES;	// Skin indices
+	//float4 vBoneWeights	: BLENDWEIGHT;	// Skin weights
+	//float4 vBoneIndices	: BLENDINDICES;	// Skin indices
 	float4 vTexCoord	: TEXCOORD0;	// Texture coordinates
-	float4 vColor		: COLOR0;		// Color
+	//float4 vColor		: COLOR0;		// Color
 };
 
 struct VS_OUTPUT
@@ -26,7 +26,7 @@ VS_OUTPUT main(const VS_INPUT v) {
 	VS_OUTPUT o = (VS_OUTPUT)0;
 
 	float3 normal, worldPos;
-	SkinPositionAndNormal(0, v.vPos, v.vNormal, v.vBoneWeights, v.vBoneIndices, worldPos, normal);
+	SkinPositionAndNormal(0, v.vPos, 0, 0, 0, worldPos, normal);
 
 	float4 vProjPos = mul(float4(worldPos, 1), cViewProj);
 	vProjPos.z = dot(float4(worldPos, 1), cViewProjZ);	// wtf does this even do?
@@ -35,7 +35,7 @@ VS_OUTPUT main(const VS_INPUT v) {
 	o.coord = v.vTexCoord;
 	o.eyepos = float4(cEyePos, length(worldPos - cEyePos));
 	o.proj = cViewProj;	// in C++ forced to be inverse of cViewProj, NOT ACTUALLY cModelViewProj!
-	o.color = v.vColor;
+	o.color = float4(1, 1, 1, 1);//v.vColor;
 	o.pos = worldPos;
 
 	return o;

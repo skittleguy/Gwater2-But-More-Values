@@ -178,7 +178,7 @@ float4 main(const PS_INPUT i) : COLOR {
 	// Calculate final color & return
 	float3 final_color = absorption * refracted * diffuse + float3(phong, phong, phong) + specular;
 	//return float4(final_color, 1);
-	return FinalOutput(float4(final_color, 1), 0, 0, TONEMAP_SCALE_LINEAR, false, 0);	// For HDR
+	return FinalOutput(float4(final_color, 1), 0, 0, TONEMAP_SCALE_NONE, false, 0);	// For HDR
 	
 	//return float4(smoothed_normal, 1);
 };
