@@ -90,6 +90,8 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 		render.DrawScreenQuad()
 		render.SetRenderTarget()
 
+		--render.CopyTexture(cache_bloom, cache_normals)
+		
 		-- Blur Y
 		water_blur:SetTexture("$normaltexture", cache_bloom)
 		water_blur:SetVector("$scrs", Vector(0, scale / scrh))
