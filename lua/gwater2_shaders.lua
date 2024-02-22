@@ -89,8 +89,6 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 		render.SetRenderTarget(cache_bloom)	-- Bloom texture resolution is significantly lower than screen res, enabling for a faster blur
 		render.DrawScreenQuad()
 		render.SetRenderTarget()
-
-		--render.CopyTexture(cache_bloom, cache_normals)
 		
 		-- Blur Y
 		water_blur:SetTexture("$normaltexture", cache_bloom)
