@@ -48,10 +48,6 @@ SHADER_DRAW {
 		DECLARE_DYNAMIC_PIXEL_SHADER(GWaterNormals_ps30);
 		SET_DYNAMIC_PIXEL_SHADER(GWaterNormals_ps30);
 	}
-
-	//CMatRenderContextPtr pRenderContext(g_pMaterialSystem);
-	//pRenderContext->E
-	//g_pHardwareConfig->IsAAEnabled()
 	
 	Draw();
 

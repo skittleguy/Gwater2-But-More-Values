@@ -71,11 +71,11 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 	-- grab normals
 	water_normals:SetFloat("$radius", radius * 0.5)
 	render.SetMaterial(water_normals)
-	render.SetRenderTarget(cache_normals)
+	--render.SetRenderTarget(cache_normals)
 	--render.ClearDepth()			-- "fixes" msaa breaking visuals
 	gwater2.renderer:DrawIMeshes()
-	render.SetRenderTarget()
-	
+	--render.SetRenderTarget()
+	/*
 	-- Blur normals
 	water_blur:SetTexture("$depthtexture", cache_depth)
 	water_blur:SetFloat("$radius", radius)
@@ -110,8 +110,8 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 	gwater2.renderer:DrawIMeshes()
 
 	-- Debug Draw
-	render.DrawTextureToScreenRect(cache_absorption, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
-	--render.DrawTextureToScreenRect(cache_normals, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
+	--render.DrawTextureToScreenRect(cache_absorption, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
+	render.DrawTextureToScreenRect(cache_normals, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)*/
 end)
 
 --hook.Add("NeedsDepthPass", "gwater2_depth", function()

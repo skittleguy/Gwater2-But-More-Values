@@ -43,7 +43,7 @@ void FlexRenderer::build_imeshes(FlexSolver* solver, float radius) {
 
 	CMeshBuilder mesh_builder;
 	for (int particle_index = 0; particle_index < solver->get_active_particles();) {
-		IMesh* imesh = render_context->CreateStaticMesh(VERTEX_POSITION | VERTEX_TEXCOORD0_2D | VERTEX_NORMAL, "");
+		IMesh* imesh = render_context->CreateStaticMesh(VERTEX_POSITION | VERTEX_NORMAL | VERTEX_TEXCOORD0_2D, "");
 		mesh_builder.Begin(imesh, MATERIAL_TRIANGLES, MAX_PRIMATIVES);
 			for (int primative = 0; primative < MAX_PRIMATIVES && particle_index < solver->get_active_particles(); particle_index++) {
 				float3 particle_pos = particle_positions[particle_index].xyz();
@@ -75,7 +75,7 @@ void FlexRenderer::build_imeshes(FlexSolver* solver, float radius) {
 					float3 world_pos = particle_pos + pos_ani;
 					mesh_builder.TexCoord2f(0, u[i], v[i]);
 					mesh_builder.Position3f(world_pos.x, world_pos.y, world_pos.z);
-					mesh_builder.Normal3f(0, 0, 0);
+					//mesh_builder.Normal3f(0, 0, 0);
 					mesh_builder.AdvanceVertex();
 				}
 
