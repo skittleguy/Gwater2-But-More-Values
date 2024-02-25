@@ -31,7 +31,7 @@ public:
 	{
 		MEM_ALLOC_CREDIT_( "CMatCallQueue.m_Allocator" );
 #ifdef SWDS
-		m_Allocator.Init( 2*1024, 0, 0, 4 );
+		m_Allocator.Init( NULL, 0, 0, 4 );
 #else
 		m_Allocator.Init(NULL, IsX360() ? 2 * 1024 * 1024 : 8 * 1024 * 1024, 64 * 1024, 256 * 1024, 4);	// Meetric: needed to edit this function so it is compatable with the 2013 sdk
 #endif
