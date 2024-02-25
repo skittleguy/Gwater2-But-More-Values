@@ -1,25 +1,17 @@
 #include "common_vs_fxc.h"
 
-//float4x4 invProj : register(c69);
-
-struct VS_INPUT
-{
+struct VS_INPUT {
 	float4 vPos			: POSITION;		// Position
 	float4 vNormal		: NORMAL;		// Normal
-	//float4 vBoneWeights	: BLENDWEIGHT;	// Skin weights
-	//float4 vBoneIndices	: BLENDINDICES;	// Skin indices
 	float4 vTexCoord	: TEXCOORD0;	// Texture coordinates
-	//float4 vColor		: COLOR0;		// Color
 };
 
-struct VS_OUTPUT
-{
+struct VS_OUTPUT {
 	float4 projPosSetup	: POSITION;
 	float4 coord		: TEXCOORD0;
 	float4 eyepos		: TEXCOORD1;
 	float3 pos			: TEXCOORD2;
 	float4x4 proj		: TEXCOORD3;
-	float4 color		: COLOR0;
 };
 
 VS_OUTPUT main(const VS_INPUT v) {
@@ -35,7 +27,6 @@ VS_OUTPUT main(const VS_INPUT v) {
 	o.coord = v.vTexCoord;
 	o.eyepos = float4(cEyePos, length(worldPos - cEyePos));
 	o.proj = cViewProj;	// in C++ forced to be inverse of cViewProj, NOT ACTUALLY cModelViewProj!
-	o.color = float4(1, 1, 1, 1);//v.vColor;
 	o.pos = worldPos;
 
 	return o;

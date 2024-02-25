@@ -6,7 +6,7 @@ float IOR 			: register(c2);
 float REFLECTANCE 	: register(c3);
 
 sampler NORMALS 	: register(s0);
-sampler SCREEN 		: register(s1);
+sampler FRAMEBUFFER : register(s1);
 samplerCUBE CUBEMAP	: register(s2);
 sampler DEPTH		: register(s3);
 
@@ -34,46 +34,11 @@ float fresnelSchlicks(float3 incident, float3 normal, float ior) {
 	ret = (REFLECTANCE + (1.0 - REFLECTANCE) * ret);
     return min(ret, 1);
 }
-/*
+
 float4 main(const PS_INPUT i) : COLOR {
-	float2 offset = (i.coord - 0.5) * 2.0;
-
-	// kill pixels outside of sphere
-	float radius2 = dot(offset, offset);
-	if (radius2 > 1) discard;
-
-	// Calculate normal from texture coords
-	float bulge = sqrt(1 - radius2);
-
-	// Get smoothed normals if available. Use projected normal otherwise
-	float3 smoothed_normal = tex2D(NORMALS, i.P / SCR_S).xyz;
-
-	// Lighting calculations
-	float3 sun_dir = float3(-0.377821, 0.520026, 0.766044);	// TODO: get from map OR get lighting data
-	float3 view_dir = normalize(i.pos - i.eyepos.xyz);
-	float3 reflected = reflect(view_dir, smoothed_normal);
-	float phong = min(pow(max(0, dot(reflected, sun_dir)), 100), 1);
-	float fresnel = fresnelSchlicks(view_dir, smoothed_normal, IOR);
-	float3 specular = texCUBE(CUBEMAP, reflected).xyz * fresnel;
-	
-	bool is_translucent = i.color.w < 0.9999;	// rounding errors
-	float diffuse = is_translucent ? 1.0 : dot(smoothed_normal, sun_dir) * 0.45 + 0.55;
-	float absorption_distance = (tex2D(DEPTH, i.P / SCR_S).x * 100 + pow(dot(smoothed_normal, view_dir), 2) * 10) * i.color.w;
-	//pow(dot(smoothed_normal, view_dir), 2)
-	float3 absorption = is_translucent ? exp((i.color.xyz - float3(1, 1, 1)) * absorption_distance) : i.color.xyz;
-
-	// Calculate refraction vector in 3d space and project it to screen
-	float3 uv_offset = i.eyepos.w > RADIUS * 4.0 ? smoothed_normal * -RADIUS * 2.0 * IOR : float3(0, 0, 0);
-	float4 uv = mul(float4(i.pos + uv_offset, 1), i.proj); uv.xy /= uv.w;
-	float3 refracted = is_translucent ? tex2D(SCREEN, float2(uv.x / 2.0 + 0.5, 0.5 - uv.y / 2.0)).xyz : float3(1, 1, 1);
-	refracted *= (1.0 - fresnel);
-
-	// Calculate final color & return
-	float3 final_color = absorption * refracted * diffuse + float3(phong, phong, phong) + specular;
-	//return float4(final_color, 1);
-	return FinalOutput(float4(final_color, 1), 0, 0, TONEMAP_SCALE_LINEAR, false, 0);	// For HDR
-};*/
-
+	return float4(1, 0, 0, 1);
+};
+/*
 // calculates direction when given a pixel position on the screen
 float3 calculate_dir(float2 uv, float4x4 proj) {
 	return normalize(mul(float4(uv * float2(2.0, -2.0) + float2(-1.0, 1.0), 1, 1), proj).xyz);
@@ -135,7 +100,7 @@ float4 main(const PS_INPUT i) : COLOR {
 	float3 bulge_pos01 = project_pos(i.eyepos.xyz, calculate_dir(uv01, i.proj), depth01);
 	float3 bulge_pos10 = project_pos(i.eyepos.xyz, calculate_dir(uv10, i.proj), depth10);
 
-	float3 smoothed_normal = normalize(cross(bulge_pos00 - bulge_pos01, bulge_pos00 - bulge_pos10));*/
+	float3 smoothed_normal = normalize(cross(bulge_pos00 - bulge_pos01, bulge_pos00 - bulge_pos10));//*
 
 	// extracted normal from depth
 	float3 view_dir = normalize(i.pos - i.eyepos.xyz);
@@ -181,4 +146,4 @@ float4 main(const PS_INPUT i) : COLOR {
 	return FinalOutput(float4(final_color, 1), 0, 0, TONEMAP_SCALE_NONE, false, 0);	// For HDR
 	
 	//return float4(smoothed_normal, 1);
-};
+};*/

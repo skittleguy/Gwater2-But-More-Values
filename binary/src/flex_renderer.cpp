@@ -6,7 +6,7 @@ void FlexRenderer::draw_imeshes() {
 
 };
 
-void FlexRenderer::build_imeshes(FlexSolver* solver, float radius) {
+void FlexRenderer::build_imeshes(FlexSolver* solver, float3 eye_pos, float radius) {
 	if (solver == nullptr) return;
 
 	// Clear previous imeshes, they are being rebuilt
@@ -22,24 +22,17 @@ void FlexRenderer::build_imeshes(FlexSolver* solver, float radius) {
 	render_context->GetMatrix(MATERIAL_VIEW, &view_matrix);
 	render_context->GetMatrix(MATERIAL_PROJECTION, &projection_matrix);
 	MatrixMultiply(projection_matrix, view_matrix, view_projection_matrix);
-	float3 up = float3(view_matrix[1][0], view_matrix[1][1], view_matrix[1][2]);
-	float3 right = float3(view_matrix[0][0], view_matrix[0][1], view_matrix[0][2]);
 
 	// local Quad positions
-	radius *= 0.5;
-	float3 local_pos1 = -up - right * SQRT3;
-	float3 local_pos2 = up * 2.0;
-	float3 local_pos3 = -up + right * SQRT3;
-	float3 local_pos[3] = {local_pos1 * radius, local_pos2 * radius, local_pos3 * radius};
+	float radius2 = radius * 0.5;
 	float u[3] = { 0.5 - SQRT3 / 2, 0.5, 0.5 + SQRT3 / 2};
 	float v[3] = { 1, -0.5, 1 };
 
 	// FleX data
 	float4* particle_positions = solver->get_parameter("smoothing") != 0 ? solver->get_host("particle_smooth") : solver->get_host("particle_pos");
-	float4* particle_ani1 = solver->get_parameter("anisotropy_scale") > 0 ? solver->get_host("particle_ani1") : NULL;
-	float4* particle_ani2 = solver->get_parameter("anisotropy_scale") > 0 ? solver->get_host("particle_ani2") : NULL;
-	float4* particle_ani3 = solver->get_parameter("anisotropy_scale") > 0 ? solver->get_host("particle_ani3") : NULL;
-	bool anisotropy_enabled = particle_ani1 && particle_ani2 && particle_ani3;
+	float4* particle_ani1 = solver->get_parameter("anisotropy_scale") > 0 ? solver->get_host("particle_ani1") : 0;
+	float4* particle_ani2 = solver->get_parameter("anisotropy_scale") > 0 ? solver->get_host("particle_ani2") : 0;
+	float4* particle_ani3 = solver->get_parameter("anisotropy_scale") > 0 ? solver->get_host("particle_ani3") : 0;
 
 	CMeshBuilder mesh_builder;
 	for (int particle_index = 0; particle_index < solver->get_active_particles();) {
@@ -55,27 +48,26 @@ void FlexRenderer::build_imeshes(FlexSolver* solver, float radius) {
 					continue;
 				}
 
-				float4 ani1 = float4();
-				float4 ani2 = float4();
-				float4 ani3 = float4();
-				if (anisotropy_enabled) {
-					ani1 = particle_ani1[particle_index];
-					ani2 = particle_ani2[particle_index];
-					ani3 = particle_ani3[particle_index];
-				}
+				// calculate triangle rotation
+				float3 forward = Normalize(particle_pos - eye_pos);
+				float3 right = Normalize(forward.cross(float3(0, 0, 1)));
+				float3 up = right.cross(forward);
+				float3 local_pos[3] = { (-up - right * SQRT3) * radius2, up * 2.0 * radius2, (-up + right * SQRT3) * radius2 };
+
+				float4 ani1 = particle_ani1 ? particle_ani1[particle_index] : 0;
+				float4 ani2 = particle_ani2 ? particle_ani2[particle_index] : 0;
+				float4 ani3 = particle_ani3 ? particle_ani3[particle_index] : 0;
 
 				for (int i = 0; i < 3; i++) {
 					float3 pos_ani = local_pos[i];
-					if (anisotropy_enabled) {
-						pos_ani = pos_ani + ani1.xyz() * (pos_ani.dot(ani1.xyz()) * ani1.w);
-						pos_ani = pos_ani + ani2.xyz() * (pos_ani.dot(ani2.xyz()) * ani2.w);
-						pos_ani = pos_ani + ani3.xyz() * (pos_ani.dot(ani3.xyz()) * ani3.w);
-					}
+					pos_ani = pos_ani + ani1.xyz() * (pos_ani.dot(ani1.xyz()) * ani1.w);
+					pos_ani = pos_ani + ani2.xyz() * (pos_ani.dot(ani2.xyz()) * ani2.w);
+					pos_ani = pos_ani + ani3.xyz() * (pos_ani.dot(ani3.xyz()) * ani3.w);
 
 					float3 world_pos = particle_pos + pos_ani;
 					mesh_builder.TexCoord2f(0, u[i], v[i]);
 					mesh_builder.Position3f(world_pos.x, world_pos.y, world_pos.z);
-					//mesh_builder.Normal3f(0, 0, 0);
+					mesh_builder.Normal3f(-forward.x, -forward.y, -forward.z);
 					mesh_builder.AdvanceVertex();
 				}
 
