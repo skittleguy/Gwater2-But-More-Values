@@ -12,7 +12,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4.1.1
     - name: do the shits
       run: |
         cd binary
@@ -38,7 +38,7 @@ jobs:
         cd D:\a\gwater2\gwater2\binary\
         dir    
     - name: Upload artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4.3.1
       with:
           name: gmcl_gwater2_win64.dll
           path: D:\a\gwater2\gwater2\binary\x86_64\Release\gmcl_gwater2_win64.dll
