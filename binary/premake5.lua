@@ -74,7 +74,7 @@ CreateWorkspace({name = "gwater2", abi_compatible = true, path = ""})
 				"FleX/lib/linux64"
 			}
 			links { 
-				"NvFlexReleaseCUDA_x64",
-				"NvFlexDeviceRelease_x64",
-				"NvFlexExtReleaseCUDA_x64"
+				"FleX/lib/linux64/NvFlexReleaseCUDA_x64.a",
+				"FleX/lib/linux64/NvFlexDeviceRelease_x64.a",
+				"FleX/lib/linux64/NvFlexExtReleaseCUDA_x64.a"
 			}
