@@ -370,7 +370,7 @@ void FlexSolver::default_parameters() {
 	this->params->fluidRestDistance = 7.f;
 	this->params->solidRestDistance = 7.f;
 
-	this->params->anisotropyScale = 2.f;
+	this->params->anisotropyScale = 1.f;
 	this->params->anisotropyMin = 0.0f;
 	this->params->anisotropyMax = 0.15f;
 	this->params->smoothing = 1.0f;
