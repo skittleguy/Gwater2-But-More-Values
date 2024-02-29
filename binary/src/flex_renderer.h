@@ -15,7 +15,7 @@ private:
 
 public:
 	int get_total_imeshes();
-	void build_imeshes(FlexSolver* solver, float3 eye_pos, float radius);
+	void build_imeshes(FlexSolver* solver, float radius);
 	void draw_imeshes();
 
 	FlexRenderer();

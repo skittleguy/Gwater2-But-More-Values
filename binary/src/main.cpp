@@ -446,10 +446,9 @@ LUA_FUNCTION(FLEXRENDERER_GarbageCollect) {
 LUA_FUNCTION(FLEXRENDERER_BuildIMeshes) {
 	LUA->CheckType(1, FLEXRENDERER_METATABLE);
 	LUA->CheckType(2, FLEXSOLVER_METATABLE);
-	LUA->CheckType(3, Type::Vector);
-	LUA->CheckNumber(4);
+	LUA->CheckNumber(3);
 
-	GET_FLEXRENDERER(1)->build_imeshes(GET_FLEXSOLVER(2), VectorTofloat3(LUA->GetVector(3)), LUA->GetNumber(4));
+	GET_FLEXRENDERER(1)->build_imeshes(GET_FLEXSOLVER(2), LUA->GetNumber(3));
 
 	return 0;
 }

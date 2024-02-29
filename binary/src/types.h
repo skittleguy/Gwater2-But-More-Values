@@ -54,8 +54,14 @@ struct float4 {
 	float4 operator+(float4 e) {
 		return { x + e.x, y + e.y, z + e.z, w + e.w };
 	}
+	float4 operator-(float4 e) {
+		return { x - e.x, y - e.y, z - e.z , w - e.w};
+	}
 	float4 operator*(float e) {
 		return { x * e, y * e, z * e, w * e };
+	}
+	float4 operator/(float e) {
+		return { x / e, y / e, z / e, w / e };
 	}
 	float3 xyz() {
 		return { x, y, z };

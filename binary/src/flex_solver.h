@@ -20,7 +20,7 @@ private:
 	std::vector<Mesh*> meshes;	// physmeshes
 
 	void add_buffer(std::string name, int type, int count);
-	NvFlexBuffer* get_buffer(std::string name);
+	inline NvFlexBuffer* get_buffer(std::string name);
 	void default_parameters();
 	void map_parameters(NvFlexParams* buffer);
 

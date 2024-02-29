@@ -55,7 +55,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 	-- Build imeshes for multiple passes
 	local up = EyeAngles():Up()
 	local right = EyeAngles():Right()
-	gwater2.renderer:BuildIMeshes(gwater2.solver, EyePos(), radius * 0.5)
+	gwater2.renderer:BuildIMeshes(gwater2.solver, radius * 0.5)
 	--render.SetMaterial(Material("models/props_combine/combine_interface_disp"))
 	--gwater2.renderer:DrawIMeshes()
 	
