@@ -31,7 +31,6 @@ void FlexRenderer::build_imeshes(FlexSolver* solver, float radius) {
 	float u[3] = { 0.5 - SQRT3 / 2, 0.5, 0.5 + SQRT3 / 2};
 	float v[3] = { 1, -0.5, 1 };
 
-	// FleX data
 	float4* particle_positions = solver->get_parameter("smoothing") != 0 ? solver->get_host("particle_smooth") : solver->get_host("particle_pos");
 	float4* particle_ani1 = solver->get_parameter("anisotropy_scale") > 0 ? solver->get_host("particle_ani1") : 0;
 	float4* particle_ani2 = solver->get_parameter("anisotropy_scale") > 0 ? solver->get_host("particle_ani2") : 0;

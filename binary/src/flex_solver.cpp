@@ -299,7 +299,7 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	solver_description.maxParticles = particles;
 	solver_description.maxDiffuseParticles = 0;
 
-	library = library;
+	this->library = library;
 	solver = NvFlexCreateSolver(library, &solver_description);
 
 	default_parameters();

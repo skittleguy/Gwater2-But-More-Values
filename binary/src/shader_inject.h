@@ -14,11 +14,10 @@
 // these externals MUST be defined (NOT NULL) BEFORE inserting shaders into the materialsystem or you WILL crash!
 extern IMaterialSystemHardwareConfig* g_pHardwareConfig = NULL;
 extern const MaterialSystem_Config_t* g_pConfig = NULL;
-IShaderSystem* g_pSLShaderSystem;
+IShaderSystem* g_pSLShaderSystem;	 // Literally no idea where this is defined in the source sdk
 
-CShaderSystem* cshadersystem;	// our unfucked (public) shadersystem struct
 CShaderSystem::ShaderDLLInfo_t* shaderlibdll;	// our shader "directory"
-//int m_ShaderDLLs_index;		// index in materialsystem of our added shader directory (unused here)
+//int m_ShaderDLLs_index;
 
 // returns true if successful, false otherwise
 bool inject_shaders() {
@@ -32,16 +31,15 @@ bool inject_shaders() {
 	// ^this check isnt technically required, but I only compiled my shaders for dx9 and above
 
 	// this will cast the memory given by the valve interfaces to an edited CShaderSystem class which allows us to use privated variables which otherwise would be hidden
-	// This cast overall makes 0 sense, and shouldn't work.
-	cshadersystem = (CShaderSystem*)g_pSLShaderSystem;
+	CShaderSystem* cshadersystem = (CShaderSystem*)g_pSLShaderSystem;
 
 	// Create new shader directory (dll)
-	//m_ShaderDLLs_index = g_pCShaderSystem->m_ShaderDLLs.AddToTail();	// WARNING: Having more than 8 total shader dlls crashes the game!!!
+	//m_ShaderDLLs_index = g_pCShaderSystem->m_ShaderDLLs.AddToTail();	// WARNING: Having more than 8 TOTAL shader dlls crashes the game!!!
 	//shaderlibdll = &cshadersystem->m_ShaderDLLs[m_ShaderDLLs_index];
 
 	// if the above code is uncommented, m_ShaderDLLs_index ends up being equal to 7 (the maximum allowed number of shader directories)
 	// im not sure what indexes 0-6 actually mean in terms of the gmod source code but ive found injecting into 0 tends to be the most stable
-	// in theory you could have an infinite amount of shaders on this index, you just need to make sure to remove them on module unload
+	// in theory you could have an unlimited amount of shaders on this index, you just need to make sure to remove them on module unload
 	shaderlibdll = &cshadersystem->m_ShaderDLLs[0];
 
 	//shaderlibdll->m_pFileName = strdup("gwater_shaders.dll");	// name likely doesnt matter

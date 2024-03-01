@@ -14,9 +14,9 @@
 #endif
 
 #include "shaderlib/cshader.h"
-//#include "shaderlib/BaseShader.h"	// Meetric: Commented this out, appears to be unused
-//#include "convar.h"
-//#include <renderparm.h>
+#include "shaderlib/BaseShader.h"
+#include "convar.h"
+#include <renderparm.h>
 
 #ifdef _X360
 #define SUPPORT_DX8 0
