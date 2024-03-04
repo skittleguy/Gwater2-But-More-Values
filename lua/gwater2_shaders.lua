@@ -16,7 +16,7 @@ end
 local cache_depth = GetRenderTargetGWater("gwater_cache_depth")
 local cache_absorption = GetRenderTargetGWater("gwater_cache_absorption")
 local cache_normals = GetRenderTargetGWater("gwater_cache_normals", nil, MATERIAL_RT_DEPTH_SEPARATE)
-local cache_bloom = GetRenderTargetGWater("0gwater_cache_bloom", nil)	-- for blurring
+local cache_bloom = GetRenderTargetGWater("2gwater_cache_bloom", 1 / 2)	-- for blurring
 local water_blur = Material("gwater2/smooth")
 local water_volumetric = Material("gwater2/volumetric")
 local water_normals = Material("gwater2/normals")
@@ -86,8 +86,8 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 	render.SetMaterial(water_blur)
 	for i = 1, blur_passes:GetInt() do
 		-- Blur X
-		--local scale = (5 - i) * 0.005
-		local scale = 0.1 / i
+		--local scale = (5 - i) * 0.05
+		local scale = 0.05 / i
 		water_blur:SetTexture("$normaltexture", cache_normals)	
 		water_blur:SetVector("$scrs", Vector(scale / scrw, 0))
 		render.SetRenderTarget(cache_bloom)	-- Bloom texture resolution is significantly lower than screen res, enabling for a faster blur
