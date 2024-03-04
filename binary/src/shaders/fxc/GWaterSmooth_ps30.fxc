@@ -4,18 +4,11 @@ float2 SCR_S	: register(c0);
 float RADIUS 	: register(c1);
 
 #define RESOLUTION 5
+#define THRESHOLD -0.25
 
 struct PS_INPUT {
 	float2 P 			: VPOS;
 	float2 coord	: TEXCOORD0;
-};
-
-float map(float s, float a1, float a2, float b1, float b2) {
-    return b1 + (s - a1) * (b2 - b1) / (a2 - a1);
-};
-
-bool is_inside(float2 coord) {
-	return coord.x > 0 && coord.x < 1 && coord.y > 0 && coord.y < 1;
 };
 
 float4 main(PS_INPUT i) : COLOR {
@@ -37,9 +30,9 @@ float4 main(PS_INPUT i) : COLOR {
 
 		// Is angle non harsh enough
 		float cosTheta = dot(og_normal, neighbor_normal);
-		if (cosTheta < 0) break;
+		if (cosTheta < THRESHOLD) break;
 
-		final_normal += neighbor_normal * (cosTheta * cosTheta * cosTheta * cosTheta);
+		final_normal += neighbor_normal * cosTheta * cosTheta * cosTheta * cosTheta;
 	}
 
 	// (Identical to above loop^)
@@ -50,8 +43,8 @@ float4 main(PS_INPUT i) : COLOR {
 		if (neighbor_depth > RADIUS) break;
 		float3 neighbor_normal = tex2D(NORMALS, texcoord_pos).xyz;
 		float cosTheta = dot(og_normal, neighbor_normal);
-		if (cosTheta < 0) break;
-		final_normal += neighbor_normal * cosTheta * cosTheta;
+		if (cosTheta < THRESHOLD) break;
+		final_normal += neighbor_normal * cosTheta * cosTheta * cosTheta * cosTheta;
 	}
 
 	return float4(normalize(final_normal), 1);
