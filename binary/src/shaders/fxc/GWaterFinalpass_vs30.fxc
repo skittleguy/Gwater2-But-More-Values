@@ -2,32 +2,32 @@
 
 struct VS_INPUT {
 	float4 vPos			: POSITION;		// Position
-	float4 vNormal		: NORMAL;		// Normal
+	//float4 vNormal	: NORMAL;		// Normal
 	float4 vTexCoord	: TEXCOORD0;	// Texture coordinates
 };
 
 struct VS_OUTPUT {
 	float4 projPosSetup	: POSITION;
 	float4 coord		: TEXCOORD0;
-	float4 eyepos		: TEXCOORD1;
+	float3 eyepos		: TEXCOORD1;
 	float3 pos			: TEXCOORD2;
-	float4x4 proj		: TEXCOORD3;
+	float4x4 proj		: TEXCOORD3;	// Used in refraction
 };
 
 VS_OUTPUT main(const VS_INPUT v) {
 	VS_OUTPUT o = (VS_OUTPUT)0;
 
-	float3 normal, worldPos;
-	SkinPositionAndNormal(0, v.vPos, 0, 0, 0, worldPos, normal);
+	float3 world_normal, world_pos;
+	SkinPositionAndNormal(0, v.vPos, 0, 0, 0, world_pos, world_normal);
 
-	float4 vProjPos = mul(float4(worldPos, 1), cViewProj);
-	vProjPos.z = dot(float4(worldPos, 1), cViewProjZ);	// wtf does this even do?
+	float4 vProjPos = mul(float4(world_pos, 1), cViewProj);
+	vProjPos.z = dot(float4(world_pos, 1), cViewProjZ);	// wtf does this even do?
 
 	o.projPosSetup = vProjPos;
 	o.coord = v.vTexCoord;
-	o.eyepos = float4(cEyePos, length(worldPos - cEyePos));
-	o.proj = cViewProj;	// in C++ forced to be inverse of cViewProj, NOT ACTUALLY cModelViewProj!
-	o.pos = worldPos;
+	o.eyepos = cEyePos;
+	o.proj = cViewProj;	
+	o.pos = world_pos;
 
 	return o;
 };

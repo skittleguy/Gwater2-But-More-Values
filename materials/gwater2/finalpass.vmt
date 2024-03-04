@@ -3,7 +3,7 @@ GWaterFinalpass {
 	$envmap "env_cubemap"
 	$radius 10
 	$ior 1.333
-	$reflectance 0.1
+	$reflectance 0.5
 	$normaltexture "lights/white"
 	$screentexture "lights/white"
 }

@@ -8,7 +8,6 @@ BEGIN_VS_SHADER(GWaterFinalpass, "gwater2 helper")
 // Shader parameters
 BEGIN_SHADER_PARAMS
 	SHADER_PARAM(RADIUS, SHADER_PARAM_TYPE_FLOAT, "1", "Radius of particles")
-	SHADER_PARAM(SCRS, SHADER_PARAM_TYPE_VEC2, "[1 1]", "Screen Size")
 	SHADER_PARAM(NORMALTEXTURE, SHADER_PARAM_TYPE_TEXTURE, "lights/white", "Texture of smoothed normals")
 	SHADER_PARAM(SCREENTEXTURE, SHADER_PARAM_TYPE_TEXTURE, "lights/white", "Texture of screen")
 	SHADER_PARAM(DEPTHTEXTURE, SHADER_PARAM_TYPE_TEXTURE, "lights/white", "Depth texture")
@@ -53,7 +52,8 @@ SHADER_DRAW {
 
 	DYNAMIC_STATE {
 		// constants
-		const float* scr_s = params[SCRS]->GetVecValue();
+		int scr_x, scr_y = 1; pShaderAPI->GetBackBufferDimensions(scr_x, scr_y);
+		const float scr_s[2] = {scr_x, scr_y};
 		float radius = params[RADIUS]->GetFloatValue();
 		float ior = params[IOR]->GetFloatValue();
 		float reflectance = params[REFLECTANCE]->GetFloatValue();

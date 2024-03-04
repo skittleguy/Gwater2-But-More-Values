@@ -14,7 +14,7 @@
 // these externals MUST be defined (NOT NULL) BEFORE inserting shaders into the materialsystem or you WILL crash!
 extern IMaterialSystemHardwareConfig* g_pHardwareConfig = NULL;
 extern const MaterialSystem_Config_t* g_pConfig = NULL;
-IShaderSystem* g_pSLShaderSystem;	 // Literally no idea where this is defined in the source sdk
+IShaderSystem* g_pSLShaderSystem;	 // I literally no idea where this is defined in the source sdk. Fails to compile without it
 
 CShaderSystem::ShaderDLLInfo_t* shaderlibdll;	// our shader "directory"
 //int m_ShaderDLLs_index;
@@ -34,10 +34,10 @@ bool inject_shaders() {
 	CShaderSystem* cshadersystem = (CShaderSystem*)g_pSLShaderSystem;
 
 	// Create new shader directory (dll)
-	//m_ShaderDLLs_index = g_pCShaderSystem->m_ShaderDLLs.AddToTail();	// WARNING: Having more than 8 TOTAL shader dlls crashes the game!!!
+	//m_ShaderDLLs_index = g_pCShaderSystem->m_ShaderDLLs.AddToTail();	// adding more than 8 TOTAL shader dlls crashes the game!!!
 	//shaderlibdll = &cshadersystem->m_ShaderDLLs[m_ShaderDLLs_index];
 
-	// if the above code is uncommented, m_ShaderDLLs_index ends up being equal to 7 (the maximum allowed number of shader directories)
+	// if the above code is uncommented, m_ShaderDLLs_index ends up being equal to 7 (I think the maximum allowed number of shader directories)
 	// im not sure what indexes 0-6 actually mean in terms of the gmod source code but ive found injecting into 0 tends to be the most stable
 	// in theory you could have an unlimited amount of shaders on this index, you just need to make sure to remove them on module unload
 	shaderlibdll = &cshadersystem->m_ShaderDLLs[0];
@@ -65,7 +65,7 @@ bool eject_shaders() {
 		shaderlibdll->m_ShaderDict.Remove(GWaterFinalpass::s_Name);
 
 		// Remove our added shader directory (dll?) in material system
-		//g_pCShaderSystem->m_ShaderDLLs.Remove(m_ShaderDLLs_index);
+		//cshadersystem->m_ShaderDLLs.Remove(m_ShaderDLLs_index);
 
 		return true;
 	}

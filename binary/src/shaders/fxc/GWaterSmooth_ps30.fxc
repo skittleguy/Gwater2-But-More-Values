@@ -3,6 +3,8 @@ sampler DEPTH	: register(s1);
 float2 SCR_S	: register(c0);
 float RADIUS 	: register(c1);
 
+#define RESOLUTION 5
+
 struct PS_INPUT {
 	float2 P 			: VPOS;
 	float2 coord	: TEXCOORD0;
@@ -16,92 +18,39 @@ bool is_inside(float2 coord) {
 	return coord.x > 0 && coord.x < 1 && coord.y > 0 && coord.y < 1;
 };
 
-#define THRESHOLD -1
-#define RESOLUTION 10
-/*
 float4 main(PS_INPUT i) : COLOR {
 	float4 depth = tex2D(DEPTH, i.coord);
 	//if (is_zero(depth)) return float4(0, 0, 0, 0);
-	if (depth.y <= RADIUS * 2.0) return float4(0, 0, 1, 0);	// Dont blur if too close. Causes weird artifacts
+	if (depth.x <= RADIUS) return float4(0, 0, 1, 0);	// Dont blur if too close. Causes weird artifacts
 
 	float3 og_normal = tex2D(NORMALS, i.coord).xyz;
 	float3 final_normal = og_normal;
 	[unroll]
-	for (int x = -RESOLUTION; x <= RESOLUTION; x++) {
-		if (x == 0) continue;	// Skip center since we sample it already
-
-		// Is Texcoord outside
-		float2 texcoord_pos = i.coord + float2(x * SCR_S.x, x * SCR_S.y) * depth.x;
-		if (!is_inside(texcoord_pos)) continue;
+	for (int x = 1; x <= RESOLUTION; x++) {
+		float2 texcoord_pos = i.coord + float2(x * SCR_S.x, x * SCR_S.y) * depth.y;
 
 		// Is particle close enough
-		float neighbor_depth =  abs(tex2D(DEPTH, texcoord_pos).y - depth.y);
-		if (neighbor_depth > RADIUS) continue;
+		float neighbor_depth = abs(tex2D(DEPTH, texcoord_pos).x - depth.x);
+		if (neighbor_depth > RADIUS) break;
 
 		float3 neighbor_normal = tex2D(NORMALS, texcoord_pos).xyz;
 
 		// Is angle non harsh enough
-		float cosTheta = dot(og_normal, neighbor_normal);
-		//if (cosTheta < THRESHOLD) continue;
+		//float cosTheta = dot(og_normal, neighbor_normal);
+		//if (cosTheta < THRESHOLD) return true;
 
-		//final_normal += neighbor_normal * max(0, map(cosTheta, THRESHOLD, 1, 0, 1));
-		final_normal += neighbor_normal * (cosTheta * 0.5 + 0.5);
-	}
-	final_normal = normalize(final_normal);
-
-	return float4(final_normal, 1);
-};*/
-
-
-float2 split_depth(float depth) {
-	int level = pow(2, floor(depth / 512));	// we are splitting a 32 bit float into two 16 bit floats. 16 bit floats have a 10 bit mantessa. 2^(10-1) = 512
-	return float2(floor(depth / level) * level, depth % level);
-}
-
-float join_depth(float2 depth) {
-	return depth.x + depth.y;
-}
-
-float4 main(PS_INPUT i) : COLOR {
-	float4 depth = tex2D(NORMALS, i.coord);
-
-	float depth_1 = join_depth(depth.xy);
-	if (depth_1 <= RADIUS * 2.0) discard;	// Dont blur if too close. Causes weird artifacts
-
-	float final_normal = depth_1;
-	float count = 1.0;
-
-	// Positive
-	[unroll]
-	for (int x = 1; x <= RESOLUTION; x++) {
-		// Is Texcoord outside
-		float2 texcoord_pos = i.coord + float2(x * SCR_S.x, x * SCR_S.y) * depth.z;
-		//if (!is_inside(texcoord_pos) || x > depth.z / 4.0) break;
-
-		// Is particle close enough
-		float neighbor_depth = join_depth(tex2D(NORMALS, texcoord_pos).xy);
-		float distance = abs(neighbor_depth - depth_1);
-		if (distance > RADIUS) break;
-
-		final_normal += neighbor_depth;
-		count++;
+		final_normal += neighbor_normal;
 	}
 
-	// Negative
+	// (Identical to above loop^)
 	[unroll]
 	for (int x = -1; x >= -RESOLUTION; x--) {
-		// Is Texcoord outside
-		float2 texcoord_pos = i.coord + float2(x * SCR_S.x, x * SCR_S.y) * depth.z;
-		//if (!is_inside(texcoord_pos) || -x > depth.z / 4.0) break;
-
-		// Is particle close enough
-		float neighbor_depth = join_depth(tex2D(NORMALS, texcoord_pos).xy);
-		float distance = abs(neighbor_depth - depth_1);
-		if (distance > RADIUS) break;
-
-		final_normal += neighbor_depth;
-		count++;
+		float2 texcoord_pos = i.coord + float2(x * SCR_S.x, x * SCR_S.y) * depth.y;
+		float neighbor_depth = abs(tex2D(DEPTH, texcoord_pos).x - depth.x);
+		if (neighbor_depth > RADIUS) break;
+		float3 neighbor_normal = tex2D(NORMALS, texcoord_pos).xyz;
+		final_normal += neighbor_normal;
 	}
 
-	return float4(split_depth(final_normal / count), depth.z, 1);
+	return float4(normalize(final_normal), 1);
 };

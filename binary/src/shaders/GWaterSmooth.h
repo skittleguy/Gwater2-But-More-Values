@@ -50,8 +50,8 @@ SHADER_DRAW {
 		pShaderAPI->SetPixelShaderConstant(0, scr_s);
 		pShaderAPI->SetPixelShaderConstant(1, &radius);
 
-		BindTexture(SHADER_SAMPLER0, NORMALTEXTURE, FRAME);
-		BindTexture(SHADER_SAMPLER1, DEPTHTEXTURE, FRAME);
+		BindTexture(SHADER_SAMPLER0, NORMALTEXTURE);
+		BindTexture(SHADER_SAMPLER1, DEPTHTEXTURE);
 
 		DECLARE_DYNAMIC_VERTEX_SHADER(GWaterVolumetric_vs30);
 		SET_DYNAMIC_VERTEX_SHADER(GWaterVolumetric_vs30);
