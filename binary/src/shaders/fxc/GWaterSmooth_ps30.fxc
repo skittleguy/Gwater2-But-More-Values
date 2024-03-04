@@ -36,10 +36,10 @@ float4 main(PS_INPUT i) : COLOR {
 		float3 neighbor_normal = tex2D(NORMALS, texcoord_pos).xyz;
 
 		// Is angle non harsh enough
-		//float cosTheta = dot(og_normal, neighbor_normal);
-		//if (cosTheta < THRESHOLD) return true;
+		float cosTheta = dot(og_normal, neighbor_normal);
+		if (cosTheta < 0) break;
 
-		final_normal += neighbor_normal;
+		final_normal += neighbor_normal * (cosTheta * cosTheta * cosTheta * cosTheta);
 	}
 
 	// (Identical to above loop^)
@@ -49,7 +49,9 @@ float4 main(PS_INPUT i) : COLOR {
 		float neighbor_depth = abs(tex2D(DEPTH, texcoord_pos).x - depth.x);
 		if (neighbor_depth > RADIUS) break;
 		float3 neighbor_normal = tex2D(NORMALS, texcoord_pos).xyz;
-		final_normal += neighbor_normal;
+		float cosTheta = dot(og_normal, neighbor_normal);
+		if (cosTheta < 0) break;
+		final_normal += neighbor_normal * cosTheta * cosTheta;
 	}
 
 	return float4(normalize(final_normal), 1);

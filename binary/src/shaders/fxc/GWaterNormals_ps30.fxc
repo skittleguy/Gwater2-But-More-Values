@@ -14,7 +14,7 @@ struct PS_OUTPUT {
 	float4 rt0			: COLOR0;
 	float4 rt1			: COLOR1;
 //#if DEPTH
-	float depth	 		: DEPTH0;
+	//float depth	 		: DEPTH0;
 //#endif
 };
 
@@ -43,7 +43,7 @@ PS_OUTPUT main(const PS_INPUT i) {
 	PS_OUTPUT o = (PS_OUTPUT)0;
 	o.rt0 = float4(world_normal, 1);
 	o.rt1 = float4(bulge_pos.z - bulge * RADIUS, uvdmax, 0, 1);
-	o.depth = bulge_pos.z / bulge_pos.w;
+	//o.depth = bulge_pos.z / bulge_pos.w;
 
 	return o;
 };

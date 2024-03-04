@@ -23,15 +23,9 @@ struct PS_INPUT {
 #define IN_COLOR float4(1, 1, 1, 1)
 
 // Assumes that incoming IOR is 1
-float fresnelSchlicks(float3 incident, float3 normal, float ior) {
-    float r0 = (1.0 - ior) / (1.0 + ior); 
-	r0 *= r0;
-	float cosX = -dot(incident, normal);
-    float x = 1.0 - cosX;
-    float ret = r0 + (1.0 - r0) * x * x * x * x * x;
-
-	//ret = (REFLECTANCE + (1.0 - REFLECTANCE) * ret);
-    return min(ret, 1);
+float fresnel_approx(const float3 incident, const float3 normal) {
+	float fresnel = saturate(dot(normal, incident));
+	return pow(1.0 - fresnel, 5);
 }
 
 float4 main(const PS_INPUT i) : COLOR {
@@ -45,13 +39,15 @@ float4 main(const PS_INPUT i) : COLOR {
 
 	// Weight the normals forward, as the only visible part is facing the player
 	float3 view_dir = normalize(i.pos - i.eyepos);
-	smoothed_normal = normalize(smoothed_normal + view_dir * REFLECTANCE);
+	smoothed_normal = normalize(smoothed_normal + view_dir * dot(-view_dir, smoothed_normal) * REFLECTANCE);
+
 	
 	// Lighting calculations
 	float3 sun_dir = float3(-0.377821, 0.520026, 0.766044);	// TODO: get from map OR get lighting data
 	float3 reflected = reflect(view_dir, smoothed_normal);
 	float phong = min(pow(max(0, dot(reflected, sun_dir)), 100), 1);
-	float fresnel = 0;//fresnelSchlicks(view_dir, smoothed_normal, IOR);
+	float fresnel = fresnel_approx(-view_dir, smoothed_normal);
+
 	float3 specular = texCUBE(CUBEMAP, reflected).xyz * fresnel;
 	
 	bool is_translucent = IN_COLOR.w < 0.9999;	// rounding errors
