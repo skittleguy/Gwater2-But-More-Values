@@ -16,7 +16,7 @@ end
 local cache_depth = GetRenderTargetGWater("gwater_cache_depth")
 local cache_absorption = GetRenderTargetGWater("gwater_cache_absorption")
 local cache_normals = GetRenderTargetGWater("gwater_cache_normals", nil, MATERIAL_RT_DEPTH_SEPARATE)
-local cache_bloom = GetRenderTargetGWater("1gwater_cache_bloom", 1 / 1)	-- for blurring
+local cache_bloom = GetRenderTargetGWater("2gwater_cache_bloom", 1 / 2)	-- for blurring
 local water_blur = Material("gwater2/smooth")
 local water_volumetric = Material("gwater2/volumetric")
 local water_normals = Material("gwater2/normals")
@@ -28,15 +28,14 @@ local antialias = GetConVar("mat_antialias")
 hook.Add("PreDrawViewModels", "gwater2_render", function()
 	if gwater2.solver:GetCount() < 1 then return end
 
-	-- A rendertargets depth is not written to when anti-aliasing is enabled
-	-- I have tried for *weeks* fighting this issue by setting flags, calling C++ functions, and using everything in the cam. library, to no avail.
-	-- * 'render.ClearDepth()' does not work well in this case as it makes particles render through walls
-	-- * MATERIAL_RT_DEPTH_SEPARATE simply does not work
-	-- * '$ignorez' flag on the material works, but has the same issue as 'render.ClearDepth()' (particles render through walls)
-	-- My solution at the moment is just force disabling it. I don't have enough time to figure out this problem and frankly I would like to work on other things
+	-- A rendertargets depth is created separately when anti-aliasing is enabled
+	-- In order to have proper rendertarget capture which obeys the depth buffer, we need to use MATERIAL_RT_DEPTH_SHARED.
+	-- That way, our rendered particles don't render through walls. (Avoid render.ClearDepth! as it resets this buffer!!!)
+	-- Unfortunately this is force disabled when MSAA is on.. So my solution at the moment is just force disabling it
 	-- Related gmod issues: 
 	-- https://github.com/Facepunch/garrysmod-issues/issues/4662
 	-- https://github.com/Facepunch/garrysmod-issues/issues/5039
+	-- https://github.com/Facepunch/garrysmod-issues/issues/5367
 	if antialias:GetInt() > 1 then
 		print("[GWater2]: Force disabling MSAA due to RT Depth issues")
 		RunConsoleCommand("mat_antialias", 1)

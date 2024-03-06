@@ -40,6 +40,9 @@ SHADER_DRAW {
 		pShaderShadow->EnableTexture(SHADER_SAMPLER0, true);	// Smoothed normals texture
 		pShaderShadow->EnableTexture(SHADER_SAMPLER1, true);	// Screen texture
 		pShaderShadow->EnableTexture(SHADER_SAMPLER2, true);	// Cubemap
+		if (g_pHardwareConfig->GetHDRType() != HDR_TYPE_NONE) {
+			pShaderShadow->EnableSRGBRead(SHADER_SAMPLER2, true);
+		}
 		pShaderShadow->EnableTexture(SHADER_SAMPLER3, true);	// Depth
 
 		DECLARE_STATIC_VERTEX_SHADER(GWaterFinalpass_vs30);

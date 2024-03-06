@@ -4,7 +4,7 @@ float2 SCR_S	: register(c0);
 float RADIUS 	: register(c1);
 
 #define RESOLUTION 4
-#define THRESHOLD -0.5
+#define THRESHOLD 0
 
 struct PS_INPUT {
 	float2 P 			: VPOS;
@@ -15,7 +15,7 @@ struct PS_INPUT {
 // Worked on this algorithm for multiple months, so it may be a little messy. Smoothing particle information is NOT easy
 float4 main(PS_INPUT i) : COLOR {
 	float4 depth = tex2D(DEPTH, i.coord);
-	if (depth.x <= RADIUS) return float4(0, 0, 1, 0);	// Dont blur if too close.
+	if (depth.x <= RADIUS) return float4(0, 0, 0, 0);	// Dont blur if too close.
 
 	float3 og_normal = tex2D(NORMALS, i.coord).xyz;
 	float3 final_normal = og_normal;
@@ -33,8 +33,8 @@ float4 main(PS_INPUT i) : COLOR {
 
 		// Weigh smooth amount based on angle
 		float cosTheta = dot(og_normal, neighbor_normal);
-		//if (cosTheta < THRESHOLD) break;
-		cosTheta = max(cosTheta, 0);
+		if (cosTheta < THRESHOLD) break;
+		//cosTheta = max(cosTheta, THRESHOLD);
 
 		final_normal += neighbor_normal * cosTheta * cosTheta;
 	}
@@ -48,7 +48,7 @@ float4 main(PS_INPUT i) : COLOR {
 		if (neighbor_depth > RADIUS) break;
 		float3 neighbor_normal = tex2D(NORMALS, texcoord_pos).xyz;
 		float cosTheta = dot(og_normal, neighbor_normal);
-		cosTheta = max(cosTheta, 0);
+		if (cosTheta < THRESHOLD) break;
 		final_normal += neighbor_normal * cosTheta * cosTheta;
 	}
 
