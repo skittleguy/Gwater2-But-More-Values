@@ -3,48 +3,53 @@ sampler DEPTH	: register(s1);
 float2 SCR_S	: register(c0);
 float RADIUS 	: register(c1);
 
-#define RESOLUTION 5
-#define THRESHOLD -0.25
+#define RESOLUTION 4
+#define THRESHOLD -0.5
 
 struct PS_INPUT {
 	float2 P 			: VPOS;
 	float2 coord	: TEXCOORD0;
 };
 
+// Algorithm smooths normals of particle (uses my own method) (separated into X and Y passes)
+// Worked on this algorithm for multiple months, so it may be a little messy. Smoothing particle information is NOT easy
 float4 main(PS_INPUT i) : COLOR {
 	float4 depth = tex2D(DEPTH, i.coord);
-	//if (is_zero(depth)) return float4(0, 0, 0, 0);
-	if (depth.x <= RADIUS) return float4(0, 0, 1, 0);	// Dont blur if too close. Causes weird artifacts
+	if (depth.x <= RADIUS) return float4(0, 0, 1, 0);	// Dont blur if too close.
 
 	float3 og_normal = tex2D(NORMALS, i.coord).xyz;
 	float3 final_normal = og_normal;
+
+	// Blurring right
 	[unroll]
 	for (int x = 1; x <= RESOLUTION; x++) {
-		float2 texcoord_pos = i.coord + float2(x * SCR_S.x, x * SCR_S.y) * depth.y;
+		float2 texcoord_pos = i.coord + float2(x * SCR_S.x, x * SCR_S.y) * depth.y;		// Grabs adjacent pixel. based on how much screen space the particle takes up (depth.y)
 
 		// Is particle close enough
 		float neighbor_depth = abs(tex2D(DEPTH, texcoord_pos).x - depth.x);
-		if (neighbor_depth > RADIUS) break;
+		if (neighbor_depth > RADIUS) break;									// Particle normal is slightly off. Abort
 
 		float3 neighbor_normal = tex2D(NORMALS, texcoord_pos).xyz;
 
-		// Is angle non harsh enough
+		// Weigh smooth amount based on angle
 		float cosTheta = dot(og_normal, neighbor_normal);
-		if (cosTheta < THRESHOLD) break;
+		//if (cosTheta < THRESHOLD) break;
+		cosTheta = max(cosTheta, 0);
 
-		final_normal += neighbor_normal * cosTheta * cosTheta * cosTheta * cosTheta;
+		final_normal += neighbor_normal * cosTheta * cosTheta;
 	}
 
+	// Blurring left
 	// (Identical to above loop^)
 	[unroll]
 	for (int x = -1; x >= -RESOLUTION; x--) {
-		float2 texcoord_pos = i.coord + float2(x * SCR_S.x, x * SCR_S.y) * depth.y;
+		float2 texcoord_pos = i.coord + float2(x * SCR_S.x, x * SCR_S.y) * depth.y;	
 		float neighbor_depth = abs(tex2D(DEPTH, texcoord_pos).x - depth.x);
 		if (neighbor_depth > RADIUS) break;
 		float3 neighbor_normal = tex2D(NORMALS, texcoord_pos).xyz;
 		float cosTheta = dot(og_normal, neighbor_normal);
-		if (cosTheta < THRESHOLD) break;
-		final_normal += neighbor_normal * cosTheta * cosTheta * cosTheta * cosTheta;
+		cosTheta = max(cosTheta, 0);
+		final_normal += neighbor_normal * cosTheta * cosTheta;
 	}
 
 	return float4(normalize(final_normal), 1);

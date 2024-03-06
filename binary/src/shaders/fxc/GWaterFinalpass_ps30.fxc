@@ -20,7 +20,7 @@ struct PS_INPUT {
 
 #define OFFSET float2(0.5, 0.5)
 #define _PI2 6.28318530718
-#define IN_COLOR float4(1, 1, 1, 1)
+#define IN_COLOR float4(0.82, 0.93, 1, 0.098)
 
 // Assumes that incoming IOR is 1
 float fresnel_approx(const float3 incident, const float3 normal) {

@@ -87,7 +87,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 	for i = 1, blur_passes:GetInt() do
 		-- Blur X
 		--local scale = (5 - i) * 0.05
-		local scale = 0.1 / i
+		local scale = 0.15 / i
 		water_blur:SetTexture("$normaltexture", cache_normals)	
 		water_blur:SetVector("$scrs", Vector(scale / scrw, 0))
 		render.SetRenderTarget(cache_bloom)	-- Bloom texture resolution is significantly lower than screen res, enabling for a faster blur

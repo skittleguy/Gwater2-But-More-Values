@@ -367,8 +367,8 @@ void FlexSolver::default_parameters() {
 	params->drag = 0.0f;
 	params->lift = 1.0f;
 	params->numIterations = 3;
-	params->fluidRestDistance = 7.f;
-	params->solidRestDistance = 7.f;
+	params->fluidRestDistance = 6.5f;
+	params->solidRestDistance = 6.5f;
 
 	params->anisotropyScale = 1.f;
 	params->anisotropyMin = 0.0f;
