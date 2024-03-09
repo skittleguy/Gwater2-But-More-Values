@@ -31,11 +31,12 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 	-- A rendertargets depth is created separately when anti-aliasing is enabled
 	-- In order to have proper rendertarget capture which obeys the depth buffer, we need to use MATERIAL_RT_DEPTH_SHARED.
 	-- That way, our rendered particles don't render through walls. (Avoid render.ClearDepth! as it resets this buffer!!!)
-	-- Unfortunately this is force disabled when MSAA is on.. So my solution at the moment is just force disabling it
+	-- Unfortunately MATERIAL_RT_DEPTH_SEPERATE is force enabled when MSAA is on.. So my solution at the moment is just force disabling MSAA 
 	-- Related gmod issues: 
 	-- https://github.com/Facepunch/garrysmod-issues/issues/4662
 	-- https://github.com/Facepunch/garrysmod-issues/issues/5039
 	-- https://github.com/Facepunch/garrysmod-issues/issues/5367
+	-- https://github.com/Facepunch/garrysmod-requests/issues/2308
 	if antialias:GetInt() > 1 then
 		print("[GWater2]: Force disabling MSAA due to RT Depth issues")
 		RunConsoleCommand("mat_antialias", 1)
@@ -106,7 +107,6 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 	-- Setup water material parameters
 	water:SetFloat("$radius", radius)
 	water:SetTexture("$normaltexture", cache_normals)
-	water:SetTexture("$screentexture", render.GetScreenEffectTexture())
 	water:SetTexture("$depthtexture", cache_absorption)
 	render.SetMaterial(water)
 	gwater2.renderer:DrawIMeshes()
@@ -114,6 +114,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 	-- Debug Draw
 	--render.DrawTextureToScreenRect(cache_absorption, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
 	render.DrawTextureToScreenRect(cache_normals, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
+	--render.DrawTextureToScreenRect(cache_normals, 0, 0, ScrW(), ScrH())
 end)
 
 --hook.Add("NeedsDepthPass", "gwater2_depth", function()

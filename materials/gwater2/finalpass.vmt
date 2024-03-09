@@ -4,5 +4,5 @@ GWaterFinalpass {
 	$ior 1.333
 	$reflectance 0.5
 	$normaltexture "lights/white"
-	$screentexture "lights/white"
+	$screentexture "_rt_fullframefb"
 }

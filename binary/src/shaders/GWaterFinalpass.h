@@ -41,7 +41,7 @@ SHADER_DRAW {
 		pShaderShadow->EnableTexture(SHADER_SAMPLER1, true);	// Screen texture
 		pShaderShadow->EnableTexture(SHADER_SAMPLER2, true);	// Cubemap
 		if (g_pHardwareConfig->GetHDRType() != HDR_TYPE_NONE) {
-			pShaderShadow->EnableSRGBRead(SHADER_SAMPLER2, true);
+			pShaderShadow->EnableSRGBRead(SHADER_SAMPLER2, true);	// Doesn't seem to do anything?
 		}
 		pShaderShadow->EnableTexture(SHADER_SAMPLER3, true);	// Depth
 
