@@ -43,6 +43,48 @@ if SERVER then
 	return 
 end
 
+-- client only, as GetMeshConvexes works 100% of the time on server
+local function unfucked_get_mesh(ent, raw)
+	-- Physics object exists
+	local phys = ent:GetPhysicsObject()
+	if phys:IsValid() then return phys:GetMesh() end
+
+	-- Physics object doesn't exist
+	local cs_ent = ents.CreateClientProp(ent:GetModel())
+	local phys = cs_ent:GetPhysicsObject()
+	local convexes = phys:IsValid() and (raw and phys:GetMesh() or phys:GetMeshConvexes()) or nil
+	cs_ent:Remove()
+
+	return convexes
+end
+
+// Add mesh colliders
+local function add_prop(ent)
+	//do return end
+	if !IsValid(ent) or !ent:IsSolid() or ent:IsWeapon() then return end
+
+	local convexes = unfucked_get_mesh(ent)
+	if !convexes then return end
+
+	local invalid = false
+	for k, v in ipairs(convexes) do 
+		if #v > 64 * 3 or k > 10 then	-- hardcoded limits in FleX.. No more than 64 planes
+			invalid = true
+			break
+		end
+	end
+
+	if !invalid then
+		for k, v in ipairs(convexes) do
+			gwater2.solver:AddConvexMesh(v, ent:GetPos(), ent:GetAngles())
+			table.insert(gwater2.meshes, ent)
+		end
+	else
+		gwater2.solver:AddConcaveMesh(unfucked_get_mesh(ent, true), ent:GetPos(), ent:GetAngles())
+		table.insert(gwater2.meshes, ent)
+	end
+end
+
 require((BRANCH == "x86-64" or BRANCH == "chromium" ) and "gwater2" or "gwater2_main")	-- carrying
 include("gwater2_shaders.lua")	-- also carrying
 
@@ -59,20 +101,13 @@ gwater2 = {
 				table.remove(gwater2.meshes, i)
 				continue
 			end
-
-			if prop:GetVelocity() == vector_origin and prop:GetLocalAngularVelocity() == Angle() then continue end
+			
+			--if prop:GetVelocity() == vector_origin and prop:GetLocalAngularVelocity() == Angle() then continue end
 			gwater2.solver:UpdateMesh(i, prop:GetPos(), prop:GetAngles())
 		end
 	end,
 }
 gwater2.solver:InitBounds(Vector(-16384, -16384, -16384), Vector(16384, 16384, 16384))	-- source bounds
-
-local volumetric = Material("gwater2/volumetric")
-local absorption = CreateClientConVar("gwater2_absorption", "1", true)
--- garry, sincerely... fuck you
-timer.Simple(0, function() 
-	volumetric:SetFloat("$alpha", absorption:GetBool() and 0.025 or 0)
-end)
 
 local function screen_plane(x, y, c)
 	return gui.ScreenToVector(x, y):Cross(c)
@@ -96,7 +131,7 @@ local function gwater_tick()
 		return
 	end
 	
-	if gwater2.solver:Tick(average_frametime * cm_2_inch, hang_thread and 0 or 1) then
+	if gwater2.solver:Tick(math.max(average_frametime * cm_2_inch, 1 / 30), hang_thread and 0 or 1) then
 	//if gwater2.solver:Tick(1/165 * cm_2_inch, hang_thread and 0 or 1) then
 		average_frametime = average_frametime + ((systime - last_systime) - average_frametime) * 0.03
 		last_systime = systime	// smooth out fps
@@ -109,40 +144,6 @@ hook.Add("PreRender", "gwater_tick", gwater_tick)
 hook.Add("PostRender", "gwater_tick", gwater_tick)
 hook.Add("Think", "gwater_tick_collision", gwater2.update_meshes)
 hook.Add("Think", "gwater_tick", gwater_tick)
-
-// Add mesh colliders
-local function add_prop(ent)
-	//do return end
-	if !IsValid(ent) or !ent:IsSolid() or ent:IsWeapon() then return end
-	--if ent:GetClass() == "prop_door_rotating" then return end	-- breaks doors for some reason
-	//if !IsValid(ent) or (ent:GetClass() != "prop_physics" and !ent:IsPlayer()) then return end
-	local phys = ent:GetPhysicsObject()
-	if !phys:IsValid() then
-		ent:PhysicsInit(SOLID_VPHYSICS)
-		local phys = ent:GetPhysicsObject()
-		if !phys:IsValid() then return end	// the fuck?
-		local convexes = phys:GetMeshConvexes()
-		local invalid = #convexes > 10
-		for k, v in ipairs(convexes) do 
-			if invalid then break end
-			invalid = invalid or #v > 64 * 3 
-		end
-
-		if !invalid then
-			for k, v in ipairs(convexes) do
-				gwater2.solver:AddConvexMesh(v, ent:GetPos(), ent:GetAngles())
-				table.insert(gwater2.meshes, ent)
-			end
-		else
-			gwater2.solver:AddConcaveMesh(phys:GetMesh(), ent:GetPos(), ent:GetAngles())
-			table.insert(gwater2.meshes, ent)
-		end
-		ent:PhysicsDestroy()
-	else
-		gwater2.solver:AddConcaveMesh(phys:GetMesh(), ent:GetPos(), ent:GetAngles())
-		table.insert(gwater2.meshes, ent)
-	end
-end
 
 local function get_map_vertices()
 	local all_vertices = {}

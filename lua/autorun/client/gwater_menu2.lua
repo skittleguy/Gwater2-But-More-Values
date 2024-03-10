@@ -10,14 +10,16 @@ local options = {
 	absorption = CreateClientConVar("gwater2_absorption", "1", true),
 	depth_fix = CreateClientConVar("gwater2_depth_fix", "0", true),
 	menu_key = CreateClientConVar("gwater2_menukey", KEY_G, true),
-	color = Color(Material("gwater2/finalpass"):GetVector4D("$color2")),
+	color = Color(gwater2.material:GetVector4D("$color2")),
 	parameter_tab_header = "Parameter Tab",
 	parameter_tab_text = "This tab is where you can change how the water interacts with itself and the environment.\n\nHover over a parameter to reveal its functionality.\n\nScroll down for presets!",
 	about_tab_header = "About Tab",
 	about_tab_text = "On each tab, this area will contain useful information.\n\nFor example:\nClicking anywhere outside the menu, or re-pressing the menu button will close it.\n\nMake sure to read this area!",
 	performance_tab_header = "Performance Tab",
 	performance_tab_text = "This tab has options which can help and alter your performance.\n\nEach option is colored between green and red to indicate its performance hit.\n\nAll parameters directly impact the GPU.",
-	
+	patron_tab_header = "Patron Tab",
+	patron_tab_text = "This tab has a list of all my patrons.\n\nThe list is sorted from biggest donator to smallest\n\nIt will be updated routinely until release.",
+
 	Cohesion = {text = "Controls how well particles hold together.\n\nHigher values make the fluid more solid/rigid, while lower values make it more fluid and loose."},
 	Adhesion = {text = "Controls how well particles stick to surfaces.\n\nNote: This specific parameter doesn't reflect changes in the preview very well and may need to be viewed externally."},
 	Gravity = {text = "Controls how strongly fluid is pulled down. This value is measured in meters per second.\n\nNote: The default source gravity is -15.24 which is NOT the same as Earths gravity of -9.81."},
@@ -28,8 +30,12 @@ local options = {
 	Substeps = {text = "Controls the number of physics steps done per tick.\n\nNote: Parameters may not be properly tuned for different substeps!\n\nMedium-High performance impact."},
 	["Blur Passes"] = {text = "Controls the number of blur passes done per frame. More passes creates a smoother water surface. Zero passes will do no blurring.\n\nMedium performance impact."},
 	["Absorption"] = {text = "Enables absorption of light over distance inside of fluid.\n\n(more depth = darker color)\n\nMedium-High performance impact."},
-	["Depth Fix"] = {text = "Makes particles spherical appear instead of flat, causing a cleaner and smoother water surface.\n\nCauses shader overdraw .\n\nHigh performance impact."},
+	["Depth Fix"] = {text = "Makes particles appear spherical instead of flat, creating a cleaner and smoother water surface.\n\nCauses shader overdraw.\n\nHigh performance impact."},
 }
+
+-- garry, sincerely... fuck you
+local volumetric = Material("gwater2/volumetric")
+timer.Simple(0, function() volumetric:SetFloat("$alpha", options.absorption:GetBool() and 0.025 or 0) end)
 
 options.solver:SetParameter("gravity", 15.24)	-- flip gravity because y axis positive is down
 options.solver:SetParameter("timescale", 10)	-- pixel space is small, so we need to speed up the simulation
@@ -350,7 +356,7 @@ concommand.Add("gwater2_menu", function()
     tabsFrame.Paint = nil
 
     -- the parameter tab, contains settings for the water
-    local function parameterTab(tabs)
+    local function parameter_tab(tabs)
         local scrollPanel = vgui.Create("GF_ScrollPanel", tabs)
         local scrollEditTab = tabs:AddSheet("Fluid Parameters", scrollPanel, "icon16/cog.png").Tab
 		scrollEditTab.Paint = draw_tabs
@@ -433,7 +439,7 @@ concommand.Add("gwater2_menu", function()
 
     end
 
-    local function performanceTab(tabs)
+    local function performance_tab(tabs)
         local scrollPanel = vgui.Create("DScrollPanel", tabs)
         local scrollEditTab = tabs:AddSheet("Performance Settings", scrollPanel, "icon16/application_xp_terminal.png").Tab
 		scrollEditTab.Paint = draw_tabs
@@ -566,25 +572,30 @@ concommand.Add("gwater2_menu", function()
 	
     end
 
-	local function aboutTab(tabs)
+	local function about_tab(tabs)
         local scrollPanel = vgui.Create("GF_ScrollPanel", tabs)
         local scrollEditTab = tabs:AddSheet("About", scrollPanel, "icon16/exclamation.png").Tab
 		scrollEditTab.Paint = draw_tabs
 
 		local label = vgui.Create("DLabel", scrollPanel)
 		label:SetPos(0, 0)
-		label:SetSize(383, 400)
+		label:SetSize(383, 800)
 		label:SetText([[
 			Thank you for downloading gwater2 beta! This menu is the interface that you will be using to control everything about gwater. So get used to it! :D
 
-			This tab will contain updates and info about the addon when it is updated. 
-
-			Welcome to gwater 0.2b! This is the second beta release
+			Make sure to read 'Changelog (v0.2b)' to see what has been updated!
 
 			Changelog (v0.2b):
-			- Added Depth Fix option to performance tab in menu
-			- Changed water surface estimation to give smoother results
+			- Performance improvements (I noticed about a 30% increase in fps, though it may depend on your hardware)
+			- Added Depth Fix option in performance tab
+			- Fixed door collision
+			- Fixed the water anisotropy occasionally flickering
+			- Make HDR lighting more consistent
+			- Added compatibility for Hammer++ maps
+			- Changed water surface estimation to grant smoother results
+			- Lots of backend code changes
 			- Internally start forcing MSAA to be disabled, as it breaks the water surface
+			- Removed multi-color water, as it was inconsistent with other parameters
 
 			Changelog (v0.1b): 
 			- Initial release
@@ -619,7 +630,59 @@ concommand.Add("gwater2_menu", function()
 			draw.DrawText(options.about_tab_header, "GWater2Title", 5, 5, Color(187, 245, 255), TEXT_ALIGN_LEFT)
 		end
     end
-	
+
+	local function patron_tab(tabs)
+        local scrollPanel = vgui.Create("DScrollPanel", tabs)
+        local scrollEditTab = tabs:AddSheet("Patrons", scrollPanel, "icon16/award_star_gold_3.png").Tab
+		scrollEditTab.Paint = draw_tabs
+
+		local patrons = file.Read("gwater2_patrons.lua", "LUA") or "<Failed to load patron data!>"
+		local patrons_table = string.Split(patrons, "\n")
+
+		local label = vgui.Create("DLabel", scrollPanel)
+		label:SetPos(0, 0)
+		label:SetSize(383, 10800)
+		label:SetText([[
+			Thanks to everyone here who supported me throughout the development of GWater2!
+			
+			All revenue generated from this project goes directly to my college fund. Thanks so much guys :)
+			-----------------------------------------
+			]])
+		label:SetColor(Color(255, 255, 255))
+		label:SetTextInset(5, 30)
+		label:SetWrap(true)
+		label:SetContentAlignment(7)	-- shove text in top left corner
+		label:SetFont("GWater2Param")
+		function label:Paint(w, h)
+			surface.SetDrawColor(0, 0, 0, 100)
+			surface.DrawRect(0, 0, w, h)
+			surface.SetDrawColor(255, 255, 255)
+			surface.DrawOutlinedRect(0, 0, w, h, 1)
+
+			draw.DrawText("Patrons", "GWater2Title", 6, 6, Color(0, 0, 0), TEXT_ALIGN_LEFT)
+			draw.DrawText("Patrons", "GWater2Title", 5, 5, Color(187, 245, 255), TEXT_ALIGN_LEFT)
+			
+			local patron_color = Color(171, 255, 163)
+			for k, v in ipairs(patrons_table) do
+				draw.DrawText(v, "GWater2Param", 6, 150 + k * 20, patron_color, TEXT_ALIGN_LEFT)
+			end
+		end
+
+		-- explanation area 
+		local explanation = create_explanation(scrollPanel)
+		explanation:SetSize(175, 320)
+		explanation:SetPos(390, 0)
+		explanation:SetText(options.patron_tab_text)
+		function explanation:Paint(w, h)
+			self:SetPos(390, scrollPanel:GetVBar():GetScroll())
+			surface.SetDrawColor(0, 0, 0, 100)
+			surface.DrawRect(0, 0, w, h)
+			surface.SetDrawColor(255, 255, 255)
+			surface.DrawOutlinedRect(0, 0, w, h)
+			draw.DrawText(options.patron_tab_header, "GWater2Title", 6, 6, Color(0, 0, 0), TEXT_ALIGN_LEFT)
+			draw.DrawText(options.patron_tab_header, "GWater2Title", 5, 5, Color(187, 245, 255), TEXT_ALIGN_LEFT)
+		end
+    end
 
     local tabs = vgui.Create("DPropertySheet", tabsFrame)
 	tabs:Dock(FILL)
@@ -643,9 +706,10 @@ concommand.Add("gwater2_menu", function()
 		end
 	end
 
-	aboutTab(tabs)
-    parameterTab(tabs)
-    performanceTab(tabs)
+	about_tab(tabs)
+    parameter_tab(tabs)
+    performance_tab(tabs)
+	patron_tab(tabs)
 
 	tabs:SetActiveTab(tabs.Items[options.tab:GetInt()].Tab)
 end)
@@ -670,6 +734,7 @@ hook.Add("PopulateToolMenu", "gwater2_menu", function()
 	end)
 end)
 
+-- TODO: Rewrite, this sucks
 -- of course playerbutton down (the only hook which runs when a button is pressed) doesnt work in singleplayer.
 local changed = false
 hook.Add("Think", "gwater2_menu", function()

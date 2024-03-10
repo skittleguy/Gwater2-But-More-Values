@@ -31,14 +31,16 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 	-- A rendertargets depth is created separately when anti-aliasing is enabled
 	-- In order to have proper rendertarget capture which obeys the depth buffer, we need to use MATERIAL_RT_DEPTH_SHARED.
 	-- That way, our rendered particles don't render through walls. (Avoid render.ClearDepth! as it resets this buffer!!!)
-	-- Unfortunately MATERIAL_RT_DEPTH_SEPERATE is force enabled when MSAA is on.. So my solution at the moment is just force disabling MSAA 
+	-- Unfortunately MATERIAL_RT_DEPTH_SEPERATE is force enabled when MSAA is on.. 
+	-- This texture flag makes it so my shaders can't use the actual depth buffer provided by source. This causes things to render through walls
+	-- My solution at the moment is force disabling MSAA, which prevents the issue.
 	-- Related gmod issues: 
 	-- https://github.com/Facepunch/garrysmod-issues/issues/4662
 	-- https://github.com/Facepunch/garrysmod-issues/issues/5039
 	-- https://github.com/Facepunch/garrysmod-issues/issues/5367
 	-- https://github.com/Facepunch/garrysmod-requests/issues/2308
 	if antialias:GetInt() > 1 then
-		print("[GWater2]: Force disabling MSAA due to RT Depth issues")
+		print("[GWater2]: Force disabling MSAA for technical reasons. (Feel free to ask me (Meetric) for more info)")
 		RunConsoleCommand("mat_antialias", 1)
 	end
 	
@@ -47,8 +49,8 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 	render.ClearRenderTarget(cache_depth, Color(0, 0, 0, 0))
 	render.ClearRenderTarget(cache_absorption, Color(0, 0, 0, 0))
 	render.ClearRenderTarget(cache_bloom, Color(0, 0, 0, 0))
-	render.UpdateScreenEffectTexture()
-	render.OverrideAlphaWriteEnable(true, true)	-- Required for shaders that use the alpha component
+	render.UpdateScreenEffectTexture()	-- _rt_framebuffer is used in refraction shader
+	render.OverrideAlphaWriteEnable(true, true)	-- Required for GWater shaders as they use the alpha component
 
 	-- cached variables
 	local scrw = ScrW()
@@ -63,7 +65,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 	--render.SetMaterial(Material("models/props_combine/combine_interface_disp"))
 	--gwater2.renderer:DrawIMeshes()
 	
-	-- Depth absorption
+	-- Depth absorption (disabled when opaque liquids are enabled)
 	local _, _, _, a = water:GetVector4D("$color2")
 	if water_volumetric:GetFloat("$alpha") != 0 and a < 255 then
 		render.SetMaterial(water_volumetric)

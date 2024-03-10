@@ -5,7 +5,6 @@ float RADIUS 	: register(c1);
 
 #define RESOLUTION 4
 #define THRESHOLD 0
-#define OFFSET float2(0.5, 0.5)
 
 struct PS_INPUT {
 	float2 P 			: VPOS;
@@ -24,7 +23,7 @@ float4 main(PS_INPUT i) : COLOR {
 	// Blurring right
 	[unroll]
 	for (int x = 1; x <= RESOLUTION; x++) {
-		float2 texcoord_pos = i.coord + float2(x * SCR_S.x, x * SCR_S.y) * mipmap + OFFSET;		// Grabs adjacent pixel based on how much screen space the particle takes up
+		float2 texcoord_pos = i.coord + float2(x * SCR_S.x, x * SCR_S.y) * mipmap;		// Grabs adjacent pixel based on how much screen space the particle takes up
 
 		// Is particle close enough	to be blended?		
 		float4 neighbor_normal = tex2D(NORMALS, texcoord_pos);
@@ -42,7 +41,7 @@ float4 main(PS_INPUT i) : COLOR {
 	// (Identical to above loop^)
 	[unroll]
 	for (int x = -1; x >= -RESOLUTION; x--) {
-		float2 texcoord_pos = i.coord + float2(x * SCR_S.x, x * SCR_S.y) * mipmap + OFFSET;
+		float2 texcoord_pos = i.coord + float2(x * SCR_S.x, x * SCR_S.y) * mipmap;
 		float4 neighbor_normal = tex2D(NORMALS, texcoord_pos);
 		if (abs(neighbor_normal.w - og_normal.w) > RADIUS) break;
 		float cosTheta = dot(og_normal.xyz, neighbor_normal.xyz);
