@@ -1,9 +1,12 @@
+//  DYNAMIC: "OPAQUE" "0..1"
+
 #include "common_ps_fxc.h"
 
 float2 SCR_S		: register(c0);
 float RADIUS		: register(c1);
 float IOR 			: register(c2);
 float REFLECTANCE 	: register(c3);
+float4 COLOR2		: register(c4);
 
 sampler NORMALS 	: register(s0);
 sampler FRAMEBUFFER : register(s1);
@@ -19,8 +22,6 @@ struct PS_INPUT {
 };
 
 #define OFFSET float2(0.5, 0.5)
-#define IN_COLOR float4(0.82, 0.93, 1, 0.098)
-//#define IN_COLOR float4(1,1,1,1)
 #define SUN_DIR float3(-0.377821, 0.520026, 0.766044)	// TODO: get from map OR get lighting data
 
 bool is_zero(float3 i) {
@@ -41,7 +42,6 @@ float4 main(const PS_INPUT i) : COLOR {
 	if (radius2 > 1) discard;
 
 	float3 smoothed_normal = tex2D(NORMALS, (i.P + OFFSET) / SCR_S).xyz;
-
 	// Weight the normals forward, as the only visible part is facing the player
 	float3 view_dir = normalize(i.pos - i.eyepos);
 	smoothed_normal = normalize(smoothed_normal + view_dir * dot(-view_dir, smoothed_normal) * REFLECTANCE);
@@ -54,27 +54,23 @@ float4 main(const PS_INPUT i) : COLOR {
 	//float3 specular = pow(texCUBE(CUBEMAP, reflected).xyz, 1.0 / 2.2) * 3.5 * fresnel;
 
 	// Secondary lighting calculations
-	float3 absorption;
-	float diffuse;
-	float3 refracted;
-	if (IN_COLOR.w < 0.9999) {// Translucent
-		float absorption_distance = (tex2D(DEPTH, i.P / SCR_S).x * 100 - dot(smoothed_normal, view_dir) * 10) * IN_COLOR.w;
-		absorption = exp((IN_COLOR.xyz - float3(1, 1, 1)) * absorption_distance);	// Beers law
+	
+#if OPAQUE // Opaque
+	float3 absorption = COLOR2.xyz;	// Technically diffuse
+	float refracted = dot(smoothed_normal, SUN_DIR) * 0.45 + 0.55;
+	
+#else // Translucent
+	float absorption_distance = (tex2D(DEPTH, i.P / SCR_S).x * 100 - dot(smoothed_normal, view_dir) * 10) * COLOR2.w;
+	float3 absorption = exp((COLOR2.xyz - float3(1, 1, 1)) * absorption_distance);	// Beers law
 
-		diffuse = 1;
-
-		// Calculate refraction vector in 3d space and project it to screen
-		float3 uv_offset = smoothed_normal * -RADIUS * IOR;
-		float4 uv = mul(float4(i.pos + uv_offset, 1), i.proj); uv.xy /= uv.w;
-		refracted = tex2D(FRAMEBUFFER, float2(uv.x / 2.0 + 0.5, 0.5 - uv.y / 2.0)).xyz * (1.0 - fresnel);
-	} else {// Opaque
-		absorption = IN_COLOR.xyz;
-		diffuse = dot(smoothed_normal, SUN_DIR) * 0.45 + 0.55;
-		refracted = float3(1, 1, 1);
-	}
+	// Calculate refraction vector in 3d space and project it to screen
+	float3 uv_offset = smoothed_normal * -RADIUS * IOR;
+	float4 uv = mul(float4(i.pos + uv_offset, 1), i.proj); uv.xy /= uv.w;
+	float3 refracted = tex2D(FRAMEBUFFER, float2(uv.x / 2.0 + 0.5, 0.5 - uv.y / 2.0)).xyz * (1.0 - fresnel);
+#endif
 
 	// Calculate final color & return
-	float3 final_color = absorption * refracted * diffuse + float3(phong, phong, phong) + specular;
-	//float3 final_color = absorption * refracted * diffuse + specular;
+	float3 final_color = absorption * refracted + float3(phong, phong, phong) + specular;
+	//float3 final_color = absorption * refracted + specular;
 	return FinalOutput(float4(final_color, 1), 0, 0, TONEMAP_SCALE_NONE);	// For HDR
 };

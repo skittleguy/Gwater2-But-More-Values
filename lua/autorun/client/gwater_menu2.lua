@@ -28,8 +28,7 @@ local options = {
 	Substeps = {text = "Controls the number of physics steps done per tick.\n\nNote: Parameters may not be properly tuned for different substeps!\n\nMedium-High performance impact."},
 	["Blur Passes"] = {text = "Controls the number of blur passes done per frame. More passes creates a smoother water surface. Zero passes will do no blurring.\n\nMedium performance impact."},
 	["Absorption"] = {text = "Enables absorption of light over distance inside of fluid.\n\n(more depth = darker color)\n\nMedium-High performance impact."},
-	["Depth Fix"] = {text = "Makes particles spherical instead of flat causing a cleaner and smoother water surface.\n\nCauses shader overdraw.\n\nHigh performance impact."},
-	["Visual Mesh Building"] = {text = "Enables creation of visuals to every visual frame instead of physical.\n\nHelps with low bandwidth GPUs\n\nHigh performance impact (Depending on your GPU)"}
+	["Depth Fix"] = {text = "Makes particles spherical appear instead of flat, causing a cleaner and smoother water surface.\n\nCauses shader overdraw .\n\nHigh performance impact."},
 }
 
 options.solver:SetParameter("gravity", 15.24)	-- flip gravity because y axis positive is down

@@ -114,7 +114,7 @@ hook.Add("Think", "gwater_tick", gwater_tick)
 local function add_prop(ent)
 	//do return end
 	if !IsValid(ent) or !ent:IsSolid() or ent:IsWeapon() then return end
-	if ent:GetClass() == "prop_door_rotating" then return end	-- breaks doors for some reason
+	--if ent:GetClass() == "prop_door_rotating" then return end	-- breaks doors for some reason
 	//if !IsValid(ent) or (ent:GetClass() != "prop_physics" and !ent:IsPlayer()) then return end
 	local phys = ent:GetPhysicsObject()
 	if !phys:IsValid() then

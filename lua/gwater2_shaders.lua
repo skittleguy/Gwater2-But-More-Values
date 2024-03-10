@@ -48,6 +48,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 	render.ClearRenderTarget(cache_absorption, Color(0, 0, 0, 0))
 	render.ClearRenderTarget(cache_bloom, Color(0, 0, 0, 0))
 	render.UpdateScreenEffectTexture()
+	render.OverrideAlphaWriteEnable(true, true)	-- Required for shaders that use the alpha component
 
 	-- cached variables
 	local scrw = ScrW()
@@ -112,19 +113,14 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 	render.SetMaterial(water)
 	gwater2.renderer:DrawIMeshes()
 
+	render.OverrideAlphaWriteEnable(false, false)
+
 	-- Debug Draw
 	--render.DrawTextureToScreenRect(cache_absorption, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
 	render.DrawTextureToScreenRect(cache_normals, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
 	--render.DrawTextureToScreenRect(cache_normals, 0, 0, ScrW(), ScrH())
 end)
 
-hook.Add("HUDPaint", "", function()
-	local lw = Material("lights/white")
-	lw:SetVector4D("$color2", 1, 0.25, 0, 1)
-	--surface.SetDrawColor(255, 255, 255, 255)
-	surface.SetMaterial(lw)
-	surface.DrawRect(0, 0, 100, 100)
-end)
 --hook.Add("NeedsDepthPass", "gwater2_depth", function()
 --	DOFModeHack(true)	-- fixes npcs and stuff dissapearing
 --	return true
