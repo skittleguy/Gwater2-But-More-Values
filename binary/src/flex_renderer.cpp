@@ -46,7 +46,7 @@ void FlexRenderer::build_imeshes(FlexSolver* solver, float radius) {
 				// Frustrum culling
 				Vector4D dst;
 				Vector4DMultiply(view_projection_matrix, Vector4D(particle_pos.x, particle_pos.y, particle_pos.z, 1), dst);
-				if (dst.z < 0 || -dst.x - dst.w > radius || dst.x - dst.w > radius || -dst.y - dst.w > radius || dst.y - dst.w > radius) {
+				if (dst.z < 0 || -dst.x - dst.w > 0 || dst.x - dst.w > 0 || -dst.y - dst.w > 0 || dst.y - dst.w > 0) {
 					continue;
 				}
 

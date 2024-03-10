@@ -2,9 +2,6 @@
 
 struct VS_INPUT {
 	float4 vPos					: POSITION;		// Position
-	float4 vNormal				: NORMAL;		// Normal
-	float4 vBoneWeights			: BLENDWEIGHT;	// Skin weights
-	float4 vBoneIndices			: BLENDINDICES;	// Skin indices
 	float4 vTexCoord			: TEXCOORD0;	// Texture coordinates
 };
 
@@ -16,11 +13,11 @@ struct VS_OUTPUT {
 VS_OUTPUT main(const VS_INPUT v)  {
 	VS_OUTPUT o = (VS_OUTPUT)0;
 
-	float3 worldNormal, worldPos;
-	SkinPositionAndNormal(0, v.vPos, v.vNormal, v.vBoneWeights, v.vBoneIndices, worldPos, worldNormal);
+	float3 world_normal, world_pos;
+	SkinPositionAndNormal(0, v.vPos, 0, 0, 0, world_pos, world_normal);
 
-	float4 vProjPos = mul(float4(worldPos, 1), cViewProj);
-	vProjPos.z = dot(float4(worldPos, 1), cViewProjZ);
+	float4 vProjPos = mul(float4(world_pos, 1), cViewProj);
+	vProjPos.z = dot(float4(world_pos, 1), cViewProjZ);
 	o.projPosSetup = vProjPos;
 	o.world_coord = v.vTexCoord;
 	return o;

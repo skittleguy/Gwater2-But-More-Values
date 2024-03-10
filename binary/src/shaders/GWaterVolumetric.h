@@ -7,7 +7,6 @@ BEGIN_VS_SHADER(GWaterVolumetric, "gwater2 helper")
 
 // Shader parameters
 BEGIN_SHADER_PARAMS
-	SHADER_PARAM(RADIUS, SHADER_PARAM_TYPE_FLOAT, "1", "Radius of particles")
 	SHADER_PARAM(ALPHA, SHADER_PARAM_TYPE_FLOAT, "0.025", "Alpha")
 END_SHADER_PARAMS
 
@@ -58,10 +57,8 @@ SHADER_DRAW {
 	DYNAMIC_STATE {
 		// constants
 		const float alpha = params[ALPHA]->GetFloatValue();
-		const float radius = params[RADIUS]->GetFloatValue();
 
 		pShaderAPI->SetPixelShaderConstant(0, &alpha);
-		pShaderAPI->SetPixelShaderConstant(1, &radius);
 
 		DECLARE_DYNAMIC_VERTEX_SHADER(GWaterVolumetric_vs30);
 		SET_DYNAMIC_VERTEX_SHADER(GWaterVolumetric_vs30);

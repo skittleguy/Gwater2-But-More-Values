@@ -51,7 +51,6 @@ gwater2 = {
 	renderer = FlexRenderer(),
 	material = Material("gwater2/finalpass"),--Material("vgui/circle"),--Material("sprites/sent_ball"),
 	meshes = {},
-	color = Color(209, 237, 255, 25),
 	update_meshes = function()
 		for i = #gwater2.meshes, 1, -1 do
 			local prop = gwater2.meshes[i]

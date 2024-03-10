@@ -2,13 +2,15 @@ AddCSLuaFile()
 
 if SERVER then return end
 
-local version = "0.1b"
+local version = "0.2b"
 local options = {
 	solver = FlexSolver(1000),
-	tab = CreateClientConVar("gwater2_tab0", "1", true),
+	tab = CreateClientConVar("gwater2_tab"..version, "1", true),
 	blur_passes = CreateClientConVar("gwater2_blur_passes", "3", true),
 	absorption = CreateClientConVar("gwater2_absorption", "1", true),
+	depth_fix = CreateClientConVar("gwater2_depth_fix", "0", true),
 	menu_key = CreateClientConVar("gwater2_menukey", KEY_G, true),
+	color = Color(Material("gwater2/finalpass"):GetVector4D("$color2")),
 	parameter_tab_header = "Parameter Tab",
 	parameter_tab_text = "This tab is where you can change how the water interacts with itself and the environment.\n\nHover over a parameter to reveal its functionality.\n\nScroll down for presets!",
 	about_tab_header = "About Tab",
@@ -25,7 +27,8 @@ local options = {
 	Iterations = {text = "Controls how many times the physics solver attempts to converge to a solution.\n\nLight performance impact."},
 	Substeps = {text = "Controls the number of physics steps done per tick.\n\nNote: Parameters may not be properly tuned for different substeps!\n\nMedium-High performance impact."},
 	["Blur Passes"] = {text = "Controls the number of blur passes done per frame. More passes creates a smoother water surface. Zero passes will do no blurring.\n\nMedium performance impact."},
-	["Absorption"] = {text = "Enables absorption of light over distance inside of fluid.\n\n(more depth = darker color)\n\nHigh performance impact."},
+	["Absorption"] = {text = "Enables absorption of light over distance inside of fluid.\n\n(more depth = darker color)\n\nMedium-High performance impact."},
+	["Depth Fix"] = {text = "Makes particles spherical instead of flat causing a cleaner and smoother water surface.\n\nCauses shader overdraw.\n\nHigh performance impact."},
 	["Visual Mesh Building"] = {text = "Enables creation of visuals to every visual frame instead of physical.\n\nHelps with low bandwidth GPUs\n\nHigh performance impact (Depending on your GPU)"}
 }
 
@@ -199,7 +202,6 @@ local function create_label(self, text, subtext, dock, size)
 		
 		draw.DrawText(text, "GWater2Title", 8, 5, Color(0, 0, 0), TEXT_ALIGN_LEFT)
 		draw.DrawText(text, "GWater2Title", 7, 4, Color(187, 245, 255), TEXT_ALIGN_LEFT)
-
 		draw.DrawText(subtext, "DermaDefault", 7, 25, Color(187, 245, 255), TEXT_ALIGN_LEFT)
 	end
 	return label
@@ -217,11 +219,12 @@ local function create_picker(self, text, dock, size)
 	label:SetContentAlignment(7)
 
 	if options[text] then 
-		options[text].default = options[text].default or copy_color(gwater2.color)	-- copy, dont reference
+		options[text].default = options[text].default or copy_color(options.color)	-- copy, dont reference
 	else
 		print("Undefined parameter '" .. text .. "'!") 
 	end
 
+	local finalpass = Material("gwater2/finalpass")
 	local mixer = vgui.Create("DColorMixer", self)
 	mixer:SetPos(130, dock + 5)
 	mixer:SetSize(210, 100)	
@@ -229,9 +232,10 @@ local function create_picker(self, text, dock, size)
 	mixer:SetLabel()
 	mixer:SetAlphaBar(true)
 	mixer:SetWangs(false)
-	mixer:SetColor(gwater2.color) 
+	mixer:SetColor(options.color) 
 	function mixer:ValueChanged(col)
-		gwater2.color = copy_color(col)	-- color returned by ValueChanged doesnt have any metatables
+		options.color = copy_color(col)	-- color returned by ValueChanged doesnt have any metatables
+		finalpass:SetVector4D("$color2", col.r, col.g, col.b, col.a)
 	end
 
 	local button = vgui.Create("DButton", self)
@@ -295,11 +299,11 @@ concommand.Add("gwater2_menu", function()
 		
 		local radius = options.solver:GetParameter("radius")
 		local function exp(v) return Vector(math.exp(v[1]), math.exp(v[2]), math.exp(v[3])) end
-		local is_translucent = gwater2.color.a < 255
+		local is_translucent = options.color.a < 255
 		surface.SetMaterial(particle_material)
 		options.solver:RenderParticles(function(pos)
 			local depth = math.max((pos[3] - y) / 390, 0) * 20	-- ranges from 0 to 20 down
-			local absorption = is_translucent and exp((gwater2.color:ToVector() - Vector(1, 1, 1)) * gwater2.color.a / 255 * depth) or gwater2.color:ToVector()
+			local absorption = is_translucent and exp((options.color:ToVector() - Vector(1, 1, 1)) * options.color.a / 255 * depth) or options.color:ToVector()
 			surface.SetDrawColor(absorption[1] * 255, absorption[2] * 255, absorption[3] * 255, 255)
 			surface.DrawTexturedRect(pos[1] - x, pos[3] - y, radius, radius)
 		end)
@@ -455,6 +459,7 @@ concommand.Add("gwater2_menu", function()
 			Color(127, 255, 0),
 			Color(255, 127, 0),
 			Color(255, 255, 0),
+			Color(255, 127, 0),
 			Color(255, 0, 0),
 		}
 
@@ -517,6 +522,25 @@ concommand.Add("gwater2_menu", function()
 			water_volumetric:SetFloat("$alpha", val and 0.025 or 0)
 		end
 
+		-- Depth fix checkbox & label
+		local label = vgui.Create("DLabel", scrollPanel)	
+		label:SetPos(10, 170)
+		label:SetSize(100, 100)
+		label:SetFont("GWater2Param")
+		label:SetText("Depth Fix")
+		label:SetContentAlignment(7)
+		labels[5] = label
+
+		local box = vgui.Create("DCheckBox", scrollPanel)
+		box:SetPos(132, 170)
+		box:SetSize(20, 20)
+		box:SetChecked(options.depth_fix:GetBool())
+		local water_normals = Material("gwater2/normals")
+		function box:OnChange(val)
+			options.depth_fix:SetBool(val)
+			water_normals:SetInt("$depthfix", val and 1 or 0)
+		end
+
 		function scrollPanel:AnimationThink()
 			local mousex, mousey = self:LocalCursorPos()
 			local text_name = nil
@@ -556,7 +580,12 @@ concommand.Add("gwater2_menu", function()
 
 			This tab will contain updates and info about the addon when it is updated. 
 
-			Since this is the first release, I don't have any changelogs or much to report, so feel free to play around with the settings!
+			Welcome to gwater 0.2b! This is the second beta release
+
+			Changelog (v0.2b):
+			- Added Depth Fix option to performance tab in menu
+			- Changed water surface estimation to give smoother results
+			- Internally start forcing MSAA to be disabled, as it breaks the water surface
 
 			Changelog (v0.1b): 
 			- Initial release

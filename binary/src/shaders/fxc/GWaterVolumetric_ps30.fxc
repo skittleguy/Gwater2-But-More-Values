@@ -1,5 +1,4 @@
 float ALPHA		: register(c0);
-float RADIUS 	: register(c1);
 
 struct PS_INPUT {
 	float2 P 		: VPOS;
@@ -7,9 +6,8 @@ struct PS_INPUT {
 };
 
 float4 main(PS_INPUT i) : COLOR {
-	float2 offset = (i.coord - 0.5) * 2.0;
-
 	// kill pixels outside of sphere
+	float2 offset = (i.coord - 0.5) * 2.0;
 	float radius2 = dot(offset, offset);
 	if (radius2 > 1) discard;
 

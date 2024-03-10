@@ -15,7 +15,7 @@ struct PS_INPUT {
 // Worked on this algorithm for multiple months, so it may be a little messy. Smoothing particle information is NOT easy
 float4 main(PS_INPUT i) : COLOR {
 	float4 depth = tex2D(DEPTH, i.coord);
-	if (depth.x <= RADIUS) return float4(0, 0, 0, 0);	// Dont blur if too close.
+	if (depth.x <= RADIUS / 2) return float4(0, 0, 0, 0);	// Dont blur if too close.
 
 	float3 og_normal = tex2D(NORMALS, i.coord).xyz;
 	float3 final_normal = og_normal;
@@ -26,7 +26,7 @@ float4 main(PS_INPUT i) : COLOR {
 		float2 texcoord_pos = i.coord + float2(x * SCR_S.x, x * SCR_S.y) * depth.y;		// Grabs adjacent pixel. based on how much screen space the particle takes up (depth.y)
 
 		// Is particle close enough
-		float neighbor_depth = abs(tex2D(DEPTH, texcoord_pos).x - depth.x);
+		float neighbor_depth = abs(tex2D(DEPTH, texcoord_pos).x - depth.x);	// TODO: rewrite so tex2D only needs to be called one time...
 		if (neighbor_depth > RADIUS) break;									// Particle normal is slightly off. Abort
 
 		float3 neighbor_normal = tex2D(NORMALS, texcoord_pos).xyz;

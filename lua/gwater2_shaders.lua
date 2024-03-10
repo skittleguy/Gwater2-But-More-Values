@@ -63,7 +63,8 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 	--gwater2.renderer:DrawIMeshes()
 	
 	-- Depth absorption
-	if water_volumetric:GetFloat("$alpha") != 0 then
+	local _, _, _, a = water:GetVector4D("$color2")
+	if water_volumetric:GetFloat("$alpha") != 0 and a < 255 then
 		render.SetMaterial(water_volumetric)
 		render.SetRenderTarget(cache_absorption)
 		gwater2.renderer:DrawIMeshes()
@@ -84,6 +85,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 	water_blur:SetFloat("$radius", radius)
 	water_blur:SetTexture("$depthtexture", cache_depth)
 	render.SetMaterial(water_blur)
+	
 	for i = 1, blur_passes:GetInt() do
 		-- Blur X
 		--local scale = (5 - i) * 0.05
@@ -92,15 +94,14 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 		water_blur:SetVector("$scrs", Vector(scale / scrw, 0))
 		render.SetRenderTarget(cache_bloom)	-- Bloom texture resolution is significantly lower than screen res, enabling for a faster blur
 		render.DrawScreenQuad()
-		render.SetRenderTarget()
 		
 		-- Blur Y
 		water_blur:SetTexture("$normaltexture", cache_bloom)
 		water_blur:SetVector("$scrs", Vector(0, scale / scrh))
 		render.SetRenderTarget(cache_normals)
 		render.DrawScreenQuad()
-		render.SetRenderTarget()
 	end
+	render.SetRenderTarget()
 
 	--render.ClearDepth()
 
@@ -117,6 +118,13 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 	--render.DrawTextureToScreenRect(cache_normals, 0, 0, ScrW(), ScrH())
 end)
 
+hook.Add("HUDPaint", "", function()
+	local lw = Material("lights/white")
+	lw:SetVector4D("$color2", 1, 0.25, 0, 1)
+	--surface.SetDrawColor(255, 255, 255, 255)
+	surface.SetMaterial(lw)
+	surface.DrawRect(0, 0, 100, 100)
+end)
 --hook.Add("NeedsDepthPass", "gwater2_depth", function()
 --	DOFModeHack(true)	-- fixes npcs and stuff dissapearing
 --	return true

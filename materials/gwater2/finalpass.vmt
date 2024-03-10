@@ -3,6 +3,6 @@ GWaterFinalpass {
 	$radius 10
 	$ior 1.333
 	$reflectance 0.5
-	$normaltexture "lights/white"
 	$screentexture "_rt_fullframefb"
+	$color2 "[209 237 255 25]"
 }
