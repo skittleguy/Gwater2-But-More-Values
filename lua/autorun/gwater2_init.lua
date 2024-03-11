@@ -106,6 +106,20 @@ gwater2 = {
 			gwater2.solver:UpdateMesh(i, prop:GetPos(), prop:GetAngles())
 		end
 	end,
+	reset_solver = function(err)	-- Will cause crashing. Dont call this if you don't know what it does
+		xpcall(function()
+			gwater2.solver:AddMapMesh(game.GetMap())
+		end, function(e)
+			gwater2.solver:AddConcaveMesh(get_map_vertices(), Vector(), Angle())
+			if !err then
+				ErrorNoHaltWithStack("[GWater2]: Map BSP structure is unsupported. Reverting to brushes. Collision WILL have holes!")
+			end
+		end)
+
+		for k, ent in ipairs(ents.GetAll()) do
+			add_prop(ent)
+		end
+	end
 }
 gwater2.solver:InitBounds(Vector(-16384, -16384, -16384), Vector(16384, 16384, 16384))	-- source bounds
 
@@ -123,7 +137,7 @@ local function gwater_tick()
 	local systime = os.clock()
 	local delta_time = systime - last_systime
 
-	if gwater2.solver:GetCount() == 0 or gwater2.solver:GetParameter("timescale") <= 0 then 
+	if gwater2.solver:GetActiveParticles() == 0 or gwater2.solver:GetParameter("timescale") <= 0 then 
 		last_systime = systime
 		average_frametime = RealFrameTime() 
 		return 
@@ -159,15 +173,5 @@ local function get_map_vertices()
 	return all_vertices
 end
 
-hook.Add("InitPostEntity", "gwater2_addprop", function()
-	xpcall(function()
-		gwater2.solver:AddMapMesh(game.GetMap())
-	end, function(e)
-		gwater2.solver:AddConcaveMesh(get_map_vertices(), Vector(), Angle())
-		ErrorNoHaltWithStack("[GWater2]: Map BSP structure is unsupported. Reverting to brushes. Collision WILL have holes!")
-	end)
-	for k, ent in ipairs(ents.GetAll()) do
-		add_prop(ent)
-	end
-end)
+hook.Add("InitPostEntity", "gwater2_addprop", gwater2.reset_solver)
 hook.Add("OnEntityCreated", "gwater2_addprop", function(ent) timer.Simple(0, function() add_prop(ent) end) end)	// timer.0 so data values are setup correctly

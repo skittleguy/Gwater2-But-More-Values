@@ -51,12 +51,11 @@ local function fuckgarry(w, s)
 end
 
 function SWEP:PrimaryAttack()
-	--self:SetNextPrimaryFire(CurTime() + self.Primary.Delay)
 	if fuckgarry(self, "PrimaryAttack") then return end
 
 	local owner = self:GetOwner()
 	local forward = owner:EyeAngles():Forward()
-	local sprite_size = gwater2.solver:GetParameter("radius") * math.Rand(1, 1.05)
+	local sprite_size = gwater2.solver:GetParameter("radius") * math.Rand(1, 1.01)
 	local amb = render.GetAmbientLightColor(owner:EyePos())
 	gwater2.solver:AddCube(owner:EyePos() + forward * 20 * sprite_size, forward * 100, Vector(4, 4, 4), sprite_size * 0.9, gwater2.color)
 end
@@ -85,9 +84,9 @@ function SWEP:PostDrawViewModel(vm, weapon, ply)
 	ang = ang + Angle(180, 0, -ang[3] * 2)
 	pos = pos - ang:Right() * 1.5
 	cam.Start3D2D(pos, ang, 0.03)
-		local num_particles = gwater2.solver:GetCount()
-		draw.DrawText("Particles: " .. format_int(num_particles) .. "/100,000", "CloseCaption_Normal", 2, 2, Color(0, 0, 0, 255), TEXT_ALIGN_CENTER)
-		draw.DrawText("Particles: " .. format_int(num_particles) .. "/100,000", "CloseCaption_Normal", 0, 0, color_white, TEXT_ALIGN_CENTER)
+		local text = "Particles: " .. format_int(gwater2.solver:GetActiveParticles()) .. "/" .. format_int(gwater2.solver:GetMaxParticles())
+		draw.DrawText(text, "CloseCaption_Normal", 2, 2, Color(0, 0, 0, 255), TEXT_ALIGN_CENTER)
+		draw.DrawText(text, "CloseCaption_Normal", 0, 0, color_white, TEXT_ALIGN_CENTER)
 	cam.End3D2D()
 end
 

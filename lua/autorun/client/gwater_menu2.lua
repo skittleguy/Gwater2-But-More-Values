@@ -2,6 +2,13 @@ AddCSLuaFile()
 
 if SERVER then return end
 
+-- *Ehem*
+-- BEHOLD. THE GWATER MENU CODE
+-- THIS MY FRIEND.. IS THE SINGLE WORST PIECE OF CODE I HAVE EVER WRITTEN
+-- DO NOT USE ANY OF THIS IN YOUR OWN CODE BECAUSE IT MIGHT SELF DESTRUCT
+-- SOURCE VGUI IS ABSOLUTELY DOG DOODOO
+-- THANK YOU FOR COMING TO MY TED TALK
+
 local version = "0.2b"
 local options = {
 	solver = FlexSolver(1000),
@@ -10,7 +17,7 @@ local options = {
 	absorption = CreateClientConVar("gwater2_absorption", "1", true),
 	depth_fix = CreateClientConVar("gwater2_depth_fix", "0", true),
 	menu_key = CreateClientConVar("gwater2_menukey", KEY_G, true),
-	color = Color(gwater2.material:GetVector4D("$color2")),
+	color = Color(209, 237, 255, 25),
 	parameter_tab_header = "Parameter Tab",
 	parameter_tab_text = "This tab is where you can change how the water interacts with itself and the environment.\n\nHover over a parameter to reveal its functionality.\n\nScroll down for presets!",
 	about_tab_header = "About Tab",
@@ -31,6 +38,7 @@ local options = {
 	["Blur Passes"] = {text = "Controls the number of blur passes done per frame. More passes creates a smoother water surface. Zero passes will do no blurring.\n\nMedium performance impact."},
 	["Absorption"] = {text = "Enables absorption of light over distance inside of fluid.\n\n(more depth = darker color)\n\nMedium-High performance impact."},
 	["Depth Fix"] = {text = "Makes particles appear spherical instead of flat, creating a cleaner and smoother water surface.\n\nCauses shader overdraw.\n\nHigh performance impact."},
+	["Particle Limit"] = {text = "USE THIS PARAMETER AT YOUR OWN RISK.\n\nChanges the limit of particles.\n\nNote that a higher limit will impact performance even with the same number of particles spawned."},
 }
 
 -- garry, sincerely... fuck you
@@ -130,13 +138,13 @@ local function set_parameter(option, val)
 	if option == "gravity" then val = -val end	-- hack hack hack! y coordinate is considered down in screenspace!
 	if option == "radius" then 					-- hack hack hack! radius needs to edit multiple parameters!
 		gwater2.solver:SetParameter("surface_tension", 0.01 / val^4)	-- not sure why this is a power of 4. might be proportional to volume
-		gwater2.solver:SetParameter("fluid_rest_distance", val * 0.7)
+		gwater2.solver:SetParameter("fluid_rest_distance", val * 0.65)
 		gwater2.solver:SetParameter("collision_distance", val * 0.5)
 		gwater2.solver:SetParameter("anisotropy_max", 1.5 / val)
 		
 		if val > 15 then val = 15 end	-- explody
 		options.solver:SetParameter("surface_tension", 0.01 / val^4)
-		options.solver:SetParameter("fluid_rest_distance", val * 0.7)
+		options.solver:SetParameter("fluid_rest_distance", val * 0.65)
 		options.solver:SetParameter("collision_distance", val * 0.5)
 	end
 	options.solver:SetParameter(option, val)
@@ -245,8 +253,8 @@ local function create_picker(self, text, dock, size)
 
 	local button = vgui.Create("DButton", self)
 	button:SetPos(355, dock)
-	button:SetSize(20, 20)
 	button:SetText("")
+	button:SetSize(20, 20)
 	button:SetImage("icon16/arrow_refresh.png")
 	button.Paint = nil
 	function button:DoClick()
@@ -285,7 +293,7 @@ concommand.Add("gwater2_menu", function()
     -- start creating visual design
     mainFrame = vgui.Create("DFrame")
     mainFrame:SetSize(800, 400)
-    mainFrame:SetPos(ScrW() / 2 - 400, ScrH() / 2 - 200)
+    mainFrame:Center()
 	mainFrame:SetTitle("gwater2 (v" .. version .. ")")
     mainFrame:MakePopup()
 	mainFrame:SetScreenLock(true)
@@ -300,7 +308,7 @@ concommand.Add("gwater2_menu", function()
 		local x, y = mainFrame:LocalToScreen()
 		options.solver:InitBounds(Vector(x, 0, y + 25), Vector(x + 192, options.solver:GetParameter("radius"), y + 390))
 		options.solver:Tick(math.max(average_fps, 1 / 9999))
-		options.solver:AddCube(Vector(x + 60, 0, y + 50), Vector(0, 0, 50), Vector(4, 1, 1), options.solver:GetParameter("radius") * 0.7, color_white)
+		options.solver:AddCube(Vector(x + 60, 0, y + 50), Vector(0, 0, 50), Vector(4, 1, 1), options.solver:GetParameter("radius") * 0.65, color_white)
 		
 		local radius = options.solver:GetParameter("radius")
 		local function exp(v) return Vector(math.exp(v[1]), math.exp(v[2]), math.exp(v[3])) end
@@ -340,7 +348,7 @@ concommand.Add("gwater2_menu", function()
 	button:SetImage("icon16/anchor.png")
 	button.Paint = nil
 	function button:DoClick()
-		mainFrame:SetPos(ScrW() / 2 - 400, ScrH() / 2 - 200)
+		mainFrame:Center()
 		surface.PlaySound("buttons/button15.wav")
 	end
 
@@ -466,6 +474,7 @@ concommand.Add("gwater2_menu", function()
 			Color(255, 255, 0),
 			Color(255, 127, 0),
 			Color(255, 0, 0),
+			Color(255, 0, 0),
 		}
 
 		local labels = {}
@@ -479,7 +488,6 @@ concommand.Add("gwater2_menu", function()
 		label:SetPos(10, 110)
 		label:SetSize(200, 20)
 		label:SetText("Blur Passes")
-		label:SetColor(Color(255, 255, 255))
 		label:SetFont("GWater2Param")
 		labels[3] = label
 
@@ -499,12 +507,103 @@ concommand.Add("gwater2_menu", function()
 		end
 		local button = vgui.Create("DButton", scrollPanel)
 		button:SetPos(355, 110)
-		button:SetSize(20, 20)
 		button:SetText("")
+		button:SetSize(20, 20)
 		button:SetImage("icon16/arrow_refresh.png")
 		button.Paint = nil
 		function button:DoClick()
 			slider:SetValue(3)
+			surface.PlaySound("buttons/button15.wav")
+		end
+
+		-- particle limit box
+		local label = vgui.Create("DLabel", scrollPanel)
+		label:SetPos(10, 250)
+		label:SetSize(200, 20)
+		label:SetText("Particle Limit")
+		label:SetFont("GWater2Param")
+		labels[6] = label
+
+		local slider = vgui.Create("DNumSlider", scrollPanel)
+		slider:SetPos(0, 250)
+		slider:SetSize(330, 20)
+		slider:SetMinMax(1, 1000000)
+		slider:SetValue(gwater2.solver:GetMaxParticles())
+		slider:SetDecimals(0)
+
+		local button = vgui.Create("DButton", scrollPanel)
+		button:SetPos(355, 250)
+		button:SetText("")
+		button:SetSize(20, 20)
+		button:SetImage("icon16/arrow_refresh.png")
+		button.Paint = nil
+		function button:DoClick()
+			slider:SetValue(100000)
+			surface.PlaySound("buttons/button15.wav")
+		end
+
+		-- 'confirm' particle limit button. Creates another DFrame
+		local button = vgui.Create("DButton", scrollPanel)
+		button:SetPos(330, 250)
+		button:SetText("")
+		button:SetSize(20, 20)
+		button:SetImage("icon16/accept.png")
+		button.Paint = nil
+		function button:DoClick()
+			local x, y = mainFrame:GetPos() x = x + 200 y = y + 100
+			local frame = vgui.Create("DFrame", mainFrame)
+			frame:SetSize(400, 200)
+			frame:SetPos(x, y)
+			frame:SetTitle("gwater2 (v" .. version .. ")")
+			frame:MakePopup()
+			frame:SetBackgroundBlur(true)
+			frame:SetScreenLock(true)
+			function frame:Paint(w, h)
+				-- Blur background
+				render.UpdateScreenEffectTexture()
+				render.BlurRenderTarget(render.GetScreenEffectTexture(), 5, 5, 1)
+				render.SetRenderTarget()
+				render.DrawScreenQuad()
+
+				-- dark background around 2d water sim
+				surface.SetDrawColor(0, 0, 0, 255)
+				surface.DrawRect(0, 0, w, h)
+
+				-- main outline
+				surface.SetDrawColor(255, 255, 255)
+				surface.DrawOutlinedRect(0, 0, w, h)
+	
+				draw.DrawText("You are about to change the limit to " .. slider:GetValue() .. ".\nAre you sure?", "GWater2Title", 200, 30, color_white, TEXT_ALIGN_CENTER)
+				draw.DrawText([[This can be dangerous, because all particles must be allocated on the GPU.
+DO NOT set the limit to a number higher then you think your computer can handle.
+I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefault", 200, 90, color_white, TEXT_ALIGN_CENTER)
+			
+			end
+
+			local confirm = vgui.Create("DButton", frame)
+			confirm:SetPos(260, 150)
+			confirm:SetText("")
+			confirm:SetSize(20, 20)
+			confirm:SetImage("icon16/accept.png")
+			confirm.Paint = nil
+			function confirm:DoClick()
+				gwater2.solver:Destroy()
+				gwater2.solver = FlexSolver(slider:GetValue())
+				gwater2.meshes = {}
+				gwater2.reset_solver(true)
+				frame:Close()
+			end
+
+			local deny = vgui.Create("DButton", frame)
+			deny:SetPos(110, 150)
+			deny:SetText("")
+			deny:SetSize(20, 20)
+			deny:SetImage("icon16/cross.png")
+			deny.Paint = nil
+			function deny:DoClick() 
+				frame:Close()
+			end
+
 			surface.PlaySound("buttons/button15.wav")
 		end
 
@@ -546,7 +645,9 @@ concommand.Add("gwater2_menu", function()
 			water_normals:SetInt("$depthfix", val and 1 or 0)
 		end
 
+		-- light up & change explanation area
 		function scrollPanel:AnimationThink()
+			if !mainFrame:HasFocus() then return end
 			local mousex, mousey = self:LocalCursorPos()
 			local text_name = nil
 			for i, label in pairs(labels) do
@@ -569,7 +670,7 @@ concommand.Add("gwater2_menu", function()
 				explanation_header = options.performance_tab_header
 			end
 		end
-	
+
     end
 
 	local function about_tab(tabs)

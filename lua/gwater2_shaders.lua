@@ -26,7 +26,7 @@ local blur_passes = CreateClientConVar("gwater2_blur_passes", "3", true)
 local antialias = GetConVar("mat_antialias")
 --PreDrawViewModels
 hook.Add("PreDrawViewModels", "gwater2_render", function()
-	if gwater2.solver:GetCount() < 1 then return end
+	if gwater2.solver:GetActiveParticles() < 1 then return end
 
 	-- A rendertargets depth is created separately when anti-aliasing is enabled
 	-- In order to have proper rendertarget capture which obeys the depth buffer, we need to use MATERIAL_RT_DEPTH_SHARED.

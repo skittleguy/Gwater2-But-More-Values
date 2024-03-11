@@ -91,22 +91,6 @@ LUA_FUNCTION(FLEXSOLVER_Tick) {
 	return 1;
 }
 
-// Gets all the particle positions in a FlexSolver. Originally used for debugging
-LUA_FUNCTION(FLEXSOLVER_GetParticles) {
-	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	FlexSolver* flex = GET_FLEXSOLVER(1);
-
-	LUA->CreateTable();
-	for (int i = 0; i < flex->get_active_particles(); i++) {
-		float4 pos = flex->get_host("particle_pos")[i];
-		LUA->PushNumber(i + 1);
-		LUA->PushVector(Vector(pos.x, pos.y, pos.z));
-		LUA->SetTable(-3);
-	}
-
-	return 1;
-}
-
 // Adds a triangle collision mesh to a FlexSolver
 LUA_FUNCTION(FLEXSOLVER_AddConcaveMesh) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
@@ -219,7 +203,7 @@ LUA_FUNCTION(FLEXSOLVER_Reset) {
 	return 0;
 }
 
-LUA_FUNCTION(FLEXSOLVER_GetCount) {
+LUA_FUNCTION(FLEXSOLVER_GetActiveParticles) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 	LUA->PushNumber(flex->get_active_particles());
@@ -425,6 +409,14 @@ LUA_FUNCTION(FLEXSOLVER_InitBounds) {
 	return 0;
 }
 
+LUA_FUNCTION(FLEXSOLVER_GetMaxParticles) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+
+	LUA->PushNumber(flex->get_max_particles());
+	return 1;
+}
+
 
 /*********************************** Flex Renderer LUA Interface *******************************************/
 
@@ -550,16 +542,15 @@ GMOD_MODULE_OPEN() {
 	ADD_FUNCTION(LUA, FLEXSOLVER_Tick, "Tick");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddParticle, "AddParticle");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddCube, "AddCube");
-	ADD_FUNCTION(LUA, FLEXSOLVER_GetParticles, "GetParticles");
+	ADD_FUNCTION(LUA, FLEXSOLVER_GetMaxParticles, "GetMaxParticles");
 	ADD_FUNCTION(LUA, FLEXSOLVER_RenderParticles, "RenderParticles");
-	//ADD_FUNCTION(LUA, RenderParticlesExternal, "RenderPositionsExternal");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddConcaveMesh, "AddConcaveMesh");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddConvexMesh, "AddConvexMesh");
 	ADD_FUNCTION(LUA, FLEXSOLVER_RemoveMesh, "RemoveMesh");
 	ADD_FUNCTION(LUA, FLEXSOLVER_UpdateMesh, "UpdateMesh");
 	ADD_FUNCTION(LUA, FLEXSOLVER_SetParameter, "SetParameter");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetParameter, "GetParameter");
-	ADD_FUNCTION(LUA, FLEXSOLVER_GetCount, "GetCount");
+	ADD_FUNCTION(LUA, FLEXSOLVER_GetActiveParticles, "GetActiveParticles");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddMapMesh, "AddMapMesh");
 	//ADD_FUNCTION(LUA, GetContacts, "GetContacts");
 	ADD_FUNCTION(LUA, FLEXSOLVER_InitBounds, "InitBounds");
