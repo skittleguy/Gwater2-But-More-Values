@@ -1,5 +1,7 @@
 #include "flex_renderer.h"
 
+//extern IMaterialSystem* materials = NULL;	// stops main branch compile from bitching
+
 void FlexRenderer::draw_imeshes() {
 	for (IMesh* mesh : imeshes) 
 		mesh->Draw();

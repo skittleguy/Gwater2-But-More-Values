@@ -1,9 +1,9 @@
-#include "GarrysMod/Lua/Interface.h"
-
 // bsp parser requirements
-// this MUST BE included before shader_inject.h because of conflicting source defines
+// this MUST BE included before everything else because of conflicting source defines
 #include "GMFS.h"
 #include "BSPParser.h"
+
+#include "GarrysMod/Lua/Interface.h"
 
 #include "flex_solver.h"
 #include "flex_renderer.h"

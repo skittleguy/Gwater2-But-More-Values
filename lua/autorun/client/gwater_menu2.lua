@@ -518,21 +518,21 @@ concommand.Add("gwater2_menu", function()
 
 		-- particle limit box
 		local label = vgui.Create("DLabel", scrollPanel)
-		label:SetPos(10, 250)
+		label:SetPos(10, 140)
 		label:SetSize(200, 20)
 		label:SetText("Particle Limit")
 		label:SetFont("GWater2Param")
 		labels[6] = label
 
 		local slider = vgui.Create("DNumSlider", scrollPanel)
-		slider:SetPos(0, 250)
+		slider:SetPos(0, 140)
 		slider:SetSize(330, 20)
 		slider:SetMinMax(1, 1000000)
 		slider:SetValue(gwater2.solver:GetMaxParticles())
 		slider:SetDecimals(0)
 
 		local button = vgui.Create("DButton", scrollPanel)
-		button:SetPos(355, 250)
+		button:SetPos(355, 140)
 		button:SetText("")
 		button:SetSize(20, 20)
 		button:SetImage("icon16/arrow_refresh.png")
@@ -544,7 +544,7 @@ concommand.Add("gwater2_menu", function()
 
 		-- 'confirm' particle limit button. Creates another DFrame
 		local button = vgui.Create("DButton", scrollPanel)
-		button:SetPos(330, 250)
+		button:SetPos(330, 140)
 		button:SetText("")
 		button:SetSize(20, 20)
 		button:SetImage("icon16/accept.png")
@@ -611,7 +611,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 
 		-- Absorption checkbox & label
 		local label = vgui.Create("DLabel", scrollPanel)	
-		label:SetPos(10, 140)
+		label:SetPos(10, 170)
 		label:SetSize(100, 100)
 		label:SetFont("GWater2Param")
 		label:SetText("Absorption")
@@ -619,7 +619,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 		labels[4] = label
 
 		local box = vgui.Create("DCheckBox", scrollPanel)
-		box:SetPos(132, 140)
+		box:SetPos(132, 170)
 		box:SetSize(20, 20)
 		box:SetChecked(options.absorption:GetBool())
 		local water_volumetric = Material("gwater2/volumetric")
@@ -630,7 +630,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 
 		-- Depth fix checkbox & label
 		local label = vgui.Create("DLabel", scrollPanel)	
-		label:SetPos(10, 170)
+		label:SetPos(10, 200)
 		label:SetSize(100, 100)
 		label:SetFont("GWater2Param")
 		label:SetText("Depth Fix")
@@ -638,7 +638,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 		labels[5] = label
 
 		local box = vgui.Create("DCheckBox", scrollPanel)
-		box:SetPos(132, 170)
+		box:SetPos(132, 200)
 		box:SetSize(20, 20)
 		box:SetChecked(options.depth_fix:GetBool())
 		local water_normals = Material("gwater2/normals")
@@ -692,6 +692,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 			- Performance improvements (I noticed about a 30% increase in fps, though it may depend on your hardware)
 			- Added Depth Fix option in performance tab
 			- Added editable particle limit in performance tab
+			- Added watergun box visual
 			- Added compatibility for Hammer++ maps
 			- Fixed door collision
 			- Fixed the water anisotropy occasionally flickering
