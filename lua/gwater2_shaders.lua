@@ -20,13 +20,23 @@ local cache_bloom = GetRenderTargetGWater("2gwater_cache_bloom", 1 / 2)	-- for b
 local water_blur = Material("gwater2/smooth")
 local water_volumetric = Material("gwater2/volumetric")
 local water_normals = Material("gwater2/normals")
-
--- The code below is the very complicated gwater2 shader pipeline since source doesn't support multiple shaders for one material
 local blur_passes = CreateClientConVar("gwater2_blur_passes", "3", true)
 local antialias = GetConVar("mat_antialias")
---PreDrawViewModels
-hook.Add("PreDrawViewModels", "gwater2_render", function()
+
+-- rebuild meshes every frame (unused atm since PostDrawOpaque is being a bitch)
+--[[
+hook.Add("RenderScene", "gwater2_render", function(eye_pos, eye_angles, fov)
+	cam.Start3D(eye_pos, eye_angles, fov) -- BuildIMeshes requires a 3d cam context (for frustrum culling)
+		gwater2.renderer:BuildIMeshes(gwater2.solver, gwater2.solver:GetParameter("radius") * 0.5)	
+	cam.End3D()
+end)]]
+
+
+-- gwater2 shader pipeline
+hook.Add("PreDrawViewModels", "gwater2_render", function()	--PreDrawViewModels
 	if gwater2.solver:GetActiveParticles() < 1 then return end
+
+	--if EyePos():DistToSqr(LocalPlayer():EyePos()) > 1 then return end	-- bail if skybox is rendering (used in postdrawopaque)
 
 	-- A rendertargets depth is created separately when anti-aliasing is enabled
 	-- In order to have proper rendertarget capture which obeys the depth buffer, we need to use MATERIAL_RT_DEPTH_SHARED.
@@ -106,8 +116,6 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 	end
 	render.SetRenderTarget()
 
-	--render.ClearDepth()
-
 	-- Setup water material parameters
 	water:SetFloat("$radius", radius)
 	water:SetTexture("$normaltexture", cache_normals)
@@ -119,7 +127,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()
 
 	-- Debug Draw
 	--render.DrawTextureToScreenRect(cache_absorption, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
-	render.DrawTextureToScreenRect(cache_normals, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
+	--render.DrawTextureToScreenRect(cache_normals, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
 	--render.DrawTextureToScreenRect(cache_normals, 0, 0, ScrW(), ScrH())
 end)
 

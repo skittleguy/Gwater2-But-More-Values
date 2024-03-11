@@ -56,8 +56,7 @@ function SWEP:PrimaryAttack()
 	local owner = self:GetOwner()
 	local forward = owner:EyeAngles():Forward()
 	local sprite_size = gwater2.solver:GetParameter("radius") * math.Rand(1, 1.01)
-	local amb = render.GetAmbientLightColor(owner:EyePos())
-	gwater2.solver:AddCube(owner:EyePos() + forward * 20 * sprite_size, forward * 100, Vector(4, 4, 4), sprite_size * 0.9, gwater2.color)
+	gwater2.solver:AddCube(owner:EyePos() + forward * 20 * sprite_size, forward * 100, Vector(4, 4, 4), sprite_size * 0.9)
 end
 
 function SWEP:SecondaryAttack()
@@ -66,8 +65,16 @@ function SWEP:SecondaryAttack()
 	local owner = self:GetOwner()
 	local forward = owner:EyeAngles():Forward()
 	local sprite_size = gwater2.solver:GetParameter("fluid_rest_distance")
-	gwater2.solver:AddCube(owner:EyePos() + forward * 40 * sprite_size, forward * 100, Vector(33, 33, 33), sprite_size * 0.9, gwater2.color)
+	gwater2.solver:AddCube(owner:EyePos() + forward * 40 * sprite_size, forward * 100, Vector(33, 33, 33), sprite_size * 0.9)
 end
+
+function SWEP:Reload()
+	if fuckgarry(self, "Reload") then return end
+	
+	gwater2.solver:Reset()
+end
+
+if SERVER then return end
 
 function SWEP:DrawHUD()
 	draw.DrawText("Left-Click to Spawn Particles", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.75, color_white, TEXT_ALIGN_RIGHT)
@@ -79,6 +86,7 @@ local function format_int(i)
 	return tostring(i):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
 end
 
+-- visual counter on gun
 function SWEP:PostDrawViewModel(vm, weapon, ply)
 	local pos, ang = vm:GetBonePosition(39)--self:GetOwner():GetViewModel():GetBonePosition(0)
 	ang = ang + Angle(180, 0, -ang[3] * 2)
@@ -90,11 +98,17 @@ function SWEP:PostDrawViewModel(vm, weapon, ply)
 	cam.End3D2D()
 end
 
-function SWEP:Reload()
-	if fuckgarry(self, "Reload") then return end
-	
-	gwater2.solver:Reset()
-end
+-- PostDrawViewModel^ doesn't write to depth buffer... add our own rendering hook
+local wireframe = Material("models/wireframe")
+hook.Add("PostDrawTranslucentRenderables", "gwater2_fuckthisshitman", function()
+	local owner = LocalPlayer()
+	local wep = owner:GetActiveWeapon()
+	if IsValid(wep) and wep:GetClass() == "weapon_gw2_watergun" then
+		local forward = owner:EyeAngles():Forward()
+		local sprite_size = gwater2.solver:GetParameter("radius")
+		render.DrawWireframeBox(owner:EyePos() + forward * 20 * sprite_size, Angle(), Vector(2, 2, 2) * -sprite_size, Vector(2, 2, 2) * sprite_size, Color(255, 255, 255, 0), true)
+	end
+end)
 
 /* -- Benchmarking stuff (ignore)
 local avg = 0

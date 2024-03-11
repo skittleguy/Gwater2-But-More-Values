@@ -38,7 +38,7 @@ local options = {
 	["Blur Passes"] = {text = "Controls the number of blur passes done per frame. More passes creates a smoother water surface. Zero passes will do no blurring.\n\nMedium performance impact."},
 	["Absorption"] = {text = "Enables absorption of light over distance inside of fluid.\n\n(more depth = darker color)\n\nMedium-High performance impact."},
 	["Depth Fix"] = {text = "Makes particles appear spherical instead of flat, creating a cleaner and smoother water surface.\n\nCauses shader overdraw.\n\nHigh performance impact."},
-	["Particle Limit"] = {text = "USE THIS PARAMETER AT YOUR OWN RISK.\n\nChanges the limit of particles.\n\nNote that a higher limit will impact performance even with the same number of particles spawned."},
+	["Particle Limit"] = {text = "USE THIS PARAMETER AT YOUR OWN RISK.\n\nChanges the limit of particles.\n\nNote that a higher limit will negatively impact performance even with the same number of particles spawned."},
 }
 
 -- garry, sincerely... fuck you
@@ -592,6 +592,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 				gwater2.meshes = {}
 				gwater2.reset_solver(true)
 				frame:Close()
+				surface.PlaySound("buttons/button15.wav")
 			end
 
 			local deny = vgui.Create("DButton", frame)
@@ -602,6 +603,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 			deny.Paint = nil
 			function deny:DoClick() 
 				frame:Close()
+				surface.PlaySound("buttons/button15.wav")
 			end
 
 			surface.PlaySound("buttons/button15.wav")
@@ -689,10 +691,11 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 			Changelog (v0.2b):
 			- Performance improvements (I noticed about a 30% increase in fps, though it may depend on your hardware)
 			- Added Depth Fix option in performance tab
+			- Added editable particle limit in performance tab
+			- Added compatibility for Hammer++ maps
 			- Fixed door collision
 			- Fixed the water anisotropy occasionally flickering
-			- Make HDR lighting more consistent
-			- Added compatibility for Hammer++ maps
+			- Made HDR lighting more consistent
 			- Changed water surface estimation to grant smoother results
 			- Lots of backend code changes
 			- Internally start forcing MSAA to be disabled, as it breaks the water surface
