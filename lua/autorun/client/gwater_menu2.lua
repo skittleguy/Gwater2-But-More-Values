@@ -694,6 +694,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 			- Added editable particle limit in performance tab
 			- Added watergun box visual
 			- Added compatibility for Hammer++ maps
+			- Added patron tab in menu
 			- Fixed door collision
 			- Fixed the water anisotropy occasionally flickering
 			- Made HDR lighting more consistent
