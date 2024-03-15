@@ -6,11 +6,9 @@ struct PS_INPUT {
 };
 
 float4 main(PS_INPUT i) : COLOR {
-	// kill pixels outside of sphere
 	float2 offset = (i.coord - 0.5) * 2.0;
 	float radius2 = dot(offset, offset);
-	if (radius2 > 1) discard;
 
-	float bulge = 1 - radius2;
+	float bulge = max(1 - radius2, 0);
 	return float4(bulge, bulge, bulge, ALPHA);
 };
