@@ -127,7 +127,7 @@ function GFScrollPanel:Init()
 end
 vgui.Register("GF_ScrollPanel", GFScrollPanel, "DScrollPanel")
 
-local function set_parameter(option, val)
+local function set_gwater_parameter(option, val)
 	if gwater2[option] then 
 		gwater2[option] = val 
 		return
@@ -176,13 +176,14 @@ local function create_slider(self, text, min, max, decimals, dock)
 	slider:SetValue(param)
 	slider:SetDecimals(decimals)
 	
+	-- rounds slider to nearest decimal
 	function slider:OnValueChanged(val)
 		if decimals == 0 and val != math.Round(val, decimals) then 
 			self:SetValue(math.Round(val, decimals))
 			return
 		end
 
-		set_parameter(option, val)
+		set_gwater_parameter(option, val)
 	end
 
 	local button = vgui.Create("DButton", self)
@@ -686,7 +687,11 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 		label:SetText([[
 			Thank you for downloading gwater2 beta! This menu is the interface that you will be using to control everything about gwater. So get used to it! :D
 
-			Make sure to read 'Changelog (v0.2b)' to see what has been updated!
+			Make sure to read 'Changelog (v0.3b)' to see what has been updated!
+
+			Changelog (v0.3b):
+			- Fixed 'Depth fix' parameter not saving properly
+			- Fixed a crash when loading into some maps
 
 			Changelog (v0.2b):
 			- Performance improvements (I noticed about a 30% increase in fps, though it may depend on your hardware)

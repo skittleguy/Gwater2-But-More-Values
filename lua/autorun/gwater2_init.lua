@@ -68,7 +68,7 @@ local function add_prop(ent)
 
 	local invalid = false
 	for k, v in ipairs(convexes) do 
-		if #v > 64 * 3 or k > 10 then	-- hardcoded limits in FleX.. No more than 64 planes
+		if #v > 64 * 3 or k > 10 then	-- hardcoded limits in FleX.. No more than 64 planes per convex
 			invalid = true
 			break
 		end
@@ -83,6 +83,20 @@ local function add_prop(ent)
 		gwater2.solver:AddConcaveMesh(unfucked_get_mesh(ent, true), ent:GetPos(), ent:GetAngles())
 		table.insert(gwater2.meshes, ent)
 	end
+end
+
+local function get_map_vertices()
+	local all_vertices = {}
+	for _, brush in ipairs(game.GetWorld():GetBrushSurfaces()) do
+		local vertices = brush:GetVertices()
+		for i = 3, #vertices do
+			all_vertices[#all_vertices + 1] = vertices[1]
+			all_vertices[#all_vertices + 1] = vertices[i - 1]
+			all_vertices[#all_vertices + 1] = vertices[i]
+		end
+	end
+
+	return all_vertices
 end
 
 require((BRANCH == "x86-64" or BRANCH == "chromium" ) and "gwater2" or "gwater2_main")	-- carrying
@@ -139,13 +153,13 @@ local function gwater_tick()
 
 	if gwater2.solver:GetActiveParticles() == 0 or gwater2.solver:GetParameter("timescale") <= 0 then 
 		last_systime = systime
-		average_frametime = RealFrameTime() 
+		average_frametime = FrameTime() 
 		return 
 	elseif hang_thread and delta_time < limit_fps then
 		return
 	end
 	
-	if gwater2.solver:Tick(math.max(average_frametime * cm_2_inch, 1 / 30), hang_thread and 0 or 1) then
+	if gwater2.solver:Tick(math.min(average_frametime * cm_2_inch, 1 / 5), hang_thread and 0 or 1) then
 	//if gwater2.solver:Tick(1/165 * cm_2_inch, hang_thread and 0 or 1) then
 		average_frametime = average_frametime + ((systime - last_systime) - average_frametime) * 0.03
 		last_systime = systime	// smooth out fps
@@ -158,20 +172,6 @@ hook.Add("PreRender", "gwater_tick", gwater_tick)
 hook.Add("PostRender", "gwater_tick", gwater_tick)
 hook.Add("Think", "gwater_tick_collision", gwater2.update_meshes)
 hook.Add("Think", "gwater_tick", gwater_tick)
-
-local function get_map_vertices()
-	local all_vertices = {}
-	for _, brush in ipairs(game.GetWorld():GetBrushSurfaces()) do
-		local vertices = brush:GetVertices()
-		for i = 3, #vertices do
-			all_vertices[#all_vertices + 1] = vertices[1]
-			all_vertices[#all_vertices + 1] = vertices[i - 1]
-			all_vertices[#all_vertices + 1] = vertices[i]
-		end
-	end
-
-	return all_vertices
-end
 
 hook.Add("InitPostEntity", "gwater2_addprop", gwater2.reset_solver)
 hook.Add("OnEntityCreated", "gwater2_addprop", function(ent) timer.Simple(0, function() add_prop(ent) end) end)	// timer.0 so data values are setup correctly
