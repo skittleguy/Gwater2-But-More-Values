@@ -54,6 +54,11 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()	--PreDrawViewModels
 		RunConsoleCommand("mat_antialias", 1)
 	end
 	
+	render.SetMaterial(Material("models/wireframe"))
+	gwater2.solver:RenderParticles(function(pos)
+		render.DrawSprite(pos, 10, 10, color_white)
+	end)
+
 	-- Clear render targets
 	render.ClearRenderTarget(cache_normals, Color(0, 0, 0, 0))
 	render.ClearRenderTarget(cache_depth, Color(0, 0, 0, 0))

@@ -9,6 +9,11 @@
 void FlexSolver::add_buffer(std::string name, int type, int count) {
 	NvFlexBuffer* buffer = NvFlexAllocBuffer(library, count, type, eNvFlexBufferHost);
 	buffers[name] = buffer;
+
+	// Initialize CPU memory
+	// this memory is automatically updated when 'NvFlexGet' is called
+	hosts[name] = NvFlexMap(buffer, eNvFlexMapWait);
+	NvFlexUnmap(buffer);
 };
 
 inline NvFlexBuffer* FlexSolver::get_buffer(std::string name) {
@@ -31,7 +36,7 @@ int FlexSolver::get_max_contacts() {
 	return solver_description.maxContactsPerParticle;
 }
 
-float4* FlexSolver::get_host(std::string name) {
+void* FlexSolver::get_host(std::string name) {
 	return hosts[name];
 }
 
@@ -41,22 +46,20 @@ void FlexSolver::add_particle(float4 pos, float3 vel) {
 	if (get_active_particles() >= get_max_particles()) return;
 
 	// map buffers for reading / writing
-	hosts["particle_smooth"] = (float4*)NvFlexMap(get_buffer("particle_smooth"), eNvFlexMapWait);
-	hosts["particle_pos"] = (float4*)NvFlexMap(get_buffer("particle_pos"), eNvFlexMapWait);
+	float4* positions = (float4*)NvFlexMap(get_buffer("particle_pos"), eNvFlexMapWait);
 	float3* velocities = (float3*)NvFlexMap(get_buffer("particle_vel"), eNvFlexMapWait);
 	int* phases = (int*)NvFlexMap(get_buffer("particle_phase"), eNvFlexMapWait);
 	int* active = (int*)NvFlexMap(get_buffer("particle_active"), eNvFlexMapWait);
 
 	// Add particle
 	int n = copy_description->elementCount++;	// increment
-	hosts["particle_pos"][n] = pos;
-	hosts["particle_smooth"][n] = pos;
+	((float4*)hosts["particle_smooth"])[n] = pos;	// avoids visual flashing. No need to call NvFlexMap as this is only a 'getter' buffer
+	positions[n] = pos;
 	velocities[n] = vel;
 	phases[n] = NvFlexMakePhase(0, eNvFlexPhaseSelfCollide | eNvFlexPhaseFluid);
 	active[n] = n;
 
 	// unmap buffers
-	NvFlexUnmap(get_buffer("particle_smooth"));
 	NvFlexUnmap(get_buffer("particle_pos"));
 	NvFlexUnmap(get_buffer("particle_vel"));
 	NvFlexUnmap(get_buffer("particle_phase"));
@@ -68,24 +71,10 @@ void FlexSolver::add_particle(float4 pos, float3 vel) {
 bool FlexSolver::pretick(NvFlexMapFlags wait) {
 	if (solver == nullptr) return false;
 
-	// Copy position memory
-	float4* positions = (float4*)NvFlexMap(get_buffer("particle_pos"), wait);
-	if (!positions) return false;
-	hosts["particle_pos"] = positions;
-	NvFlexUnmap(get_buffer("particle_pos"));
-
-	// Copy anisotropy & smoothing (used in rendering)
-	hosts["particle_ani1"] = (float4*)NvFlexMap(get_buffer("particle_ani1"), eNvFlexMapWait);
-	hosts["particle_ani2"] = (float4*)NvFlexMap(get_buffer("particle_ani2"), eNvFlexMapWait);
-	hosts["particle_ani3"] = (float4*)NvFlexMap(get_buffer("particle_ani3"), eNvFlexMapWait);
-	hosts["particle_smooth"] = (float4*)NvFlexMap(get_buffer("particle_smooth"), eNvFlexMapWait);
-	NvFlexUnmap(get_buffer("particle_ani1"));
-	NvFlexUnmap(get_buffer("particle_ani2"));
-	NvFlexUnmap(get_buffer("particle_ani3"));
-	NvFlexUnmap(get_buffer("particle_smooth"));
-
 	// Update collider positions
-	float4* pos = (float4*)NvFlexMap(get_buffer("geometry_pos"), eNvFlexMapWait);
+	float4* pos = (float4*)NvFlexMap(get_buffer("geometry_pos"), wait);
+	if (!pos) return false;
+
 	float4* ppos = (float4*)NvFlexMap(get_buffer("geometry_prevpos"), eNvFlexMapWait);
 	float4* ang = (float4*)NvFlexMap(get_buffer("geometry_quat"), eNvFlexMapWait);
 	float4* pang = (float4*)NvFlexMap(get_buffer("geometry_prevquat"), eNvFlexMapWait);
@@ -109,7 +98,7 @@ bool FlexSolver::pretick(NvFlexMapFlags wait) {
 void FlexSolver::tick(float dt) {
 	if (solver == nullptr) return;
 	// write to device (async)
-	NvFlexSetParticles(solver, get_buffer("particle_pos"), copy_description);
+	NvFlexSetParticles(solver, get_buffer("particle_pos"), copy_description);	// TODO: Move these to particle creation, as they are not required to be called per tick
 	NvFlexSetVelocities(solver, get_buffer("particle_vel"), copy_description);
 	NvFlexSetPhases(solver, get_buffer("particle_phase"), copy_description);
 	NvFlexSetActive(solver, get_buffer("particle_active"), copy_description);
@@ -133,6 +122,7 @@ void FlexSolver::tick(float dt) {
 	NvFlexGetVelocities(solver, get_buffer("particle_vel"), copy_description);
 	NvFlexGetPhases(solver, get_buffer("particle_phase"), copy_description);
 	NvFlexGetActive(solver, get_buffer("particle_active"), copy_description);
+	NvFlexGetDiffuseParticles(solver, get_buffer("diffuse_pos"), NULL, get_buffer("diffuse_active"));
 	//NvFlexGetContacts(solver, get_buffer("contact_planes"), get_buffer("contact_vel"), get_buffer("contact_indices"), get_buffer("contact_count"));
 	if (get_parameter("anisotropy_scale") != 0) NvFlexGetAnisotropy(solver, get_buffer("particle_ani1"), get_buffer("particle_ani2"), get_buffer("particle_ani3"), copy_description);
 	if (get_parameter("smoothing") != 0) NvFlexGetSmoothParticles(solver, get_buffer("particle_smooth"), copy_description);
@@ -295,7 +285,7 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 
 	NvFlexSetSolverDescDefaults(&solver_description);
 	solver_description.maxParticles = particles;
-	solver_description.maxDiffuseParticles = 0;
+	solver_description.maxDiffuseParticles = 10000;
 
 	this->library = library;
 	solver = NvFlexCreateSolver(library, &solver_description);
@@ -324,6 +314,9 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	add_buffer("particle_ani1", sizeof(float4), particles);
 	add_buffer("particle_ani2", sizeof(float4), particles);
 	add_buffer("particle_ani3", sizeof(float4), particles);
+
+	add_buffer("diffuse_pos", sizeof(float4), solver_description.maxDiffuseParticles);
+	add_buffer("diffuse_active", sizeof(int), 1);	// "this may be updated by the GPU which is why it is passed back in a buffer"
 };
 
 // Free memory
@@ -393,17 +386,18 @@ void FlexSolver::default_parameters() {
 	params->vorticityConfinement = 0.0f;
 	params->buoyancy = 1.0f;
 
-	params->diffuseThreshold = 3.f;
+	params->diffuseThreshold = 1000.f;
 	params->diffuseBuoyancy = 1.f;
 	params->diffuseDrag = 0.8f;
-	params->diffuseBallistic = 0;
-	params->diffuseLifetime = 30.0f;
+	params->diffuseBallistic = 4;
+	params->diffuseLifetime = 10.0f;
 
 	params->numPlanes = 0;
 };
 
 void FlexSolver::map_parameters(NvFlexParams* buffer) {
 	param_map["gravity"] = &(buffer->gravity[2]);
+
 	param_map["radius"] = &buffer->radius;
 	param_map["viscosity"] = &buffer->viscosity;
 	param_map["dynamic_friction"] = &buffer->dynamicFriction;
@@ -412,12 +406,15 @@ void FlexSolver::map_parameters(NvFlexParams* buffer) {
 	param_map["free_surface_drag"] = &buffer->freeSurfaceDrag;
 	param_map["drag"] = &buffer->drag;
 	param_map["lift"] = &buffer->lift;
-	//param_map["num_iterations"] = &buffer->numIterations;		// integer, cant map
+	//param_map["iterations"] = &buffer->numIterations;				// integer, cant map
 	param_map["fluid_rest_distance"] = &buffer->fluidRestDistance;
 	param_map["solid_rest_distance"] = &buffer->solidRestDistance;
+
 	param_map["anisotropy_scale"] = &buffer->anisotropyScale;
 	param_map["anisotropy_min"] = &buffer->anisotropyMin;
 	param_map["anisotropy_max"] = &buffer->anisotropyMax;
+	param_map["smoothing"] = &buffer->smoothing;
+
 	param_map["dissipation"] = &buffer->dissipation;
 	param_map["damping"] = &buffer->damping;
 	param_map["particle_collision_margin"] = &buffer->particleCollisionMargin;
@@ -426,6 +423,7 @@ void FlexSolver::map_parameters(NvFlexParams* buffer) {
 	param_map["sleep_threshold"] = &buffer->sleepThreshold;
 	param_map["shock_propagation"] = &buffer->shockPropagation;
 	param_map["restitution"] = &buffer->restitution;
+
 	param_map["max_speed"] = &buffer->maxSpeed;
 	param_map["max_acceleration"] = &buffer->maxAcceleration;	
 	//param_map["relaxation_mode"] = &buffer->relaxationMode;		// ^
@@ -436,7 +434,12 @@ void FlexSolver::map_parameters(NvFlexParams* buffer) {
 	param_map["surface_tension"] = &buffer->surfaceTension;
 	param_map["vorticity_confinement"] = &buffer->vorticityConfinement;
 	param_map["buoyancy"] = &buffer->buoyancy;
-	param_map["smoothing"] = &buffer->smoothing;
+
+	param_map["diffuse_threshold"] = &buffer->diffuseThreshold;
+	param_map["diffuse_buoyancy"] = &buffer->diffuseBuoyancy;
+	param_map["diffuse_drag"] = &buffer->diffuseDrag;
+	//param_map["diffuse_ballistic"] = &buffer->diffuseBallistic;	// ^
+	param_map["diffuse_lifetime"] = &buffer->diffuseLifetime;
 
 	// Extra values we store which are not stored in flexes default parameters
 	param_map["substeps"] = new float(3);

@@ -16,7 +16,7 @@ private:
 	NvFlexSolverDesc solver_description = NvFlexSolverDesc();
 	std::map<std::string, NvFlexBuffer*> buffers;
 	std::map<std::string, float*> param_map;
-	std::map<std::string, float4*> hosts;
+	std::map<std::string, void*> hosts;
 	std::vector<Mesh*> meshes;	// physmeshes
 
 	void add_buffer(std::string name, int type, int count);
@@ -32,7 +32,7 @@ public:
 
 	// Returns a host (pointer of float4s) where FleX buffer data is transferred to. 
 	// If the FleX buffer is never used, it may return NULL
-	float4* get_host(std::string name);
+	void* get_host(std::string name);
 
 	void add_particle(float4 pos, float3 vel);
 	bool pretick(NvFlexMapFlags wait);	// Handles transfer of FleX buffers to hosts & updates mesh positions/angles

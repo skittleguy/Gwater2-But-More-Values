@@ -216,9 +216,8 @@ LUA_FUNCTION(FLEXSOLVER_RenderParticles) {
 	LUA->CheckType(2, Type::Function);
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
-
-	float4* host = flex->get_host("particle_pos");
-	for (int i = 0; i < flex->get_active_particles(); i++) {
+	float4* host = (float4*)flex->get_host("diffuse_pos");
+	for (int i = 0; i < ((int*)flex->get_host("diffuse_active"))[0]; i++) {
 		// render function
 		LUA->Push(2);
 		LUA->PushVector(Vector(host[i].x, host[i].y, host[i].z));
