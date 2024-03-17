@@ -33,7 +33,7 @@ end)]]
 
 
 -- gwater2 shader pipeline
-hook.Add("PreDrawViewModels", "gwater2_render", function()	--PreDrawViewModels
+hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--PreDrawViewModels
 	if gwater2.solver:GetActiveParticles() < 1 then return end
 
 	--if EyePos():DistToSqr(LocalPlayer():EyePos()) > 1 then return end	-- bail if skybox is rendering (used in postdrawopaque)
@@ -53,11 +53,13 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()	--PreDrawViewModels
 		print("[GWater2]: Force disabling MSAA for technical reasons. (Feel free to ask me (Meetric) for more info)")
 		RunConsoleCommand("mat_antialias", 1)
 	end
-	
-	render.SetMaterial(Material("models/wireframe"))
-	gwater2.solver:RenderParticles(function(pos)
-		render.DrawSprite(pos, 10, 10, color_white)
-	end)
+
+	--[[
+	-- diffuse particles
+	render.SetMaterial(water_volumetric)//Material("models/wireframe"))
+	gwater2.solver:RenderParticles(function(pos, size)
+		render.DrawSprite(pos, 5, 5, color_white)
+	end)]]
 
 	-- Clear render targets
 	render.ClearRenderTarget(cache_normals, Color(0, 0, 0, 0))
@@ -81,6 +83,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()	--PreDrawViewModels
 	--gwater2.renderer:DrawIMeshes()
 	
 	-- Depth absorption (disabled when opaque liquids are enabled)
+	
 	local _, _, _, a = water:GetVector4D("$color2")
 	if water_volumetric:GetFloat("$alpha") != 0 and a < 255 then
 		render.SetMaterial(water_volumetric)
@@ -131,7 +134,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function()	--PreDrawViewModels
 	render.OverrideAlphaWriteEnable(false, false)
 
 	-- Debug Draw
-	--render.DrawTextureToScreenRect(cache_absorption, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
+	render.DrawTextureToScreenRect(cache_absorption, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
 	--render.DrawTextureToScreenRect(cache_normals, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
 	--render.DrawTextureToScreenRect(cache_normals, 0, 0, ScrW(), ScrH())
 end)

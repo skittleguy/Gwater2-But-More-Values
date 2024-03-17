@@ -389,7 +389,7 @@ void FlexSolver::default_parameters() {
 	params->diffuseThreshold = 1000.f;
 	params->diffuseBuoyancy = 1.f;
 	params->diffuseDrag = 0.8f;
-	params->diffuseBallistic = 4;
+	params->diffuseBallistic = 8;
 	params->diffuseLifetime = 10.0f;
 
 	params->numPlanes = 0;

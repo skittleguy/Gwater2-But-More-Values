@@ -221,7 +221,8 @@ LUA_FUNCTION(FLEXSOLVER_RenderParticles) {
 		// render function
 		LUA->Push(2);
 		LUA->PushVector(Vector(host[i].x, host[i].y, host[i].z));
-		LUA->Call(1, 0);
+		LUA->PushNumber(host[i].w);
+		LUA->Call(2, 0);
 	}
 
 	return 0;

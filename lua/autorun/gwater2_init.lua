@@ -172,6 +172,6 @@ hook.Add("PreRender", "gwater_tick", gwater_tick)
 hook.Add("PostRender", "gwater_tick", gwater_tick)
 hook.Add("Think", "gwater_tick_collision", gwater2.update_meshes)
 hook.Add("Think", "gwater_tick", gwater_tick)
-
+--gwater2.reset_solver()
 hook.Add("InitPostEntity", "gwater2_addprop", gwater2.reset_solver)
 hook.Add("OnEntityCreated", "gwater2_addprop", function(ent) timer.Simple(0, function() add_prop(ent) end) end)	// timer.0 so data values are setup correctly
