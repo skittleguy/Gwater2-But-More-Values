@@ -166,12 +166,19 @@ local function gwater_tick()
 	end
 end
 
+local function gwater_tick2()
+	if gwater2.solver:GetActiveParticles() == 0 or gwater2.solver:GetParameter("timescale") <= 0 then return end
+
+	gwater2.solver:Tick(limit_fps * cm_2_inch, 0)
+end
+
 // run whenever possible, as often as possible. we dont know when flex will finish calculations
 local no = function() end
-hook.Add("PreRender", "gwater_tick", gwater_tick)
-hook.Add("PostRender", "gwater_tick", gwater_tick)
+hook.Add("PreRender", "gwater_tick", no)
+hook.Add("PostRender", "gwater_tick", no)
 hook.Add("Think", "gwater_tick_collision", gwater2.update_meshes)
-hook.Add("Think", "gwater_tick", gwater_tick)
+hook.Add("Think", "gwater_tick", no)
+timer.Create("gwater2_tick", limit_fps, 0, gwater_tick2)
 --gwater2.reset_solver()
 hook.Add("InitPostEntity", "gwater2_addprop", gwater2.reset_solver)
 hook.Add("OnEntityCreated", "gwater2_addprop", function(ent) timer.Simple(0, function() add_prop(ent) end) end)	// timer.0 so data values are setup correctly

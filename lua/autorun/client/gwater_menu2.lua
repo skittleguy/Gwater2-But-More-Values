@@ -43,7 +43,7 @@ local options = {
 
 -- garry, sincerely... fuck you
 local volumetric = Material("gwater2/volumetric")
-timer.Simple(0, function() volumetric:SetFloat("$alpha", options.absorption:GetBool() and 0.025 or 0) end)
+timer.Simple(0, function() volumetric:SetFloat("$alpha", options.absorption:GetBool() and 0.15 or 0) end)
 
 options.solver:SetParameter("gravity", 15.24)	-- flip gravity because y axis positive is down
 options.solver:SetParameter("timescale", 10)	-- pixel space is small, so we need to speed up the simulation
@@ -626,7 +626,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 		local water_volumetric = Material("gwater2/volumetric")
 		function box:OnChange(val)
 			options.absorption:SetBool(val)
-			water_volumetric:SetFloat("$alpha", val and 0.025 or 0)
+			water_volumetric:SetFloat("$alpha", val and 0.15 or 0)
 		end
 
 		-- Depth fix checkbox & label
@@ -747,6 +747,8 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
         local scrollEditTab = tabs:AddSheet("Patrons", scrollPanel, "icon16/award_star_gold_3.png").Tab
 		scrollEditTab.Paint = draw_tabs
 
+		-- DONT FORGET TO ADD 'Xenthio'
+		-- & Spaghetti Regretti
 		local patrons = file.Read("gwater2_patrons.lua", "LUA") or "<Failed to load patron data!>"
 		local patrons_table = string.Split(patrons, "\n")
 

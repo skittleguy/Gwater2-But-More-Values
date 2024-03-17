@@ -52,7 +52,7 @@ void FlexSolver::add_particle(float4 pos, float3 vel) {
 	int* active = (int*)NvFlexMap(get_buffer("particle_active"), eNvFlexMapWait);
 
 	// Add particle
-	int n = copy_description->elementCount++;	// increment
+	int n = copy_description->elementCount++;		// n = particle_count; n++
 	((float4*)hosts["particle_smooth"])[n] = pos;	// avoids visual flashing. No need to call NvFlexMap as this is only a 'getter' buffer
 	positions[n] = pos;
 	velocities[n] = vel;
@@ -67,7 +67,7 @@ void FlexSolver::add_particle(float4 pos, float3 vel) {
 }
 
 
-// Handles transfer of FleX buffers to hosts & updates mesh positions/angles
+// Handles particle creation and geometry update
 bool FlexSolver::pretick(NvFlexMapFlags wait) {
 	if (solver == nullptr) return false;
 
