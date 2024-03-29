@@ -31,7 +31,6 @@ public:
 	int get_max_contacts();
 
 	// Returns a host (pointer of float4s) where FleX buffer data is transferred to. 
-	// If the FleX buffer is never used, it may return NULL
 	void* get_host(std::string name);
 
 	void add_particle(float4 pos, float3 vel);

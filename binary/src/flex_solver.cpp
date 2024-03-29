@@ -10,7 +10,7 @@ void FlexSolver::add_buffer(std::string name, int type, int count) {
 	NvFlexBuffer* buffer = NvFlexAllocBuffer(library, count, type, eNvFlexBufferHost);
 	buffers[name] = buffer;
 
-	// Initialize CPU memory
+	// Initialize CPU buffer memory
 	// this memory is automatically updated when 'NvFlexGet' is called
 	hosts[name] = NvFlexMap(buffer, eNvFlexMapWait);
 	NvFlexUnmap(buffer);
@@ -67,7 +67,7 @@ void FlexSolver::add_particle(float4 pos, float3 vel) {
 }
 
 
-// Handles particle creation and geometry update
+// Handles geometry update. TODO: Queue particles to be spawned here
 bool FlexSolver::pretick(NvFlexMapFlags wait) {
 	if (solver == nullptr) return false;
 
@@ -339,6 +339,8 @@ FlexSolver::~FlexSolver() {
 	solver = nullptr;
 }
 
+
+// TODO: Remove this, it sucks. Frankly a switch-case is probably better
 void FlexSolver::default_parameters() {
 	params = new NvFlexParams();
 	params->gravity[0] = 0.0f;

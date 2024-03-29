@@ -29,7 +29,6 @@ void FlexRenderer::build_imeshes(FlexSolver* solver, float radius) {
 	Vector ep; render_context->GetWorldSpaceCameraPosition(&ep);
 	float3 eye_pos = float3(ep.x, ep.y, ep.z);
 
-	float radius2 = radius * 0.5;
 	float u[3] = { 0.5 - SQRT3 / 2, 0.5, 0.5 + SQRT3 / 2};
 	float v[3] = { 1, -0.5, 1 };
 
@@ -69,7 +68,7 @@ void FlexRenderer::build_imeshes(FlexSolver* solver, float radius) {
 					pos_ani = pos_ani + ani2.xyz() * (local_pos[i].dot(ani2.xyz()) * ani2.w);
 					pos_ani = pos_ani + ani3.xyz() * (local_pos[i].dot(ani3.xyz()) * ani3.w);
 
-					float3 world_pos = particle_pos + pos_ani * radius2;
+					float3 world_pos = particle_pos + pos_ani * radius;
 					mesh_builder.TexCoord2f(0, u[i], v[i]);
 					mesh_builder.Position3f(world_pos.x, world_pos.y, world_pos.z);
 					mesh_builder.Normal3f(-forward.x, -forward.y, -forward.z);

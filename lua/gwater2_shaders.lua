@@ -13,9 +13,9 @@ local function GetRenderTargetGWater(name, mult, depth)
 	)
 end
 
-local cache_depth = GetRenderTargetGWater("gwater_cache_depth")
+local cache_depth = GetRenderTargetGWater("2gwater_cache_depth", 1 / 2)
 local cache_absorption = GetRenderTargetGWater("gwater_cache_absorption")
-local cache_normals = GetRenderTargetGWater("gwater_cache_normals", nil, MATERIAL_RT_DEPTH_SEPARATE)
+local cache_normals = GetRenderTargetGWater("2gwater_cache_normals", 1 / 2, MATERIAL_RT_DEPTH_SEPARATE)
 local cache_bloom = GetRenderTargetGWater("2gwater_cache_bloom", 1 / 2)	-- for blurring
 local water_blur = Material("gwater2/smooth")
 local water_volumetric = Material("gwater2/volumetric")
@@ -78,7 +78,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	-- Build imeshes for multiple passes
 	local up = EyeAngles():Up()
 	local right = EyeAngles():Right()
-	gwater2.renderer:BuildIMeshes(gwater2.solver, radius * 0.5)
+	gwater2.renderer:BuildIMeshes(gwater2.solver, 1)
 	--render.SetMaterial(Material("models/props_combine/combine_interface_disp"))
 	--gwater2.renderer:DrawIMeshes()
 	
@@ -110,7 +110,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	for i = 1, blur_passes:GetInt() do
 		-- Blur X
 		--local scale = (5 - i) * 0.05
-		local scale = 0.15 / i
+		local scale = 0.3 / i
 		water_blur:SetTexture("$normaltexture", cache_normals)	
 		water_blur:SetVector("$scrs", Vector(scale / scrw, 0))
 		render.SetRenderTarget(cache_bloom)	-- Bloom texture resolution is significantly lower than screen res, enabling for a faster blur

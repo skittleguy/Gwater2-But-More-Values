@@ -42,8 +42,10 @@ local options = {
 }
 
 -- garry, sincerely... fuck you
-local volumetric = Material("gwater2/volumetric")
-timer.Simple(0, function() volumetric:SetFloat("$alpha", options.absorption:GetBool() and 0.15 or 0) end)
+timer.Simple(0, function() 
+	Material("gwater2/volumetric"):SetFloat("$alpha", options.absorption:GetBool() and 0.15 or 0) 
+	Material("gwater2/normals"):SetInt("$depthfix", options.depth_fix and 1 or 0)
+end)
 
 options.solver:SetParameter("gravity", 15.24)	-- flip gravity because y axis positive is down
 options.solver:SetParameter("timescale", 10)	-- pixel space is small, so we need to speed up the simulation
@@ -140,7 +142,6 @@ local function set_gwater_parameter(option, val)
 		gwater2.solver:SetParameter("surface_tension", 0.01 / val^4)	-- not sure why this is a power of 4. might be proportional to volume
 		gwater2.solver:SetParameter("fluid_rest_distance", val * 0.65)
 		gwater2.solver:SetParameter("collision_distance", val * 0.5)
-		gwater2.solver:SetParameter("anisotropy_max", 1.5 / val)
 		
 		if val > 15 then val = 15 end	-- explody
 		options.solver:SetParameter("surface_tension", 0.01 / val^4)

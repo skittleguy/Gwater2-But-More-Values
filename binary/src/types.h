@@ -3,6 +3,8 @@
 
 // Float structures originally provided by AndrewEathan (https://mariluu.hehe.moe/)
 
+// TODO: Remove. These structs are useless as the Vector library provided by sourceengine does the same thing
+
 //Float3 structure, holds 3 floats, X, Y, and Z
 struct float3 {
 	float x, y, z;
