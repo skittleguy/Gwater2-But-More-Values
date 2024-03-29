@@ -8,10 +8,11 @@ struct VS_INPUT {
 
 struct VS_OUTPUT {
 	float4 projPosSetup	: POSITION;
-	float4 coord		: TEXCOORD0;
+	float2 coord		: TEXCOORD0;
 	float3 eyepos		: TEXCOORD1;
 	float3 pos			: TEXCOORD2;
 	float4x4 proj		: TEXCOORD3;	// Used in refraction
+	//float psize			: PSIZE;
 };
 
 VS_OUTPUT main(const VS_INPUT v) {

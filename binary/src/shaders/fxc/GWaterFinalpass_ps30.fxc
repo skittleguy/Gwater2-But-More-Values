@@ -14,11 +14,11 @@ sampler CUBEMAP		: register(s2);
 sampler DEPTH		: register(s3);
 
 struct PS_INPUT {
-	float2 P 		: VPOS;
-	float2 coord	: TEXCOORD0;
-	float3 eyepos	: TEXCOORD1;
-	float3 pos		: TEXCOORD2;
-	float4x4 proj	: TEXCOORD3;
+	float2 P 			: VPOS;
+	float2 coord		: TEXCOORD0;
+	float3 eyepos		: TEXCOORD1;
+	float3 pos			: TEXCOORD2;
+	float4x4 proj		: TEXCOORD3;
 };
 
 #define OFFSET float2(0.5, 0.5)
@@ -35,17 +35,17 @@ float fresnel_approx(const float3 incident, const float3 normal) {
 }
 
 float4 main(const PS_INPUT i) : COLOR {
-
 	// kill pixels outside of sphere
 	float2 offset = (i.coord - 0.5) * 2.0;
 	float radius2 = dot(offset, offset);
 	if (radius2 > 1) discard;
 
-	float3 smoothed_normal = tex2D(NORMALS, (i.P + OFFSET) / SCR_S).xyz;
+	float3 smoothed_normal = tex2D(NORMALS, i.P / SCR_S).xyz;
 	// Weight the normals forward, as the only visible part is facing the player
 	float3 view_dir = normalize(i.pos - i.eyepos);
-	smoothed_normal = normalize(smoothed_normal + view_dir * dot(-view_dir, smoothed_normal) * REFLECTANCE);
 	
+	smoothed_normal = normalize(smoothed_normal + view_dir * dot(-view_dir, smoothed_normal) * REFLECTANCE);
+
 	// Primary lighting calculations
 	float3 reflected = reflect(view_dir, smoothed_normal);
 	float phong = min(pow(max(0, dot(reflected, SUN_DIR)), 100), 1);

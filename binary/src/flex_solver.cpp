@@ -364,8 +364,8 @@ void FlexSolver::default_parameters() {
 	params->solidRestDistance = 6.5f;
 
 	params->anisotropyScale = 1.f;
-	params->anisotropyMin = 0.0f;
-	params->anisotropyMax = 0.15f;
+	params->anisotropyMin = 0.1f;
+	params->anisotropyMax = 2.f;
 	params->smoothing = 1.0f;
 
 	params->dissipation = 0.f;

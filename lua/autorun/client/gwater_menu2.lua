@@ -44,7 +44,7 @@ local options = {
 -- garry, sincerely... fuck you
 timer.Simple(0, function() 
 	Material("gwater2/volumetric"):SetFloat("$alpha", options.absorption:GetBool() and 0.15 or 0) 
-	Material("gwater2/normals"):SetInt("$depthfix", options.depth_fix and 1 or 0)
+	Material("gwater2/normals"):SetInt("$depthfix", options.depth_fix:GetBool() and 1 or 0)
 end)
 
 options.solver:SetParameter("gravity", 15.24)	-- flip gravity because y axis positive is down
@@ -407,7 +407,7 @@ concommand.Add("gwater2_menu", function()
 		presets:AddChoice("Acid", "Color:240 255 0 200\nCohesion:\nAdhesion:0.1\nViscosity:0")
 		presets:AddChoice("Blood", "Color:240 0 0 250\nCohesion:0.01\nAdhesion:0.05\nViscosity:10")
 		presets:AddChoice("Glue", "Color:230 230 230 255\nCohesion:0.03\nAdhesion:0.1\nViscosity:10")	-- yeah sure.. "glue"...
-		presets:AddChoice("Lava", "Color:255 210 0 200\nCohesion:0.1\nAdhesion:0\nViscosity:10")
+		presets:AddChoice("Lava", "Color:255 210 0 200\nCohesion:0.1\nAdhesion:0.01\nViscosity:10")
 		presets:AddChoice("Oil", "Color:0 0 0 255\nCohesion:0\nAdhesion:0\nViscosity:0")
 		presets:AddChoice("Water (Default)", "Color:\nCohesion:\nAdhesion:\nViscosity:")
 		function presets:OnSelect(index, value, data)
