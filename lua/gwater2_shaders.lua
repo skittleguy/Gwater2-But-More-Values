@@ -27,7 +27,7 @@ local antialias = GetConVar("mat_antialias")
 --[[
 hook.Add("RenderScene", "gwater2_render", function(eye_pos, eye_angles, fov)
 	cam.Start3D(eye_pos, eye_angles, fov) -- BuildIMeshes requires a 3d cam context (for frustrum culling)
-		gwater2.renderer:BuildIMeshes(gwater2.solver, gwater2.solver:GetParameter("radius") * 0.5)	
+		gwater2.renderer:BuildIMeshes(gwater2.solver, 1)	
 	cam.End3D()
 end)]]
 
@@ -35,6 +35,8 @@ end)]]
 -- gwater2 shader pipeline
 hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--PreDrawViewModels
 	if gwater2.solver:GetActiveParticles() < 1 then return end
+
+	local old_rt = render.GetRenderTarget()
 
 	--if EyePos():DistToSqr(LocalPlayer():EyePos()) > 1 then return end	-- bail if skybox is rendering (used in postdrawopaque)
 
@@ -122,7 +124,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 		render.SetRenderTarget(cache_normals)
 		render.DrawScreenQuad()
 	end
-	render.SetRenderTarget()
+	render.SetRenderTarget(old_rt)
 
 	-- Setup water material parameters
 	water:SetFloat("$radius", radius)

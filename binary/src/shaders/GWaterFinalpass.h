@@ -56,7 +56,7 @@ SHADER_DRAW {
 	DYNAMIC_STATE {
 		// constants
 		int scr_x, scr_y = 1; pShaderAPI->GetBackBufferDimensions(scr_x, scr_y);
-		const float scr_s[2] = {scr_x, scr_y};
+		const float scr_s[2] = {1.0 / scr_x, 1.0 / scr_y};
 		float radius = params[RADIUS]->GetFloatValue();
 		float ior = params[IOR]->GetFloatValue();
 		float reflectance = params[REFLECTANCE]->GetFloatValue();
