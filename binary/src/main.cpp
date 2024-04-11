@@ -9,6 +9,14 @@
 #include "flex_renderer.h"
 #include "shader_inject.h"
 
+// Sys_LoadInterface symbols
+/*#include "strtools_unicode.cpp"
+#include "utlbuffer.cpp"
+#include "utlstring.cpp"
+#include "characterset.cpp"
+#include "strtools.cpp"
+#include "interface.cpp"*/
+
 using namespace GarrysMod::Lua;
 
 NvFlexLibrary* FLEX_LIBRARY;	// Main FleX library, handles all solvers. ("The heart of all that is FleX" - andreweathan)

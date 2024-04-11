@@ -1,5 +1,5 @@
 AddCSLuaFile()
-
+do return end
 if SERVER then 
 	util.AddNetworkString("gwater2_offsetprop")
 	/*local valid_materials = {
