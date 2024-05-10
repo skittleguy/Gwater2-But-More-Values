@@ -26,23 +26,23 @@ void FlexRenderer::build_imeshes(FlexSolver* solver, float radius) {
 	MatrixMultiply(projection_matrix, view_matrix, view_projection_matrix);
 	
 	// Get eye position for sprite calculations
-	Vector ep; render_context->GetWorldSpaceCameraPosition(&ep);
-	float3 eye_pos = float3(ep.x, ep.y, ep.z);
+	Vector eye_pos; render_context->GetWorldSpaceCameraPosition(&eye_pos);
 
 	float u[3] = { 0.5 - SQRT3 / 2, 0.5, 0.5 + SQRT3 / 2};
 	float v[3] = { 1, -0.5, 1 };
 
-	float4* particle_positions = solver->get_parameter("smoothing") != 0 ? (float4*)solver->get_host("particle_smooth") : (float4*)solver->get_host("particle_pos");
-	float4* particle_ani1 = solver->get_parameter("anisotropy_scale") > 0 ? (float4*)solver->get_host("particle_ani1") : 0;
-	float4* particle_ani2 = solver->get_parameter("anisotropy_scale") > 0 ? (float4*)solver->get_host("particle_ani2") : 0;
-	float4* particle_ani3 = solver->get_parameter("anisotropy_scale") > 0 ? (float4*)solver->get_host("particle_ani3") : 0;
+	Vector4D* particle_positions = solver->get_parameter("smoothing") != 0 ? (Vector4D*)solver->get_host("particle_smooth") : (Vector4D*)solver->get_host("particle_pos");
+	Vector4D* particle_ani1 = (Vector4D*)solver->get_host("particle_ani1");
+	Vector4D* particle_ani2 = (Vector4D*)solver->get_host("particle_ani2");
+	Vector4D* particle_ani3 = (Vector4D*)solver->get_host("particle_ani3");
+	bool particle_ani = solver->get_parameter("anisotropy_scale") != 0;
 
 	CMeshBuilder mesh_builder;
 	for (int particle_index = 0; particle_index < solver->get_active_particles();) {
 		IMesh* imesh = render_context->CreateStaticMesh(VERTEX_POSITION | VERTEX_NORMAL | VERTEX_TEXCOORD0_2D, "");
 		mesh_builder.Begin(imesh, MATERIAL_TRIANGLES, MAX_PRIMATIVES);
 			for (int primative = 0; primative < MAX_PRIMATIVES && particle_index < solver->get_active_particles(); particle_index++) {
-				float3 particle_pos = particle_positions[particle_index].xyz();
+				Vector particle_pos = particle_positions[particle_index].AsVector3D();
 
 				// Frustrum culling
 				Vector4D dst;
@@ -52,27 +52,38 @@ void FlexRenderer::build_imeshes(FlexSolver* solver, float radius) {
 				}
 
 				// calculate triangle rotation
-				float3 forward = Normalize(particle_pos - eye_pos);
-				float3 right = Normalize(forward.cross(float3(0, 0, 1)));
-				float3 up = right.cross(forward);
-				float3 local_pos[3] = { (-up - right * SQRT3), up * 2.0, (-up + right * SQRT3) };
+				Vector forward = (particle_pos - eye_pos).Normalized();
+				Vector right = forward.Cross(Vector(0, 0, 1)).Normalized();
+				Vector up = right.Cross(forward);
+				Vector local_pos[3] = { (-up - right * SQRT3), up * 2.0, (-up + right * SQRT3) };
 
-				float4 ani1 = particle_ani1 ? particle_ani1[particle_index] : 0;
-				float4 ani2 = particle_ani2 ? particle_ani2[particle_index] : 0;
-				float4 ani3 = particle_ani3 ? particle_ani3[particle_index] : 0;
+				if (particle_ani) {
+					Vector4D ani1 = particle_ani1[particle_index];
+					Vector4D ani2 = particle_ani2[particle_index];
+					Vector4D ani3 = particle_ani3[particle_index];
 
-				for (int i = 0; i < 3; i++) {
-					// Anisotropy warping (code provided by Spanky)
-					float3 pos_ani = local_pos[i];
-					pos_ani = pos_ani + ani1.xyz() * (local_pos[i].dot(ani1.xyz()) * ani1.w);
-					pos_ani = pos_ani + ani2.xyz() * (local_pos[i].dot(ani2.xyz()) * ani2.w);
-					pos_ani = pos_ani + ani3.xyz() * (local_pos[i].dot(ani3.xyz()) * ani3.w);
+					for (int i = 0; i < 3; i++) {
+						// Anisotropy warping (code provided by Spanky)
+						Vector pos_ani = local_pos[i];
+						pos_ani = pos_ani + ani1.AsVector3D() * (local_pos[i].Dot(ani1.AsVector3D()) * ani1.w);
+						pos_ani = pos_ani + ani2.AsVector3D() * (local_pos[i].Dot(ani2.AsVector3D()) * ani2.w);
+						pos_ani = pos_ani + ani3.AsVector3D() * (local_pos[i].Dot(ani3.AsVector3D()) * ani3.w);
 
-					float3 world_pos = particle_pos + pos_ani * radius;
-					mesh_builder.TexCoord2f(0, u[i], v[i]);
-					mesh_builder.Position3f(world_pos.x, world_pos.y, world_pos.z);
-					mesh_builder.Normal3f(-forward.x, -forward.y, -forward.z);
-					mesh_builder.AdvanceVertex();
+						Vector world_pos = particle_pos + pos_ani * radius;
+						mesh_builder.TexCoord2f(0, u[i], v[i]);
+						mesh_builder.Position3f(world_pos.x, world_pos.y, world_pos.z);
+						mesh_builder.Normal3f(-forward.x, -forward.y, -forward.z);
+						mesh_builder.AdvanceVertex();
+					}
+				} else {
+					for (int i = 0; i < 3; i++) { // Same as above w/o anisotropy warping
+						Vector pos_ani = local_pos[i];
+						Vector world_pos = particle_pos + pos_ani * radius;
+						mesh_builder.TexCoord2f(0, u[i], v[i]);
+						mesh_builder.Position3f(world_pos.x, world_pos.y, world_pos.z);
+						mesh_builder.Normal3f(-forward.x, -forward.y, -forward.z);
+						mesh_builder.AdvanceVertex();
+					}
 				}
 
 				primative += 1;

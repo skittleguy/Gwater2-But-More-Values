@@ -1,6 +1,7 @@
 #pragma once
 #include <NvFlex.h>
-#include "types.h"
+#include "mathlib/vector.h"
+#include "mathlib/vector4d.h"
 
 // TODO: Rewrite this class as FlexMesh
 // This class will handle all flex geometry related data. Think of it as a wrapper to flex collisions
@@ -16,13 +17,13 @@ private:
 	NvFlexTriangleMeshId id;
 
 public:
-	float4 pos = float4{};
-	float4 ang = float4{};
+	Vector4D pos = Vector4D(0, 0, 0, 0);
+	Vector4D ang = Vector4D(0, 0, 0, 1);
 	
 	Mesh(NvFlexLibrary* lib);
 	~Mesh();
 	NvFlexTriangleMeshId get_id() { return this->id; }
-	bool init_concave(float3* verts, int num_verts); // returns true on success, false otherwise
-	bool init_convex(float3* verts, int num_verts);	// ^
-	void update(float3 pos, float3 ang);
+	bool init_concave(Vector* verts, int num_verts); // returns true on success, false otherwise
+	bool init_convex(Vector* verts, int num_verts);	// ^
+	void update(Vector pos, QAngle ang);
 };

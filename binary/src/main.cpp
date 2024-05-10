@@ -30,23 +30,17 @@ int FLEXRENDERER_METATABLE = 0;
 
 #define GET_FLEXSOLVER(stack_pos) LUA->GetUserType<FlexSolver>(stack_pos, FLEXSOLVER_METATABLE)
 
-// todo: probably need to move these defines somewhere else or remove them
-float3 VectorTofloat3(Vector v) {
-	return float3(v.x, v.y, v.z);
-}
-
 // Warning: allocates memory which MUST be freed!
 // todo: this is shit. the physics mesh library should be rewritten
-float3* TableTofloat3(ILuaBase* LUA) {
+Vector* TableTofloat3(ILuaBase* LUA) {
 	const int num_vertices = LUA->ObjLen(2);
-	float3* verts = reinterpret_cast<float3*>(malloc(sizeof(float3) * num_vertices));
+	Vector* verts = reinterpret_cast<Vector*>(malloc(sizeof(Vector) * num_vertices));
 	for (int i = 0; i < num_vertices; i++) {
 		LUA->PushNumber(i + 1);   //lua is 1 indexed
 		LUA->GetTable(2);
 		LUA->GetField(-1, "pos");
 
-		Vector pos = LUA->GetType(-2) == Type::Vector ? LUA->GetVector(-2) : LUA->GetVector();
-		verts[i] = float3(pos.x, pos.y, pos.z);
+		verts[i] = LUA->GetType(-2) == Type::Vector ? LUA->GetVector(-2) : LUA->GetVector();
 		LUA->Pop(2); //pop table & position
 	}
 
@@ -79,10 +73,7 @@ LUA_FUNCTION(FLEXSOLVER_AddParticle) {
 	Vector vel = LUA->GetVector(3);
 	float inv_mass = 1.f / (float)LUA->GetNumber(5);	// FleX uses inverse mass for their calculations
 	
-	flex->add_particle(
-		float4(pos.x, pos.y, pos.z, inv_mass), 
-		float3(vel.x, vel.y, vel.z)
-	);
+	flex->add_particle(Vector4D(pos.x, pos.y, pos.z, inv_mass), vel);
 
 	return 0;
 }
@@ -111,14 +102,14 @@ LUA_FUNCTION(FLEXSOLVER_AddConcaveMesh) {
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 	Mesh* mesh = new Mesh(FLEX_LIBRARY);
-	float3* verts = TableTofloat3(LUA);
+	Vector* verts = TableTofloat3(LUA);
 	if (!mesh->init_concave(verts, LUA->ObjLen(2))) {
 		free(verts);
 		LUA->ThrowError("Tried to add concave mesh with invalid data (NumVertices is not a multiple of 3!)");
 		return 0;
 	}
 	free(verts);
-	mesh->update(float3(pos.x, pos.y, pos.z), float3(ang.x, ang.y, ang.z));
+	mesh->update(pos, ang);
 	flex->add_mesh(mesh, eNvFlexShapeTriangleMesh, true);
 
 	return 0;
@@ -136,7 +127,7 @@ LUA_FUNCTION(FLEXSOLVER_AddConvexMesh) {
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 	Mesh* mesh = new Mesh(FLEX_LIBRARY);
-	float3* verts = TableTofloat3(LUA);
+	Vector* verts = TableTofloat3(LUA);
 	if (!mesh->init_convex(verts, LUA->ObjLen(2))) {
 		free(verts);
 		LUA->ThrowError("Tried to add convex mesh with invalid data (NumVertices is not a multiple of 3!)");
@@ -144,7 +135,7 @@ LUA_FUNCTION(FLEXSOLVER_AddConvexMesh) {
 	}
 	free(verts);
 
-	mesh->update(float3(pos.x, pos.y, pos.z), float3(ang.x, ang.y, ang.z));
+	mesh->update(pos, ang);
 	flex->add_mesh(mesh, eNvFlexShapeConvexMesh, true);
 
 	return 0;
@@ -197,7 +188,7 @@ LUA_FUNCTION(FLEXSOLVER_UpdateMesh) {
 	Vector pos = LUA->GetVector(3);
 	QAngle ang = LUA->GetAngle(4);
 
-	flex->update_mesh(LUA->GetNumber(2), float3(pos.x, pos.y, pos.z), float3(ang.x, ang.y, ang.z));
+	flex->update_mesh(LUA->GetNumber(2), pos, ang);
 
 	return 0;
 }
@@ -224,11 +215,11 @@ LUA_FUNCTION(FLEXSOLVER_RenderParticles) {
 	LUA->CheckType(2, Type::Function);
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
-	float4* host = (float4*)flex->get_host("diffuse_pos");
+	Vector4D* host = (Vector4D*)flex->get_host("diffuse_pos");
 	for (int i = 0; i < ((int*)flex->get_host("diffuse_active"))[0]; i++) {
 		// render function
 		LUA->Push(2);
-		LUA->PushVector(Vector(host[i].x, host[i].y, host[i].z));
+		LUA->PushVector(host[i].AsVector3D());
 		LUA->PushNumber(host[i].w);
 		LUA->Call(2, 0);
 	}
@@ -263,7 +254,7 @@ LUA_FUNCTION(FLEXSOLVER_AddMapMesh) {
 
 	BSPMap map = BSPMap(data, filesize);
 	Mesh* mesh = new Mesh(FLEX_LIBRARY);
-	if (!mesh->init_concave((float3*)map.GetVertices(), map.GetNumTris() * 3)) {
+	if (!mesh->init_concave((Vector*)map.GetVertices(), map.GetNumTris() * 3)) {
 		free(data);
 		LUA->ThrowError("Tried to add map mesh with invalid data (NumVertices is 0 or not a multiple of 3!)");
 
@@ -381,20 +372,20 @@ LUA_FUNCTION(FLEXSOLVER_AddCube) {
 
 	//gmod Vector and fleX float4
 	FlexSolver* flex = GET_FLEXSOLVER(1);
-	float3 gmodPos = VectorTofloat3(LUA->GetVector(2));		//pos
-	float3 gmodVel = VectorTofloat3(LUA->GetVector(3));		//vel
-	float3 gmodSize = VectorTofloat3(LUA->GetVector(4));	//size
+	Vector gmodPos = LUA->GetVector(2);		//pos
+	Vector gmodVel = LUA->GetVector(3);		//vel
+	Vector gmodSize = LUA->GetVector(4);	//size
 	float size = LUA->GetNumber(5);			//size apart
 
 	gmodSize = gmodSize / 2.f;
-	gmodPos = gmodPos + float3(size) / 2.0;
+	gmodPos = gmodPos + Vector(size, size, size) / 2.0;
 
 	for (float z = -gmodSize.z; z < gmodSize.z; z++) {
 		for (float y = -gmodSize.y; y < gmodSize.y; y++) {
 			for (float x = -gmodSize.x; x < gmodSize.x; x++) {
-				float3 newPos = float3(x, y, z) * size + gmodPos;
+				Vector newPos = Vector(x, y, z) * size + gmodPos;
 
-				flex->add_particle(float4(newPos.x, newPos.y, newPos.z, 1), gmodVel);
+				flex->add_particle(Vector4D(newPos.x, newPos.y, newPos.z, 1), gmodVel);
 			}
 		}
 	}
@@ -409,7 +400,7 @@ LUA_FUNCTION(FLEXSOLVER_InitBounds) {
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 
 	if (LUA->GetType(2) == Type::Vector && LUA->GetType(3) == Type::Vector) {
-		flex->enable_bounds(VectorTofloat3(LUA->GetVector(2)), VectorTofloat3(LUA->GetVector(3)));
+		flex->enable_bounds(LUA->GetVector(2), LUA->GetVector(3));
 	} else {
 		flex->disable_bounds();
 	}

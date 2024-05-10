@@ -3,7 +3,6 @@
 #include <map>
 #include <vector>
 #include <string>
-#include "types.h"	// float3 & float4
 #include "mesh.h"
 
 // Struct that holds FleX solver data
@@ -21,8 +20,6 @@ private:
 
 	void add_buffer(std::string name, int type, int count);
 	inline NvFlexBuffer* get_buffer(std::string name);
-	void default_parameters();
-	void map_parameters(NvFlexParams* buffer);
 
 public:
 	void set_active_particles(int n);
@@ -33,15 +30,15 @@ public:
 	// Returns a host (pointer of float4s) where FleX buffer data is transferred to. 
 	void* get_host(std::string name);
 
-	void add_particle(float4 pos, float3 vel);
+	void add_particle(Vector4D pos, Vector vel);
 	bool pretick(NvFlexMapFlags wait);	// Handles transfer of FleX buffers to hosts & updates mesh positions/angles
 	void tick(float dt);
 	void add_mesh(Mesh* mesh, NvFlexCollisionShapeType mesh_type, bool dynamic);
 	void remove_mesh(int index);
-	void update_mesh(int index, float3 new_pos, float3 new_ang);
+	void update_mesh(int index, Vector new_pos, QAngle new_ang);
 	bool set_parameter(std::string param, float number);	// Returns true on success, false otherwise
 	float get_parameter(std::string param);	// returns NaN on invalid parameter
-	void enable_bounds(float3 mins, float3 maxs);
+	void enable_bounds(Vector mins, Vector maxs);
 	void disable_bounds();
 
 	FlexSolver(NvFlexLibrary* library, int particles);

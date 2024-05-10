@@ -40,20 +40,22 @@ void* FlexSolver::get_host(std::string name) {
 	return hosts[name];
 }
 
-void FlexSolver::add_particle(float4 pos, float3 vel) {
+void FlexSolver::add_particle(Vector4D pos, Vector vel) {
 	if (solver == nullptr) return;
-
 	if (get_active_particles() >= get_max_particles()) return;
 
 	// map buffers for reading / writing
-	float4* positions = (float4*)NvFlexMap(get_buffer("particle_pos"), eNvFlexMapWait);
-	float3* velocities = (float3*)NvFlexMap(get_buffer("particle_vel"), eNvFlexMapWait);
+	Vector4D* positions = (Vector4D*)NvFlexMap(get_buffer("particle_pos"), eNvFlexMapWait);
+	Vector* velocities = (Vector*)NvFlexMap(get_buffer("particle_vel"), eNvFlexMapWait);
 	int* phases = (int*)NvFlexMap(get_buffer("particle_phase"), eNvFlexMapWait);
 	int* active = (int*)NvFlexMap(get_buffer("particle_active"), eNvFlexMapWait);
 
 	// Add particle
 	int n = copy_description->elementCount++;		// n = particle_count; n++
-	((float4*)hosts["particle_smooth"])[n] = pos;	// avoids visual flashing. No need to call NvFlexMap as this is only a 'getter' buffer
+	((Vector4D*)hosts["particle_smooth"])[n] = pos;	// avoids visual flashing. No need to call NvFlexMap as this is only a 'getter' buffer
+	((Vector4D*)hosts["particle_ani1"])[n] = Vector4D();
+	((Vector4D*)hosts["particle_ani2"])[n] = Vector4D();
+	((Vector4D*)hosts["particle_ani3"])[n] = Vector4D();
 	positions[n] = pos;
 	velocities[n] = vel;
 	phases[n] = NvFlexMakePhase(0, eNvFlexPhaseSelfCollide | eNvFlexPhaseFluid);
@@ -72,12 +74,12 @@ bool FlexSolver::pretick(NvFlexMapFlags wait) {
 	if (solver == nullptr) return false;
 
 	// Update collider positions
-	float4* pos = (float4*)NvFlexMap(get_buffer("geometry_pos"), wait);
+	Vector4D* pos = (Vector4D*)NvFlexMap(get_buffer("geometry_pos"), wait);
 	if (!pos) return false;
 
-	float4* ppos = (float4*)NvFlexMap(get_buffer("geometry_prevpos"), eNvFlexMapWait);
-	float4* ang = (float4*)NvFlexMap(get_buffer("geometry_quat"), eNvFlexMapWait);
-	float4* pang = (float4*)NvFlexMap(get_buffer("geometry_prevquat"), eNvFlexMapWait);
+	Vector4D* ppos = (Vector4D*)NvFlexMap(get_buffer("geometry_prevpos"), eNvFlexMapWait);
+	Vector4D* ang = (Vector4D*)NvFlexMap(get_buffer("geometry_quat"), eNvFlexMapWait);
+	Vector4D* pang = (Vector4D*)NvFlexMap(get_buffer("geometry_prevquat"), eNvFlexMapWait);
 	for (int i = 0; i < meshes.size(); i++) {
 		Mesh* mesh = meshes[i];
 		ppos[i] = pos[i];
@@ -135,10 +137,10 @@ void FlexSolver::add_mesh(Mesh* mesh, NvFlexCollisionShapeType mesh_type, bool d
 	meshes.push_back(mesh);
 
 	NvFlexCollisionGeometry* geo = (NvFlexCollisionGeometry*)NvFlexMap(get_buffer("geometry"), eNvFlexMapWait);
-	float4* pos = (float4*)NvFlexMap(get_buffer("geometry_pos"), eNvFlexMapWait);
-	float4* ppos = (float4*)NvFlexMap(get_buffer("geometry_prevpos"), eNvFlexMapWait);
-	float4* ang = (float4*)NvFlexMap(get_buffer("geometry_quat"), eNvFlexMapWait);
-	float4* pang = (float4*)NvFlexMap(get_buffer("geometry_prevquat"), eNvFlexMapWait);
+	Vector4D* pos = (Vector4D*)NvFlexMap(get_buffer("geometry_pos"), eNvFlexMapWait);
+	Vector4D* ppos = (Vector4D*)NvFlexMap(get_buffer("geometry_prevpos"), eNvFlexMapWait);
+	Vector4D* ang = (Vector4D*)NvFlexMap(get_buffer("geometry_quat"), eNvFlexMapWait);
+	Vector4D* pang = (Vector4D*)NvFlexMap(get_buffer("geometry_prevquat"), eNvFlexMapWait);
 	int* flag = (int*)NvFlexMap(get_buffer("geometry_flags"), eNvFlexMapWait);
 
 	flag[index] = NvFlexMakeShapeFlags(mesh_type, dynamic);
@@ -172,10 +174,10 @@ void FlexSolver::remove_mesh(int index) {
 	delete meshes[index];
 
 	NvFlexCollisionGeometry* geo = (NvFlexCollisionGeometry*)NvFlexMap(get_buffer("geometry"), eNvFlexMapWait);
-	float4* pos = (float4*)NvFlexMap(get_buffer("geometry_pos"), eNvFlexMapWait);
-	float4* ppos = (float4*)NvFlexMap(get_buffer("geometry_prevpos"), eNvFlexMapWait);
-	float4* ang = (float4*)NvFlexMap(get_buffer("geometry_quat"), eNvFlexMapWait);
-	float4* pang = (float4*)NvFlexMap(get_buffer("geometry_prevquat"), eNvFlexMapWait);
+	Vector4D* pos = (Vector4D*)NvFlexMap(get_buffer("geometry_pos"), eNvFlexMapWait);
+	Vector4D* ppos = (Vector4D*)NvFlexMap(get_buffer("geometry_prevpos"), eNvFlexMapWait);
+	Vector4D* ang = (Vector4D*)NvFlexMap(get_buffer("geometry_quat"), eNvFlexMapWait);
+	Vector4D* pang = (Vector4D*)NvFlexMap(get_buffer("geometry_prevquat"), eNvFlexMapWait);
 	int* flag = (int*)NvFlexMap(get_buffer("geometry_flags"), eNvFlexMapWait);
 
 	// "Remove" prop by shifting everything down onto it
@@ -200,7 +202,7 @@ void FlexSolver::remove_mesh(int index) {
 }
 
 // sets the position and angles of a mesh object. The inputted angle is Eular
-void FlexSolver::update_mesh(int index, float3 new_pos, float3 new_ang) {
+void FlexSolver::update_mesh(int index, Vector new_pos, QAngle new_ang) {
 	if (solver == nullptr) return;
 	
 	meshes[index]->update(new_pos, new_ang);
@@ -234,7 +236,7 @@ float FlexSolver::get_parameter(std::string param) {
 }
 
 // Initializes a box around a FleX solver with a mins and maxs
-void FlexSolver::enable_bounds(float3 mins, float3 maxs) {
+void FlexSolver::enable_bounds(Vector mins, Vector maxs) {
 
 	// Right
 	params->planes[0][0] = 1.f;
@@ -290,58 +292,6 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	this->library = library;
 	solver = NvFlexCreateSolver(library, &solver_description);
 
-	default_parameters();
-	map_parameters(params);
-
-	add_buffer("particle_pos", sizeof(float4), particles);
-	add_buffer("particle_vel", sizeof(float3), particles);
-	add_buffer("particle_phase", sizeof(int), particles);
-	add_buffer("particle_active", sizeof(int), particles);
-	add_buffer("particle_smooth", sizeof(float4), particles);
-
-	add_buffer("geometry", sizeof(NvFlexCollisionGeometry), MAX_COLLIDERS);
-	add_buffer("geometry_pos", sizeof(float4), MAX_COLLIDERS);
-	add_buffer("geometry_prevpos", sizeof(float4), MAX_COLLIDERS);
-	add_buffer("geometry_quat", sizeof(float4), MAX_COLLIDERS);
-	add_buffer("geometry_prevquat", sizeof(float4), MAX_COLLIDERS);
-	add_buffer("geometry_flags", sizeof(int), MAX_COLLIDERS);
-
-	add_buffer("contact_planes", sizeof(float4), particles * get_max_contacts());
-	add_buffer("contact_vel", sizeof(float4), particles * get_max_contacts());
-	add_buffer("contact_count", sizeof(int), particles);
-	add_buffer("contact_indices", sizeof(int), particles);
-
-	add_buffer("particle_ani1", sizeof(float4), particles);
-	add_buffer("particle_ani2", sizeof(float4), particles);
-	add_buffer("particle_ani3", sizeof(float4), particles);
-
-	add_buffer("diffuse_pos", sizeof(float4), solver_description.maxDiffuseParticles);
-	add_buffer("diffuse_active", sizeof(int), 1);	// "this may be updated by the GPU which is why it is passed back in a buffer"
-};
-
-// Free memory
-FlexSolver::~FlexSolver() {
-	if (solver == nullptr) return;
-
-	// Free props
-	for (Mesh* mesh : meshes) 
-		delete mesh;
-	meshes.clear();
-
-	delete param_map["substeps"];		// Seperate since its externally stored & not a default parameter
-	delete param_map["timescale"];		// ^
-
-	// Free flex buffers
-	for (std::pair<std::string, NvFlexBuffer*> buffer : buffers) 
-		NvFlexFreeBuffer(buffer.second);
-
-	NvFlexDestroySolver(solver);	// bye bye solver
-	solver = nullptr;
-}
-
-
-// TODO: Remove this, it sucks. Frankly a switch-case is probably better
-void FlexSolver::default_parameters() {
 	params = new NvFlexParams();
 	params->gravity[0] = 0.0f;
 	params->gravity[1] = 0.0f;
@@ -395,55 +345,93 @@ void FlexSolver::default_parameters() {
 	params->diffuseLifetime = 10.0f;
 
 	params->numPlanes = 0;
-};
 
-void FlexSolver::map_parameters(NvFlexParams* buffer) {
-	param_map["gravity"] = &(buffer->gravity[2]);
-
-	param_map["radius"] = &buffer->radius;
-	param_map["viscosity"] = &buffer->viscosity;
-	param_map["dynamic_friction"] = &buffer->dynamicFriction;
-	param_map["static_friction"] = &buffer->staticFriction;
-	param_map["particle_friction"] = &buffer->particleFriction;
-	param_map["free_surface_drag"] = &buffer->freeSurfaceDrag;
-	param_map["drag"] = &buffer->drag;
-	param_map["lift"] = &buffer->lift;
-	//param_map["iterations"] = &buffer->numIterations;				// integer, cant map
-	param_map["fluid_rest_distance"] = &buffer->fluidRestDistance;
-	param_map["solid_rest_distance"] = &buffer->solidRestDistance;
-
-	param_map["anisotropy_scale"] = &buffer->anisotropyScale;
-	param_map["anisotropy_min"] = &buffer->anisotropyMin;
-	param_map["anisotropy_max"] = &buffer->anisotropyMax;
-	param_map["smoothing"] = &buffer->smoothing;
-
-	param_map["dissipation"] = &buffer->dissipation;
-	param_map["damping"] = &buffer->damping;
-	param_map["particle_collision_margin"] = &buffer->particleCollisionMargin;
-	param_map["shape_collision_margin"] = &buffer->shapeCollisionMargin;
-	param_map["collision_distance"] = &buffer->collisionDistance;
-	param_map["sleep_threshold"] = &buffer->sleepThreshold;
-	param_map["shock_propagation"] = &buffer->shockPropagation;
-	param_map["restitution"] = &buffer->restitution;
-
-	param_map["max_speed"] = &buffer->maxSpeed;
-	param_map["max_acceleration"] = &buffer->maxAcceleration;	
-	//param_map["relaxation_mode"] = &buffer->relaxationMode;		// ^
-	param_map["relaxation_factor"] = &buffer->relaxationFactor;
-	param_map["solid_pressure"] = &buffer->solidPressure;
-	param_map["adhesion"] = &buffer->adhesion;
-	param_map["cohesion"] = &buffer->cohesion;
-	param_map["surface_tension"] = &buffer->surfaceTension;
-	param_map["vorticity_confinement"] = &buffer->vorticityConfinement;
-	param_map["buoyancy"] = &buffer->buoyancy;
-
-	param_map["diffuse_threshold"] = &buffer->diffuseThreshold;
-	param_map["diffuse_buoyancy"] = &buffer->diffuseBuoyancy;
-	param_map["diffuse_drag"] = &buffer->diffuseDrag;
-	//param_map["diffuse_ballistic"] = &buffer->diffuseBallistic;	// ^
-	param_map["diffuse_lifetime"] = &buffer->diffuseLifetime;
-
+	param_map["gravity"] = &(params->gravity[2]);
+	param_map["radius"] = &params->radius;
+	param_map["viscosity"] = &params->viscosity;
+	param_map["dynamic_friction"] = &params->dynamicFriction;
+	param_map["static_friction"] = &params->staticFriction;
+	param_map["particle_friction"] = &params->particleFriction;
+	param_map["free_surface_drag"] = &params->freeSurfaceDrag;
+	param_map["drag"] = &params->drag;
+	param_map["lift"] = &params->lift;
+	//param_map["iterations"] = &params->numIterations;				// integer, cant map
+	param_map["fluid_rest_distance"] = &params->fluidRestDistance;
+	param_map["solid_rest_distance"] = &params->solidRestDistance;
+	param_map["anisotropy_scale"] = &params->anisotropyScale;
+	param_map["anisotropy_min"] = &params->anisotropyMin;
+	param_map["anisotropy_max"] = &params->anisotropyMax;
+	param_map["smoothing"] = &params->smoothing;
+	param_map["dissipation"] = &params->dissipation;
+	param_map["damping"] = &params->damping;
+	param_map["particle_collision_margin"] = &params->particleCollisionMargin;
+	param_map["shape_collision_margin"] = &params->shapeCollisionMargin;
+	param_map["collision_distance"] = &params->collisionDistance;
+	param_map["sleep_threshold"] = &params->sleepThreshold;
+	param_map["shock_propagation"] = &params->shockPropagation;
+	param_map["restitution"] = &params->restitution;
+	param_map["max_speed"] = &params->maxSpeed;
+	param_map["max_acceleration"] = &params->maxAcceleration;
+	//param_map["relaxation_mode"] = &params->relaxationMode;		// ^
+	param_map["relaxation_factor"] = &params->relaxationFactor;
+	param_map["solid_pressure"] = &params->solidPressure;
+	param_map["adhesion"] = &params->adhesion;
+	param_map["cohesion"] = &params->cohesion;
+	param_map["surface_tension"] = &params->surfaceTension;
+	param_map["vorticity_confinement"] = &params->vorticityConfinement;
+	param_map["buoyancy"] = &params->buoyancy;
+	param_map["diffuse_threshold"] = &params->diffuseThreshold;
+	param_map["diffuse_buoyancy"] = &params->diffuseBuoyancy;
+	param_map["diffuse_drag"] = &params->diffuseDrag;
+	//param_map["diffuse_ballistic"] = &params->diffuseBallistic;	// ^
+	param_map["diffuse_lifetime"] = &params->diffuseLifetime;
 	// Extra values we store which are not stored in flexes default parameters
 	param_map["substeps"] = new float(3);
 	param_map["timescale"] = new float(1);
+
+	add_buffer("particle_pos", sizeof(Vector4D), particles);
+	add_buffer("particle_vel", sizeof(Vector), particles);
+	add_buffer("particle_phase", sizeof(int), particles);
+	add_buffer("particle_active", sizeof(int), particles);
+	add_buffer("particle_smooth", sizeof(Vector4D), particles);
+
+	add_buffer("geometry", sizeof(NvFlexCollisionGeometry), MAX_COLLIDERS);
+	add_buffer("geometry_pos", sizeof(Vector4D), MAX_COLLIDERS);
+	add_buffer("geometry_prevpos", sizeof(Vector4D), MAX_COLLIDERS);
+	add_buffer("geometry_quat", sizeof(Vector4D), MAX_COLLIDERS);
+	add_buffer("geometry_prevquat", sizeof(Vector4D), MAX_COLLIDERS);
+	add_buffer("geometry_flags", sizeof(int), MAX_COLLIDERS);
+
+	add_buffer("contact_planes", sizeof(Vector4D), particles * get_max_contacts());
+	add_buffer("contact_vel", sizeof(Vector4D), particles * get_max_contacts());
+	add_buffer("contact_count", sizeof(int), particles);
+	add_buffer("contact_indices", sizeof(int), particles);
+
+	add_buffer("particle_ani1", sizeof(Vector4D), particles);
+	add_buffer("particle_ani2", sizeof(Vector4D), particles);
+	add_buffer("particle_ani3", sizeof(Vector4D), particles);
+
+	add_buffer("diffuse_pos", sizeof(Vector4D), solver_description.maxDiffuseParticles);
+	add_buffer("diffuse_active", sizeof(int), 1);	// "this may be updated by the GPU which is why it is passed back in a buffer"
+};
+
+// Free memory
+FlexSolver::~FlexSolver() {
+	if (solver == nullptr) return;
+
+	// Free props
+	for (Mesh* mesh : meshes) 
+		delete mesh;
+	meshes.clear();
+
+	delete param_map["substeps"];		// Seperate since its externally stored & not a default parameter
+	delete param_map["timescale"];		// ^
+	delete params;
+
+	// Free flex buffers
+	for (std::pair<std::string, NvFlexBuffer*> buffer : buffers) 
+		NvFlexFreeBuffer(buffer.second);
+
+	NvFlexDestroySolver(solver);	// bye bye solver
+	solver = nullptr;
 }
