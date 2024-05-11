@@ -110,6 +110,7 @@ gwater2 = {
 	update_meshes = function()
 		for i = #gwater2.meshes, 1, -1 do
 			local prop = gwater2.meshes[i]
+			print(prop)
 			if !prop:IsValid() then
 				gwater2.solver:RemoveMesh(i)
 				table.remove(gwater2.meshes, i)

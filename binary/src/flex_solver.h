@@ -19,7 +19,7 @@ private:
 	std::vector<Mesh*> meshes;	// physmeshes
 
 	void add_buffer(std::string name, int type, int count);
-	inline NvFlexBuffer* get_buffer(std::string name);
+	NvFlexBuffer* get_buffer(std::string name);
 
 public:
 	void set_active_particles(int n);
@@ -31,7 +31,8 @@ public:
 	void* get_host(std::string name);
 
 	void add_particle(Vector4D pos, Vector vel);
-	bool pretick(NvFlexMapFlags wait);	// Handles transfer of FleX buffers to hosts & updates mesh positions/angles
+	void add_callback(NvFlexSolverCallback callback, NvFlexSolverCallbackStage stage);
+	bool pretick(NvFlexMapFlags wait);	// Updates mesh positions/angles & particle queues
 	void tick(float dt);
 	void add_mesh(Mesh* mesh, NvFlexCollisionShapeType mesh_type, bool dynamic);
 	void remove_mesh(int index);

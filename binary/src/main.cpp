@@ -185,10 +185,7 @@ LUA_FUNCTION(FLEXSOLVER_UpdateMesh) {
 	LUA->CheckType(4, Type::Angle);		// Prop Angle
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
-	Vector pos = LUA->GetVector(3);
-	QAngle ang = LUA->GetAngle(4);
-
-	flex->update_mesh(LUA->GetNumber(2), pos, ang);
+	flex->update_mesh(LUA->GetNumber(2), LUA->GetVector(3), LUA->GetAngle(4));
 
 	return 0;
 }
@@ -465,6 +462,22 @@ LUA_FUNCTION(NewFlexSolver) {
 	LUA->PushMetaTable(FLEXSOLVER_METATABLE);	// Add our meta functions
 	LUA->SetMetaTable(-2);
 
+	NvFlexSolverCallback callback;
+	callback.userData = LUA->GetUserdata();	// "DePriCatEd!!".. maybe add a function with identical or similar functionaliy
+	callback.function = [](NvFlexSolverCallbackParams p) {
+		// hook.Call("GW2FlexCallback", nil, FlexSolver)
+		GLOBAL_LUA->PushSpecial(SPECIAL_GLOB);
+		GLOBAL_LUA->GetField(-1, "hook");
+		GLOBAL_LUA->GetField(-1, "Call");
+		GLOBAL_LUA->PushString("GW2FlexCallback");
+		GLOBAL_LUA->PushNil();
+		GLOBAL_LUA->PushUserdata(p.userData);	// ^
+		GLOBAL_LUA->PushMetaTable(FLEXSOLVER_METATABLE);
+		GLOBAL_LUA->SetMetaTable(-2);
+		GLOBAL_LUA->PCall(3, 0, 0);
+	};
+	flex->add_callback(callback, eNvFlexStageUpdateEnd);
+
 	return 1;
 }
 
@@ -474,12 +487,6 @@ LUA_FUNCTION(NewFlexRenderer) {
 	LUA->PushMetaTable(FLEXRENDERER_METATABLE);
 	LUA->SetMetaTable(-2);
 
-	return 1;
-}
-
-// ShaderDevice is assumed to exist since if it didnt, this function wouldn't be accessable by lua
-LUA_FUNCTION(GetMSAAEnabled) {
-	LUA->PushBool(g_pHardwareConfig->IsAAEnabled());
 	return 1;
 }
 
@@ -570,7 +577,6 @@ GMOD_MODULE_OPEN() {
 	LUA->PushSpecial(SPECIAL_GLOB);
 	ADD_FUNCTION(LUA, NewFlexSolver, "FlexSolver");
 	ADD_FUNCTION(LUA, NewFlexRenderer, "FlexRenderer");
-	ADD_FUNCTION(LUA, GetMSAAEnabled, "GetMSAAEnabled");
 	LUA->Pop();
 
 	return 0;

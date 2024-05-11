@@ -141,6 +141,11 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	--render.DrawTextureToScreenRect(cache_normals, 0, 0, ScrW(), ScrH())
 end)
 
+hook.Add("GW2FlexCallback", "fuckjoff", function(flex)
+	--print(flex)
+	--print(flex.AddParticle.AddOart)
+end)
+
 --hook.Add("NeedsDepthPass", "gwater2_depth", function()
 --	DOFModeHack(true)	-- fixes npcs and stuff dissapearing
 --	return true

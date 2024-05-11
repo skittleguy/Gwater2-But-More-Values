@@ -277,6 +277,10 @@ void FlexSolver::enable_bounds(Vector mins, Vector maxs) {
 	params->numPlanes = 6;
 }
 
+void FlexSolver::add_callback(NvFlexSolverCallback callback, NvFlexSolverCallbackStage stage) {
+	NvFlexRegisterSolverCallback(solver, callback, stage);
+}
+
 void FlexSolver::disable_bounds() {
 	params->numPlanes = 0;
 }
