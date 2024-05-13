@@ -8,15 +8,15 @@
 // Struct that holds FleX solver data
 class FlexSolver {
 private:
-	NvFlexLibrary* library = nullptr;	
+	NvFlexLibrary* library = nullptr;
 	NvFlexSolver* solver = nullptr;
 	NvFlexParams* params = nullptr;
 	NvFlexCopyDesc* copy_description = new NvFlexCopyDesc();
-	NvFlexSolverDesc solver_description = NvFlexSolverDesc();
+	NvFlexSolverDesc solver_description = NvFlexSolverDesc();	// stores stuff such as max particles
 	std::map<std::string, NvFlexBuffer*> buffers;
-	std::map<std::string, float*> param_map;
+	std::map<std::string, float*> param_map; // TODO: figure out if this is the best way to do this... Would a set/get switch statement be better..?
 	std::map<std::string, void*> hosts;
-	std::vector<Mesh*> meshes;	// physmeshes
+	std::vector<FlexMesh> meshes;	// physics meshes.. not visual!
 
 	void add_buffer(std::string name, int type, int count);
 	NvFlexBuffer* get_buffer(std::string name);
@@ -31,12 +31,14 @@ public:
 	void* get_host(std::string name);
 
 	void add_particle(Vector4D pos, Vector vel);
-	void add_callback(NvFlexSolverCallback callback, NvFlexSolverCallbackStage stage);
+	
 	bool pretick(NvFlexMapFlags wait);	// Updates mesh positions/angles & particle queues
 	void tick(float dt);
-	void add_mesh(Mesh* mesh, NvFlexCollisionShapeType mesh_type, bool dynamic);
-	void remove_mesh(int index);
-	void update_mesh(int index, Vector new_pos, QAngle new_ang);
+
+	void add_mesh(FlexMesh mesh, NvFlexCollisionShapeType mesh_type, bool dynamic);
+	void remove_mesh(int id);
+	void update_mesh(int id, Vector new_pos, QAngle new_ang);
+
 	bool set_parameter(std::string param, float number);	// Returns true on success, false otherwise
 	float get_parameter(std::string param);	// returns NaN on invalid parameter
 	void enable_bounds(Vector mins, Vector maxs);

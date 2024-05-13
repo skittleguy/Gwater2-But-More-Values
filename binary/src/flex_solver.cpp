@@ -73,21 +73,22 @@ void FlexSolver::add_particle(Vector4D pos, Vector vel) {
 bool FlexSolver::pretick(NvFlexMapFlags wait) {
 	if (solver == nullptr) return false;
 
-	// Update collider positions
 	Vector4D* pos = (Vector4D*)NvFlexMap(get_buffer("geometry_pos"), wait);
 	if (!pos) return false;
 
 	Vector4D* ppos = (Vector4D*)NvFlexMap(get_buffer("geometry_prevpos"), eNvFlexMapWait);
 	Vector4D* ang = (Vector4D*)NvFlexMap(get_buffer("geometry_quat"), eNvFlexMapWait);
 	Vector4D* pang = (Vector4D*)NvFlexMap(get_buffer("geometry_prevquat"), eNvFlexMapWait);
+
+	// Update collider positions
 	for (int i = 0; i < meshes.size(); i++) {
-		Mesh* mesh = meshes[i];
 		ppos[i] = pos[i];
-		pos[i] = mesh->pos;
+		pos[i] = meshes[i].get_pos();
 
 		pang[i] = ang[i];
-		ang[i] = mesh->ang;
+		ang[i] = meshes[i].get_ang();
 	}
+
 	NvFlexUnmap(get_buffer("geometry_pos"));
 	NvFlexUnmap(get_buffer("geometry_prevpos"));
 	NvFlexUnmap(get_buffer("geometry_quat"));
@@ -130,7 +131,7 @@ void FlexSolver::tick(float dt) {
 	if (get_parameter("smoothing") != 0) NvFlexGetSmoothParticles(solver, get_buffer("particle_smooth"), copy_description);
 }
 
-void FlexSolver::add_mesh(Mesh* mesh, NvFlexCollisionShapeType mesh_type, bool dynamic) {
+void FlexSolver::add_mesh(FlexMesh mesh, NvFlexCollisionShapeType mesh_type, bool dynamic) {
 	if (solver == nullptr) return;
 
 	int index = meshes.size();
@@ -144,20 +145,20 @@ void FlexSolver::add_mesh(Mesh* mesh, NvFlexCollisionShapeType mesh_type, bool d
 	int* flag = (int*)NvFlexMap(get_buffer("geometry_flags"), eNvFlexMapWait);
 
 	flag[index] = NvFlexMakeShapeFlags(mesh_type, dynamic);
-	geo[index].triMesh.mesh = mesh->get_id();
+	geo[index].triMesh.mesh = mesh.get_flex_id();
 	geo[index].triMesh.scale[0] = 1;
 	geo[index].triMesh.scale[1] = 1;
 	geo[index].triMesh.scale[2] = 1;
 
-	geo[index].convexMesh.mesh = mesh->get_id();
+	geo[index].convexMesh.mesh = mesh.get_flex_id();
 	geo[index].convexMesh.scale[0] = 1;
 	geo[index].convexMesh.scale[1] = 1;
 	geo[index].convexMesh.scale[2] = 1;
 
-	pos[index] = mesh->pos;
-	ppos[index] = mesh->pos;
-	ang[index] = mesh->ang;
-	pang[index] = mesh->ang;
+	pos[index] = mesh.get_pos();
+	ppos[index] = mesh.get_pos();
+	ang[index] = mesh.get_ang();
+	pang[index] = mesh.get_ang();
 
 	NvFlexUnmap(get_buffer("geometry"));
 	NvFlexUnmap(get_buffer("geometry_pos"));
@@ -171,7 +172,7 @@ void FlexSolver::remove_mesh(int index) {
 	if (solver == nullptr) return;
 
 	// Free mesh buffers
-	delete meshes[index];
+	meshes[index].destroy(library);
 
 	NvFlexCollisionGeometry* geo = (NvFlexCollisionGeometry*)NvFlexMap(get_buffer("geometry"), eNvFlexMapWait);
 	Vector4D* pos = (Vector4D*)NvFlexMap(get_buffer("geometry_pos"), eNvFlexMapWait);
@@ -205,7 +206,8 @@ void FlexSolver::remove_mesh(int index) {
 void FlexSolver::update_mesh(int index, Vector new_pos, QAngle new_ang) {
 	if (solver == nullptr) return;
 	
-	meshes[index]->update(new_pos, new_ang);
+	meshes[index].set_pos(new_pos);
+	meshes[index].set_ang(new_ang);
 }
 
 bool FlexSolver::set_parameter(std::string param, float number) {
@@ -275,10 +277,6 @@ void FlexSolver::enable_bounds(Vector mins, Vector maxs) {
 	params->planes[5][3] = maxs.z;
 
 	params->numPlanes = 6;
-}
-
-void FlexSolver::add_callback(NvFlexSolverCallback callback, NvFlexSolverCallbackStage stage) {
-	NvFlexRegisterSolverCallback(solver, callback, stage);
 }
 
 void FlexSolver::disable_bounds() {
@@ -424,8 +422,8 @@ FlexSolver::~FlexSolver() {
 	if (solver == nullptr) return;
 
 	// Free props
-	for (Mesh* mesh : meshes) 
-		delete mesh;
+	for (FlexMesh mesh : meshes)
+		mesh.destroy(library);
 	meshes.clear();
 
 	delete param_map["substeps"];		// Seperate since its externally stored & not a default parameter

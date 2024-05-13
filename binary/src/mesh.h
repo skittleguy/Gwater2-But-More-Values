@@ -2,28 +2,32 @@
 #include <NvFlex.h>
 #include "mathlib/vector.h"
 #include "mathlib/vector4d.h"
+#include <vector>
 
-// TODO: Rewrite this class as FlexMesh
-// This class will handle all flex geometry related data. Think of it as a wrapper to flex collisions
-// The idea is that these will be controlled completely by lua
-// CONSTRUCTION AND DESTRUCTION OF THESE OBJECTS MUST NOT HAPPEN WITHIN THE FLEXSOLVER CLASS. THESE ARE COMPLETELY SEPARATE AND SHOULD BE HANDLED BY LUA!
-// This class should be passed INTO the FlexSolver class as an argument into an array. If the memory becomes invalidated, it will simply be removed by the FlexSolver in pre_tick
-
-class Mesh {
+// Handles colliders in FleX
+class FlexMesh {
 private:
-	NvFlexLibrary* library = nullptr;
+	int mesh_id;	// id associated with the entity its attached to in source, as some physmeshes have multiple colliders (eg. ragdolls)
+	NvFlexTriangleMeshId flex_id;
 	NvFlexBuffer* vertices = nullptr;
 	NvFlexBuffer* indices = nullptr;
-	NvFlexTriangleMeshId id;
+
+	Vector4D pos = Vector4D(0, 0, 0, 0);
+	Vector4D ang = Vector4D(0, 0, 0, 1); // Quaternion
 
 public:
-	Vector4D pos = Vector4D(0, 0, 0, 0);
-	Vector4D ang = Vector4D(0, 0, 0, 1);
-	
-	Mesh(NvFlexLibrary* lib);
-	~Mesh();
-	NvFlexTriangleMeshId get_id() { return this->id; }
-	bool init_concave(Vector* verts, int num_verts); // returns true on success, false otherwise
-	bool init_convex(Vector* verts, int num_verts);	// ^
-	void update(Vector pos, QAngle ang);
+	FlexMesh(int mesh_id);
+
+	bool init_concave(NvFlexLibrary* lib, std::vector<Vector> verts);	// Triangles
+	bool init_convex(NvFlexLibrary* lib, std::vector<Vector> verts);	// Triangles (turned into planes)
+	void destroy(NvFlexLibrary* lib);
+
+	void set_pos(Vector pos);
+	void set_ang(QAngle ang);
+
+	Vector4D get_pos();	// Returns a Vector4D for convenience
+	Vector4D get_ang();
+
+	NvFlexTriangleMeshId get_flex_id();
+	int get_mesh_id();
 };

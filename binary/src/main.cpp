@@ -48,7 +48,6 @@ Vector* TableTofloat3(ILuaBase* LUA) {
 }
 
 // Frees the flex solver instance from memory
-// For some reason the vram only gets freed when the LIBRARY is shut down
 LUA_FUNCTION(FLEXSOLVER_GarbageCollect) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 
@@ -58,7 +57,6 @@ LUA_FUNCTION(FLEXSOLVER_GarbageCollect) {
 	LUA->SetMetaTable(-2);
 
 	delete flex;
-	flex = nullptr;
 	return 0;
 }
 
@@ -427,7 +425,6 @@ LUA_FUNCTION(FLEXRENDERER_GarbageCollect) {
 	LUA->SetMetaTable(-2);
 
 	delete flex;
-	flex = nullptr;
 	return 0;
 }
 
@@ -435,7 +432,6 @@ LUA_FUNCTION(FLEXRENDERER_BuildIMeshes) {
 	LUA->CheckType(1, FLEXRENDERER_METATABLE);
 	LUA->CheckType(2, FLEXSOLVER_METATABLE);
 	LUA->CheckNumber(3);
-
 	GET_FLEXRENDERER(1)->build_imeshes(GET_FLEXSOLVER(2), LUA->GetNumber(3));
 
 	return 0;
@@ -462,8 +458,9 @@ LUA_FUNCTION(NewFlexSolver) {
 	LUA->PushMetaTable(FLEXSOLVER_METATABLE);	// Add our meta functions
 	LUA->SetMetaTable(-2);
 
+	/*
 	NvFlexSolverCallback callback;
-	callback.userData = LUA->GetUserdata();	// "DePriCatEd!!".. maybe add a function with identical or similar functionaliy
+	callback.userData = LUA->GetUserdata();	// "DePriCatEd!!".. maybe add a function with identical or similar functionaliy... :/
 	callback.function = [](NvFlexSolverCallbackParams p) {
 		// hook.Call("GW2FlexCallback", nil, FlexSolver)
 		GLOBAL_LUA->PushSpecial(SPECIAL_GLOB);
@@ -476,7 +473,7 @@ LUA_FUNCTION(NewFlexSolver) {
 		GLOBAL_LUA->SetMetaTable(-2);
 		GLOBAL_LUA->PCall(3, 0, 0);
 	};
-	flex->add_callback(callback, eNvFlexStageUpdateEnd);
+	flex->add_callback(callback, eNvFlexStageUpdateEnd);*/
 
 	return 1;
 }
@@ -490,6 +487,7 @@ LUA_FUNCTION(NewFlexRenderer) {
 	return 1;
 }
 
+// `mat_antialias 0` but shit
 /*LUA_FUNCTION(SetMSAAEnabled) {
 	MaterialSystem_Config_t config = materials->GetCurrentConfigForVideoCard();
 	config.m_nAAQuality = 0;

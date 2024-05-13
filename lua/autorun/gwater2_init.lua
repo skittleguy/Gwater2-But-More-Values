@@ -110,7 +110,6 @@ gwater2 = {
 	update_meshes = function()
 		for i = #gwater2.meshes, 1, -1 do
 			local prop = gwater2.meshes[i]
-			print(prop)
 			if !prop:IsValid() then
 				gwater2.solver:RemoveMesh(i)
 				table.remove(gwater2.meshes, i)
@@ -179,6 +178,11 @@ hook.Add("PreRender", "gwater_tick", no)
 hook.Add("PostRender", "gwater_tick", no)
 hook.Add("Think", "gwater_tick_collision", gwater2.update_meshes)
 hook.Add("Think", "gwater_tick", no)
+
+hook.Add("GW2FlexCallback", "fuckjoff", function(flex)
+
+end)
+
 timer.Create("gwater2_tick", limit_fps, 0, gwater_tick2)
 --gwater2.reset_solver()
 hook.Add("InitPostEntity", "gwater2_addprop", gwater2.reset_solver)

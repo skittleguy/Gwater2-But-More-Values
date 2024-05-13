@@ -85,7 +85,6 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	--gwater2.renderer:DrawIMeshes()
 	
 	-- Depth absorption (disabled when opaque liquids are enabled)
-	
 	local _, _, _, a = water:GetVector4D("$color2")
 	if water_volumetric:GetFloat("$alpha") != 0 and a < 255 then
 		render.SetMaterial(water_volumetric)
@@ -105,7 +104,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	render.SetRenderTargetEx(1, nil)
 	
 	-- Blur normals
-	water_blur:SetFloat("$radius", radius * 1.5)
+	water_blur:SetFloat("$radius", radius)
 	water_blur:SetTexture("$depthtexture", cache_depth)
 	render.SetMaterial(water_blur)
 	
@@ -137,13 +136,8 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 
 	-- Debug Draw
 	--render.DrawTextureToScreenRect(cache_absorption, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
-	--render.DrawTextureToScreenRect(cache_normals, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
+	render.DrawTextureToScreenRect(cache_normals, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
 	--render.DrawTextureToScreenRect(cache_normals, 0, 0, ScrW(), ScrH())
-end)
-
-hook.Add("GW2FlexCallback", "fuckjoff", function(flex)
-	--print(flex)
-	--print(flex.AddParticle.AddOart)
 end)
 
 --hook.Add("NeedsDepthPass", "gwater2_depth", function()

@@ -77,8 +77,7 @@ void FlexRenderer::build_imeshes(FlexSolver* solver, float radius) {
 					}
 				} else {
 					for (int i = 0; i < 3; i++) { // Same as above w/o anisotropy warping
-						Vector pos_ani = local_pos[i];
-						Vector world_pos = particle_pos + pos_ani * radius;
+						Vector world_pos = particle_pos + local_pos[i] * radius;
 						mesh_builder.TexCoord2f(0, u[i], v[i]);
 						mesh_builder.Position3f(world_pos.x, world_pos.y, world_pos.z);
 						mesh_builder.Normal3f(-forward.x, -forward.y, -forward.z);
