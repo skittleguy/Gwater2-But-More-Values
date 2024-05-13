@@ -41,8 +41,8 @@ float4 main(const PS_INPUT i) : COLOR {
 	if (radius2 > 1) discard;
 
 	float3 smoothed_normal = tex2D(NORMALS, i.P * SCR_S).xyz;
-	// Weight the normals forward, as the only visible part is facing the player
 	
+	// Weight the normals forward, as the only visible part is facing the player
 	smoothed_normal = normalize(smoothed_normal + i.view_dir * dot(-i.view_dir, smoothed_normal) * REFLECTANCE);
 
 	// Primary lighting calculations
