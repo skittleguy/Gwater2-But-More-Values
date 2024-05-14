@@ -30,23 +30,6 @@ int FLEXRENDERER_METATABLE = 0;
 
 #define GET_FLEXSOLVER(stack_pos) LUA->GetUserType<FlexSolver>(stack_pos, FLEXSOLVER_METATABLE)
 
-// Warning: allocates memory which MUST be freed!
-// todo: this is shit. the physics mesh library should be rewritten
-Vector* TableTofloat3(ILuaBase* LUA) {
-	const int num_vertices = LUA->ObjLen(2);
-	Vector* verts = reinterpret_cast<Vector*>(malloc(sizeof(Vector) * num_vertices));
-	for (int i = 0; i < num_vertices; i++) {
-		LUA->PushNumber(i + 1);   //lua is 1 indexed
-		LUA->GetTable(2);
-		LUA->GetField(-1, "pos");
-
-		verts[i] = LUA->GetType(-2) == Type::Vector ? LUA->GetVector(-2) : LUA->GetVector();
-		LUA->Pop(2); //pop table & position
-	}
-
-	return verts;
-}
-
 // Frees the flex solver instance from memory
 LUA_FUNCTION(FLEXSOLVER_GarbageCollect) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
@@ -78,11 +61,11 @@ LUA_FUNCTION(FLEXSOLVER_AddParticle) {
 
 LUA_FUNCTION(FLEXSOLVER_Tick) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	LUA->CheckNumber(2);
+	LUA->CheckNumber(2);	// Delta Time
+
 	FlexSolver* flex = GET_FLEXSOLVER(1);
-	float dt = (float)LUA->GetNumber(2);
 	bool succ = flex->pretick((NvFlexMapFlags)LUA->GetNumber(3));
-	if (succ) flex->tick(dt);
+	if (succ) flex->tick((float)LUA->GetNumber(2));
 
 	LUA->PushBool(succ);
 	return 1;
@@ -91,24 +74,35 @@ LUA_FUNCTION(FLEXSOLVER_Tick) {
 // Adds a triangle collision mesh to a FlexSolver
 LUA_FUNCTION(FLEXSOLVER_AddConcaveMesh) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	LUA->CheckType(2, Type::Table);		// Mesh data
-	LUA->CheckType(3, Type::Vector);	// Initial Pos
-	LUA->CheckType(4, Type::Angle);		// Initial Angle
+	LUA->CheckNumber(2);				// Entity ID
+	LUA->CheckType(3, Type::Table);		// Mesh data
+	LUA->CheckType(4, Type::Vector);	// Initial Pos
+	LUA->CheckType(5, Type::Angle);		// Initial Angle
 
-	Vector pos = LUA->GetVector(3);
-	QAngle ang = LUA->GetAngle(4);
+	Vector pos = LUA->GetVector(4);
+	QAngle ang = LUA->GetAngle(5);
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
-	Mesh* mesh = new Mesh(FLEX_LIBRARY);
-	Vector* verts = TableTofloat3(LUA);
-	if (!mesh->init_concave(verts, LUA->ObjLen(2))) {
-		free(verts);
+	std::vector<Vector> verts;	// mnnmm yess... vector vector
+	for (int i = 1; i <= LUA->ObjLen(3); i++) {	// dont forget lua is 1 indexed!
+		LUA->PushNumber(i);
+		LUA->GetTable(2);
+		LUA->GetField(-1, "pos");
+
+		verts.push_back(LUA->GetType(-2) == Type::Vector ? LUA->GetVector(-2) : LUA->GetVector());
+		LUA->Pop(2); //pop table & position
+	}
+
+	FlexMesh mesh = FlexMesh((int)LUA->GetNumber(2));
+	if (!mesh.init_concave(FLEX_LIBRARY, verts, true)) {
 		LUA->ThrowError("Tried to add concave mesh with invalid data (NumVertices is not a multiple of 3!)");
 		return 0;
 	}
-	free(verts);
-	mesh->update(pos, ang);
-	flex->add_mesh(mesh, eNvFlexShapeTriangleMesh, true);
+
+	mesh.set_pos(pos);
+	mesh.set_ang(ang);
+
+	flex->add_mesh(mesh);
 
 	return 0;
 }
@@ -116,32 +110,43 @@ LUA_FUNCTION(FLEXSOLVER_AddConcaveMesh) {
 // Adds a convex collision mesh to a FlexSolver
 LUA_FUNCTION(FLEXSOLVER_AddConvexMesh) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	LUA->CheckType(2, Type::Table);		// Mesh data
-	LUA->CheckType(3, Type::Vector);	// Initial Pos
-	LUA->CheckType(4, Type::Angle);		// Initial Angle
+	LUA->CheckNumber(2);				// Entity ID
+	LUA->CheckType(3, Type::Table);		// Mesh data
+	LUA->CheckType(4, Type::Vector);	// Initial Pos
+	LUA->CheckType(5, Type::Angle);		// Initial Angle
 
-	Vector pos = LUA->GetVector(3);
-	QAngle ang = LUA->GetAngle(4);
+	Vector pos = LUA->GetVector(4);
+	QAngle ang = LUA->GetAngle(5);
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
-	Mesh* mesh = new Mesh(FLEX_LIBRARY);
-	Vector* verts = TableTofloat3(LUA);
-	if (!mesh->init_convex(verts, LUA->ObjLen(2))) {
-		free(verts);
+	std::vector<Vector> verts;
+	for (int i = 1; i <= LUA->ObjLen(3); i++) {	// dont forget lua is 1 indexed!
+		LUA->PushNumber(i);
+		LUA->GetTable(2);
+		LUA->GetField(-1, "pos");
+
+		verts.push_back(LUA->GetType(-2) == Type::Vector ? LUA->GetVector(-2) : LUA->GetVector());
+		LUA->Pop(2); //pop table & position
+	}
+
+	FlexMesh mesh = FlexMesh((int)LUA->GetNumber(2));
+	if (!mesh.init_convex(FLEX_LIBRARY, verts, true)) {
 		LUA->ThrowError("Tried to add convex mesh with invalid data (NumVertices is not a multiple of 3!)");
 		return 0;
 	}
-	free(verts);
 
-	mesh->update(pos, ang);
-	flex->add_mesh(mesh, eNvFlexShapeConvexMesh, true);
+	mesh.set_pos(pos);
+	mesh.set_ang(ang);
+
+	flex->add_mesh(mesh);
 
 	return 0;
 }
 
+// Removes all meshes associated with the entity id
 LUA_FUNCTION(FLEXSOLVER_RemoveMesh) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	LUA->CheckNumber(2); // Mesh ID
+	LUA->CheckNumber(2); // Entity ID
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 	flex->remove_mesh(LUA->GetNumber(2));
@@ -204,7 +209,7 @@ LUA_FUNCTION(FLEXSOLVER_GetActiveParticles) {
 	return 1;
 }
 
-// Iterates through all particles and calls a lua function with 1 parameter (position) (also does frustrum culling)
+// Iterates through all particles and calls a lua function with 1 parameter (position)
 LUA_FUNCTION(FLEXSOLVER_RenderParticles) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckType(2, Type::Function);
@@ -222,15 +227,16 @@ LUA_FUNCTION(FLEXSOLVER_RenderParticles) {
 	return 0;
 }
 
-// todo: rewrite this shit
+// TODO: rewrite this shit
 LUA_FUNCTION(FLEXSOLVER_AddMapMesh) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	LUA->CheckString(2);
+	LUA->CheckNumber(2);
+	LUA->CheckString(3);
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 
 	// Get path, check if it exists
-	std::string path = "maps/" + (std::string)LUA->GetString(2) + ".bsp";
+	std::string path = "maps/" + (std::string)LUA->GetString(3) + ".bsp";
 	if (!FileSystem::Exists(path.c_str(), "GAME")) {
 		LUA->ThrowError(("[GWater2 Internal Error]: Map path " + path + " not found! (Is the map subscribed to?)").c_str());
 		return 0;
@@ -248,8 +254,8 @@ LUA_FUNCTION(FLEXSOLVER_AddMapMesh) {
 	FileSystem::Close(file);
 
 	BSPMap map = BSPMap(data, filesize);
-	Mesh* mesh = new Mesh(FLEX_LIBRARY);
-	if (!mesh->init_concave((Vector*)map.GetVertices(), map.GetNumTris() * 3)) {
+	FlexMesh mesh = FlexMesh((int)LUA->GetNumber(2));
+	if (!mesh.init_concave(FLEX_LIBRARY, (Vector*)map.GetVertices(), map.GetNumTris() * 3, false)) {
 		free(data);
 		LUA->ThrowError("Tried to add map mesh with invalid data (NumVertices is 0 or not a multiple of 3!)");
 
@@ -257,7 +263,7 @@ LUA_FUNCTION(FLEXSOLVER_AddMapMesh) {
 	}
 
 	free(data);
-	flex->add_mesh(mesh, eNvFlexShapeTriangleMesh, false);
+	flex->add_mesh(mesh);
 
 	return 0;
 }

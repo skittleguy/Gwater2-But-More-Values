@@ -35,7 +35,7 @@ public:
 	bool pretick(NvFlexMapFlags wait);	// Updates mesh positions/angles & particle queues
 	void tick(float dt);
 
-	void add_mesh(FlexMesh mesh, NvFlexCollisionShapeType mesh_type, bool dynamic);
+	void add_mesh(FlexMesh mesh);
 	void remove_mesh(int id);
 	void update_mesh(int id, Vector new_pos, QAngle new_ang);
 

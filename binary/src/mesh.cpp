@@ -31,17 +31,20 @@ Vector4D angle_to_quat(QAngle ang) {
 }
 
 void FlexMesh::destroy(NvFlexLibrary* lib) {
-	NvFlexFreeBuffer(vertices);
-	if (indices == nullptr) {
-		NvFlexDestroyConvexMesh(lib, flex_id);
-	}
-	else {	// Convex meshes dont have an indices buffer, so the mesh must be concave
-		NvFlexFreeBuffer(indices);
-		NvFlexDestroyTriangleMesh(lib, flex_id);
+	if (vertices != nullptr) {
+		NvFlexFreeBuffer(vertices);
+		if (indices == nullptr) {
+			NvFlexDestroyConvexMesh(lib, id);
+		} else {	// Convex meshes dont have an indices buffer, so the mesh must be concave
+			NvFlexFreeBuffer(indices);
+			NvFlexDestroyTriangleMesh(lib, id);
+		}
 	}
 }
 
-bool FlexMesh::init_concave(NvFlexLibrary* lib, std::vector<Vector> verts) {
+bool FlexMesh::init_concave(NvFlexLibrary* lib, std::vector<Vector> verts, bool dynamic) {
+	destroy(lib);
+
 	// Is Mesh invalid?
 	if (verts.size() == 0 || verts.size() % 3 != 0) {
 		return false;
@@ -81,13 +84,54 @@ bool FlexMesh::init_concave(NvFlexLibrary* lib, std::vector<Vector> verts) {
 	float lower[3] = { min.x, min.y, min.z };
 	float upper[3] = { max.x, max.y, max.z };
 
-	flex_id = NvFlexCreateTriangleMesh(lib);
-	NvFlexUpdateTriangleMesh(lib, flex_id, vertices, indices, verts.size(), verts.size() / 3, lower, upper);
+	id = NvFlexCreateTriangleMesh(lib);
+	flags = NvFlexMakeShapeFlags(eNvFlexShapeTriangleMesh, dynamic);
+	NvFlexUpdateTriangleMesh(lib, id, vertices, indices, verts.size(), verts.size() / 3, lower, upper);
 
 	return true;
 }
 
-bool FlexMesh::init_convex(NvFlexLibrary* lib, std::vector<Vector> verts) {
+// only used for map collision
+bool FlexMesh::init_concave(NvFlexLibrary* lib, Vector* verts, int num_verts, bool dynamic) {
+	destroy(lib);
+
+	// Is Mesh invalid?
+	if (num_verts == 0 || num_verts % 3 != 0) {
+		return false;
+	}
+
+	// Allocate buffers
+	vertices = NvFlexAllocBuffer(lib, num_verts, sizeof(Vector4D), eNvFlexBufferHost);
+	indices = NvFlexAllocBuffer(lib, num_verts, sizeof(int), eNvFlexBufferHost);
+	Vector4D* host_verts = (Vector4D*)NvFlexMap(vertices, eNvFlexMapWait);
+	int* host_indices = (int*)NvFlexMap(indices, eNvFlexMapWait);
+
+	// Find OBB Bounding box automatically during parsing
+	Vector min = verts[0];
+	Vector max = verts[0];
+	for (int i = 0; i < num_verts; i++) {
+		host_verts[i] = Vector4D(verts[i].x, verts[i].y, verts[i].z, 0);
+
+		min = min.Min(verts[i]);
+		max = min.Max(verts[i]);
+	}
+	NvFlexUnmap(vertices);
+	NvFlexUnmap(indices);
+
+	float lower[3] = { min.x, min.y, min.z };
+	float upper[3] = { max.x, max.y, max.z };
+
+	id = NvFlexCreateTriangleMesh(lib);
+	flags = NvFlexMakeShapeFlags(eNvFlexShapeTriangleMesh, dynamic);
+	NvFlexUpdateTriangleMesh(lib, id, vertices, indices, num_verts, num_verts / 3, lower, upper);
+
+	return true;
+}
+
+
+bool FlexMesh::init_convex(NvFlexLibrary* lib, std::vector<Vector> verts, bool dynamic) {
+	destroy(lib);
+
 	// Is Mesh invalid?
 	if (verts.size() == 0 || verts.size() % 3 != 0) {
 		return false;
@@ -122,10 +166,16 @@ bool FlexMesh::init_convex(NvFlexLibrary* lib, std::vector<Vector> verts) {
 	float lower[3] = { min.x, min.y, min.z };
 	float upper[3] = { max.x, max.y, max.z };
 
-	flex_id = NvFlexCreateConvexMesh(lib);
-	NvFlexUpdateConvexMesh(lib, flex_id, this->vertices, verts.size() / 3, lower, upper);
+	id = NvFlexCreateConvexMesh(lib);
+	flags = NvFlexMakeShapeFlags(eNvFlexShapeConvexMesh, dynamic);
+	NvFlexUpdateConvexMesh(lib, id, vertices, verts.size() / 3, lower, upper);
 
 	return true;
+}
+
+void FlexMesh::update() {
+	ppos = pos;
+	pang = ang;
 }
 
 Vector4D FlexMesh::get_pos() {
@@ -139,16 +189,28 @@ Vector4D FlexMesh::get_ang() {
 	return ang;
 }
 
+Vector4D FlexMesh::get_ppos() {
+	return ppos;
+}
+
+Vector4D FlexMesh::get_pang() {
+	return pang;
+}
+
 void FlexMesh::set_ang(QAngle a) {
 	ang = angle_to_quat(a);
 }
 
-NvFlexTriangleMeshId FlexMesh::get_flex_id() {
-	return flex_id;
+NvFlexTriangleMeshId FlexMesh::get_id() {
+	return id;
 }
 
 int FlexMesh::get_mesh_id() {
 	return mesh_id;
+}
+
+int FlexMesh::get_flags() {
+	return flags;
 }
 
 FlexMesh::FlexMesh(int id) {

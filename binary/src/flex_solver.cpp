@@ -73,26 +73,38 @@ void FlexSolver::add_particle(Vector4D pos, Vector vel) {
 bool FlexSolver::pretick(NvFlexMapFlags wait) {
 	if (solver == nullptr) return false;
 
-	Vector4D* pos = (Vector4D*)NvFlexMap(get_buffer("geometry_pos"), wait);
-	if (!pos) return false;
+	NvFlexCollisionGeometry* geo = (NvFlexCollisionGeometry*)NvFlexMap(get_buffer("geometry"), wait);
+	if (!geo) return false;
 
+	Vector4D* pos = (Vector4D*)NvFlexMap(get_buffer("geometry_pos"), eNvFlexMapWait);
 	Vector4D* ppos = (Vector4D*)NvFlexMap(get_buffer("geometry_prevpos"), eNvFlexMapWait);
 	Vector4D* ang = (Vector4D*)NvFlexMap(get_buffer("geometry_quat"), eNvFlexMapWait);
 	Vector4D* pang = (Vector4D*)NvFlexMap(get_buffer("geometry_prevquat"), eNvFlexMapWait);
+	int* flag = (int*)NvFlexMap(get_buffer("geometry_flags"), eNvFlexMapWait);
 
 	// Update collider positions
 	for (int i = 0; i < meshes.size(); i++) {
-		ppos[i] = pos[i];
-		pos[i] = meshes[i].get_pos();
+		FlexMesh mesh = meshes[i];
 
-		pang[i] = ang[i];
-		ang[i] = meshes[i].get_ang();
+		flag[i] = mesh.get_flags();
+		geo[i].triMesh.mesh = mesh.get_id();
+		geo[i].convexMesh.mesh = mesh.get_id();
+
+		ppos[i] = mesh.get_ppos();
+		pos[i] = mesh.get_pos();
+
+		pang[i] = mesh.get_pang();
+		ang[i] = mesh.get_ang();
+
+		meshes[i].update();	// sets the previous position/angle to current position/angle
 	}
 
+	NvFlexUnmap(get_buffer("geometry"));
 	NvFlexUnmap(get_buffer("geometry_pos"));
 	NvFlexUnmap(get_buffer("geometry_prevpos"));
 	NvFlexUnmap(get_buffer("geometry_quat"));
 	NvFlexUnmap(get_buffer("geometry_prevquat"));
+	NvFlexUnmap(get_buffer("geometry_flags"));
 
 	return true;
 }
@@ -131,75 +143,24 @@ void FlexSolver::tick(float dt) {
 	if (get_parameter("smoothing") != 0) NvFlexGetSmoothParticles(solver, get_buffer("particle_smooth"), copy_description);
 }
 
-void FlexSolver::add_mesh(FlexMesh mesh, NvFlexCollisionShapeType mesh_type, bool dynamic) {
+void FlexSolver::add_mesh(FlexMesh mesh) {
 	if (solver == nullptr) return;
 
-	int index = meshes.size();
 	meshes.push_back(mesh);
-
-	NvFlexCollisionGeometry* geo = (NvFlexCollisionGeometry*)NvFlexMap(get_buffer("geometry"), eNvFlexMapWait);
-	Vector4D* pos = (Vector4D*)NvFlexMap(get_buffer("geometry_pos"), eNvFlexMapWait);
-	Vector4D* ppos = (Vector4D*)NvFlexMap(get_buffer("geometry_prevpos"), eNvFlexMapWait);
-	Vector4D* ang = (Vector4D*)NvFlexMap(get_buffer("geometry_quat"), eNvFlexMapWait);
-	Vector4D* pang = (Vector4D*)NvFlexMap(get_buffer("geometry_prevquat"), eNvFlexMapWait);
-	int* flag = (int*)NvFlexMap(get_buffer("geometry_flags"), eNvFlexMapWait);
-
-	flag[index] = NvFlexMakeShapeFlags(mesh_type, dynamic);
-	geo[index].triMesh.mesh = mesh.get_flex_id();
-	geo[index].triMesh.scale[0] = 1;
-	geo[index].triMesh.scale[1] = 1;
-	geo[index].triMesh.scale[2] = 1;
-
-	geo[index].convexMesh.mesh = mesh.get_flex_id();
-	geo[index].convexMesh.scale[0] = 1;
-	geo[index].convexMesh.scale[1] = 1;
-	geo[index].convexMesh.scale[2] = 1;
-
-	pos[index] = mesh.get_pos();
-	ppos[index] = mesh.get_pos();
-	ang[index] = mesh.get_ang();
-	pang[index] = mesh.get_ang();
-
-	NvFlexUnmap(get_buffer("geometry"));
-	NvFlexUnmap(get_buffer("geometry_pos"));
-	NvFlexUnmap(get_buffer("geometry_prevpos"));
-	NvFlexUnmap(get_buffer("geometry_quat"));
-	NvFlexUnmap(get_buffer("geometry_prevquat"));
-	NvFlexUnmap(get_buffer("geometry_flags"));
 }
 
-void FlexSolver::remove_mesh(int index) {
+// TODO(?): Use a linked list instead of a vector
+void FlexSolver::remove_mesh(int id) {
 	if (solver == nullptr) return;
 
-	// Free mesh buffers
-	meshes[index].destroy(library);
-
-	NvFlexCollisionGeometry* geo = (NvFlexCollisionGeometry*)NvFlexMap(get_buffer("geometry"), eNvFlexMapWait);
-	Vector4D* pos = (Vector4D*)NvFlexMap(get_buffer("geometry_pos"), eNvFlexMapWait);
-	Vector4D* ppos = (Vector4D*)NvFlexMap(get_buffer("geometry_prevpos"), eNvFlexMapWait);
-	Vector4D* ang = (Vector4D*)NvFlexMap(get_buffer("geometry_quat"), eNvFlexMapWait);
-	Vector4D* pang = (Vector4D*)NvFlexMap(get_buffer("geometry_prevquat"), eNvFlexMapWait);
-	int* flag = (int*)NvFlexMap(get_buffer("geometry_flags"), eNvFlexMapWait);
-
-	// "Remove" prop by shifting everything down onto it
-	for (int i = index; i < meshes.size() - 1; i++) {
-		int i2 = i + 1;
-		geo[i] = geo[i2];
-		pos[i] = pos[i2];
-		ppos[i] = ppos[i2];
-		ang[i] = ang[i2];
-		pang[i] = pang[i2];
-		flag[i] = flag[i2];
-		meshes[i] = meshes[i2];
+	// TODO: Optimize
+	for (int i = meshes.size() - 1; i >= 0; i--) {
+		if (meshes[i].get_mesh_id() == id) {
+			// Free mesh buffers
+			meshes[i].destroy(library);
+			meshes.erase(meshes.begin() + i);
+		}
 	}
-	meshes.pop_back();
-
-	NvFlexUnmap(get_buffer("geometry"));
-	NvFlexUnmap(get_buffer("geometry_pos"));
-	NvFlexUnmap(get_buffer("geometry_prevpos"));
-	NvFlexUnmap(get_buffer("geometry_quat"));
-	NvFlexUnmap(get_buffer("geometry_prevquat"));
-	NvFlexUnmap(get_buffer("geometry_flags"));
 }
 
 // sets the position and angles of a mesh object. The inputted angle is Eular
