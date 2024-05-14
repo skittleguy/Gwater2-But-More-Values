@@ -42,6 +42,51 @@ void FlexMesh::destroy(NvFlexLibrary* lib) {
 	}
 }
 
+
+bool FlexMesh::init_convex(NvFlexLibrary* lib, std::vector<Vector> verts, bool dynamic) {
+	destroy(lib);
+
+	// Is Mesh invalid?
+	if (verts.size() == 0 || verts.size() % 3 != 0) {
+		return false;
+	}
+
+	// Allocate buffers
+	vertices = NvFlexAllocBuffer(lib, verts.size() / 3, sizeof(Vector4D), eNvFlexBufferHost);
+	Vector4D* host_verts = (Vector4D*)NvFlexMap(vertices, eNvFlexMapWait);
+
+	// Find OBB Bounding box automatically during parsing
+	Vector min = verts[0];
+	Vector max = verts[0];
+	for (int i = 0; i < verts.size(); i += 3) {
+		Vector tri[3] = { verts[i], verts[i + 1], verts[i + 2] };
+
+		// Turn triangle into normalized plane & add to vertex buffer
+		Vector plane_dir = (tri[1] - tri[0]).Cross(tri[0] - tri[2]).Normalized();
+		float plane_height = -plane_dir.Dot(tri[0]);	// Negative because our triangle winding is reversed
+		host_verts[i / 3] = Vector4D(plane_dir.x, plane_dir.y, plane_dir.z, plane_height);
+
+		min = min.Min(tri[0]);
+		min = min.Min(tri[1]);
+		min = min.Min(tri[2]);
+
+		max = max.Max(tri[0]);
+		max = max.Max(tri[1]);
+		max = max.Max(tri[2]);
+	}
+
+	NvFlexUnmap(vertices);
+
+	float lower[3] = { min.x, min.y, min.z };
+	float upper[3] = { max.x, max.y, max.z };
+
+	id = NvFlexCreateConvexMesh(lib);
+	flags = NvFlexMakeShapeFlags(eNvFlexShapeConvexMesh, dynamic);
+	NvFlexUpdateConvexMesh(lib, id, vertices, verts.size() / 3, lower, upper);
+
+	return true;
+}
+
 bool FlexMesh::init_concave(NvFlexLibrary* lib, std::vector<Vector> verts, bool dynamic) {
 	destroy(lib);
 
@@ -76,7 +121,7 @@ bool FlexMesh::init_concave(NvFlexLibrary* lib, std::vector<Vector> verts, bool 
 		}
 
 		min = min.Min(verts[i]);
-		max = min.Max(verts[i]);
+		max = max.Max(verts[i]);
 	}
 	NvFlexUnmap(vertices);
 	NvFlexUnmap(indices);
@@ -87,50 +132,6 @@ bool FlexMesh::init_concave(NvFlexLibrary* lib, std::vector<Vector> verts, bool 
 	id = NvFlexCreateTriangleMesh(lib);
 	flags = NvFlexMakeShapeFlags(eNvFlexShapeTriangleMesh, dynamic);
 	NvFlexUpdateTriangleMesh(lib, id, vertices, indices, verts.size(), verts.size() / 3, lower, upper);
-
-	return true;
-}
-
-bool FlexMesh::init_convex(NvFlexLibrary* lib, std::vector<Vector> verts, bool dynamic) {
-	destroy(lib);
-
-	// Is Mesh invalid?
-	if (verts.size() == 0 || verts.size() % 3 != 0) {
-		return false;
-	}
-
-	// Allocate buffers
-	vertices = NvFlexAllocBuffer(lib, verts.size() / 3, sizeof(Vector4D), eNvFlexBufferHost);
-	Vector4D* host_verts = (Vector4D*)NvFlexMap(vertices, eNvFlexMapWait);
-
-	// Find OBB Bounding box automatically during parsing
-	Vector min = verts[0];
-	Vector max = verts[0];
-	for (int i = 0; i < verts.size(); i += 3) {
-		Vector tri[3] = {verts[i], verts[i + 1], verts[i + 2]};
-
-		// Turn triangle into normalized plane & add to vertex buffer
-		Vector plane_dir = (tri[1] - tri[0]).Cross(tri[0] - tri[2]).Normalized();
-		float plane_height = -plane_dir.Dot(tri[0]);	// Negative because our triangle winding is reversed
-		host_verts[i / 3] = Vector4D(plane_dir.x, plane_dir.y, plane_dir.z, plane_height);
-
-		min = min.Min(tri[0]);
-		min = min.Min(tri[1]);
-		min = min.Min(tri[2]);
-
-		max = min.Max(tri[0]);
-		max = min.Max(tri[1]);
-		max = min.Max(tri[2]);
-	}
-
-	NvFlexUnmap(vertices);
-
-	float lower[3] = { min.x, min.y, min.z };
-	float upper[3] = { max.x, max.y, max.z };
-
-	id = NvFlexCreateConvexMesh(lib);
-	flags = NvFlexMakeShapeFlags(eNvFlexShapeConvexMesh, dynamic);
-	NvFlexUpdateConvexMesh(lib, id, vertices, verts.size() / 3, lower, upper);
 
 	return true;
 }
@@ -155,9 +156,10 @@ bool FlexMesh::init_concave(NvFlexLibrary* lib, Vector* verts, int num_verts, bo
 	Vector max = verts[0];
 	for (int i = 0; i < num_verts; i++) {
 		host_verts[i] = Vector4D(verts[i].x, verts[i].y, verts[i].z, 0);
+		host_indices[i] = i;
 
 		min = min.Min(verts[i]);
-		max = min.Max(verts[i]);
+		max = max.Max(verts[i]);
 	}
 	NvFlexUnmap(vertices);
 	NvFlexUnmap(indices);

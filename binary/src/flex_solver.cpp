@@ -92,7 +92,14 @@ bool FlexSolver::pretick(NvFlexMapFlags wait) {
 
 		flag[i] = mesh.get_flags();
 		geo[i].triMesh.mesh = mesh.get_id();
+		geo[i].triMesh.scale[0] = 1;
+		geo[i].triMesh.scale[1] = 1;
+		geo[i].triMesh.scale[2] = 1;
+
 		geo[i].convexMesh.mesh = mesh.get_id();
+		geo[i].convexMesh.scale[0] = 1;
+		geo[i].convexMesh.scale[1] = 1;
+		geo[i].convexMesh.scale[2] = 1;
 
 		ppos[i] = mesh.get_ppos();
 		pos[i] = mesh.get_pos();

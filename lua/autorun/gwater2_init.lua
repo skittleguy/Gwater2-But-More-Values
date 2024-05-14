@@ -73,6 +73,14 @@ local function add_prop(ent)
 		end
 	end
 
+	if !invalid then
+		for k, v in ipairs(convexes) do
+			gwater2.solver:AddConvexMesh(0, v, ent:GetPos(), ent:GetAngles())
+		end
+	else
+		gwater2.solver:AddConcaveMesh(0, unfucked_get_mesh(ent, true), ent:GetPos(), ent:GetAngles())
+	end
+
 end
 
 local function get_map_vertices()

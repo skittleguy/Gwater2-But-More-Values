@@ -86,7 +86,7 @@ LUA_FUNCTION(FLEXSOLVER_AddConcaveMesh) {
 	std::vector<Vector> verts;	// mnnmm yess... vector vector
 	for (int i = 1; i <= LUA->ObjLen(3); i++) {	// dont forget lua is 1 indexed!
 		LUA->PushNumber(i);
-		LUA->GetTable(2);
+		LUA->GetTable(3);
 		LUA->GetField(-1, "pos");
 
 		verts.push_back(LUA->GetType(-2) == Type::Vector ? LUA->GetVector(-2) : LUA->GetVector());
@@ -122,7 +122,7 @@ LUA_FUNCTION(FLEXSOLVER_AddConvexMesh) {
 	std::vector<Vector> verts;
 	for (int i = 1; i <= LUA->ObjLen(3); i++) {	// dont forget lua is 1 indexed!
 		LUA->PushNumber(i);
-		LUA->GetTable(2);
+		LUA->GetTable(3);
 		LUA->GetField(-1, "pos");
 
 		verts.push_back(LUA->GetType(-2) == Type::Vector ? LUA->GetVector(-2) : LUA->GetVector());
@@ -236,7 +236,7 @@ LUA_FUNCTION(FLEXSOLVER_RenderParticles) {
 LUA_FUNCTION(FLEXSOLVER_AddMapMesh) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckNumber(2);
-	LUA->CheckString(3);
+	LUA->CheckString(3);	// Map name
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 
@@ -258,9 +258,9 @@ LUA_FUNCTION(FLEXSOLVER_AddMapMesh) {
 	FileSystem::Read(data, filesize, file);
 	FileSystem::Close(file);
 
-	BSPMap map = BSPMap(data, filesize);
+	BSPMap map = BSPMap(data, filesize, false);
 	FlexMesh mesh = FlexMesh((int)LUA->GetNumber(2));
-	if (!mesh.init_concave(FLEX_LIBRARY, (Vector*)map.GetVertices(), map.GetNumTris() * 3, false)) {
+	if (!mesh.init_concave(FLEX_LIBRARY, (Vector*)map.GetVertices(), map.GetNumVertices(), false)) {
 		free(data);
 		LUA->ThrowError("Tried to add map mesh with invalid data (NumVertices is 0 or not a multiple of 3!)");
 
@@ -440,10 +440,10 @@ LUA_FUNCTION(FLEXSOLVER_IterateMeshes) {
 		int id = mesh.get_mesh_id();
 
 		// func(i, id, repeat)
+		LUA->Push(2);
 		LUA->PushNumber(i);
 		LUA->PushNumber(id);
 		LUA->PushNumber(repeat);
-		LUA->Push(2);
 		LUA->Call(3, 0);
 
 		repeat = (i != 0 && previous_id == id) ? repeat + 1 : 1;	// if (same as last time) {repeat = repeat + 1} else {repeat = 1}
