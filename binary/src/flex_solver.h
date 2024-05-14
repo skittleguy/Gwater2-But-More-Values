@@ -26,9 +26,9 @@ public:
 	int get_active_particles();
 	int get_max_particles();
 	int get_max_contacts();
+	std::vector<FlexMesh>* get_meshes();
 
-	// Returns a host (pointer of float4s) where FleX buffer data is transferred to. 
-	void* get_host(std::string name);
+	void* get_host(std::string name);	// Returns a host (pointer of float4s) where FleX buffer data is transferred to. 
 
 	void add_particle(Vector4D pos, Vector vel);
 	

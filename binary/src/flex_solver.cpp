@@ -40,6 +40,10 @@ void* FlexSolver::get_host(std::string name) {
 	return hosts[name];
 }
 
+std::vector<FlexMesh>* FlexSolver::get_meshes() {
+	return &meshes;
+}
+
 void FlexSolver::add_particle(Vector4D pos, Vector vel) {
 	if (solver == nullptr) return;
 	if (get_active_particles() >= get_max_particles()) return;
@@ -166,7 +170,8 @@ void FlexSolver::remove_mesh(int id) {
 // sets the position and angles of a mesh object. The inputted angle is Eular
 void FlexSolver::update_mesh(int index, Vector new_pos, QAngle new_ang) {
 	if (solver == nullptr) return;
-	
+	if (index < 0 || index >= meshes.size()) return;	// Invalid
+
 	meshes[index].set_pos(new_pos);
 	meshes[index].set_ang(new_ang);
 }

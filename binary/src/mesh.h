@@ -4,7 +4,7 @@
 #include "mathlib/vector4d.h"
 #include <vector>
 
-// Handles colliders in FleX
+// Data wrapper for FleX collisions
 class FlexMesh {
 private:
 	int mesh_id;	// id associated with the entity its attached to in source, as some physmeshes have multiple colliders (eg. ragdolls)
@@ -20,8 +20,6 @@ private:
 	Vector4D pang = Vector4D(0, 0, 0, 1);	// Previous ang
 
 public:
-	FlexMesh(int mesh_id);
-
 	bool init_concave(NvFlexLibrary* lib, std::vector<Vector> verts, bool dynamic);	
 	bool init_concave(NvFlexLibrary* lib, Vector* verts, int num_verts, bool dynamic);	
 	bool init_convex(NvFlexLibrary* lib, std::vector<Vector> verts, bool dynamic);
@@ -41,4 +39,6 @@ public:
 	int get_flags();
 
 	void update();
+	
+	FlexMesh(int mesh_id);
 };

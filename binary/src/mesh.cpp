@@ -91,44 +91,6 @@ bool FlexMesh::init_concave(NvFlexLibrary* lib, std::vector<Vector> verts, bool 
 	return true;
 }
 
-// only used for map collision
-bool FlexMesh::init_concave(NvFlexLibrary* lib, Vector* verts, int num_verts, bool dynamic) {
-	destroy(lib);
-
-	// Is Mesh invalid?
-	if (num_verts == 0 || num_verts % 3 != 0) {
-		return false;
-	}
-
-	// Allocate buffers
-	vertices = NvFlexAllocBuffer(lib, num_verts, sizeof(Vector4D), eNvFlexBufferHost);
-	indices = NvFlexAllocBuffer(lib, num_verts, sizeof(int), eNvFlexBufferHost);
-	Vector4D* host_verts = (Vector4D*)NvFlexMap(vertices, eNvFlexMapWait);
-	int* host_indices = (int*)NvFlexMap(indices, eNvFlexMapWait);
-
-	// Find OBB Bounding box automatically during parsing
-	Vector min = verts[0];
-	Vector max = verts[0];
-	for (int i = 0; i < num_verts; i++) {
-		host_verts[i] = Vector4D(verts[i].x, verts[i].y, verts[i].z, 0);
-
-		min = min.Min(verts[i]);
-		max = min.Max(verts[i]);
-	}
-	NvFlexUnmap(vertices);
-	NvFlexUnmap(indices);
-
-	float lower[3] = { min.x, min.y, min.z };
-	float upper[3] = { max.x, max.y, max.z };
-
-	id = NvFlexCreateTriangleMesh(lib);
-	flags = NvFlexMakeShapeFlags(eNvFlexShapeTriangleMesh, dynamic);
-	NvFlexUpdateTriangleMesh(lib, id, vertices, indices, num_verts, num_verts / 3, lower, upper);
-
-	return true;
-}
-
-
 bool FlexMesh::init_convex(NvFlexLibrary* lib, std::vector<Vector> verts, bool dynamic) {
 	destroy(lib);
 
@@ -172,6 +134,44 @@ bool FlexMesh::init_convex(NvFlexLibrary* lib, std::vector<Vector> verts, bool d
 
 	return true;
 }
+
+// this overload is only used for map collision, as the BSP Parser returns an array instead of a vector
+bool FlexMesh::init_concave(NvFlexLibrary* lib, Vector* verts, int num_verts, bool dynamic) {
+	destroy(lib);
+
+	// Is Mesh invalid?
+	if (num_verts == 0 || num_verts % 3 != 0) {
+		return false;
+	}
+
+	// Allocate buffers
+	vertices = NvFlexAllocBuffer(lib, num_verts, sizeof(Vector4D), eNvFlexBufferHost);
+	indices = NvFlexAllocBuffer(lib, num_verts, sizeof(int), eNvFlexBufferHost);
+	Vector4D* host_verts = (Vector4D*)NvFlexMap(vertices, eNvFlexMapWait);
+	int* host_indices = (int*)NvFlexMap(indices, eNvFlexMapWait);
+
+	// Find OBB Bounding box automatically during parsing
+	Vector min = verts[0];
+	Vector max = verts[0];
+	for (int i = 0; i < num_verts; i++) {
+		host_verts[i] = Vector4D(verts[i].x, verts[i].y, verts[i].z, 0);
+
+		min = min.Min(verts[i]);
+		max = min.Max(verts[i]);
+	}
+	NvFlexUnmap(vertices);
+	NvFlexUnmap(indices);
+
+	float lower[3] = { min.x, min.y, min.z };
+	float upper[3] = { max.x, max.y, max.z };
+
+	id = NvFlexCreateTriangleMesh(lib);
+	flags = NvFlexMakeShapeFlags(eNvFlexShapeTriangleMesh, dynamic);
+	NvFlexUpdateTriangleMesh(lib, id, vertices, indices, num_verts, num_verts / 3, lower, upper);
+
+	return true;
+}
+
 
 void FlexMesh::update() {
 	ppos = pos;

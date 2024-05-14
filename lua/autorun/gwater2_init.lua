@@ -1,8 +1,8 @@
 AddCSLuaFile()
 
 if SERVER then 
-	util.AddNetworkString("gwater2_offsetprop")
-	/*local valid_materials = {
+	/*util.AddNetworkString("gwater2_offsetprop")
+	local valid_materials = {
         ["floating_metal_barrel"] = true,
         ["wood"] = true,
         ["wood_crate"] = true,
@@ -43,7 +43,7 @@ if SERVER then
 	return 
 end
 
--- client only, as GetMeshConvexes works 100% of the time on server
+-- GetMeshConvexes but for client
 local function unfucked_get_mesh(ent, raw)
 	-- Physics object exists
 	local phys = ent:GetPhysicsObject()
@@ -58,9 +58,8 @@ local function unfucked_get_mesh(ent, raw)
 	return convexes
 end
 
-// Add mesh colliders
+-- adds entity to FlexSolver
 local function add_prop(ent)
-	//do return end
 	if !IsValid(ent) or !ent:IsSolid() or ent:IsWeapon() then return end
 
 	local convexes = unfucked_get_mesh(ent)
@@ -68,21 +67,12 @@ local function add_prop(ent)
 
 	local invalid = false
 	for k, v in ipairs(convexes) do 
-		if #v > 64 * 3 or k > 10 then	-- hardcoded limits in FleX.. No more than 64 planes per convex
+		if #v > 64 * 3 or k > 10 then	-- hardcoded limits.. No more than 64 planes per convex it is a FleX limitation, and arbitrary maximum of 10 convexes
 			invalid = true
 			break
 		end
 	end
 
-	if !invalid then
-		for k, v in ipairs(convexes) do
-			gwater2.solver:AddConvexMesh(v, ent:GetPos(), ent:GetAngles())
-			table.insert(gwater2.meshes, ent)
-		end
-	else
-		gwater2.solver:AddConcaveMesh(unfucked_get_mesh(ent, true), ent:GetPos(), ent:GetAngles())
-		table.insert(gwater2.meshes, ent)
-	end
 end
 
 local function get_map_vertices()
@@ -106,34 +96,31 @@ gwater2 = {
 	solver = FlexSolver(100000),
 	renderer = FlexRenderer(),
 	material = Material("gwater2/finalpass"),--Material("vgui/circle"),--Material("sprites/sent_ball"),
-	meshes = {},
-	update_meshes = function()
-		for i = #gwater2.meshes, 1, -1 do
-			local prop = gwater2.meshes[i]
-			if !prop:IsValid() then
-				gwater2.solver:RemoveMesh(i)
-				table.remove(gwater2.meshes, i)
-				continue
-			end
-			
-			--if prop:GetVelocity() == vector_origin and prop:GetLocalAngularVelocity() == Angle() then continue end
-			gwater2.solver:UpdateMesh(i, prop:GetPos(), prop:GetAngles())
-		end
+	update_meshes = function(index, id, rep)
+		--local prop = gwater2.meshes[i]
+		--if !prop:IsValid() then
+		--	gwater2.solver:RemoveMesh(i)
+		--	continue
+		--end
+		
+		--if prop:GetVelocity() == vector_origin and prop:GetLocalAngularVelocity() == Angle() then continue end
+		--gwater2.solver:UpdateMesh(i, prop:GetPos(), prop:GetAngles())
+		print(index, id, rep)
 	end,
-	reset_solver = function(err)	-- Will cause crashing. Dont call this if you don't know what it does
-		xpcall(function()
-			gwater2.solver:AddMapMesh(game.GetMap())
-		end, function(e)
-			gwater2.solver:AddConcaveMesh(get_map_vertices(), Vector(), Angle())
-			if !err then
-				ErrorNoHaltWithStack("[GWater2]: Map BSP structure is unsupported. Reverting to brushes. Collision WILL have holes!")
-			end
-		end)
+	--reset_solver = function(err)	-- Will cause crashing. Dont call this if you don't know what it does
+	--	xpcall(function()
+	--		gwater2.solver:AddMapMesh(game.GetMap())
+	--	end, function(e)
+	--		gwater2.solver:AddConcaveMesh(get_map_vertices(), Vector(), Angle())
+	--		if !err then
+	--			ErrorNoHaltWithStack("[GWater2]: Map BSP structure is unsupported. Reverting to brushes. Collision WILL have holes!")
+	--		end
+	--	end)
 
-		for k, ent in ipairs(ents.GetAll()) do
-			add_prop(ent)
-		end
-	end
+	--	for k, ent in ipairs(ents.GetAll()) do
+	--		add_prop(ent)
+	--	end
+	--end
 }
 gwater2.solver:InitBounds(Vector(-16384, -16384, -16384), Vector(16384, 16384, 16384))	-- source bounds
 
@@ -176,14 +163,10 @@ end
 local no = function() end
 hook.Add("PreRender", "gwater_tick", no)
 hook.Add("PostRender", "gwater_tick", no)
-hook.Add("Think", "gwater_tick_collision", gwater2.update_meshes)
+--hook.Add("Think", "gwater_tick_collision", gwater2.update_meshes)
 hook.Add("Think", "gwater_tick", no)
-
-hook.Add("GW2FlexCallback", "fuckjoff", function(flex)
-
-end)
 
 timer.Create("gwater2_tick", limit_fps, 0, gwater_tick2)
 --gwater2.reset_solver()
-hook.Add("InitPostEntity", "gwater2_addprop", gwater2.reset_solver)
+--hook.Add("InitPostEntity", "gwater2_addprop", gwater2.reset_solver)
 hook.Add("OnEntityCreated", "gwater2_addprop", function(ent) timer.Simple(0, function() add_prop(ent) end) end)	// timer.0 so data values are setup correctly

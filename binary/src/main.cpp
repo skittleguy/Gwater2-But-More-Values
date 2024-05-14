@@ -154,13 +154,18 @@ LUA_FUNCTION(FLEXSOLVER_RemoveMesh) {
 	return 0;
 }
 
+// TODO: Implement
+/*
+LUA_FUNCTION(FLEXSOLVER_RemoveMeshIndex) {
+
+}*/
+
 LUA_FUNCTION(FLEXSOLVER_SetParameter) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckString(2); // Param
 	LUA->CheckNumber(3); // Number
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
-
 	bool succ = flex->set_parameter(LUA->GetString(2), LUA->GetNumber(3));
 	if (!succ) LUA->ThrowError(("Attempt to set invalid parameter '" + (std::string)LUA->GetString(2) + "'").c_str());
 
@@ -173,10 +178,9 @@ LUA_FUNCTION(FLEXSOLVER_GetParameter) {
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 	float value = flex->get_parameter(LUA->GetString(2));
-
 	if (isnan(value)) LUA->ThrowError(("Attempt to get invalid parameter '" + (std::string)LUA->GetString(2) + "'").c_str());
-
 	LUA->PushNumber(value);
+
 	return 1;
 }
 
@@ -206,6 +210,7 @@ LUA_FUNCTION(FLEXSOLVER_GetActiveParticles) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 	LUA->PushNumber(flex->get_active_particles());
+
 	return 1;
 }
 
@@ -417,6 +422,39 @@ LUA_FUNCTION(FLEXSOLVER_GetMaxParticles) {
 	return 1;
 }
 
+// Runs lua function on all FlexMeshes stored in a FlexSolver
+// This is faster then returning a table of values and using ipairs and also allows removal / additions during function execution
+// first parameter is the index of the mesh inside the array
+// second parameter is the entity id associated that was given during AddMesh
+// third parameter is the number of same i'ds in a row (eg. given id's 0,2,1,1 this parameter would be 2 at the end of execution since there are two repeated 1's)
+// ^this sounds confusing but just know its used for multi-joint entities such as ragdolls/players/npcs
+LUA_FUNCTION(FLEXSOLVER_IterateMeshes) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	LUA->CheckType(2, Type::Function);
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+
+	int i = 0;
+	int repeat = 1;
+	int previous_id;
+	for (FlexMesh mesh : *flex->get_meshes()) {
+		int id = mesh.get_mesh_id();
+
+		// func(i, id, repeat)
+		LUA->PushNumber(i);
+		LUA->PushNumber(id);
+		LUA->PushNumber(repeat);
+		LUA->Push(2);
+		LUA->Call(3, 0);
+
+		repeat = (i != 0 && previous_id == id) ? repeat + 1 : 1;	// if (same as last time) {repeat = repeat + 1} else {repeat = 1}
+
+		i++;
+		previous_id = id;
+	}
+
+	return 0;
+}
+
 
 /*********************************** Flex Renderer LUA Interface *******************************************/
 
@@ -520,7 +558,7 @@ GMOD_MODULE_OPEN() {
 		}
 	);
 
-	if (!FLEX_LIBRARY) 
+	if (FLEX_LIBRARY == nullptr) 
 		LUA->ThrowError("[GWater2 Internal Error]: Nvidia FleX Failed to load! (Does your GPU meet the minimum requirements to run FleX?)");
 
 	if (!Sys_LoadInterface("materialsystem", MATERIAL_SYSTEM_INTERFACE_VERSION, NULL, (void**)&materials))
@@ -562,6 +600,7 @@ GMOD_MODULE_OPEN() {
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetParameter, "GetParameter");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetActiveParticles, "GetActiveParticles");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddMapMesh, "AddMapMesh");
+	ADD_FUNCTION(LUA, FLEXSOLVER_IterateMeshes, "IterateMeshes");
 	//ADD_FUNCTION(LUA, GetContacts, "GetContacts");
 	ADD_FUNCTION(LUA, FLEXSOLVER_InitBounds, "InitBounds");
 	ADD_FUNCTION(LUA, FLEXSOLVER_Reset, "Reset");

@@ -44,8 +44,8 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	-- In order to have proper rendertarget capture which obeys the depth buffer, we need to use MATERIAL_RT_DEPTH_SHARED.
 	-- That way, our rendered particles don't render through walls. (Avoid render.ClearDepth! as it resets this buffer!!!)
 	-- Unfortunately MATERIAL_RT_DEPTH_SEPERATE is force enabled when MSAA is on.. 
-	-- This texture flag makes it so my shaders can't use the actual depth buffer provided by source. This causes things to render through walls
-	-- My solution at the moment is force disabling MSAA, which prevents the issue.
+	-- This texture flag makes it so the shaders can't use the actual depth buffer provided by source. This causes things to render through walls
+	-- My solution at the moment is force disabling MSAA, which prevents the issue. (Although this is not an ideal solution)
 	-- Related gmod issues: 
 	-- https://github.com/Facepunch/garrysmod-issues/issues/4662
 	-- https://github.com/Facepunch/garrysmod-issues/issues/5039
