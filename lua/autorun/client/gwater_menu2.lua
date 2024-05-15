@@ -5,11 +5,13 @@ if SERVER then return end
 -- *Ehem*
 -- BEHOLD. THE GWATER MENU CODE
 -- THIS MY FRIEND.. IS THE SINGLE WORST PIECE OF CODE I HAVE EVER WRITTEN
--- DO NOT USE ANY OF THIS IN YOUR OWN CODE BECAUSE IT MIGHT SELF DESTRUCT
--- SOURCE VGUI IS ABSOLUTELY DOG DOODOO
+-- PLEASE NOTE THAT: 
+	-- SOURCE VGUI IS ABSOLUTELY DOODOO
+	-- THE GMOD INTERFACE IS ABSOLULTELY DOODOO
+	-- HALF OF THIS CODE WAS WRITTEN AT 3 AM
 -- THANK YOU FOR COMING TO MY TED TALK
 
-local version = "0.2b"
+local version = "0.3b"
 local options = {
 	solver = FlexSolver(1000),
 	tab = CreateClientConVar("gwater2_tab"..version, "1", true),
@@ -848,23 +850,13 @@ hook.Add("PopulateToolMenu", "gwater2_menu", function()
 	end)
 end)
 
--- TODO: Rewrite, this sucks
--- of course playerbutton down (the only hook which runs when a button is pressed) doesnt work in singleplayer.
-local changed = false
-hook.Add("Think", "gwater2_menu", function()
-	if IsValid(LocalPlayer()) and LocalPlayer():IsTyping() then return end
+-- 
+hook.Add("PlayerButtonDown", "gwater2_menu", function(ply, key)
+	if key != options.menu_key:GetInt() or just_closed == true then return end
+	RunConsoleCommand("gwater2_menu")
+end)
 
-	if input.IsKeyDown(options.menu_key:GetInt()) and !IsValid(mainFrame) then
-		if changed then return end
-
-		if just_closed then 
-			just_closed = false
-		else
-			RunConsoleCommand("gwater2_menu")
-		end
-
-		changed = true
-	else
-		changed = false
-	end
+hook.Add("PlayerButtonUp", "gwater2_menu", function(ply, key)
+	if key != options.menu_key:GetInt() then return end
+	just_closed = false
 end)
