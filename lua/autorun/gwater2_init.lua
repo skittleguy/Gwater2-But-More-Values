@@ -72,8 +72,7 @@ end
 
 -- adds entity to FlexSolver
 local function add_prop(ent)
-	if !IsValid(ent) or !ent:IsSolid() or ent:IsWeapon() then return end
-	--if !ent:IsRagdoll() then return end
+	if !IsValid(ent) or !ent:IsSolid() or ent:IsWeapon() or !ent:GetModel() then return end
 
 	local convexes = unfucked_get_mesh(ent)
 	if !convexes then return end
@@ -82,12 +81,15 @@ local function add_prop(ent)
 		for k, v in ipairs(convexes) do
 			if #v <= 64 * 3 then	-- hardcoded limits.. No more than 64 planes per convex as it is a FleX limitation
 				gwater2.solver:AddConvexMesh(ent:EntIndex(), v, ent:GetPos(), ent:GetAngles())
+				print("adding convex mesh")
 			else
 				gwater2.solver:AddConcaveMesh(ent:EntIndex(), v, ent:GetPos(), ent:GetAngles())
+				print("adding concave mesh")
 			end
 		end
 	else
 		gwater2.solver:AddConcaveMesh(ent:EntIndex(), unfucked_get_mesh(ent, true), ent:GetPos(), ent:GetAngles())
+		print("adding concave mesh")
 	end
 
 end
@@ -123,10 +125,20 @@ gwater2 = {
 			if !util.IsValidRagdoll(ent:GetModel()) then
 				gwater2.solver:UpdateMesh(index, ent:GetPos(), ent:GetAngles())	
 			else
-				--print(rep)
-				--local bone = ent:GetBoneMatrix(ent:TranslatePhysBoneToBone(rep))
-				--print(bone:GetTranslation())
-				gwater2.solver:UpdateMesh(index, ent:GetBonePosition(ent:TranslatePhysBoneToBone(rep)))
+				-- horrible code for proper ragdoll collision. Still breaks half the time. Fuck source
+				local bone_index = ent:TranslatePhysBoneToBone(rep)
+				local pos, ang = ent:GetBonePosition(bone_index)
+				if !pos or pos == ent:GetPos() then 	-- wtf?
+					local bone = ent:GetBoneMatrix(bone_index)
+					if bone then
+						pos = bone:GetTranslation()
+						ang = bone:GetAngles()
+					else
+						pos = ent:GetPos()
+						ang = ent:GetPos()
+					end
+				end
+				gwater2.solver:UpdateMesh(index, pos, ang)
 			end
 		end
 	end,

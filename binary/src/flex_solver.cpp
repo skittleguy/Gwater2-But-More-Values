@@ -57,9 +57,9 @@ void FlexSolver::add_particle(Vector4D pos, Vector vel) {
 	// Add particle
 	int n = copy_description->elementCount++;		// n = particle_count; n++
 	((Vector4D*)hosts["particle_smooth"])[n] = pos;	// avoids visual flashing. No need to call NvFlexMap as this is only a 'getter' buffer
-	((Vector4D*)hosts["particle_ani1"])[n] = Vector4D(0);
-	((Vector4D*)hosts["particle_ani2"])[n] = Vector4D(0);
-	((Vector4D*)hosts["particle_ani3"])[n] = Vector4D(0);
+	((Vector4D*)hosts["particle_ani1"])[n] = Vector4D(0, 0, 0, 0);
+	((Vector4D*)hosts["particle_ani2"])[n] = Vector4D(0, 0, 0, 0);
+	((Vector4D*)hosts["particle_ani3"])[n] = Vector4D(0, 0, 0, 0);
 	positions[n] = pos;
 	velocities[n] = vel;
 	phases[n] = NvFlexMakePhase(0, eNvFlexPhaseSelfCollide | eNvFlexPhaseFluid);
