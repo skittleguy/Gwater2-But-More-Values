@@ -38,7 +38,7 @@ public:
 	int get_mesh_id();
 	int get_flags();
 
-	void update();
+	void update();	// sets the previous position/angle to current position/angle (previous_pos = pos; previous_ang = ang)
 	
 	FlexMesh(int mesh_id);
 };

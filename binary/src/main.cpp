@@ -101,6 +101,7 @@ LUA_FUNCTION(FLEXSOLVER_AddConcaveMesh) {
 
 	mesh.set_pos(pos);
 	mesh.set_ang(ang);
+	mesh.update();
 
 	flex->add_mesh(mesh);
 
@@ -137,6 +138,7 @@ LUA_FUNCTION(FLEXSOLVER_AddConvexMesh) {
 
 	mesh.set_pos(pos);
 	mesh.set_ang(ang);
+	mesh.update();
 
 	flex->add_mesh(mesh);
 
@@ -422,22 +424,25 @@ LUA_FUNCTION(FLEXSOLVER_GetMaxParticles) {
 	return 1;
 }
 
-// Runs lua function on all FlexMeshes stored in a FlexSolver
+// Runs a lua function with some data on all FlexMeshes stored in a FlexSolver
 // This is faster then returning a table of values and using ipairs and also allows removal / additions during function execution
 // first parameter is the index of the mesh inside the array
 // second parameter is the entity id associated that was given during AddMesh
-// third parameter is the number of same i'ds in a row (eg. given id's 0,2,1,1 this parameter would be 2 at the end of execution since there are two repeated 1's)
-// ^this sounds confusing but just know its used for multi-joint entities such as ragdolls/players/npcs
+// third parameter is the number of reoccurring id's in a row (eg. given id's 0,1,1,1 the parameter would be 2 at the end of execution since 1 was repeated two more times)
+// ^the third parameter sounds confusing but its useful for multi-joint entities such as ragdolls/players/npcs
 LUA_FUNCTION(FLEXSOLVER_IterateMeshes) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckType(2, Type::Function);
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 
 	int i = 0;
-	int repeat = 1;
+	int repeat = 0;
 	int previous_id;
 	for (FlexMesh mesh : *flex->get_meshes()) {
 		int id = mesh.get_mesh_id();
+
+		repeat = (i != 0 && previous_id == id) ? repeat + 1 : 0;	// if (same as last time) {repeat = repeat + 1} else {repeat = 0}
+		previous_id = id;
 
 		// func(i, id, repeat)
 		LUA->Push(2);
@@ -446,10 +451,7 @@ LUA_FUNCTION(FLEXSOLVER_IterateMeshes) {
 		LUA->PushNumber(repeat);
 		LUA->Call(3, 0);
 
-		repeat = (i != 0 && previous_id == id) ? repeat + 1 : 1;	// if (same as last time) {repeat = repeat + 1} else {repeat = 1}
-
 		i++;
-		previous_id = id;
 	}
 
 	return 0;

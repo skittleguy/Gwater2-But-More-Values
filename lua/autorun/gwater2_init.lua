@@ -49,11 +49,23 @@ local function unfucked_get_mesh(ent, raw)
 	local phys = ent:GetPhysicsObject()
 	if phys:IsValid() then return phys:GetMesh() end
 
-	-- Physics object doesn't exist
-	local cs_ent = ents.CreateClientProp(ent:GetModel())
-	local phys = cs_ent:GetPhysicsObject()
-	local convexes = phys:IsValid() and (raw and phys:GetMesh() or phys:GetMeshConvexes()) or nil
-	cs_ent:Remove()
+	local model = ent:GetModel()
+	local is_ragdoll = util.IsValidRagdoll(model)
+	local convexes
+
+	if !is_ragdoll or raw then
+		local cs_ent = ents.CreateClientProp(model)
+		local phys = cs_ent:GetPhysicsObject()
+		convexes = phys:IsValid() and (raw and phys:GetMesh() or phys:GetMeshConvexes())
+		cs_ent:Remove()
+	else 
+		local cs_ent = ClientsideRagdoll(model)
+		convexes = {}
+		for i = 0, cs_ent:GetPhysicsObjectCount() - 1 do
+			table.insert(convexes, cs_ent:GetPhysicsObjectNum(i):GetMesh())
+		end
+		cs_ent:Remove()
+	end
 
 	return convexes
 end
@@ -61,24 +73,21 @@ end
 -- adds entity to FlexSolver
 local function add_prop(ent)
 	if !IsValid(ent) or !ent:IsSolid() or ent:IsWeapon() then return end
+	--if !ent:IsRagdoll() then return end
 
 	local convexes = unfucked_get_mesh(ent)
 	if !convexes then return end
 
-	local invalid = false
-	for k, v in ipairs(convexes) do 
-		if #v > 64 * 3 or k > 10 then	-- hardcoded limits.. No more than 64 planes per convex it is a FleX limitation, and arbitrary maximum of 10 convexes
-			invalid = true
-			break
-		end
-	end
-
-	if !invalid then
+	if #convexes < 16 then	-- too many convexes to be worth calculating
 		for k, v in ipairs(convexes) do
-			gwater2.solver:AddConvexMesh(0, v, ent:GetPos(), ent:GetAngles())
+			if #v <= 64 * 3 then	-- hardcoded limits.. No more than 64 planes per convex as it is a FleX limitation
+				gwater2.solver:AddConvexMesh(ent:EntIndex(), v, ent:GetPos(), ent:GetAngles())
+			else
+				gwater2.solver:AddConcaveMesh(ent:EntIndex(), v, ent:GetPos(), ent:GetAngles())
+			end
 		end
 	else
-		gwater2.solver:AddConcaveMesh(0, unfucked_get_mesh(ent, true), ent:GetPos(), ent:GetAngles())
+		gwater2.solver:AddConcaveMesh(ent:EntIndex(), unfucked_get_mesh(ent, true), ent:GetPos(), ent:GetAngles())
 	end
 
 end
@@ -105,36 +114,39 @@ gwater2 = {
 	renderer = FlexRenderer(),
 	material = Material("gwater2/finalpass"),--Material("vgui/circle"),--Material("sprites/sent_ball"),
 	update_meshes = function(index, id, rep)
-		--local prop = gwater2.meshes[i]
-		--if !prop:IsValid() then
-		--	gwater2.solver:RemoveMesh(i)
-		--	continue
-		--end
-		
-		--if prop:GetVelocity() == vector_origin and prop:GetLocalAngularVelocity() == Angle() then continue end
-		--gwater2.solver:UpdateMesh(i, prop:GetPos(), prop:GetAngles())
-		print(index, id, rep)
+		if id == 0 then return end
+
+		local ent = Entity(id)
+		if !IsValid(ent) then 
+			gwater2.solver:RemoveMesh(id)
+		else 
+			if !util.IsValidRagdoll(ent:GetModel()) then
+				gwater2.solver:UpdateMesh(index, ent:GetPos(), ent:GetAngles())	
+			else
+				--print(rep)
+				--local bone = ent:GetBoneMatrix(ent:TranslatePhysBoneToBone(rep))
+				--print(bone:GetTranslation())
+				gwater2.solver:UpdateMesh(index, ent:GetBonePosition(ent:TranslatePhysBoneToBone(rep)))
+			end
+		end
 	end,
-	--reset_solver = function(err)	-- Will cause crashing. Dont call this if you don't know what it does
-	--	xpcall(function()
-	--		gwater2.solver:AddMapMesh(game.GetMap())
-	--	end, function(e)
-	--		gwater2.solver:AddConcaveMesh(get_map_vertices(), Vector(), Angle())
-	--		if !err then
-	--			ErrorNoHaltWithStack("[GWater2]: Map BSP structure is unsupported. Reverting to brushes. Collision WILL have holes!")
-	--		end
-	--	end)
+	reset_solver = function(err)
+		xpcall(function()
+			gwater2.solver:AddMapMesh(0, game.GetMap())
+		end, function(e)
+			gwater2.solver:AddConcaveMesh(0, get_map_vertices(), Vector(), Angle())
+			if !err then
+				ErrorNoHaltWithStack("[GWater2]: Map BSP structure is unsupported. Reverting to brushes. Collision WILL have holes!")
+			end
+		end)
 
-	--	for k, ent in ipairs(ents.GetAll()) do
-	--		add_prop(ent)
-	--	end
-	--end
+		for k, ent in ipairs(ents.GetAll()) do
+			add_prop(ent)
+		end
+
+		gwater2.solver:InitBounds(Vector(-16384, -16384, -16384), Vector(16384, 16384, 16384))	-- source bounds
+	end
 }
-gwater2.solver:InitBounds(Vector(-16384, -16384, -16384), Vector(16384, 16384, 16384))	-- source bounds
-
-local function screen_plane(x, y, c)
-	return gui.ScreenToVector(x, y):Cross(c)
-end
 
 -- tick particle solver
 local cm_2_inch = 2.54 * 2.54
@@ -169,12 +181,14 @@ end
 
 // run whenever possible, as often as possible. we dont know when flex will finish calculations
 local no = function() end
-hook.Add("PreRender", "gwater_tick", no)
-hook.Add("PostRender", "gwater_tick", no)
---hook.Add("Think", "gwater_tick_collision", gwater2.update_meshes)
-hook.Add("Think", "gwater_tick", no)
+hook.Add("PreRender", "gwater_tick", gwater_tick)
+hook.Add("PostRender", "gwater_tick", gwater_tick)
+hook.Add("Think", "gwater_tick", gwater_tick)
+hook.Add("Think", "gwater_tick_collision", function()
+	gwater2.solver:IterateMeshes(gwater2.update_meshes)
+end)
 
-timer.Create("gwater2_tick", limit_fps, 0, gwater_tick2)
---gwater2.reset_solver()
---hook.Add("InitPostEntity", "gwater2_addprop", gwater2.reset_solver)
+timer.Create("gwater2_tick", limit_fps, 0, no)
+gwater2.reset_solver()
+hook.Add("InitPostEntity", "gwater2_addprop", gwater2.reset_solver)
 hook.Add("OnEntityCreated", "gwater2_addprop", function(ent) timer.Simple(0, function() add_prop(ent) end) end)	// timer.0 so data values are setup correctly
