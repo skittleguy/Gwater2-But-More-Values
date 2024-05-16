@@ -71,6 +71,8 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	render.UpdateScreenEffectTexture()	-- _rt_framebuffer is used in refraction shader
 	render.OverrideAlphaWriteEnable(true, true)	-- Required for GWater shaders as they use the alpha component
 
+	--render.BlurRenderTarget(render.GetScreenEffectTexture(), 2, 2, 0)
+
 	-- cached variables
 	local scrw = ScrW()
 	local scrh = ScrH()
@@ -85,6 +87,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	--gwater2.renderer:DrawIMeshes()
 	
 	-- Depth absorption (disabled when opaque liquids are enabled)
+	-- TODO: REMOVE SETRENDERTARGET
 	local _, _, _, a = water:GetVector4D("$color2")
 	if water_volumetric:GetFloat("$alpha") != 0 and a < 255 then
 		render.SetMaterial(water_volumetric)

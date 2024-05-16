@@ -396,7 +396,7 @@ concommand.Add("gwater2_menu", function()
 		labels[1], sliders["Cohesion"] = create_slider(scrollPanel, "Cohesion", 0, 2, 3, 50)
 		labels[2], sliders["Adhesion"] = create_slider(scrollPanel, "Adhesion", 0, 0.2, 3, 80)
 		labels[3], sliders["Gravity"] = create_slider(scrollPanel, "Gravity", -30.48, 30.48, 2, 110)
-		labels[4], sliders["Viscosity"] = create_slider(scrollPanel, "Viscosity", 0, 10, 2, 140)
+		labels[4], sliders["Viscosity"] = create_slider(scrollPanel, "Viscosity", 0, 100, 2, 140)
 		labels[5], sliders["Radius"] = create_slider(scrollPanel, "Radius", 1, 100, 1, 170)
 		labels[6], sliders["Color"] = create_picker(scrollPanel, "Color", 200, 200)
 
@@ -693,8 +693,16 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 			Make sure to read 'Changelog (v0.3b)' to see what has been updated!
 
 			Changelog (v0.3b):
+			- Added NPC, Player, and Ragdoll collision
+			- Improved surface estimation (smoother water surface)
+			- Improved anisotropy code
+			- Changed viscosity slider limit from 10 to 100
+			- Fixed flashing when spawning particles after changing limits
 			- Fixed 'Depth fix' parameter not saving properly
 			- Fixed a crash when loading into some maps
+			- Fixed menu opening when using e2 editor
+			- Updated Patron List
+			- General micro-optimizations and codebase rewrites
 
 			Changelog (v0.2b):
 			- Performance improvements (I noticed about a 30% increase in fps, though it may depend on your hardware)

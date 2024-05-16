@@ -3,7 +3,12 @@
 #include <map>
 #include <vector>
 #include <string>
-#include "mesh.h"
+#include "flex_mesh.h"
+
+struct Particle {
+	Vector4D pos = Vector4D(0, 0, 0, 1);
+	Vector vel = Vector(0, 0, 0);
+};
 
 // Struct that holds FleX solver data
 class FlexSolver {
@@ -17,6 +22,7 @@ private:
 	std::map<std::string, float*> param_map; // TODO: figure out if this is the best way to do this... Would a set/get switch statement be better..?
 	std::map<std::string, void*> hosts;
 	std::vector<FlexMesh> meshes;	// physics meshes.. not visual!
+	std::vector<Particle> particles;	// Doesnt actually hold particles. Just a queue
 
 	void add_buffer(std::string name, int type, int count);
 	NvFlexBuffer* get_buffer(std::string name);

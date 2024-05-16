@@ -426,7 +426,7 @@ LUA_FUNCTION(FLEXSOLVER_GetMaxParticles) {
 
 // Runs a lua function with some data on all FlexMeshes stored in a FlexSolver
 // This is faster then returning a table of values and using ipairs and also allows removal / additions during function execution
-// first parameter is the index of the mesh inside the array
+// first parameter is the index of the mesh inside the vector
 // second parameter is the entity id associated that was given during AddMesh
 // third parameter is the number of reoccurring id's in a row (eg. given id's 0,1,1,1 the parameter would be 2 at the end of execution since 1 was repeated two more times)
 // ^the third parameter sounds confusing but its useful for multi-joint entities such as ragdolls/players/npcs

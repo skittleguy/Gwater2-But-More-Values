@@ -1,4 +1,4 @@
-#include "mesh.h"
+#include "flex_mesh.h"
 
 #define _PI 3.14159265358979323846f
 float rad(float degree) {

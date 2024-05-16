@@ -1,5 +1,5 @@
 GWaterVolumetric {
 	$additive 1
-	$alpha 0.15
+	$alpha 0.215
 	$translucent 1
 }

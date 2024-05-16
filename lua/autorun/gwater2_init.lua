@@ -135,7 +135,7 @@ gwater2 = {
 						ang = bone:GetAngles()
 					else
 						pos = ent:GetPos()
-						ang = ent:GetPos()
+						ang = ent:GetAngles()
 					end
 				end
 				gwater2.solver:UpdateMesh(index, pos, ang)
@@ -172,13 +172,13 @@ local function gwater_tick()
 
 	if gwater2.solver:GetActiveParticles() == 0 or gwater2.solver:GetParameter("timescale") <= 0 then 
 		last_systime = systime
-		average_frametime = FrameTime() 
+		average_frametime = RealFrameTime()	-- clamped to minimum of 10 fps
 		return 
 	elseif hang_thread and delta_time < limit_fps then
 		return
 	end
-	
-	if gwater2.solver:Tick(math.min(average_frametime * cm_2_inch, 1 / 5), hang_thread and 0 or 1) then
+
+	if gwater2.solver:Tick(average_frametime * cm_2_inch, hang_thread and 0 or 1) then
 	//if gwater2.solver:Tick(1/165 * cm_2_inch, hang_thread and 0 or 1) then
 		average_frametime = average_frametime + ((systime - last_systime) - average_frametime) * 0.03
 		last_systime = systime	// smooth out fps
