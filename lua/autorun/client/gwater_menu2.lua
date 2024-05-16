@@ -393,11 +393,11 @@ concommand.Add("gwater2_menu", function()
 		local labels = {}
 		local sliders = {}
 		create_label(scrollPanel, "Fun Parameters", "These parameters directly influence physics and visuals.", 0)
-		labels[1], sliders["Cohesion"] = create_slider(scrollPanel, "Cohesion", 0, 2, 3, 50)
-		labels[2], sliders["Adhesion"] = create_slider(scrollPanel, "Adhesion", 0, 0.2, 3, 80)
-		labels[3], sliders["Gravity"] = create_slider(scrollPanel, "Gravity", -30.48, 30.48, 2, 110)
-		labels[4], sliders["Viscosity"] = create_slider(scrollPanel, "Viscosity", 0, 100, 2, 140)
-		labels[5], sliders["Radius"] = create_slider(scrollPanel, "Radius", 1, 100, 1, 170)
+		labels[5], sliders["Radius"] = create_slider(scrollPanel, "Radius", 1, 100, 1, 50)
+		labels[1], sliders["Cohesion"] = create_slider(scrollPanel, "Cohesion", 0, 2, 3, 80)
+		labels[2], sliders["Adhesion"] = create_slider(scrollPanel, "Adhesion", 0, 0.2, 3, 110)
+		labels[3], sliders["Gravity"] = create_slider(scrollPanel, "Gravity", -30.48, 30.48, 2, 140)
+		labels[4], sliders["Viscosity"] = create_slider(scrollPanel, "Viscosity", 0, 100, 2, 170)
 		labels[6], sliders["Color"] = create_picker(scrollPanel, "Color", 200, 200)
 
 		create_label(scrollPanel, "Presets", "A dropdown menu of example presets.\nNote that the color of existing particles will not change, but their settings will!", 323)
@@ -693,7 +693,8 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 			Make sure to read 'Changelog (v0.3b)' to see what has been updated!
 
 			Changelog (v0.3b):
-			- Added NPC, Player, and Ragdoll collision
+			- Added NPC, player, and ragdoll collision
+			- Improved (optimized) particle spawning code
 			- Improved surface estimation (smoother water surface)
 			- Improved anisotropy code
 			- Changed viscosity slider limit from 10 to 100
@@ -701,7 +702,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 			- Fixed 'Depth fix' parameter not saving properly
 			- Fixed a crash when loading into some maps
 			- Fixed menu opening when using e2 editor
-			- Updated Patron List
+			- Updated patron list
 			- General micro-optimizations and codebase rewrites
 
 			Changelog (v0.2b):

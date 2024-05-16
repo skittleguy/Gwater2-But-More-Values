@@ -89,7 +89,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	-- Depth absorption (disabled when opaque liquids are enabled)
 	-- TODO: REMOVE SETRENDERTARGET
 	local _, _, _, a = water:GetVector4D("$color2")
-	if water_volumetric:GetFloat("$alpha") != 0 and a < 255 then
+	if water_volumetric:GetFloat("$alpha") != 0 and a > 0 and a < 255 then
 		render.SetMaterial(water_volumetric)
 		render.SetRenderTarget(cache_absorption)
 		gwater2.renderer:DrawIMeshes()

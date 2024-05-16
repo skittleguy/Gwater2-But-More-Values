@@ -449,7 +449,7 @@ LUA_FUNCTION(FLEXSOLVER_IterateMeshes) {
 		LUA->PushNumber(i);
 		LUA->PushNumber(id);
 		LUA->PushNumber(repeat);
-		LUA->Call(3, 0);
+		LUA->PCall(3, 0, 0);
 
 		i++;
 	}
