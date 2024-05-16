@@ -10,5 +10,5 @@ float4 main(PS_INPUT i) : COLOR {
 	float radius2 = dot(offset, offset);
 
 	float bulge = radius2 < 1 ? (1 - radius2) * ALPHA : 0;
-	return float4(bulge, bulge, bulge, bulge);
+	return float4(bulge, bulge, bulge, ALPHA);
 };

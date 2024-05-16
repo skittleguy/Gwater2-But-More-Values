@@ -12,7 +12,7 @@ struct PS_INPUT {
 };
 
 // Algorithm smooths normals of particle (uses my own method) (separated into X and Y passes)
-// Worked on this algorithm for multiple months, so it may be a little messy. Smoothing particle information is NOT easy
+// Worked on this algorithm for multiple months, so it may be a little messy. Smoothing particle information is not easy..
 float4 main(PS_INPUT i) : COLOR {
 	float4 og_normal = tex2D(NORMALS, i.coord);
 	if (og_normal.w <= RADIUS) return og_normal;	// Dont blur if too close.
@@ -27,7 +27,7 @@ float4 main(PS_INPUT i) : COLOR {
 
 		// Is particle close enough	to be blended?		
 		float4 neighbor_normal = tex2D(NORMALS, texcoord_pos);
-		if (abs(neighbor_normal.w - og_normal.w) > RADIUS) return og_normal;
+		if (neighbor_normal.w - og_normal.w > RADIUS || neighbor_normal.w == 0) return og_normal;
 
 		// Weigh smooth amount based on angle
 		float cosTheta = dot(og_normal.xyz, neighbor_normal.xyz);
@@ -43,7 +43,7 @@ float4 main(PS_INPUT i) : COLOR {
 	for (int x = -1; x >= -RESOLUTION; x--) {
 		float2 texcoord_pos = i.coord + float2(x * SCR_S.x, x * SCR_S.y) * mipmap;
 		float4 neighbor_normal = tex2D(NORMALS, texcoord_pos);
-		if (abs(neighbor_normal.w - og_normal.w) > RADIUS) return og_normal;
+		if (neighbor_normal.w - og_normal.w > RADIUS || neighbor_normal.w == 0) return og_normal;
 		float cosTheta = dot(og_normal.xyz, neighbor_normal.xyz);
 		if (cosTheta < THRESHOLD) break;
 		final_normal += neighbor_normal.xyz * cosTheta * cosTheta;
