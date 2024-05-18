@@ -10,11 +10,15 @@
 
 class FlexRenderer {
 private:
-	std::vector<IMesh*> imeshes;
+	std::vector<IMesh*> water;
+	std::vector<IMesh*> diffuse;
 
 public:
-	void build_imeshes(FlexSolver* solver, float radius);
-	void draw_imeshes();
+	void build_water(FlexSolver* solver, float radius);
+	void build_diffuse(FlexSolver* solver, float radius);
+
+	void draw_water();
+	void draw_diffuse();
 
 	FlexRenderer();
 	~FlexRenderer();

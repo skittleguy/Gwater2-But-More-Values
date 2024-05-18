@@ -31,12 +31,9 @@ hook.Add("RenderScene", "gwater2_render", function(eye_pos, eye_angles, fov)
 	cam.End3D()
 end)]]
 
-
 -- gwater2 shader pipeline
 hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--PreDrawViewModels
 	if gwater2.solver:GetActiveParticles() < 1 then return end
-
-	local old_rt = render.GetRenderTarget()
 
 	--if EyePos():DistToSqr(LocalPlayer():EyePos()) > 1 then return end	-- bail if skybox is rendering (used in postdrawopaque)
 
@@ -55,10 +52,12 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 		print("[GWater2]: Force disabling MSAA for technical reasons. (Feel free to ask me (Meetric) for more info)")
 		RunConsoleCommand("mat_antialias", 1)
 	end
+	
+	local old_rt = render.GetRenderTarget()
 
-	--[[
 	-- diffuse particles
-	render.SetMaterial(water_volumetric)//Material("models/wireframe"))
+	--[[
+	render.SetMaterial(Material("models/wireframe"))//Material("models/wireframe"))
 	gwater2.solver:RenderParticles(function(pos, size)
 		render.DrawSprite(pos, 5, 5, color_white)
 	end)]]
@@ -68,10 +67,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	render.ClearRenderTarget(cache_depth, Color(0, 0, 0, 0))
 	render.ClearRenderTarget(cache_absorption, Color(0, 0, 0, 0))
 	render.ClearRenderTarget(cache_bloom, Color(0, 0, 0, 0))
-	render.UpdateScreenEffectTexture()	-- _rt_framebuffer is used in refraction shader
 	render.OverrideAlphaWriteEnable(true, true)	-- Required for GWater shaders as they use the alpha component
-
-	--render.BlurRenderTarget(render.GetScreenEffectTexture(), 2, 2, 0)
 
 	-- cached variables
 	local scrw = ScrW()
@@ -82,19 +78,28 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	-- Build imeshes for multiple passes
 	local up = EyeAngles():Up()
 	local right = EyeAngles():Right()
-	gwater2.renderer:BuildIMeshes(gwater2.solver, 1)
+	gwater2.renderer:BuildWater(gwater2.solver, 1)
+	gwater2.renderer:BuildDiffuse(gwater2.solver, radius / 5)
 	--render.SetMaterial(Material("models/props_combine/combine_interface_disp"))
-	--gwater2.renderer:DrawIMeshes()
+	
+	render.UpdateScreenEffectTexture()	-- _rt_framebuffer is used in refraction shader
+	render.SetRenderTarget(render.GetScreenEffectTexture())
+	render.SetMaterial(water_volumetric)
+	-- render.SetRenderTarget(old_rt)	-- required if upcoming pipeline doesnt exist
+	gwater2.renderer:DrawDiffuse()
+
+	--render.BlurRenderTarget(render.GetScreenEffectTexture(), 2, 2, 0)
 	
 	-- Depth absorption (disabled when opaque liquids are enabled)
 	-- TODO: REMOVE SETRENDERTARGET
+	--[[
 	local _, _, _, a = water:GetVector4D("$color2")
 	if water_volumetric:GetFloat("$alpha") != 0 and a > 0 and a < 255 then
 		render.SetMaterial(water_volumetric)
 		render.SetRenderTarget(cache_absorption)
-		gwater2.renderer:DrawIMeshes()
+		gwater2.renderer:DrawWater()
 		render.SetRenderTarget()
-	end
+	end]]
 
 	-- grab normals
 	water_normals:SetFloat("$radius", radius * 0.5)
@@ -102,7 +107,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	render.SetRenderTargetEx(0, cache_normals)
 	render.SetRenderTargetEx(1, cache_depth)
 	render.ClearDepth()
-	gwater2.renderer:DrawIMeshes()
+	gwater2.renderer:DrawWater()
 	render.SetRenderTargetEx(0, nil)
 	render.SetRenderTargetEx(1, nil)
 	
@@ -133,9 +138,12 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	water:SetTexture("$normaltexture", cache_normals)
 	water:SetTexture("$depthtexture", cache_absorption)
 	render.SetMaterial(water)
-	gwater2.renderer:DrawIMeshes()
+	gwater2.renderer:DrawWater()
 
 	render.OverrideAlphaWriteEnable(false, false)
+
+	render.SetMaterial(water_volumetric)
+	gwater2.renderer:DrawDiffuse()
 
 	-- Debug Draw
 	--render.DrawTextureToScreenRect(cache_absorption, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
