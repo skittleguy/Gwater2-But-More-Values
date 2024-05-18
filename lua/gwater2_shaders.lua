@@ -71,7 +71,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	render.UpdateScreenEffectTexture()	-- _rt_framebuffer is used in refraction shader
 	render.OverrideAlphaWriteEnable(true, true)	-- Required for GWater shaders as they use the alpha component
 
-	--render.BlurRenderTarget(render.GetScreenEffectTexture(), 2, 2, 0)
+	render.BlurRenderTarget(render.GetScreenEffectTexture(), 2, 2, 0)
 
 	-- cached variables
 	local scrw = ScrW()
