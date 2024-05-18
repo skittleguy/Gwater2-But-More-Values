@@ -20,6 +20,8 @@ local cache_bloom = GetRenderTargetGWater("2gwater_cache_bloom", 1 / 2)	-- for b
 local water_blur = Material("gwater2/smooth")
 local water_volumetric = Material("gwater2/volumetric")
 local water_normals = Material("gwater2/normals")
+local water_diffuse = Material("gwater2/diffuse")	-- foam/bubbles
+
 local blur_passes = CreateClientConVar("gwater2_blur_passes", "3", true)
 local antialias = GetConVar("mat_antialias")
 
@@ -84,7 +86,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	
 	render.UpdateScreenEffectTexture()	-- _rt_framebuffer is used in refraction shader
 	render.SetRenderTarget(render.GetScreenEffectTexture())
-	render.SetMaterial(water_volumetric)
+	render.SetMaterial(water_diffuse)
 	-- render.SetRenderTarget(old_rt)	-- required if upcoming pipeline doesnt exist
 	gwater2.renderer:DrawDiffuse()
 
@@ -92,14 +94,13 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	
 	-- Depth absorption (disabled when opaque liquids are enabled)
 	-- TODO: REMOVE SETRENDERTARGET
-	--[[
 	local _, _, _, a = water:GetVector4D("$color2")
 	if water_volumetric:GetFloat("$alpha") != 0 and a > 0 and a < 255 then
 		render.SetMaterial(water_volumetric)
 		render.SetRenderTarget(cache_absorption)
 		gwater2.renderer:DrawWater()
 		render.SetRenderTarget()
-	end]]
+	end
 
 	-- grab normals
 	water_normals:SetFloat("$radius", radius * 0.5)
@@ -142,7 +143,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 
 	render.OverrideAlphaWriteEnable(false, false)
 
-	render.SetMaterial(water_volumetric)
+	render.SetMaterial(water_diffuse)
 	gwater2.renderer:DrawDiffuse()
 
 	-- Debug Draw
