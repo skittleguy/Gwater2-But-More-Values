@@ -52,7 +52,7 @@ LUA_FUNCTION(FLEXSOLVER_AddParticle) {
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 	Vector pos = LUA->GetVector(2);
 	Vector vel = LUA->GetVector(3);
-	float inv_mass = 1.f / (float)LUA->GetNumber(5);	// FleX uses inverse mass for their calculations
+	float inv_mass = 1.f / (float)LUA->GetNumber(4);	// FleX uses inverse mass for their calculations
 	
 	flex->add_particle(Vector4D(pos.x, pos.y, pos.z, inv_mass), vel);
 
@@ -222,8 +222,8 @@ LUA_FUNCTION(FLEXSOLVER_RenderParticles) {
 	LUA->CheckType(2, Type::Function);
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
-	Vector4D* host = (Vector4D*)flex->get_host("diffuse_pos");
-	for (int i = 0; i < ((int*)flex->get_host("diffuse_active"))[0]; i++) {
+	Vector4D* host = (Vector4D*)flex->get_host("particle_pos");
+	for (int i = 0; i < flex->get_active_particles(); i++) {
 		// render function
 		LUA->Push(2);
 		LUA->PushVector(host[i].AsVector3D());
@@ -474,21 +474,39 @@ LUA_FUNCTION(FLEXRENDERER_GarbageCollect) {
 	return 0;
 }
 
-LUA_FUNCTION(FLEXRENDERER_BuildIMeshes) {
+// FlexRenderer imesh related functions
+LUA_FUNCTION(FLEXRENDERER_BuildWater) {
 	LUA->CheckType(1, FLEXRENDERER_METATABLE);
 	LUA->CheckType(2, FLEXSOLVER_METATABLE);
 	LUA->CheckNumber(3);
-	GET_FLEXRENDERER(1)->build_imeshes(GET_FLEXSOLVER(2), LUA->GetNumber(3));
+	GET_FLEXRENDERER(1)->build_water(GET_FLEXSOLVER(2), LUA->GetNumber(3));
 
 	return 0;
 }
 
-LUA_FUNCTION(FLEXRENDERER_DrawIMeshes) {
+LUA_FUNCTION(FLEXRENDERER_DrawWater) {
 	LUA->CheckType(1, FLEXRENDERER_METATABLE);
-	GET_FLEXRENDERER(1)->draw_imeshes();
+	GET_FLEXRENDERER(1)->draw_water();
 
 	return 0;
 }
+
+LUA_FUNCTION(FLEXRENDERER_BuildDiffuse) {
+	LUA->CheckType(1, FLEXRENDERER_METATABLE);
+	LUA->CheckType(2, FLEXSOLVER_METATABLE);
+	LUA->CheckNumber(3);
+	GET_FLEXRENDERER(1)->build_diffuse(GET_FLEXSOLVER(2), LUA->GetNumber(3));
+
+	return 0;
+}
+
+LUA_FUNCTION(FLEXRENDERER_DrawDiffuse) {
+	LUA->CheckType(1, FLEXRENDERER_METATABLE);
+	GET_FLEXRENDERER(1)->draw_diffuse();
+
+	return 0;
+}
+
 
 /************************************* Global LUA Interface **********************************************/
 
@@ -614,8 +632,10 @@ GMOD_MODULE_OPEN() {
 	// FlexMetaTable.__index = {func1, func2, ...}
 	LUA->CreateTable();
 	ADD_FUNCTION(LUA, FLEXRENDERER_GarbageCollect, "Destroy");
-	ADD_FUNCTION(LUA, FLEXRENDERER_BuildIMeshes, "BuildIMeshes");
-	ADD_FUNCTION(LUA, FLEXRENDERER_DrawIMeshes, "DrawIMeshes");
+	ADD_FUNCTION(LUA, FLEXRENDERER_BuildWater, "BuildWater");
+	ADD_FUNCTION(LUA, FLEXRENDERER_DrawWater, "DrawWater");
+	ADD_FUNCTION(LUA, FLEXRENDERER_BuildDiffuse, "BuildDiffuse");
+	ADD_FUNCTION(LUA, FLEXRENDERER_DrawDiffuse, "DrawDiffuse");
 	LUA->SetField(-2, "__index");
 
 	// _G.FlexSolver = NewFlexSolver

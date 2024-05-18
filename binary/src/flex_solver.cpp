@@ -290,7 +290,7 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 
 	NvFlexSetSolverDescDefaults(&solver_description);
 	solver_description.maxParticles = particles;
-	solver_description.maxDiffuseParticles = 10000;
+	solver_description.maxDiffuseParticles = 50000;
 
 	this->library = library;
 	solver = NvFlexCreateSolver(library, &solver_description);
@@ -341,11 +341,11 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	params->vorticityConfinement = 0.0f;
 	params->buoyancy = 1.0f;
 
-	params->diffuseThreshold = 1000.f;
+	params->diffuseThreshold = 200.f;
 	params->diffuseBuoyancy = 1.f;
 	params->diffuseDrag = 0.8f;
-	params->diffuseBallistic = 8;
-	params->diffuseLifetime = 10.0f;
+	params->diffuseBallistic = 16;
+	params->diffuseLifetime = 13.f;	// not actually in seconds
 
 	params->numPlanes = 0;
 

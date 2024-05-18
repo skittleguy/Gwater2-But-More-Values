@@ -2,22 +2,19 @@
 
 //extern IMaterialSystem* materials = NULL;	// stops main branch compile from bitching
 
-void FlexRenderer::draw_imeshes() {
-	for (IMesh* mesh : imeshes) 
-		mesh->Draw();
-};
-
 // lord have mercy brothers
-void FlexRenderer::build_imeshes(FlexSolver* solver, float radius) {
+void FlexRenderer::build_water(FlexSolver* solver, float radius) {
 	if (solver == nullptr) return;
 
 	// Clear previous imeshes since they are being rebuilt
 	IMatRenderContext* render_context = materials->GetRenderContext();
-	for (IMesh* mesh : imeshes)
+	for (IMesh* mesh : water) {
 		render_context->DestroyStaticMesh(mesh);
-	imeshes.clear();
+	}
+	water.clear();
 	
-	if (solver->get_active_particles() == 0) return;
+	int max_particles = solver->get_active_particles();
+	if (max_particles == 0) return;
 
 	// View matrix, used in frustrum culling
 	VMatrix view_matrix, projection_matrix, view_projection_matrix;
@@ -37,11 +34,23 @@ void FlexRenderer::build_imeshes(FlexSolver* solver, float radius) {
 	Vector4D* particle_ani3 = (Vector4D*)solver->get_host("particle_ani3");
 	bool particle_ani = solver->get_parameter("anisotropy_scale") != 0;
 
+	// Create meshes and iterates through particles. We also need to abide by the source limits of 2^15 max vertices per mesh
+	// Does so in this structure:
+
+	// for (particle in particles) {
+	//	create_mesh()
+	//	for (primative = 0 through maxprimatives) {
+	//    particle++
+	//    if frustrum {continue}
+	//    primative++
+	//  }
+	// }
+
 	CMeshBuilder mesh_builder;
-	for (int particle_index = 0; particle_index < solver->get_active_particles();) {
+	for (int particle_index = 0; particle_index < max_particles;) {
 		IMesh* imesh = render_context->CreateStaticMesh(VERTEX_POSITION | VERTEX_NORMAL | VERTEX_TEXCOORD0_2D, "");
 		mesh_builder.Begin(imesh, MATERIAL_TRIANGLES, MAX_PRIMATIVES);
-			for (int primative = 0; primative < MAX_PRIMATIVES && particle_index < solver->get_active_particles(); particle_index++) {
+			for (int primative = 0; primative < MAX_PRIMATIVES && particle_index < max_particles; particle_index++) {
 				Vector particle_pos = particle_positions[particle_index].AsVector3D();
 
 				// Frustrum culling
@@ -89,18 +98,99 @@ void FlexRenderer::build_imeshes(FlexSolver* solver, float radius) {
 			}
 		mesh_builder.End();
 		mesh_builder.Reset();
-		imeshes.push_back(imesh);
+		water.push_back(imesh);
+	}
+};
+
+void FlexRenderer::build_diffuse(FlexSolver* solver, float radius) {
+	if (solver == nullptr) return;
+
+	// Clear previous imeshes since they are being rebuilt
+	IMatRenderContext* render_context = materials->GetRenderContext();
+	for (IMesh* mesh : diffuse) {
+		render_context->DestroyStaticMesh(mesh);
+	}	
+	diffuse.clear();
+
+	int max_particles = ((int*)solver->get_host("diffuse_active"))[0];
+	if (max_particles == 0) return;
+
+	// View matrix, used in frustrum culling
+	VMatrix view_matrix, projection_matrix, view_projection_matrix;
+	render_context->GetMatrix(MATERIAL_VIEW, &view_matrix);
+	render_context->GetMatrix(MATERIAL_PROJECTION, &projection_matrix);
+	MatrixMultiply(projection_matrix, view_matrix, view_projection_matrix);
+	
+	// Get eye position for sprite calculations
+	Vector eye_pos; render_context->GetWorldSpaceCameraPosition(&eye_pos);
+
+	float u[3] = { 0.5 - SQRT3 / 2, 0.5, 0.5 + SQRT3 / 2 };
+	float v[3] = { 1, -0.5, 1 };
+	float mult = 1.f / solver->get_parameter("diffuse_lifetime");
+
+	Vector4D* particle_positions = (Vector4D*)solver->get_host("diffuse_pos");
+	CMeshBuilder mesh_builder;
+	for (int particle_index = 0; particle_index < max_particles;) {
+		IMesh* imesh = render_context->CreateStaticMesh(VERTEX_POSITION | VERTEX_NORMAL | VERTEX_TEXCOORD0_2D, "");
+		mesh_builder.Begin(imesh, MATERIAL_TRIANGLES, MAX_PRIMATIVES);
+		for (int primative = 0; primative < MAX_PRIMATIVES && particle_index < max_particles; particle_index++) {
+			Vector particle_pos = particle_positions[particle_index].AsVector3D();
+
+			// Frustrum culling
+			Vector4D dst;
+			Vector4DMultiply(view_projection_matrix, Vector4D(particle_pos.x, particle_pos.y, particle_pos.z, 1), dst);
+			if (dst.z < 0 || -dst.x - dst.w > 0 || dst.x - dst.w > 0 || -dst.y - dst.w > 0 || dst.y - dst.w > 0) {
+				continue;
+			}
+
+			// calculate triangle rotation
+			Vector forward = (particle_pos - eye_pos).Normalized();
+			Vector right = forward.Cross(Vector(0, 0, 1)).Normalized();
+			Vector up = right.Cross(forward);
+			Vector local_pos[3] = { (-up - right * SQRT3), up * 2.0, (-up + right * SQRT3) };
+			for (int i = 0; i < 3; i++) { 
+				Vector world_pos = particle_pos + local_pos[i] * radius * particle_positions[particle_index].w * mult;
+				mesh_builder.TexCoord2f(0, u[i], v[i]);
+				mesh_builder.Position3f(world_pos.x, world_pos.y, world_pos.z);
+				mesh_builder.Normal3f(-forward.x, -forward.y, -forward.z);
+				mesh_builder.AdvanceVertex();
+			}
+
+			primative += 1;
+		}
+		mesh_builder.End();
+		mesh_builder.Reset();
+		diffuse.push_back(imesh);
+	}
+};
+
+
+void FlexRenderer::draw_diffuse() {
+	for (IMesh* mesh : diffuse) {
+		mesh->Draw();
+	}
+}
+
+void FlexRenderer::draw_water() {
+	for (IMesh* mesh : water) {
+		mesh->Draw();
 	}
 };
 
 FlexRenderer::FlexRenderer() {
-	imeshes = std::vector<IMesh*>();
+
 };
 
 FlexRenderer::~FlexRenderer() {
 	IMatRenderContext* render_context = materials->GetRenderContext();
-	for (IMesh* mesh : imeshes) 
+	for (IMesh* mesh : water) {
 		render_context->DestroyStaticMesh(mesh);
-	
-	imeshes.clear();
+	}
+
+	for (IMesh* mesh : diffuse) {
+		render_context->DestroyStaticMesh(mesh);
+	}
+
+	water.clear();
+	diffuse.clear();
 };
