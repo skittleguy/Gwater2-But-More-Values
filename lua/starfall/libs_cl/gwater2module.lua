@@ -15,11 +15,9 @@ local function main(instance)
 	-- @client
 	-- @param Vector pos
 	-- @param Vector vel
-	-- @param number mass
-	function gwater_library.addParticle(pos, vel, color, mass)
+	function gwater_library.addParticle(pos, vel)
 		if LocalPlayer() == instance.player then
-			mass = mass ~= nil and mass or 1
-			gwater2.solver:AddParticle(vunwrap(pos), vunwrap(vel), color, mass)
+			gwater2.solver:AddParticle(vunwrap(pos), vunwrap(vel), 1, 1)
 		end
 	end
 
@@ -29,10 +27,9 @@ local function main(instance)
 	-- @param Vector vel
 	-- @param Vector size
 	-- @param number apart
-	-- @param Color color
-	function gwater_library.addCube(pos, vel, size, apart, color)
+	function gwater_library.addCube(pos, vel, size, apart)
 		if LocalPlayer() == instance.player then
-			gwater2.solver:AddCube(vunwrap(pos), vunwrap(vel), vunwrap(size), apart, color)
+			gwater2.solver:AddCube(vunwrap(pos), vunwrap(vel), vunwrap(size), apart)
 		end
 	end
 
@@ -60,7 +57,7 @@ local function main(instance)
 	-- @return number value
 	function gwater_library.getParameter(parameter)
 		if LocalPlayer() == instance.player then
-			return GetGwaterParameter(parameter)
+			return gwater2.solver:GetParameter(parameter)
 		end
 	end
 end

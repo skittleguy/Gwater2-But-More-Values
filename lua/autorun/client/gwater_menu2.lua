@@ -29,16 +29,25 @@ local options = {
 	patron_tab_header = "Patron Tab",
 	patron_tab_text = "This tab has a list of all my patrons.\n\nThe list is sorted from biggest donator to smallest\n\nIt will be updated routinely until release.",
 
+	-- Physics Parameters
 	Cohesion = {text = "Controls how well particles hold together.\n\nHigher values make the fluid more solid/rigid, while lower values make it more fluid and loose."},
 	Adhesion = {text = "Controls how well particles stick to surfaces.\n\nNote: This specific parameter doesn't reflect changes in the preview very well and may need to be viewed externally."},
 	Gravity = {text = "Controls how strongly fluid is pulled down. This value is measured in meters per second.\n\nNote: The default source gravity is -15.24 which is NOT the same as Earths gravity of -9.81."},
 	Viscosity = {text = "Controls how much particles resist movement.\n\nHigher values look more like honey or syrup, while lower values look like water or oil.\n\nUsually bundled with cohesion."},
 	Radius = {text = "Controls the size of each particle. In the preview it is clamped to 15 to avoid weirdness.\n\nRadius is measured in source units (aka inches) and is the same for all particles."},
 	["Surface Tension"] = {text = "Controls how strongly particles minimize surface area."},
-	["Fluid Rest Distance"] = {text = "Percentage of distance between particles.\n\n0.9 = rigid\n0.5 = smooth"},
+	["Fluid Rest Distance"] = {text = "Percentage of distance between particles.\n\n0.9 = rigid\n0.55 = smooth\n\nThis parameter can cause the water to splash in one direction if set too low."},
 	["Timescale"] = {text = "Sets how fast the simulation runs."},
+	["Collision Distance"] = {text = "The distance at which particles collide with the world."},
+	--
 	
+	-- Visual Parameters
 	Color = {text = "Controls what color the fluid is.\n\nUnlike all other parameters, color is separate, and per-particle.\n\nThe alpha channel controls the amount of color absorbsion."},
+	["Anisotropy Min"] = {text = ""}, -- TODO: Define these
+	["Anisotropy Max"] = {text = ""},
+	["Anisotropy Scale"] = {text = ""},
+	--
+
 	Iterations = {text = "Controls how many times the physics solver attempts to converge to a solution.\n\nLight performance impact."},
 	Substeps = {text = "Controls the number of physics steps done per tick.\n\nNote: Parameters may not be properly tuned for different substeps!\n\nMedium-High performance impact."},
 	["Blur Passes"] = {text = "Controls the number of blur passes done per frame. More passes creates a smoother water surface. Zero passes will do no blurring.\n\nMedium performance impact."},
@@ -49,6 +58,7 @@ local options = {
 
 gwater2["surface_tension"] = gwater2.solver:GetParameter("surface_tension")
 gwater2["fluid_rest_distance"] = gwater2.solver:GetParameter("fluid_rest_distance") / gwater2.solver:GetParameter("radius")
+gwater2["collision_distance"] = gwater2.solver:GetParameter("radius") * 0.5
 -- garry, sincerely... fuck you
 timer.Simple(0, function() 
 	Material("gwater2/volumetric"):SetFloat("$alpha", options.absorption:GetBool() and 0.15 or 0)
@@ -62,10 +72,11 @@ options.solver:SetParameter("dynamic_friction", 0)
 
 -- designs for tabs and frames
 local function draw_tabs(self, w, h)
-	draw.RoundedBox(0, 2, 0, w - 4, 20, Color( 27, 27, 27, 255))
 	if h ~= 20 then
-		surface.SetDrawColor(0,80,255, 60)
+		surface.SetDrawColor(0,80,255, 230)
 		surface.DrawRect(2,0,w - 4,h - 8)
+	else
+		draw.RoundedBox(0, 2, 0, w - 4, 20, Color( 27, 27, 27, 230))
 	end
 	surface.SetDrawColor(255, 255, 255)
 	surface.DrawOutlinedRect(2, 0, w - 4, 21, 1)
@@ -143,7 +154,10 @@ local function set_gwater_parameter(option, val)
 			gwater2.solver:SetParameter(option, val / gwater2.solver:GetParameter("radius")^4)
 		end
 		if option == "fluid_rest_distance" then
-			gwater2.solver:SetParameter("fluid_rest_distance", val * gwater2.solver:GetParameter("radius"))
+			gwater2.solver:SetParameter(option, val * gwater2.solver:GetParameter("radius"))
+		end
+		if option == "collision_distance" then
+			gwater2.solver:SetParameter(option, val * gwater2.solver:GetParameter("radius"))
 		end
 		return
 	end
@@ -166,8 +180,10 @@ local function set_gwater_parameter(option, val)
 end
 
 -- some helper functions
-local function create_slider(self, text, min, max, decimals, dock, x_offset, length)
+local function create_slider(self, text, min, max, decimals, dock, x_offset, length, label_offset_x, reset_offset_x)
 	x_offset = x_offset or 0
+	label_offset_x = label_offset_x or 0
+	reset_offset_x = reset_offset_x or 0
 	length = length or 300
 
 	local option = string.lower(text)
@@ -181,7 +197,7 @@ local function create_slider(self, text, min, max, decimals, dock, x_offset, len
 	end
 	
 	local label = vgui.Create("DLabel", self)
-	label:SetPos(0, dock)
+	label:SetPos(10 + label_offset_x, dock)
 	label:SetSize(200, 20)
 	label:SetText(text)
 	label:SetColor(Color(255, 255, 255))
@@ -204,7 +220,7 @@ local function create_slider(self, text, min, max, decimals, dock, x_offset, len
 	end
 
 	local button = vgui.Create("DButton", self)
-	button:SetPos(345, dock)
+	button:SetPos(345 + reset_offset_x, dock)
 	button:SetSize(20, 20)
 	button:SetText("")
 	button:SetImage("icon16/arrow_refresh.png")
@@ -236,7 +252,7 @@ end
 local function copy_color(c) return Color(c.r, c.g, c.b, c.a) end
 local function create_picker(self, text, dock, size)
 	local label = vgui.Create("DLabel", self)
-	label:SetPos(10, dock)
+	label:SetPos(0, dock)
 	label:SetSize(100, 100)
 	label:SetFont("GWater2Param")
 	label:SetText(text)
@@ -251,12 +267,43 @@ local function create_picker(self, text, dock, size)
 
 	local finalpass = Material("gwater2/finalpass")
 	local mixer = vgui.Create("DColorMixer", self)
-	mixer:SetPos(70, dock + 5)
-	mixer:SetSize(210, 100)	
-	mixer:SetPalette(false)  	
+	mixer:SetPos(60, dock + 5)
+	mixer:SetSize(276, 110)
+	mixer:SetPalette(false)
 	mixer:SetLabel()
 	mixer:SetAlphaBar(true)
-	mixer:SetWangs(false)
+	mixer:SetWangs(true)
+
+	for k, wang in pairs(mixer:GetChildren()[3]:GetChildren()) do
+		for k, arrow in pairs(wang:GetChildren()) do
+			function arrow:Paint(w, h)
+				surface.SetDrawColor(255, 255, 255)
+				
+				if k == 1 then
+					surface.DrawLine(w * 0.5, 4, w * 0.5 - 4, 8)
+					surface.DrawLine(w * 0.5, 4, w * 0.5 + 4, 8)
+				else
+					surface.DrawLine(w * 0.5, h - 3, w * 0.5 - 4, h - 7)
+					surface.DrawLine(w * 0.5, h - 3, w * 0.5 + 4, h - 7)
+				end
+			end
+		end
+		function wang:Paint(w, h)
+			surface.SetDrawColor(0, 0, 0, 150)
+			surface.DrawRect(0, 0, w, h)
+			surface.SetDrawColor(255, 255, 255)
+			surface.DrawOutlinedRect(0, 0, w, h)
+			surface.SetDrawColor(255, 255, 255, 50)
+			surface.DrawLine(w * 0.5 + 10, 4, w * 0.5 + 10, h - 4)
+			local txt_col = Color((k == 1 and 255 or 0) + (k == 4 and 255 or 0), (k == 2 and 255 or 0) + (k == 4 and 255 or 0), (k == 3 and 255 or 0) + (k == 4 and 255 or 0))
+			local cutoff_start_x, cutoff_start_y = wang:LocalToScreen(0,0)
+			local cutoff_end_x, cutoff_end_y = wang:LocalToScreen(w * 0.5 + 10,h)
+			render.SetScissorRect(cutoff_start_x, cutoff_start_y, cutoff_end_x, cutoff_end_y, true)
+				draw.DrawText(self:GetValue(), "DermaDefault", 5, 3, txt_col, TEXT_ALIGN_LEFT)
+			render.SetScissorRect(cutoff_start_x, cutoff_start_y, cutoff_end_x, cutoff_end_y, false)
+		end
+	end
+
 	mixer:SetColor(options.color) 
 	function mixer:ValueChanged(col)
 		options.color = copy_color(col)	-- color returned by ValueChanged doesnt have any metatables
@@ -264,7 +311,7 @@ local function create_picker(self, text, dock, size)
 	end
 
 	local button = vgui.Create("DButton", self)
-	button:SetPos(290, dock + 5)
+	button:SetPos(345, dock)
 	button:SetText("")
 	button:SetSize(20, 20)
 	button:SetImage("icon16/arrow_refresh.png")
@@ -305,10 +352,45 @@ concommand.Add("gwater2_menu", function()
     -- start creating visual design
     mainFrame = vgui.Create("DFrame")
     mainFrame:SetSize(800, 400)
+	mainFrame:SetSizable(false)
     mainFrame:Center()
 	mainFrame:SetTitle("gwater2 (v" .. version .. ")")
     mainFrame:MakePopup()
 	mainFrame:SetScreenLock(true)
+
+	local minimize_btn = mainFrame:GetChildren()[3]
+	--minimize_btn:SetMouseInputEnabled(false)
+	minimize_btn:SetVisible(false)
+	
+	local maximize_btn = mainFrame:GetChildren()[2]
+	--maximize_btn:SetMouseInputEnabled(false)
+	maximize_btn:SetVisible(false)
+
+	local close_btn = mainFrame:GetChildren()[1]
+	close_btn:SetVisible(false)
+
+	local new_close_btn = vgui.Create("DButton", mainFrame)
+	new_close_btn:SetPos(777, 3)
+	new_close_btn:SetSize(20, 20)
+	new_close_btn:SetText("")
+
+	function new_close_btn:DoClick()
+		mainFrame:Remove()
+		EmitSound("buttons/lightswitch2.wav", Vector(), -2, CHAN_AUTO, 1, nil, nil, 200)
+		just_closed = true
+	end
+
+	function new_close_btn:Paint(w, h)
+		if self:IsHovered() then
+			surface.SetDrawColor(255, 0, 0, 127)
+			surface.DrawRect(0, 0, w, h)
+		end
+		surface.SetDrawColor(255, 255, 255)
+		surface.DrawOutlinedRect(0, 0, w, h)
+		surface.DrawLine(5, 5, w - 5, h - 5)
+		surface.DrawLine(w - (5 + 1), 5, 5 - 1, h - 5)
+	end
+
 	function mainFrame:Paint(w, h)
 		-- dark background around 2d water sim
 		surface.SetDrawColor(0, 0, 0, 230)
@@ -354,7 +436,7 @@ concommand.Add("gwater2_menu", function()
 
 	-- menu "center" button
 	local button = vgui.Create("DButton", mainFrame)
-	button:SetPos(680, 3)
+	button:SetPos(755, 3)
 	button:SetSize(20, 20)
 	button:SetText("")
 	button:SetImage("icon16/anchor.png")
@@ -390,14 +472,19 @@ concommand.Add("gwater2_menu", function()
         presets:SetPos(5, 72)
         presets:SetSize(200, 20)
         presets:SetText("Liquid Presets")
-		presets:AddChoice("Acid", "Color:240 255 0 200\nCohesion:\nAdhesion:0.1\nViscosity:0")
-		presets:AddChoice("Blood", "Color:240 0 0 250\nCohesion:0.01\nAdhesion:0.05\nViscosity:10")
-		presets:AddChoice("Glue", "Color:230 230 230 255\nCohesion:0.03\nAdhesion:0.1\nViscosity:10")	-- yeah sure.. "glue"...
-		presets:AddChoice("Lava", "Color:255 210 0 200\nCohesion:0.1\nAdhesion:0.01\nViscosity:10")
-		presets:AddChoice("Oil", "Color:0 0 0 255\nCohesion:0\nAdhesion:0\nViscosity:0")
-		presets:AddChoice("Water (Default)", "Color:\nCohesion:\nAdhesion:\nViscosity:")
+		presets:AddChoice("Acid", "Color:240 255 0 200\nCohesion:\nAdhesion:0.1\nViscosity:0\nFluid Rest Distance: 0.65\nSurface Tension:0.000001")
+		presets:AddChoice("Blood", "Color:220 0 0 250\nCohesion:0.004\nAdhesion:0.05\nViscosity:1\nFluid Rest Distance: 0.55")
+		presets:AddChoice("Glue", "Color:230 230 230 255\nCohesion:0.03\nAdhesion:0.1\nViscosity:10\nFluid Rest Distance: 0.65\nSurface Tension:0.000001")	-- yeah sure.. "glue"...
+		presets:AddChoice("Lava", "Color:255 210 0 200\nCohesion:0.1\nAdhesion:0.01\nViscosity:10\nFluid Rest Distance: 0.65\nSurface Tension:0.000001")
+		presets:AddChoice("Oil", "Color:0 0 0 255\nCohesion:0\nAdhesion:0\nViscosity:0\nFluid Rest Distance: 0.65\nSurface Tension:0.000001")
+
+		presets:AddChoice("Blue Portal Gel", "Color:0 127 255 255\nCohesion:0.05\nAdhesion:0.3\nViscosity:10\nFluid Rest Distance: 0.55\nSurface Tension:0.06")
+		presets:AddChoice("Orange Portal Gel", "Color:255 127 0 255\nCohesion:0.05\nAdhesion:0.3\nViscosity:10\nFluid Rest Distance: 0.55\nSurface Tension:0.06")
+
+		presets:AddChoice("Water (Default)", "Color:\nCohesion:\nAdhesion:\nViscosity:\nFluid Rest Distance: 0.65\nSurface Tension:0.000001")
 
 		function presets:OnSelect(index, value, data)
+			EmitSound("buttons/lightswitch2.wav", Vector(), -2, CHAN_AUTO, 1, nil, nil, 200)
 			local params = string.Split(data, "\n")
 			for _, param in ipairs(params) do
 				local key, val = unpack(string.Split(param, ":"))
@@ -415,6 +502,7 @@ concommand.Add("gwater2_menu", function()
 		end
 
 		function presets:OnMenuOpened(pnl)
+			EmitSound("buttons/lightswitch2.wav", Vector(), -2, CHAN_AUTO, 1, nil, nil, 200)
 			for k, label in pairs(pnl:GetCanvas():GetChildren()) do
 				function label:Paint(w, h)
 					if self:IsHovered() then
@@ -459,6 +547,10 @@ concommand.Add("gwater2_menu", function()
 
 		local parameter_tabs = vgui.Create("DPropertySheet", scrollPanel)
 
+		function parameter_tabs:OnActiveTabChanged(old, new)
+			EmitSound("buttons/lightswitch2.wav", Vector(), -2, CHAN_AUTO, 1, nil, nil, 200)
+		end
+
         local scrollEditTab = tabs:AddSheet("Fluid Parameters", scrollPanel, "icon16/wrench.png").Tab
 		
 		scrollEditTab.Paint = draw_tabs
@@ -469,8 +561,14 @@ concommand.Add("gwater2_menu", function()
 		local physics_tab_panel = vgui.Create("DPanel", parameter_tabs)
 		physics_tab_panel.Paint = nil
 
-		local physics_tab = parameter_tabs:AddSheet("Physics", physics_tab_panel, "icon16/bricks.png").Tab
+		local physics_tab = parameter_tabs:AddSheet("Physics", physics_tab_panel, "icon16/cog.png").Tab
 		physics_tab.Paint = draw_tabs
+
+		local adv_physics_tab_panel = vgui.Create("DPanel", parameter_tabs)
+		adv_physics_tab_panel.Paint = nil
+
+		local adv_physics_tab = parameter_tabs:AddSheet("Advanced Physics", adv_physics_tab_panel, "icon16/cog_add.png").Tab
+		adv_physics_tab.Paint = draw_tabs
 
 		local visuals_tab_panel = vgui.Create("DPanel", parameter_tabs)
 		visuals_tab_panel.Paint = nil
@@ -483,6 +581,7 @@ concommand.Add("gwater2_menu", function()
 		-- we need to save the index the tab is in, and when the menu is reopened it will set to that tab
 		-- we cant use a reference to an actual panel because it wont be valid the next time the menu is opened... so we use the index instead
 		function tabs:OnActiveTabChanged(old, new)
+			EmitSound("buttons/lightswitch2.wav", Vector(), -2, CHAN_AUTO, 1, nil, nil, 200)
 			for k, v in ipairs(self.Items) do
 				if v.Tab == new then
 					options.tab:SetInt(k)
@@ -510,22 +609,76 @@ concommand.Add("gwater2_menu", function()
 		local labels = {}
 
 		create_label(physics_tab_panel, "Physics Parameters", "These parameters directly influence physics.", 0)
-		labels[1], sliders["Radius"] = create_slider(physics_tab_panel, "Radius", 1, 100, 1, 50, -60, 360)
-		labels[2], sliders["Cohesion"] = create_slider(physics_tab_panel, "Cohesion", 0, 2, 3, 80, -60, 360)
-		labels[3], sliders["Adhesion"] = create_slider(physics_tab_panel, "Adhesion", 0, 0.2, 3, 110, -60, 360)
-		labels[4], sliders["Gravity"] = create_slider(physics_tab_panel, "Gravity", -30.48, 30.48, 2, 140, -60, 360)
-		labels[5], sliders["Viscosity"] = create_slider(physics_tab_panel, "Viscosity", 0, 100, 2, 170, -60, 360)
-		labels[6], sliders["Surface Tension"] = create_slider(physics_tab_panel, "Surface Tension", 0, 1, 2, 200, -60, 360)
-		labels[7], sliders["Fluid Rest Distance"] = create_slider(physics_tab_panel, "Fluid Rest Distance", 0.5, 0.85, 2, 230, 0, 300)
-		labels[8], sliders["Timescale"] = create_slider(physics_tab_panel, "Timescale", 0, 2, 2, 260, 0, 300)
+		create_label(adv_physics_tab_panel, "Advanced Physics Parameters", "These are the more technical version of the physics Parameters", 0)
+		labels[1], sliders["Radius"] = create_slider(physics_tab_panel, "Radius", 1, 100, 1, 50, -60, 360, -10)
+		labels[2], sliders["Cohesion"] = create_slider(physics_tab_panel, "Cohesion", 0, 2, 3, 80, -60, 360, -10)
+		labels[3], sliders["Adhesion"] = create_slider(physics_tab_panel, "Adhesion", 0, 0.2, 3, 110, -60, 360, -10)
+		labels[4], sliders["Gravity"] = create_slider(physics_tab_panel, "Gravity", -30.48, 30.48, 2, 140, -60, 360, -10)
+		labels[5], sliders["Viscosity"] = create_slider(physics_tab_panel, "Viscosity", 0, 100, 2, 170, -60, 360, -10)
+		labels[6], sliders["Surface Tension"] = create_slider(physics_tab_panel, "Surface Tension", 0, 1, 2, 200, -60, 360, -10)
+		labels[7], sliders["Fluid Rest Distance"] = create_slider(physics_tab_panel, "Fluid Rest Distance", 0.55, 0.85, 2, 230, 0, 300, -10)
+		labels[8], sliders["Timescale"] = create_slider(physics_tab_panel, "Timescale", 0, 2, 2, 260, 0, 300, -10)
+		labels[9], sliders["Collision Distance"] = create_slider(adv_physics_tab_panel, "Collision Distance", 0, 1, 3, 50, 0, 300, -10)
 
 		create_label(visuals_tab_panel, "Visual Parameters", "These parameters directly influence visuals.", 0)
-		labels[8], sliders["Color"] = create_picker(visuals_tab_panel, "Color", 50, 200)
-
+		labels[10], sliders["Anisotropy Min"] = create_slider(visuals_tab_panel, "Anisotropy Min", 0, 1, 3, 50, -40, 340, -10)
+		labels[11], sliders["Anisotropy Max"] = create_slider(visuals_tab_panel, "Anisotropy Max", 0, 2, 3, 80, -40, 340, -10)
+		labels[12], sliders["Anisotropy Scale"] = create_slider(visuals_tab_panel, "Anisotropy Scale", 0, 2, 3, 110, -40, 340, -10)
+		labels[13], sliders["Color"] = create_picker(visuals_tab_panel, "Color", 140, 200)
+		
 		function physics_tab_panel:AnimationThink()
 			local mousex, mousey = self:LocalCursorPos()
 			local text_name = nil
 			for _, label in pairs(labels) do
+				if label:GetParent() != self then continue end
+				local x, y = label:GetPos()
+				local w, h = 345, 22
+				if y >= -20 and mousex > x and mousey > y and mousex < x + w and mousey < y + h then
+					label:SetColor(Color(177, 255, 154))
+					text_name = label:GetText()
+				else
+					label:SetColor(Color(255, 255, 255))
+				end
+			end
+
+			if text_name then
+				explanation:SetText(options[text_name].text)
+				explanation_header = text_name
+			else
+				explanation:SetText(options.parameter_tab_text)
+				explanation_header = options.parameter_tab_header
+			end
+		end
+
+		function adv_physics_tab_panel:AnimationThink()
+			local mousex, mousey = self:LocalCursorPos()
+			local text_name = nil
+			for _, label in pairs(labels) do
+				if label:GetParent() != self then continue end
+				local x, y = label:GetPos()
+				local w, h = 345, 22
+				if y >= -20 and mousex > x and mousey > y and mousex < x + w and mousey < y + h then
+					label:SetColor(Color(177, 255, 154))
+					text_name = label:GetText()
+				else
+					label:SetColor(Color(255, 255, 255))
+				end
+			end
+
+			if text_name then
+				explanation:SetText(options[text_name].text)
+				explanation_header = text_name
+			else
+				explanation:SetText(options.parameter_tab_text)
+				explanation_header = options.parameter_tab_header
+			end
+		end
+
+		function visuals_tab_panel:AnimationThink()
+			local mousex, mousey = self:LocalCursorPos()
+			local text_name = nil
+			for _, label in pairs(labels) do
+				if label:GetParent() != self then continue end
 				local x, y = label:GetPos()
 				local w, h = 345, 22
 				if y >= -20 and mousex > x and mousey > y and mousex < x + w and mousey < y + h then
@@ -550,6 +703,13 @@ concommand.Add("gwater2_menu", function()
         local scrollPanel = vgui.Create("GF_ScrollPanel", tabs)
         local scrollEditTab = tabs:AddSheet("Performance Settings", scrollPanel, "icon16/application_xp_terminal.png").Tab
 		scrollEditTab.Paint = draw_tabs
+
+		function scrollPanel:Paint(w, h)
+			surface.SetDrawColor(0, 0, 0, 100)
+			surface.DrawRect(0, 0, w - 201, h)
+			surface.SetDrawColor(255, 255, 255)
+			surface.DrawOutlinedRect(0, 0, w - 201, h)
+		end
 
 		-- explanation area 
 		local explanation = create_explanation(scrollPanel)
@@ -578,8 +738,9 @@ concommand.Add("gwater2_menu", function()
 
 		local labels = {}
 		create_label(scrollPanel, "Performance Settings", "These settings directly influence performance", 0)
-		labels[1] = create_slider(scrollPanel, "Iterations", 1, 10, 0, 50) 
-		labels[2] = create_slider(scrollPanel, "Substeps", 1, 10, 0, 80) 
+		-- create_slider(self, text, min, max, decimals, dock, x_offset, length, label_offset_x, reset_offset_x)
+		labels[1] = create_slider(scrollPanel, "Iterations", 1, 10, 0, 50, -50, 330, 0, 10)
+		labels[2] = create_slider(scrollPanel, "Substeps", 1, 10, 0, 80, -50, 330, 0, 10)
 		--labels[3] = create_slider(scrollPanel, "Blur Passes", 0, 4, 0, 110) 
 
 		-- blur passes slider is special since it uses a convar
@@ -591,8 +752,8 @@ concommand.Add("gwater2_menu", function()
 		labels[3] = label
 
 		local slider = vgui.Create("DNumSlider", scrollPanel)
-		slider:SetPos(-40, 110)
-		slider:SetSize(400, 20)
+		slider:SetPos(0, 110)
+		slider:SetSize(330, 20)
 		slider:SetMinMax(0, 4)
 		slider:SetValue(options.blur_passes:GetInt())
 		slider:SetDecimals(0)
