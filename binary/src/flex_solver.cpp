@@ -156,6 +156,7 @@ bool FlexSolver::pretick(NvFlexMapFlags wait) {
 // ticks the solver
 void FlexSolver::tick(float dt) {
 	if (solver == nullptr) return;
+
 	// write to device (async)
 	NvFlexSetParams(solver, params);
 	NvFlexSetShapes(solver,
@@ -290,7 +291,7 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 
 	NvFlexSetSolverDescDefaults(&solver_description);
 	solver_description.maxParticles = particles;
-	solver_description.maxDiffuseParticles = 50000;
+	solver_description.maxDiffuseParticles = 100000;
 
 	this->library = library;
 	solver = NvFlexCreateSolver(library, &solver_description);

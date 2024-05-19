@@ -51,6 +51,7 @@ local function fuckgarry(w, s)
 end
 
 function SWEP:PrimaryAttack()
+	--self:SetNextPrimaryFire(CurTime() + 1/60)
 	if fuckgarry(self, "PrimaryAttack") then return end
 
 	local owner = self:GetOwner()

@@ -186,7 +186,7 @@ local function gwater_tick()
 end
 
 local function gwater_tick2()
-	if gwater2.solver:GetActiveParticles() == 0 or gwater2.solver:GetParameter("timescale") <= 0 then return end
+	--if gwater2.solver:GetActiveParticles() == 0 or gwater2.solver:GetParameter("timescale") <= 0 then return end
 
 	gwater2.solver:Tick(limit_fps * cm_2_inch, 0)
 end

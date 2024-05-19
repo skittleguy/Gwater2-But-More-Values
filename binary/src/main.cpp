@@ -64,8 +64,16 @@ LUA_FUNCTION(FLEXSOLVER_Tick) {
 	LUA->CheckNumber(2);	// Delta Time
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
+	
+	// Avoid ticking if the deltatime ends up being zero, as it invalidates the simulation
+	float dt = (float)LUA->GetNumber(2);
+	if (flex->get_parameter("timescale") == 0 || dt == 0 || flex->get_active_particles() == 0) {
+		LUA->PushBool(true);
+		return 1;
+	}
+
 	bool succ = flex->pretick((NvFlexMapFlags)LUA->GetNumber(3));
-	if (succ) flex->tick((float)LUA->GetNumber(2));
+	if (succ) flex->tick(dt);
 
 	LUA->PushBool(succ);
 	return 1;
