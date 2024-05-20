@@ -51,13 +51,13 @@ local function fuckgarry(w, s)
 end
 
 function SWEP:PrimaryAttack()
-	--self:SetNextPrimaryFire(CurTime() + 1/60)
+	self:SetNextPrimaryFire(CurTime() + 1/60)
 	if fuckgarry(self, "PrimaryAttack") then return end
 
 	local owner = self:GetOwner()
 	local forward = owner:EyeAngles():Forward()
 	local sprite_size = gwater2.solver:GetParameter("radius") * math.Rand(1, 1.01)
-	gwater2.solver:AddCube(owner:EyePos() + forward * 20 * sprite_size, forward * 100, Vector(4, 4, 4), sprite_size * 0.9)
+	gwater2.solver:AddCube(owner:EyePos() + forward * 20 * sprite_size, forward * 100, Vector(4, 4, 4), sprite_size)
 end
 
 function SWEP:SecondaryAttack()
@@ -66,7 +66,7 @@ function SWEP:SecondaryAttack()
 	local owner = self:GetOwner()
 	local forward = owner:EyeAngles():Forward()
 	local sprite_size = gwater2.solver:GetParameter("fluid_rest_distance")
-	gwater2.solver:AddCube(owner:EyePos() + forward * 40 * sprite_size, forward * 100, Vector(33, 33, 33), sprite_size * 0.9)
+	gwater2.solver:AddCube(owner:EyePos() + forward * 40 * sprite_size, forward * 100, Vector(33, 33, 33), sprite_size)
 end
 
 function SWEP:Reload()
@@ -100,18 +100,42 @@ function SWEP:PostDrawViewModel(vm, weapon, ply)
 end
 
 -- PostDrawViewModel^ doesn't write to depth buffer... add our own rendering hook
+-- TODO: This code sucks. Rewrite this
 local wireframe = Material("models/wireframe")
 hook.Add("PostDrawTranslucentRenderables", "gwater2_fuckthisshitman", function()
 	local owner = LocalPlayer()
 	local wep = owner:GetActiveWeapon()
 	if IsValid(wep) and wep:GetClass() == "weapon_gw2_watergun" then
 		local forward = owner:EyeAngles():Forward()
+
+		-- tiny cube
 		local sprite_size = gwater2.solver:GetParameter("radius")
-		render.DrawWireframeBox(owner:EyePos() + forward * 20 * sprite_size, Angle(), Vector(2, 2, 2) * -sprite_size, Vector(2, 2, 2) * sprite_size, Color(255, 255, 255, 0), true)
+		local pos = owner:EyePos() + forward * 20 * sprite_size
+		local size = Vector(2, 2, 2) * sprite_size
+
+		-- big cube
+		local sprite_size = gwater2.solver:GetParameter("fluid_rest_distance")
+		local pos2 = owner:EyePos() + forward * 40 * sprite_size
+		local size2 = Vector(16.5, 16.5, 16.5) * sprite_size
+
+		local tr = util.TraceHull({	
+			start = pos2,
+			endpos = pos2,
+			filter = owner,
+			mins = -size2,
+			maxs = size2
+		})
+		--PrintTable(tr)
+		if tr.Hit then
+			--render.DrawWireframeBox(pos, Angle(), -size, size, Color(255, 0, 0, 255), false)
+			render.DrawWireframeBox(pos, Angle(), -size, size, Color(255, 255, 255, 255), true)
+			
+			render.DrawWireframeBox(pos2, Angle(), -size2, size2, Color(255, 255, 255, 255), true)
+		end
 	end
 end)
 
-/* -- Benchmarking stuff (ignore)
+--[[ -- Benchmarking stuff (ignore)
 local avg = 0
 local line = 0
 local lines = {}
@@ -126,4 +150,4 @@ for i = 0, 1920 do
 end
 
 
-line = (line + 1) % 1920*/
+line = (line + 1) % 1920]]

@@ -20,15 +20,16 @@ inline NvFlexBuffer* FlexSolver::get_buffer(std::string name) {
 	return buffers[name];
 }
 
-// do not set this number to higher than the current number of active particles or youll probably crash
+//int diff = Max(n - copy_description->elementCount, 0);
+//particles.erase(particles.begin() + diff, particles.end());
+//copy_description->elementCount = Min(copy_description->elementCount, n);
 void FlexSolver::set_active_particles(int n) {
-	int diff = Max(n - copy_description->elementCount, 0);
-	particles.erase(particles.begin() + diff, particles.end());
-	copy_description->elementCount = Min(copy_description->elementCount, n);
+	copy_description->elementCount = n;
 }
 
+
 int FlexSolver::get_active_particles() {
-	return copy_description->elementCount + particles.size();
+	return copy_description->elementCount;
 }
 
 int FlexSolver::get_max_particles() {
@@ -49,16 +50,7 @@ std::vector<FlexMesh>* FlexSolver::get_meshes() {
 
 void FlexSolver::add_particle(Vector4D pos, Vector vel) {
 	if (solver == nullptr) return;
-	if (get_active_particles() >= get_max_particles()) return;
-
-	// avoids visual flashing. No need to call NvFlexMap as this is only a 'getter' buffer
-	int n = get_active_particles();
-	((Vector4D*)hosts["particle_pos"])[n] = pos;
-	//((Vector*)hosts["particle_vel"])[n] = vel;
-	((Vector4D*)hosts["particle_smooth"])[n] = pos;
-	((Vector4D*)hosts["particle_ani1"])[n] = Vector4D(0, 0, 0, 0);
-	((Vector4D*)hosts["particle_ani2"])[n] = Vector4D(0, 0, 0, 0);
-	((Vector4D*)hosts["particle_ani3"])[n] = Vector4D(0, 0, 0, 0);
+	if (get_active_particles() + particles.size() >= get_max_particles()) return;
 
 	Particle p;
 	p.pos = pos;
@@ -111,46 +103,47 @@ bool FlexSolver::pretick(NvFlexMapFlags wait) {
 	NvFlexUnmap(get_buffer("geometry_prevquat"));
 	NvFlexUnmap(get_buffer("geometry_flags"));
 
-	// Add particles into the FlexSolver if they exist
-	if (particles.size() > 0) {
-		// map buffers for reading / writing
-		Vector4D* positions = (Vector4D*)NvFlexMap(get_buffer("particle_pos"), eNvFlexMapWait);
-		Vector* velocities = (Vector*)NvFlexMap(get_buffer("particle_vel"), eNvFlexMapWait);
-		int* phases = (int*)NvFlexMap(get_buffer("particle_phase"), eNvFlexMapWait);
-		int* active = (int*)NvFlexMap(get_buffer("particle_active"), eNvFlexMapWait);
+	return true;
+}
 
-		// Add particle
-		for (const Particle& particle : particles) {
-			int n = copy_description->elementCount++;		// n = particle_count; n++
-			positions[n] = particle.pos;
-			velocities[n] = particle.vel;
-			phases[n] = NvFlexMakePhase(0, eNvFlexPhaseSelfCollide | eNvFlexPhaseFluid);
-			active[n] = n;
-			
-			// fixes visual flashing but not shit? i dont know why this needs to be here. its currently 3:27am as i'm writing this
-			((Vector4D*)hosts["particle_smooth"])[n] = particle.pos;
-			((Vector4D*)hosts["particle_ani1"])[n] = Vector4D(0, 0, 0, 0);
-			((Vector4D*)hosts["particle_ani2"])[n] = Vector4D(0, 0, 0, 0);
-			((Vector4D*)hosts["particle_ani3"])[n] = Vector4D(0, 0, 0, 0);
-		}
+void FlexSolver::map_particles() {
+	if (particles.empty()) return;
 
-		// unmap buffers
-		NvFlexUnmap(get_buffer("particle_pos"));
-		NvFlexUnmap(get_buffer("particle_vel"));
-		NvFlexUnmap(get_buffer("particle_phase"));
-		NvFlexUnmap(get_buffer("particle_active"));
-		
-		// Update particle information
-		NvFlexSetParticles(solver, get_buffer("particle_pos"), copy_description);
-		NvFlexSetVelocities(solver, get_buffer("particle_vel"), copy_description);
-		NvFlexSetPhases(solver, get_buffer("particle_phase"), copy_description);
-		NvFlexSetActive(solver, get_buffer("particle_active"), copy_description);
-		NvFlexSetActiveCount(solver, copy_description->elementCount);
+	// map buffers for reading / writing
+	Vector4D* positions = (Vector4D*)NvFlexMap(get_buffer("particle_pos"), eNvFlexMapWait);
+	Vector* velocities = (Vector*)NvFlexMap(get_buffer("particle_vel"), eNvFlexMapWait);
+	int* phases = (int*)NvFlexMap(get_buffer("particle_phase"), eNvFlexMapWait);
+	int* active = (int*)NvFlexMap(get_buffer("particle_active"), eNvFlexMapWait);
 
-		particles.clear();
+	// Add particle
+	for (Particle particle : particles) {
+		int n = copy_description->elementCount++;		// n = particle_count; n++
+		positions[n] = particle.pos;
+		velocities[n] = particle.vel;
+		phases[n] = NvFlexMakePhase(0, eNvFlexPhaseSelfCollide | eNvFlexPhaseFluid);
+		active[n] = n;
+
+		// fixes visual flashing
+		((Vector4D*)hosts["particle_smooth"])[n] = particle.pos;
+		((Vector4D*)hosts["particle_ani1"])[n] = Vector4D(0, 0, 0, 0);
+		((Vector4D*)hosts["particle_ani2"])[n] = Vector4D(0, 0, 0, 0);
+		((Vector4D*)hosts["particle_ani3"])[n] = Vector4D(0, 0, 0, 0);
 	}
 
-	return true;
+	// unmap buffers
+	NvFlexUnmap(get_buffer("particle_pos"));
+	NvFlexUnmap(get_buffer("particle_vel"));
+	NvFlexUnmap(get_buffer("particle_phase"));
+	NvFlexUnmap(get_buffer("particle_active"));
+
+	// Update particle information
+	NvFlexSetParticles(solver, get_buffer("particle_pos"), copy_description);	// TODO: Optimize this by creating your own copy description
+	NvFlexSetVelocities(solver, get_buffer("particle_vel"), copy_description);
+	NvFlexSetPhases(solver, get_buffer("particle_phase"), copy_description);
+	NvFlexSetActive(solver, get_buffer("particle_active"), copy_description);
+	NvFlexSetActiveCount(solver, copy_description->elementCount);
+
+	particles.clear();
 }
 
 // ticks the solver
@@ -346,7 +339,7 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	params->diffuseBuoyancy = 1.f;
 	params->diffuseDrag = 0.8f;
 	params->diffuseBallistic = 16;
-	params->diffuseLifetime = 13.f;	// not actually in seconds
+	params->diffuseLifetime = 10.f;	// not actually in seconds
 
 	params->numPlanes = 0;
 

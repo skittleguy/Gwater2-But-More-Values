@@ -43,15 +43,17 @@ local options = {
 	["Fluid Rest Distance"] = {text = "Controls the collision distance between particles.\n\nHigher values cause more lumpy liquids while lower values cause smoother liquids"},
 	["Timescale"] = {text = "Sets the speed of the simulation.\n\nNote that some parameters like cohesion and surface tension may behave differently due to smaller or larger compute times"},
 	["Collision Distance"] = {text = "Controls the collision distance between particles and objects.\n\nNote that a lower collision distance will cause particles to clip through objects more often."},
-	["Vorticity Confinement"] = {text = "Increases the vorticity effect by applying rotational forces to particles.\n\nMakes vortices more likely to occur."},
+	["Vorticity Confinement"] = {text = "Increases the vorticity effect by applying rotational forces to particles.\n\nThis exists because air pressure cannot be efficiently simulated."},
 	
 	-- Visual Parameters
 	Color = {text = "Controls the color of the fluid.\n\nThe alpha (transparency) channel controls the amount of color absorbsion.\n\nAn alpha value of 255 (maxxed) makes the fluid opaque."},
 	["Anisotropy Min"] = {text = "Controls the minimum size that particles can be."}, 
 	["Anisotropy Max"] = {text = "Controls the maximum size that particles are allowed to stretch between particles."},
 	["Anisotropy Scale"] = {text = "Controls the size of stretching between particles.\n\nMaking this value zero will turn off stretching."},
+	["Diffuse Threshold"] = {text = "Controls the amount of force required to make a bubble/foam particle."},
+	["Diffuse Lifetime"] = {text = "Controls how long bubbles/foam particles last after being created.\n\nThis is affected by the Timescale parameter.\n\nSetting this to zero will spawn no diffuse particles"},
 
-	Iterations = {text = "Controls how many times the physics solver attempts to converge to a solution.\n\nLight performance impact."},
+	Iterations = {text = "Controls how many times the physics solver attempts to converge to a solution per substep.\n\nLight performance impact."},
 	Substeps = {text = "Controls the number of physics steps done per tick.\n\nNote that parameters may not be properly tuned for different substeps!\n\nMedium-High performance impact."},
 	["Blur Passes"] = {text = "Controls the number of blur passes done per frame. More passes creates a smoother water surface. Zero passes will do no blurring.\n\nMedium performance impact."},
 	["Absorption"] = {text = "Enables absorption of light over distance inside of fluid.\n\n(more depth = darker color)\n\nMedium-High performance impact."},
@@ -62,6 +64,7 @@ local options = {
 gwater2["surface_tension"] = gwater2.solver:GetParameter("surface_tension") * gwater2.solver:GetParameter("radius")^4
 gwater2["fluid_rest_distance"] = gwater2.solver:GetParameter("fluid_rest_distance") / gwater2.solver:GetParameter("radius")
 gwater2["collision_distance"] = gwater2.solver:GetParameter("collision_distance") / gwater2.solver:GetParameter("radius")
+
 -- garry, sincerely... fuck you
 timer.Simple(0, function() 
 	Material("gwater2/volumetric"):SetFloat("$alpha", options.absorption:GetBool() and 0.125 or 0)
@@ -71,6 +74,7 @@ end)
 options.solver:SetParameter("gravity", 15.24)	-- flip gravity because y axis positive is down
 options.solver:SetParameter("static_friction", 0)	-- stop adhesion sticking to front and back walls
 options.solver:SetParameter("dynamic_friction", 0)	-- ^
+options.solver:SetParameter("diffuse_lifetime", math.huge)	-- no diffuse particles allowed in preview
 
 -- designs for tabs and frames
 local function draw_tabs(self, w, h)
@@ -159,11 +163,11 @@ vgui.Register("GF_ScrollPanel", GFScrollPanel, "DScrollPanel")
 local function set_gwater_parameter(option, val)
 	if gwater2[option] then
 		gwater2[option] = val
-		if option == "surface_tension" then
-			local thing = val / gwater2.solver:GetParameter("radius")^4-- literally cant think of a name for this variable rn
+		if option == "surface_tension" then	-- hack hack hack! this parameter scales based on radius
+			local thing = val / gwater2.solver:GetParameter("radius")^4	-- cant think of a name for this variable rn
 			gwater2.solver:SetParameter(option, thing)
 			options.solver:SetParameter(option, thing)
-		elseif option == "fluid_rest_distance" or option == "collision_distance" then
+		elseif option == "fluid_rest_distance" or option == "collision_distance" then -- hack hack hack! this parameter scales based on radius
 			local thing = val * gwater2.solver:GetParameter("radius")
 			gwater2.solver:SetParameter(option, thing)
 			options.solver:SetParameter(option, thing)
@@ -185,7 +189,9 @@ local function set_gwater_parameter(option, val)
 		options.solver:SetParameter("collision_distance", val * gwater2["collision_distance"])
 	end
 
-	options.solver:SetParameter(option, val)
+	if option != "diffuse_threshold" then -- hack hack hack! fluid preview doesn't use diffuse particles
+		options.solver:SetParameter(option, val)
+	end
 end
 
 -- some helper functions
@@ -353,11 +359,13 @@ local function create_explanation(parent)
 	return explanation
 end
 
---------------------------------------------------------
+--------------- Actual menu code ------------------------------
 
 local mainFrame = nil
 local just_closed = false
 concommand.Add("gwater2_menu", function()
+	if IsValid(mainFrame) then return end
+
 	local average_fps = 1 / 60
 	local particle_material = CreateMaterial("gwater2_menu_material", "UnlitGeneric", {
 		["$basetexture"] = "vgui/circle",
@@ -393,7 +401,7 @@ concommand.Add("gwater2_menu", function()
 
 	function new_close_btn:DoClick()
 		mainFrame:Remove()
-		EmitSound("buttons/lightswitch2.wav", Vector(), -2, CHAN_AUTO, 1, nil, nil, 200)
+		--surface.PlaySound("buttons/lightswitch2.wav")
 		just_closed = false
 	end
 
@@ -418,8 +426,8 @@ concommand.Add("gwater2_menu", function()
 		-- 2d simulation
 		local x, y = mainFrame:LocalToScreen()
 		options.solver:InitBounds(Vector(x, 0, y + 25), Vector(x + 192, options.solver:GetParameter("radius"), y + 390))
+		options.solver:AddCube(Vector(x + 60 + math.random(), 0, y + 50), Vector(0, 0, 50), Vector(4, 1, 1), options.solver:GetParameter("radius") * 0.65, color_white)
 		options.solver:Tick(average_fps * 10)
-		options.solver:AddCube(Vector(x + 60, 0, y + 50), Vector(0, 0, 50), Vector(4, 1, 1), options.solver:GetParameter("radius") * 0.65, color_white)
 		
 		local radius = options.solver:GetParameter("radius")
 		local function exp(v) return Vector(math.exp(v[1]), math.exp(v[2]), math.exp(v[3])) end
@@ -539,16 +547,16 @@ concommand.Add("gwater2_menu", function()
 		presets:SetPos(240, 20)
 		presets:SetSize(135, 20)
 		presets:SetText("Presets (click to open)")
-		presets:AddChoice("Acid", "Color:240 255 0 200\nCohesion:\nAdhesion:0.1\nViscosity:0\nFluid Rest Distance:\nSurface Tension:")
-		presets:AddChoice("Blood", "Color:220 0 0 250\nCohesion:0.004\nAdhesion:0.05\nViscosity:1\nFluid Rest Distance:0.55")
-		presets:AddChoice("Glue", "Color:230 230 230 255\nCohesion:0.03\nAdhesion:0.1\nViscosity:10\nFluid Rest Distance:\nSurface Tension:")	-- yeah sure.. "glue"...
-		presets:AddChoice("Lava", "Color:255 210 0 200\nCohesion:0.1\nAdhesion:0.01\nViscosity:10\nFluid Rest Distance:\nSurface Tension:")
-		presets:AddChoice("Oil", "Color:0 0 0 255\nCohesion:0\nAdhesion:0\nViscosity:0\nFluid Rest Distance:\nSurface Tension:0")
+		presets:AddChoice("Acid", "Color:240 255 0 200\nCohesion:\nAdhesion:0.1\nViscosity:0\nSurface Tension:")
+		presets:AddChoice("Blood", "Color:220 0 0 250\nCohesion:0.004\nAdhesion:0.05\nViscosity:1")
+		presets:AddChoice("Glue", "Color:230 230 230 255\nCohesion:0.03\nAdhesion:0.1\nViscosity:10\nSurface Tension:")	-- yeah sure.. "glue"...
+		presets:AddChoice("Lava", "Color:255 210 0 200\nCohesion:0.1\nAdhesion:0.01\nViscosity:10\nSurface Tension:")
+		presets:AddChoice("Oil", "Color:0 0 0 255\nCohesion:0\nAdhesion:0\nViscosity:0\nSurface Tension:0")
 
-		presets:AddChoice("Portal Gel (Blue)", "Color:0 127 255 255\nCohesion:0.05\nAdhesion:0.3\nViscosity:10\nFluid Rest Distance:0.55\nSurface Tension:0.5")
-		presets:AddChoice("Portal Gel (Orange)", "Color:255 127 0 255\nCohesion:0.05\nAdhesion:0.3\nViscosity:10\nFluid Rest Distance:0.55\nSurface Tension:0.5")
+		presets:AddChoice("Portal Gel (Blue)", "Color:0 127 255 255\nCohesion:0.05\nAdhesion:0.3\nViscosity:10\nSurface Tension:0.5")
+		presets:AddChoice("Portal Gel (Orange)", "Color:255 127 0 255\nCohesion:0.05\nAdhesion:0.3\nViscosity:10\nSurface Tension:0.5")
 
-		presets:AddChoice("(Default) Water", "Color:\nCohesion:\nAdhesion:\nViscosity:\nFluid Rest Distance:\nSurface Tension:")
+		presets:AddChoice("(Default) Water", "Color:\nCohesion:\nAdhesion:\nViscosity:\nSurface Tension:")
 
 		function presets:OnSelect(index, value, data)
 			EmitSound("buttons/lightswitch2.wav", Vector(), -2, CHAN_AUTO, 1, nil, nil, 200)
@@ -678,10 +686,12 @@ concommand.Add("gwater2_menu", function()
 		-- parameters
 		local labels = {}
 		create_label(scrollPanel, "Visual Parameters", "These parameters directly influence visuals.", 5)
-		labels[1], sliders["Anisotropy Min"] = create_slider(scrollPanel, "Anisotropy Min", 0, 1, 2, 50, 370, 0)
-		labels[2], sliders["Anisotropy Max"] = create_slider(scrollPanel, "Anisotropy Max", 0, 2, 2, 80, 370, 0)
-		labels[3], sliders["Anisotropy Scale"] = create_slider(scrollPanel, "Anisotropy Scale", 0, 2, 2, 110, 370, 0)
-		labels[4], sliders["Color"] = create_picker(scrollPanel, "Color", 140, 200)
+		labels[1], sliders["Anisotropy Min"] = create_slider(scrollPanel, "Anisotropy Min", 0, 1, 2, 50, 350, 20)
+		labels[2], sliders["Anisotropy Max"] = create_slider(scrollPanel, "Anisotropy Max", 0, 2, 2, 80, 350, 20)
+		labels[3], sliders["Anisotropy Scale"] = create_slider(scrollPanel, "Anisotropy Scale", 0, 2, 2, 110, 350, 20)
+		labels[4], sliders["Diffuse Threshold"] = create_slider(scrollPanel, "Diffuse Threshold", 1, 1000, 0, 140, 350, 20)
+		labels[5], sliders["Diffuse Lifetime"] = create_slider(scrollPanel, "Diffuse Lifetime", 0, 20, 1, 170, 350, 20)
+		labels[6], sliders["Color"] = create_picker(scrollPanel, "Color", 200, 200)
 		
 		function scrollPanel:AnimationThink()
 			local mousex, mousey = self:LocalCursorPos()
@@ -1043,6 +1053,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 			draw.DrawText("Patrons", "GWater2Title", 6, 6, Color(0, 0, 0), TEXT_ALIGN_LEFT)
 			draw.DrawText("Patrons", "GWater2Title", 5, 5, Color(187, 245, 255), TEXT_ALIGN_LEFT)
 			
+			-- unoptimized as shit but im at the mercy of vgui. 
 			local patron_color = Color(171, 255, 163)
 			for k, v in ipairs(patrons_table) do
 				draw.DrawText(v, "GWater2Param", 6, 150 + k * 20, patron_color, TEXT_ALIGN_LEFT)
@@ -1095,6 +1106,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 	tabs:SetActiveTab(tabs.Items[options.tab:GetInt()].Tab)
 end)
 
+-- closes menu if mouse presses on the outside
 hook.Add("GUIMousePressed", "gwater2_menuclose", function(mouse_code, aim_vector)
 	if !IsValid(mainFrame) then return end
 
@@ -1115,7 +1127,6 @@ hook.Add("PopulateToolMenu", "gwater2_menu", function()
 	end)
 end)
 
--- shit breaks if singleplayer due to predicted hooks
 function OpenGW2Menu(ply, key)
 	if key != options.menu_key:GetInt() or just_closed == true then return end
 	RunConsoleCommand("gwater2_menu")
@@ -1126,6 +1137,7 @@ function CloseGW2Menu(ply, key)
 	just_closed = false
 end
 
+-- shit breaks in singleplayer due to predicted hooks
 if game.SinglePlayer() then return end
 
 hook.Add("PlayerButtonDown", "gwater2_menu", OpenGW2Menu)

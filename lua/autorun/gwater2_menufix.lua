@@ -1,4 +1,4 @@
--- fixes menu not working in singleplayer. Fuck this shit hack
+-- fixes menu not working in singleplayer because of predicted hooks. Fuck this shit hack
 if !game.SinglePlayer() or CLIENT then return end
 
 hook.Add("PlayerButtonDown", "gwater2_menu", function(ply, key)

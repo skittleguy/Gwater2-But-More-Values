@@ -55,6 +55,7 @@ LUA_FUNCTION(FLEXSOLVER_AddParticle) {
 	float inv_mass = 1.f / (float)LUA->GetNumber(4);	// FleX uses inverse mass for their calculations
 	
 	flex->add_particle(Vector4D(pos.x, pos.y, pos.z, inv_mass), vel);
+	flex->map_particles();
 
 	return 0;
 }
@@ -405,6 +406,8 @@ LUA_FUNCTION(FLEXSOLVER_AddCube) {
 			}
 		}
 	}
+
+	flex->map_particles();
 
 	return 0;
 }

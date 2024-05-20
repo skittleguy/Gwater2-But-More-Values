@@ -193,16 +193,15 @@ end
 
 // run whenever possible, as often as possible. we dont know when flex will finish calculations
 local no = function() end
-hook.Add("PreRender", "gwater_tick", no)
-hook.Add("PostRender", "gwater_tick", no)
+hook.Add("PreRender", "gwater_tick", gwater_tick)
+hook.Add("PostRender", "gwater_tick", gwater_tick)
 hook.Add("Think", "gwater_tick", function()
-	--gwater2.solver:IterateMeshes(gwater2.update_meshes)
-	--gwater_tick()
+	gwater2.solver:IterateMeshes(gwater2.update_meshes)
 end)
 
 timer.Create("gwater2_tick", limit_fps, 0, function()
-	gwater2.solver:IterateMeshes(gwater2.update_meshes)
-	gwater_tick2()
+	--gwater2.solver:IterateMeshes(gwater2.update_meshes)
+	--gwater_tick2()
 end)
 gwater2.reset_solver()
 hook.Add("InitPostEntity", "gwater2_addprop", gwater2.reset_solver)
