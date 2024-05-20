@@ -1115,13 +1115,18 @@ hook.Add("PopulateToolMenu", "gwater2_menu", function()
 	end)
 end)
 
--- TODO: Fix Singleplayer menu key not working
-hook.Add("PlayerButtonDown", "gwater2_menu", function(ply, key)
+-- shit breaks if singleplayer due to predicted hooks
+function OpenGW2Menu(ply, key)
 	if key != options.menu_key:GetInt() or just_closed == true then return end
 	RunConsoleCommand("gwater2_menu")
-end)
+end
 
-hook.Add("PlayerButtonUp", "gwater2_menu", function(ply, key)
+function CloseGW2Menu(ply, key)
 	if key != options.menu_key:GetInt() then return end
 	just_closed = false
-end)
+end
+
+if game.SinglePlayer() then return end
+
+hook.Add("PlayerButtonDown", "gwater2_menu", OpenGW2Menu)
+hook.Add("PlayerButtonUp", "gwater2_menu", CloseGW2Menu)
