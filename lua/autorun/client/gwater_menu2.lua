@@ -61,7 +61,8 @@ local options = {
 	["Particle Limit"] = {text = "USE THIS PARAMETER AT YOUR OWN RISK.\n\nChanges the limit of particles.\n\nNote that a higher limit will negatively impact performance even with the same number of particles spawned."},
 }
 
-gwater2["surface_tension"] = gwater2.solver:GetParameter("surface_tension") * gwater2.solver:GetParameter("radius")^4
+-- setup percentage values
+gwater2["surface_tension"] = gwater2.solver:GetParameter("surface_tension") * gwater2.solver:GetParameter("radius")^4	-- dont ask me why its a power of 4
 gwater2["fluid_rest_distance"] = gwater2.solver:GetParameter("fluid_rest_distance") / gwater2.solver:GetParameter("radius")
 gwater2["collision_distance"] = gwater2.solver:GetParameter("collision_distance") / gwater2.solver:GetParameter("radius")
 
@@ -548,10 +549,11 @@ concommand.Add("gwater2_menu", function()
 		presets:SetSize(135, 20)
 		presets:SetText("Presets (click to open)")
 		presets:AddChoice("Acid", "Color:240 255 0 200\nCohesion:\nAdhesion:0.1\nViscosity:0\nSurface Tension:")
-		presets:AddChoice("Blood", "Color:220 0 0 250\nCohesion:0.004\nAdhesion:0.05\nViscosity:1")
+		presets:AddChoice("Blood", "Color:240 0 0 250\nCohesion:0.45\nAdhesion:0.15\nViscosity:1\nSurface Tension:0")	-- Parameters by GHM
 		presets:AddChoice("Glue", "Color:230 230 230 255\nCohesion:0.03\nAdhesion:0.1\nViscosity:10\nSurface Tension:")	-- yeah sure.. "glue"...
 		presets:AddChoice("Lava", "Color:255 210 0 200\nCohesion:0.1\nAdhesion:0.01\nViscosity:10\nSurface Tension:")
 		presets:AddChoice("Oil", "Color:0 0 0 255\nCohesion:0\nAdhesion:0\nViscosity:0\nSurface Tension:0")
+		presets:AddChoice("Goop", "Color:160 240 140 70\nCohesion:1\nAdhesion:0.1\nViscosity:0\nSurface Tension:0.5")
 
 		presets:AddChoice("Portal Gel (Blue)", "Color:0 127 255 255\nCohesion:0.05\nAdhesion:0.3\nViscosity:10\nSurface Tension:0.5")
 		presets:AddChoice("Portal Gel (Orange)", "Color:255 127 0 255\nCohesion:0.05\nAdhesion:0.3\nViscosity:10\nSurface Tension:0.5")
@@ -958,10 +960,13 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 		label:SetText([[
 			Thank you for downloading gwater2 beta! This menu is the interface that you will be using to control everything about gwater. So get used to it! :D
 
-			Make sure to read 'Changelog (v0.3b)' to see what has been updated!
+			Make sure to read the changelog to see what has been updated!
 
 			Changelog (v0.3b):
-			- Added NPC, player, and ragdoll collision
+			- Added NPC, player, and ragdoll collisions
+			- Added more fluid parameters
+			- Added visual parameters
+			- Added diffuse particles (bubbles/foam)
 			- Improved (optimized) particle spawning code
 			- Improved surface estimation (smoother water surface)
 			- Improved anisotropy code
@@ -971,25 +976,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 			- Fixed a crash when loading into some maps
 			- Fixed menu opening when using e2 editor
 			- Updated patron list
-			- General micro-optimizations and codebase rewrites
-
-			Changelog (v0.2b):
-			- Performance improvements (I noticed about a 30% increase in fps, though it may depend on your hardware)
-			- Added Depth Fix option in performance tab
-			- Added editable particle limit in performance tab
-			- Added watergun box visual
-			- Added compatibility for Hammer++ maps
-			- Added patron tab in menu
-			- Fixed door collision
-			- Fixed the water anisotropy occasionally flickering
-			- Made HDR lighting more consistent
-			- Changed water surface estimation to grant smoother results
-			- Lots of backend code changes
-			- Internally start forcing MSAA to be disabled, as it breaks the water surface
-			- Removed multi-color water, as it was inconsistent with other parameters
-
-			Changelog (v0.1b): 
-			- Initial release
+			- General micro-optimizations and codebase rewrites (performance improvement of ~30% in my testing)
 		]])
 		label:SetColor(Color(255, 255, 255))
 		label:SetTextInset(5, 30)

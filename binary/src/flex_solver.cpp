@@ -32,6 +32,10 @@ int FlexSolver::get_active_particles() {
 	return copy_description->elementCount;
 }
 
+int FlexSolver::get_active_diffuse() {
+	return ((int*)hosts["diffuse_active"])[0];
+}
+
 int FlexSolver::get_max_particles() {
 	return solver_description.maxParticles;
 }
@@ -137,7 +141,7 @@ void FlexSolver::map_particles() {
 	NvFlexUnmap(get_buffer("particle_active"));
 
 	// Update particle information
-	NvFlexSetParticles(solver, get_buffer("particle_pos"), copy_description);	// TODO: Optimize this by creating your own copy description
+	NvFlexSetParticles(solver, get_buffer("particle_pos"), copy_description);	// TODO: Optimize this by creating another copy description
 	NvFlexSetVelocities(solver, get_buffer("particle_vel"), copy_description);
 	NvFlexSetPhases(solver, get_buffer("particle_phase"), copy_description);
 	NvFlexSetActive(solver, get_buffer("particle_active"), copy_description);
@@ -284,7 +288,7 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 
 	NvFlexSetSolverDescDefaults(&solver_description);
 	solver_description.maxParticles = particles;
-	solver_description.maxDiffuseParticles = 100000;
+	solver_description.maxDiffuseParticles = 65536;
 
 	this->library = library;
 	solver = NvFlexCreateSolver(library, &solver_description);

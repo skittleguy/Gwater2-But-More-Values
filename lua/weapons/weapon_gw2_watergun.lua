@@ -51,7 +51,7 @@ local function fuckgarry(w, s)
 end
 
 function SWEP:PrimaryAttack()
-	self:SetNextPrimaryFire(CurTime() + 1/60)
+	--self:SetNextPrimaryFire(CurTime() + 1/60)
 	if fuckgarry(self, "PrimaryAttack") then return end
 
 	local owner = self:GetOwner()
@@ -93,9 +93,13 @@ function SWEP:PostDrawViewModel(vm, weapon, ply)
 	ang = ang + Angle(180, 0, -ang[3] * 2)
 	pos = pos - ang:Right() * 1.5
 	cam.Start3D2D(pos, ang, 0.03)
-		local text = "Particles: " .. format_int(gwater2.solver:GetActiveParticles()) .. "/" .. format_int(gwater2.solver:GetMaxParticles())
-		draw.DrawText(text, "CloseCaption_Normal", 2, 2, Color(0, 0, 0, 255), TEXT_ALIGN_CENTER)
-		draw.DrawText(text, "CloseCaption_Normal", 0, 0, color_white, TEXT_ALIGN_CENTER)
+		local text = "Water Particles: " .. format_int(gwater2.solver:GetActiveParticles()) .. "/" .. format_int(gwater2.solver:GetMaxParticles())
+		local text2 = "Foam Particles: " .. format_int(gwater2.solver:GetActiveDiffuse()) .. "/65,536"
+		draw.DrawText(text, "CloseCaption_Normal", 4, -24, Color(0, 0, 0, 255), TEXT_ALIGN_CENTER)
+		draw.DrawText(text, "CloseCaption_Normal", 2, -26, color_white, TEXT_ALIGN_CENTER)
+
+		draw.DrawText(text2, "CloseCaption_Normal", 2, 2, Color(0, 0, 0, 255), TEXT_ALIGN_CENTER)
+		draw.DrawText(text2, "CloseCaption_Normal", 0, 0, color_white, TEXT_ALIGN_CENTER)
 	cam.End3D2D()
 end
 

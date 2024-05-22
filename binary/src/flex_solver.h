@@ -21,7 +21,7 @@ private:
 	std::map<std::string, NvFlexBuffer*> buffers;
 	std::map<std::string, float*> param_map; // TODO: figure out if this is the best way to do this... Would a set/get switch statement be better..?
 	std::map<std::string, void*> hosts;
-	std::vector<FlexMesh> meshes;	// physics meshes.. not visual!
+	std::vector<FlexMesh> meshes;		// physics meshes.. not visual!
 	std::vector<Particle> particles;	// Doesnt actually hold particles. Just a queue
 
 	void add_buffer(std::string name, int type, int count);
@@ -30,6 +30,7 @@ private:
 public:
 	void set_active_particles(int n);
 	int get_active_particles();
+	int get_active_diffuse();
 	int get_max_particles();
 	int get_max_contacts();
 	std::vector<FlexMesh>* get_meshes();

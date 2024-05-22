@@ -9,6 +9,10 @@
 #include "flex_renderer.h"
 #include "shader_inject.h"
 
+#include <fstream>
+#include <iostream>
+#include <string>
+
 // Sys_LoadInterface symbols
 /*#include "strtools_unicode.cpp"
 #include "utlbuffer.cpp"
@@ -224,6 +228,15 @@ LUA_FUNCTION(FLEXSOLVER_GetActiveParticles) {
 
 	return 1;
 }
+
+LUA_FUNCTION(FLEXSOLVER_GetActiveDiffuse) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+	LUA->PushNumber(flex->get_active_diffuse());
+
+	return 1;
+}
+
 
 // Iterates through all particles and calls a lua function with 1 parameter (position)
 LUA_FUNCTION(FLEXSOLVER_RenderParticles) {
@@ -562,6 +575,38 @@ LUA_FUNCTION(NewFlexRenderer) {
 	return 1;
 }
 
+LUA_FUNCTION(TestDRM) {
+	// gwater2 DRM (antipiracy)
+	// Identification is done by reading the last 26 chars in the current binary, which are injected before download
+	// We will call these chars a 'Key'
+	// We send an HTTPS request to a server which returns if the key is considered valid
+	// If the request fails in any way (returns anything other than 200) we instantly return
+	// Keys can be invalidated if too many requsts (ips) are sent with the same key. If this is the case, the binary was likely distributed
+	std::ifstream fs;
+#if WIN64
+	fs.open("garrysmod/lua/bin/gmcl_gwater2_win64.dll", std::ios::binary);	// Binary path is Local to GarrysMod/
+#elif
+	fs.open("garrysmod/lua/bin/gmcl_gwater2_win32.dll", std::ios::binary);
+#endif
+	if (fs.fail()) {
+		Msg("Fuck!\n");
+	}
+	else {
+		// Read file, shove in std::string
+		fs.seekg(0, std::ios::end);
+		size_t i = fs.tellg();
+		char* buf = new char[i];
+		fs.seekg(0, std::ios::beg);
+		fs.read(buf, i);
+		fs.close();
+		std::string s;
+		s.assign(buf, i);
+		delete[] buf;
+
+		Msg(s.substr(s.length() - 26, 26).c_str());
+	}
+}
+
 // `mat_antialias 0` but shit
 /*LUA_FUNCTION(SetMSAAEnabled) {
 	MaterialSystem_Config_t config = materials->GetCurrentConfigForVideoCard();
@@ -630,6 +675,7 @@ GMOD_MODULE_OPEN() {
 	ADD_FUNCTION(LUA, FLEXSOLVER_SetParameter, "SetParameter");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetParameter, "GetParameter");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetActiveParticles, "GetActiveParticles");
+	ADD_FUNCTION(LUA, FLEXSOLVER_GetActiveDiffuse, "GetActiveDiffuse");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddMapMesh, "AddMapMesh");
 	ADD_FUNCTION(LUA, FLEXSOLVER_IterateMeshes, "IterateMeshes");
 	//ADD_FUNCTION(LUA, GetContacts, "GetContacts");
@@ -653,6 +699,7 @@ GMOD_MODULE_OPEN() {
 	LUA->PushSpecial(SPECIAL_GLOB);
 	ADD_FUNCTION(LUA, NewFlexSolver, "FlexSolver");
 	ADD_FUNCTION(LUA, NewFlexRenderer, "FlexRenderer");
+	ADD_FUNCTION(LUA, TestDRM, "TestDRM");
 	LUA->Pop();
 
 	return 0;
