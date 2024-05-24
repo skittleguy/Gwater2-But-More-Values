@@ -122,20 +122,9 @@ hook.Add("PostDrawTranslucentRenderables", "gwater2_fuckthisshitman", function()
 		local pos2 = owner:EyePos() + forward * 40 * sprite_size
 		local size2 = Vector(16.5, 16.5, 16.5) * sprite_size
 
-		local tr = util.TraceHull({	
-			start = pos2,
-			endpos = pos2,
-			filter = owner,
-			mins = -size2,
-			maxs = size2
-		})
-		--PrintTable(tr)
-		if tr.Hit then
-			--render.DrawWireframeBox(pos, Angle(), -size, size, Color(255, 0, 0, 255), false)
-			render.DrawWireframeBox(pos, Angle(), -size, size, Color(255, 255, 255, 255), true)
-			
-			render.DrawWireframeBox(pos2, Angle(), -size2, size2, Color(255, 255, 255, 255), true)
-		end
+		render.DrawWireframeBox(pos, Angle(), -size, size, Color(255, 255, 255, 255), true)
+		
+		--render.DrawWireframeBox(pos2, Angle(), -size2, size2, Color(255, 255, 255, 255), true)
 	end
 end)
 

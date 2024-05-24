@@ -129,6 +129,7 @@ void FlexRenderer::build_diffuse(FlexSolver* solver, float radius) {
 	float mult = 1.f / solver->get_parameter("diffuse_lifetime");
 
 	Vector4D* particle_positions = (Vector4D*)solver->get_host("diffuse_pos");
+	//Vector4D* particle_velocities = (Vector4D*)solver->get_host("diffuse_vel");
 	CMeshBuilder mesh_builder;
 	for (int particle_index = 0; particle_index < max_particles;) {
 		IMesh* imesh = render_context->CreateStaticMesh(VERTEX_POSITION | VERTEX_NORMAL | VERTEX_TEXCOORD0_2D, "");
@@ -149,6 +150,9 @@ void FlexRenderer::build_diffuse(FlexSolver* solver, float radius) {
 			Vector up = right.Cross(forward);
 			Vector local_pos[3] = { (-up - right * SQRT3), up * 2.0, (-up + right * SQRT3) };
 			for (int i = 0; i < 3; i++) { 
+				//Vector pos_ani = local_pos[i];	// Warp based on velocity
+				//pos_ani = pos_ani + particle_velocities[particle_index].AsVector3D() * (pos_ani.Dot(particle_velocities[particle_index].AsVector3D()) * 0.01f);
+
 				Vector world_pos = particle_pos + local_pos[i] * radius * particle_positions[particle_index].w * mult;
 				mesh_builder.TexCoord2f(0, u[i], v[i]);
 				mesh_builder.Position3f(world_pos.x, world_pos.y, world_pos.z);

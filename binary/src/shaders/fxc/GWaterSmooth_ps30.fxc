@@ -15,7 +15,7 @@ struct PS_INPUT {
 // Worked on this algorithm for multiple months, so it may be a little messy. Smoothing particle information is not easy..
 float4 main(PS_INPUT i) : COLOR {
 	float4 og_normal = tex2D(NORMALS, i.coord);
-	if (og_normal.w <= RADIUS) return og_normal;	// Dont blur if too close.
+	if (og_normal.w <= RADIUS) return float4(0, 0, 0, 0);	// Dont blur if too close.
 
 	float mipmap = tex2D(DEPTH, i.coord).x;
 	float3 final_normal = og_normal.xyz;

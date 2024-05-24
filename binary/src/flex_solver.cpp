@@ -413,6 +413,7 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	add_buffer("particle_ani3", sizeof(Vector4D), particles);
 
 	add_buffer("diffuse_pos", sizeof(Vector4D), solver_description.maxDiffuseParticles);
+	//add_buffer("diffuse_vel", sizeof(Vector4D), solver_description.maxDiffuseParticles);
 	add_buffer("diffuse_active", sizeof(int), 1);	// "this may be updated by the GPU which is why it is passed back in a buffer"
 };
 

@@ -29,10 +29,29 @@ bool is_zero(float3 i) {
 }
 
 // Assumes that incoming IOR is 1
+/*
 float fresnel_approx(const float3 incident, const float3 normal) {
 	float fresnel = saturate(dot(normal, incident));
 	return pow(1.0 - fresnel, 5);
+}*/
+
+float fresnel_approx(float n1, float n2, float3 normal, float3 incident, float ref) {
+        float r0 = (n1 - n2) / (n1 + n2);
+        r0 *= r0;
+        float cosX = -dot(normal, incident);
+        /*if (n1 > n2){
+            float n = n1/n2;
+            float sinT2 = n*n*(1.0-cosX*cosX);
+            if (sinT2 > 1.0)
+                return 1.0;
+            cosX = sqrt(1.0-sinT2);
+        }*/
+        float x = 1.0-cosX;
+        float ret = r0+(1.0-r0)*x*x*x*x*x;
+        ret = (ref + (1.0-ref) * ret);
+        return ret;
 }
+
 
 float4 main(const PS_INPUT i) : COLOR {
 	// kill pixels outside of sphere
@@ -48,28 +67,32 @@ float4 main(const PS_INPUT i) : COLOR {
 	// Primary lighting calculations
 	float3 reflected = reflect(i.view_dir, smoothed_normal);
 	float phong = min(pow(max(0, dot(reflected, SUN_DIR)), 100), 1);
-	float fresnel = is_zero(smoothed_normal) ? 0 : fresnel_approx(-i.view_dir, smoothed_normal);
+	float fresnel = is_zero(smoothed_normal) ? 0 : fresnel_approx(1.0, 1.333, i.view_dir, smoothed_normal, 0.1);
 	float3 specular = texCUBE(CUBEMAP, reflected).xyz * fresnel;
 	//float3 specular = pow(texCUBE(CUBEMAP, reflected).xyz, 1.0 / 2.2) * 3.5 * fresnel;
 
 	// Secondary lighting calculations
 	
 #if OPAQUE // Opaque
-	float3 absorption = COLOR2.xyz;	// Technically diffuse
-	float refracted = dot(smoothed_normal, SUN_DIR) * 0.45 + 0.55;
+	float3 absorption = COLOR2.xyz;
+	float diffuse = dot(smoothed_normal, SUN_DIR) * 0.45 + 0.55;
+
+	float3 final_color = absorption * diffuse + float3(phong, phong, phong) + specular;
 	
 #else // Translucent
-	float absorption_distance = (tex2D(DEPTH, i.P * SCR_S).x * 100 - dot(smoothed_normal, i.view_dir) * 10) * COLOR2.w;
-	float3 absorption = exp((COLOR2.xyz - float3(1, 1, 1)) * absorption_distance);	// Beers law
-
 	// Calculate refraction vector in 3d space and project it to screen
 	float3 uv_offset = smoothed_normal * -RADIUS * IOR;
 	float4 uv = mul(float4(i.pos + uv_offset, 1), i.proj); uv.xy /= uv.w;
-	float3 refracted = tex2D(FRAMEBUFFER, float2(uv.x / 2.0 + 0.5, 0.5 - uv.y / 2.0)).xyz * (1.0 - fresnel);
+	
+	float2 refract_pos = float2(uv.x / 2.0 + 0.5, 0.5 - uv.y / 2.0);
+	float3 refracted = tex2D(FRAMEBUFFER, refract_pos).xyz * (1.0 - fresnel);
+
+	float absorption_distance = (tex2D(DEPTH, refract_pos).x * 100 - dot(smoothed_normal, i.view_dir) * 10) * COLOR2.w;
+	float3 absorption = exp((COLOR2.xyz - float3(1, 1, 1)) * absorption_distance);	// Beers law
+
+	float3 final_color = absorption * refracted + float3(phong, phong, phong) + specular;
 #endif
 
 	// Calculate final color & return
-	float3 final_color = absorption * refracted + float3(phong, phong, phong) + specular;
-	//float3 final_color = absorption * refracted + specular;
 	return FinalOutput(float4(final_color, 1), 0, 0, TONEMAP_SCALE_NONE);	// For HDR
 };

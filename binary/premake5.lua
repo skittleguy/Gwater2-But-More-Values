@@ -7,12 +7,10 @@ newoption({
 	default = "./garrysmod_common"
 })
 
-
 local gmcommon = assert(_OPTIONS.gmcommon or os.getenv("GARRYSMOD_COMMON"),
 	"you didn't provide a path to your garrysmod_common (https://github.com/danielga/garrysmod_common) directory")
 
 include(gmcommon)
-
 
 CreateWorkspace({name = "gwater2", abi_compatible = true, path = ""})
 	--CreateProject({serverside = true, source_path = "source", manual_files = false})
@@ -36,7 +34,8 @@ CreateWorkspace({name = "gwater2", abi_compatible = true, path = ""})
 			"FleX/include",
 			"BSPParser",
 			"GMFS",
-			"src/sourceengine"
+			"src/sourceengine",
+			"cpp-httplib"
 		}
 
 		files {
@@ -48,24 +47,36 @@ CreateWorkspace({name = "gwater2", abi_compatible = true, path = ""})
 
 		filter({"system:windows", "platforms:x86"})
 			targetsuffix("_win32")
+			includedirs {
+				"openssl/x86/include"
+			}
 			libdirs {
-				"FleX/lib/win32"
+				"FleX/lib/win32",
+				"openssl/x86/lib"
 			}
 			links { 
 				"NvFlexReleaseD3D_x86",
 				"NvFlexDeviceRelease_x86",
-				"NvFlexExtReleaseD3D_x86"
+				"NvFlexExtReleaseD3D_x86",
+				"libcrypto",
+				"libssl"
 			}
 
 		filter({"system:windows", "platforms:x86_64"})
 			targetsuffix("_win64")
+			includedirs {
+				"openssl/x64/include"
+			}
 			libdirs {
-				"FleX/lib/win64"
+				"FleX/lib/win64",
+				"openssl/x64/lib"
 			}
 			links { 
 				"NvFlexReleaseD3D_x64",
 				"NvFlexDeviceRelease_x64",
-				"NvFlexExtReleaseD3D_x64"
+				"NvFlexExtReleaseD3D_x64",
+				"libcrypto",
+				"libssl"
 			}
 			
 		filter({"system:linux", "platforms:x86_64"})

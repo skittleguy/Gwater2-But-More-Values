@@ -53,12 +53,13 @@ local options = {
 	["Diffuse Threshold"] = {text = "Controls the amount of force required to make a bubble/foam particle."},
 	["Diffuse Lifetime"] = {text = "Controls how long bubbles/foam particles last after being created.\n\nThis is affected by the Timescale parameter.\n\nSetting this to zero will spawn no diffuse particles"},
 
-	Iterations = {text = "Controls how many times the physics solver attempts to converge to a solution per substep.\n\nLight performance impact."},
+	Iterations = {text = "Controls how many times the physics solver attempts to converge to a solution per substep.\n\nMedium performance impact."},
 	Substeps = {text = "Controls the number of physics steps done per tick.\n\nNote that parameters may not be properly tuned for different substeps!\n\nMedium-High performance impact."},
-	["Blur Passes"] = {text = "Controls the number of blur passes done per frame. More passes creates a smoother water surface. Zero passes will do no blurring.\n\nMedium performance impact."},
-	["Absorption"] = {text = "Enables absorption of light over distance inside of fluid.\n\n(more depth = darker color)\n\nMedium-High performance impact."},
-	["Depth Fix"] = {text = "Makes particles appear spherical instead of flat, creating a cleaner and smoother water surface.\n\nCauses shader overdraw.\n\nHigh performance impact."},
+	["Blur Passes"] = {text = "Controls the number of blur passes done per frame. More passes creates a smoother water surface. Zero passes will do no blurring.\n\nLow performance impact."},
+	["Absorption"] = {text = "Enables absorption of light over distance inside of fluid.\n\n(more depth = darker color)\n\nMedium performance impact."},
+	["Depth Fix"] = {text = "Makes particles appear spherical instead of flat, creating a cleaner and smoother water surface.\n\nCauses shader overdraw.\n\nMedium-High performance impact."},
 	["Particle Limit"] = {text = "USE THIS PARAMETER AT YOUR OWN RISK.\n\nChanges the limit of particles.\n\nNote that a higher limit will negatively impact performance even with the same number of particles spawned."},
+	["Old Solver"] = {text = "If checked, uses the solver used in 0.1b and 0.2b.\n\nThe old solver usually grants better performance, but has more particle leaking.\n\nI suggest using the old solver when recording."},
 }
 
 -- setup percentage values
@@ -548,20 +549,20 @@ concommand.Add("gwater2_menu", function()
 		presets:SetPos(240, 20)
 		presets:SetSize(135, 20)
 		presets:SetText("Presets (click to open)")
-		presets:AddChoice("Acid", "Color:240 255 0 200\nCohesion:\nAdhesion:0.1\nViscosity:0\nSurface Tension:")
-		presets:AddChoice("Blood", "Color:240 0 0 250\nCohesion:0.45\nAdhesion:0.15\nViscosity:1\nSurface Tension:0")	-- Parameters by GHM
-		presets:AddChoice("Glue", "Color:230 230 230 255\nCohesion:0.03\nAdhesion:0.1\nViscosity:10\nSurface Tension:")	-- yeah sure.. "glue"...
-		presets:AddChoice("Lava", "Color:255 210 0 200\nCohesion:0.1\nAdhesion:0.01\nViscosity:10\nSurface Tension:")
-		presets:AddChoice("Oil", "Color:0 0 0 255\nCohesion:0\nAdhesion:0\nViscosity:0\nSurface Tension:0")
-		presets:AddChoice("Goop", "Color:160 240 140 70\nCohesion:1\nAdhesion:0.1\nViscosity:0\nSurface Tension:0.5")
+		presets:AddChoice("Acid", "Color:240 255 0 200\nCohesion:\nAdhesion:0.1\nViscosity:0\nSurface Tension:\nFluid Rest Distance:")
+		presets:AddChoice("Blood", "Color:240 0 0 250\nCohesion:0.45\nAdhesion:0.15\nViscosity:1\nSurface Tension:0\nFluid Rest Distance:0.55")	-- Parameters by GHM
+		presets:AddChoice("Glue", "Color:230 230 230 255\nCohesion:0.03\nAdhesion:0.1\nViscosity:10\nSurface Tension:\nFluid Rest Distance:")	-- yeah sure.. "glue"...
+		presets:AddChoice("Lava", "Color:255 210 0 200\nCohesion:0.1\nAdhesion:0.01\nViscosity:10\nSurface Tension:\nFluid Rest Distance:")
+		presets:AddChoice("Oil", "Color:0 0 0 255\nCohesion:0\nAdhesion:0\nViscosity:0\nSurface Tension:0\nFluid Rest Distance:")
+		presets:AddChoice("Goop", "Color:170 240 140 50\nCohesion:1\nAdhesion:0.1\nViscosity:0\nSurface Tension:0.25\nFluid Rest Distance:")
 
-		presets:AddChoice("Portal Gel (Blue)", "Color:0 127 255 255\nCohesion:0.05\nAdhesion:0.3\nViscosity:10\nSurface Tension:0.5")
-		presets:AddChoice("Portal Gel (Orange)", "Color:255 127 0 255\nCohesion:0.05\nAdhesion:0.3\nViscosity:10\nSurface Tension:0.5")
+		presets:AddChoice("Portal Gel (Blue)", "Color:0 127 255 255\nCohesion:0.05\nAdhesion:0.3\nViscosity:10\nSurface Tension:0.5\nFluid Rest Distance:")
+		presets:AddChoice("Portal Gel (Orange)", "Color:255 127 0 255\nCohesion:0.05\nAdhesion:0.3\nViscosity:10\nSurface Tension:0.5\nFluid Rest Distance:")
 
 		presets:AddChoice("(Default) Water", "Color:\nCohesion:\nAdhesion:\nViscosity:\nSurface Tension:")
 
 		function presets:OnSelect(index, value, data)
-			EmitSound("buttons/lightswitch2.wav", Vector(), -2, CHAN_AUTO, 1, nil, nil, 200)
+			--EmitSound("buttons/lightswitch2.wav", Vector(), -2, CHAN_AUTO, 1, nil, nil, 200)
 			local params = string.Split(data, "\n")
 			for _, param in ipairs(params) do
 				local key, val = unpack(string.Split(param, ":"))
@@ -579,7 +580,7 @@ concommand.Add("gwater2_menu", function()
 		end
 
 		function presets:OnMenuOpened(pnl)
-			EmitSound("buttons/lightswitch2.wav", Vector(), -2, CHAN_AUTO, 1, nil, nil, 200)
+			--EmitSound("buttons/lightswitch2.wav", Vector(), -2, CHAN_AUTO, 1, nil, nil, 200)
 			for k, label in pairs(pnl:GetCanvas():GetChildren()) do
 				function label:Paint(w, h)
 					if self:IsHovered() then
@@ -742,11 +743,12 @@ concommand.Add("gwater2_menu", function()
 		end
 
 		local colors = {
+			Color(250, 250, 0),
+			Color(255, 127, 0),
 			Color(127, 255, 0),
-			Color(255, 127, 0),
-			Color(255, 255, 0),
-			Color(255, 127, 0),
 			Color(255, 0, 0),
+			Color(250, 250, 0),
+			Color(255, 127, 0),
 			Color(255, 0, 0),
 		}
 
@@ -796,7 +798,7 @@ concommand.Add("gwater2_menu", function()
 		label:SetSize(200, 20)
 		label:SetText("Particle Limit")
 		label:SetFont("GWater2Param")
-		labels[6] = label
+		labels[4] = label
 
 		local slider = vgui.Create("DNumSlider", scrollPanel)
 		slider:SetPos(0, 140)
@@ -840,7 +842,7 @@ concommand.Add("gwater2_menu", function()
 				render.DrawScreenQuad()
 
 				-- dark background around 2d water sim
-				surface.SetDrawColor(0, 0, 0, 255)
+				surface.SetDrawColor(0, 0, 0, 200)
 				surface.DrawRect(0, 0, w, h)
 
 				-- main outline
@@ -890,7 +892,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 		label:SetFont("GWater2Param")
 		label:SetText("Absorption")
 		label:SetContentAlignment(7)
-		labels[4] = label
+		labels[5] = label
 
 		local box = vgui.Create("DCheckBox", scrollPanel)
 		box:SetPos(132, 170)
@@ -909,7 +911,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 		label:SetFont("GWater2Param")
 		label:SetText("Depth Fix")
 		label:SetContentAlignment(7)
-		labels[5] = label
+		labels[6] = label
 
 		local box = vgui.Create("DCheckBox", scrollPanel)
 		box:SetPos(132, 200)
@@ -919,6 +921,23 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 		function box:OnChange(val)
 			options.depth_fix:SetBool(val)
 			water_normals:SetInt("$depthfix", val and 1 or 0)
+		end
+
+		-- Solver checkbox
+		local label = vgui.Create("DLabel", scrollPanel)	
+		label:SetPos(10, 230)
+		label:SetSize(100, 100)
+		label:SetFont("GWater2Param")
+		label:SetText("Old Solver")
+		label:SetContentAlignment(7)
+		labels[7] = label
+
+		local box = vgui.Create("DCheckBox", scrollPanel)
+		box:SetPos(132, 230)
+		box:SetSize(20, 20)
+		box:SetChecked(gwater2.old_ticker)
+		function box:OnChange(val)
+			gwater2.old_ticker = !gwater2.old_ticker
 		end
 
 		-- light up & change explanation area

@@ -45,6 +45,7 @@ SHADER_DRAW {
 			pShaderShadow->EnableSRGBRead(SHADER_SAMPLER2, true);	// Doesn't seem to do anything?
 		}
 		pShaderShadow->EnableTexture(SHADER_SAMPLER3, true);	// Depth
+		pShaderShadow->EnableTexture(SHADER_SAMPLER5, true);	// RandomRotationSampler (used in pixel shader)
 
 		DECLARE_STATIC_VERTEX_SHADER(GWaterFinalpass_vs30);
 		SET_STATIC_VERTEX_SHADER(GWaterFinalpass_vs30);

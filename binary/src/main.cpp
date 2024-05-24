@@ -9,9 +9,15 @@
 #include "flex_renderer.h"
 #include "shader_inject.h"
 
+#define DRM
+
+#ifdef DRM
+#define CPPHTTPLIB_OPENSSL_SUPPORT
+#include "httplib.h"
 #include <fstream>
 #include <iostream>
 #include <string>
+#endif
 
 // Sys_LoadInterface symbols
 /*#include "strtools_unicode.cpp"
@@ -575,6 +581,8 @@ LUA_FUNCTION(NewFlexRenderer) {
 	return 1;
 }
 
+#ifdef DRM
+
 LUA_FUNCTION(TestDRM) {
 	// gwater2 DRM (antipiracy)
 	// Identification is done by reading the last 26 chars in the current binary, which are injected before download
@@ -585,11 +593,12 @@ LUA_FUNCTION(TestDRM) {
 	std::ifstream fs;
 #if WIN64
 	fs.open("garrysmod/lua/bin/gmcl_gwater2_win64.dll", std::ios::binary);	// Binary path is Local to GarrysMod/
-#elif
-	fs.open("garrysmod/lua/bin/gmcl_gwater2_win32.dll", std::ios::binary);
+#else
+	fs.open("garrysmod/lua/bin/gmcl_gwater2_win32.dll", std::ios::binary);	//^
 #endif
 	if (fs.fail()) {
 		Msg("Fuck!\n");
+		// Fail code
 	}
 	else {
 		// Read file, shove in std::string
@@ -603,10 +612,22 @@ LUA_FUNCTION(TestDRM) {
 		s.assign(buf, i);
 		delete[] buf;
 
-		Msg(s.substr(s.length() - 26, 26).c_str());
+		httplib::Client cli("https://gwater.misleadingname.cc");
+		if (auto res = cli.Get("/verify.php" + s.substr(s.length() - 26, 26))) {
+			Msg(std::to_string(res->status).c_str());
+			Msg(res->body.c_str());
+			// Success code
+		}
+		else {
+			auto err = res.error();
+			Msg(httplib::to_string(err).c_str());
+			// Fail code
+		}
 	}
-}
 
+	return 0;
+}
+#endif
 // `mat_antialias 0` but shit
 /*LUA_FUNCTION(SetMSAAEnabled) {
 	MaterialSystem_Config_t config = materials->GetCurrentConfigForVideoCard();

@@ -114,9 +114,10 @@ include("gwater2_shaders.lua")	-- also carrying
 gwater2 = {
 	solver = FlexSolver(100000),
 	renderer = FlexRenderer(),
+	old_ticker = false,
 	material = Material("gwater2/finalpass"),--Material("vgui/circle"),--Material("sprites/sent_ball"),
 	update_meshes = function(index, id, rep)
-		if id == 0 then return end
+		if id == 0 then return end	-- entity is world
 
 		local ent = Entity(id)
 		if !IsValid(ent) then 
@@ -161,24 +162,16 @@ gwater2 = {
 }
 
 -- tick particle solver
-local cm_2_inch = 2.54 * 2.54
+local cm_2_inch = 2.54 * 2.54	-- FleX is in centimeters, source is in inches
 local last_systime = os.clock()
-local hang_thread = false
 local limit_fps = 1 / 60
 local average_frametime = limit_fps
 local function gwater_tick()
+	if !gwater2.old_ticker then return end
+
 	local systime = os.clock()
-	local delta_time = systime - last_systime
 
-	if gwater2.solver:GetActiveParticles() == 0 or gwater2.solver:GetParameter("timescale") <= 0 then 
-		last_systime = systime
-		average_frametime = RealFrameTime()	-- internally clamped to minimum of 10 fps
-		return 
-	elseif hang_thread and delta_time < limit_fps then
-		return
-	end
-
-	if gwater2.solver:Tick(average_frametime * cm_2_inch, hang_thread and 0 or 1) then
+	if gwater2.solver:Tick(average_frametime * cm_2_inch, 1) then
 	//if gwater2.solver:Tick(1/165 * cm_2_inch, hang_thread and 0 or 1) then
 		average_frametime = average_frametime + ((systime - last_systime) - average_frametime) * 0.03
 		last_systime = systime	// smooth out fps
@@ -186,23 +179,24 @@ local function gwater_tick()
 end
 
 local function gwater_tick2()
-	--if gwater2.solver:GetActiveParticles() == 0 or gwater2.solver:GetParameter("timescale") <= 0 then return end
-
+	last_systime = os.clock()
 	gwater2.solver:Tick(limit_fps * cm_2_inch, 0)
 end
 
 // run whenever possible, as often as possible. we dont know when flex will finish calculations
 local no = function() end
-hook.Add("PreRender", "gwater_tick", no)
-hook.Add("PostRender", "gwater_tick", no)
+hook.Add("PreRender", "gwater_tick", gwater_tick)
+hook.Add("PostRender", "gwater_tick", gwater_tick)
 hook.Add("Think", "gwater_tick", function()
-	--gwater2.solver:IterateMeshes(gwater2.update_meshes)
+	if !gwater2.old_ticker then return end
+	gwater2.solver:IterateMeshes(gwater2.update_meshes)
 end)
 
 timer.Create("gwater2_tick", limit_fps, 0, function()
+	if gwater2.old_ticker then return end
 	gwater2.solver:IterateMeshes(gwater2.update_meshes)
 	gwater_tick2()
 end)
-gwater2.reset_solver()
+
 hook.Add("InitPostEntity", "gwater2_addprop", gwater2.reset_solver)
 hook.Add("OnEntityCreated", "gwater2_addprop", function(ent) timer.Simple(0, function() add_prop(ent) end) end)	// timer.0 so data values are setup correctly
