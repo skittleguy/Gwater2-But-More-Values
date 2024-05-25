@@ -11,12 +11,15 @@
 
 #define DRM
 
+// httplib and (compiled) opensll are required to build gwater2 with DRM
 #ifdef DRM
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
 #include <fstream>
 #include <iostream>
 #include <string>
+
+volatile int RED_HERRING = 0;
 #endif
 
 // Sys_LoadInterface symbols
@@ -547,6 +550,10 @@ LUA_FUNCTION(NewFlexSolver) {
 	LUA->CheckNumber(1);
 	if (LUA->GetNumber(1) <= 0) LUA->ThrowError("Max Particles must be a positive number!");
 
+#ifdef DRM 
+	if (RED_HERRING != 1) return 0;	// User is validated, but tinkered with the asm
+#endif
+
 	FlexSolver* flex = new FlexSolver(FLEX_LIBRARY, LUA->GetNumber(1));
 	LUA->PushUserType(flex, FLEXSOLVER_METATABLE);
 	LUA->PushMetaTable(FLEXSOLVER_METATABLE);	// Add our meta functions
@@ -581,53 +588,6 @@ LUA_FUNCTION(NewFlexRenderer) {
 	return 1;
 }
 
-#ifdef DRM
-
-LUA_FUNCTION(TestDRM) {
-	// gwater2 DRM (antipiracy)
-	// Identification is done by reading the last 26 chars in the current binary, which are injected before download
-	// We will call these chars a 'Key'
-	// We send an HTTPS request to a server which returns if the key is considered valid
-	// If the request fails in any way (returns anything other than 200) we instantly return
-	// Keys can be invalidated if too many requsts (ips) are sent with the same key. If this is the case, the binary was likely distributed
-	std::ifstream fs;
-#if WIN64
-	fs.open("garrysmod/lua/bin/gmcl_gwater2_win64.dll", std::ios::binary);	// Binary path is Local to GarrysMod/
-#else
-	fs.open("garrysmod/lua/bin/gmcl_gwater2_win32.dll", std::ios::binary);	//^
-#endif
-	if (fs.fail()) {
-		Msg("Fuck!\n");
-		// Fail code
-	}
-	else {
-		// Read file, shove in std::string
-		fs.seekg(0, std::ios::end);
-		size_t i = fs.tellg();
-		char* buf = new char[i];
-		fs.seekg(0, std::ios::beg);
-		fs.read(buf, i);
-		fs.close();
-		std::string s;
-		s.assign(buf, i);
-		delete[] buf;
-
-		httplib::Client cli("https://gwater.misleadingname.cc");
-		if (auto res = cli.Get("/verify.php" + s.substr(s.length() - 26, 26))) {
-			Msg(std::to_string(res->status).c_str());
-			Msg(res->body.c_str());
-			// Success code
-		}
-		else {
-			auto err = res.error();
-			Msg(httplib::to_string(err).c_str());
-			// Fail code
-		}
-	}
-
-	return 0;
-}
-#endif
 // `mat_antialias 0` but shit
 /*LUA_FUNCTION(SetMSAAEnabled) {
 	MaterialSystem_Config_t config = materials->GetCurrentConfigForVideoCard();
@@ -645,91 +605,188 @@ LUA_FUNCTION(TestDRM) {
 	return 0;
 }*/
 
+#ifdef DRM
+// Lua Red herring
+// We add a new function called VerifyInstall, which ALSO must be called in the Lua before using gwater2
+// If this function is tinkered with in any way (eg. its not called), we engine error inside of FlexSolver creation
+LUA_FUNCTION(VerifyInstall) {
+	RED_HERRING = (int)LUA->GetNumber(-1);
+	LUA->PushBool(false);
+	return 1;
+}
+
+LUA_FUNCTION(NewFlexSolverHerring) {
+	// User has pirated and tinkered the Lua code
+
+	// all of this is random meaningless bullshit
+	switch (RED_HERRING) {
+	case 0:
+		Error("OpenSSL Verification failed! (Restart and make sure you have an internet connection?)");
+		return 0;
+	case 200:
+		Error("Assert Failed! (200 != 302)");
+		return 0;
+	case 302:
+		Error("Assert Failed! (200 != %i)", rand() % 1000);
+		return 0;
+	default:
+		return 0;
+	}
+}
+#endif
+
+// Overrides VerifyInstall when gwater2 is verified
+LUA_FUNCTION(VerifiedInstall) {
+	LUA->PushBool((int)LUA->GetNumber(-1) == 200);
+	return 1;
+}
+
 GMOD_MODULE_OPEN() {
 	GLOBAL_LUA = LUA;
-	FLEX_LIBRARY = NvFlexInit(
-		NV_FLEX_VERSION, 
-		[](NvFlexErrorSeverity type, const char* message, const char* file, int line) {
-			std::string error = "[GWater2 Internal Error]: " + (std::string)message;
-			GLOBAL_LUA->ThrowError(error.c_str());
+
+	// gwater2 DRM (antipiracy)
+	// Identification is done by reading the last 26 chars in the current binary, which are injected before download
+	// We will call these chars a 'Key'
+	// We send an HTTPS request to a server which returns if the key is considered valid
+	// If the request fails in any way (returns anything other than 200) we don't load gwater
+	// Keys can be invalidated if too many requsts (ips) are sent with the same key. 
+	// When this happens, we assume the binary was distributed (user is pirating) and disallow usage
+#ifdef DRM
+		LUA->PushSpecial(SPECIAL_GLOB);
+		ADD_FUNCTION(LUA, NewFlexSolverHerring, "FlexSolver");	// gets overridden if successfully verified
+		ADD_FUNCTION(LUA, VerifyInstall, "VerifyInstall");
+		LUA->Pop();
+
+		std::ifstream fs;
+#if WIN64
+		fs.open("garrysmod/lua/bin/gmcl_gwater2_win64.dll", std::ios::binary);	// Binary path is Local to GarrysMod/
+#else
+		fs.open("garrysmod/lua/bin/gmcl_gwater2_win32.dll", std::ios::binary);	// ^
+#endif
+		if (fs.fail()) {
+			Msg("\n[GWater2 Internal Error]: Failed to open DLL file (What the fuck?) (Contact Meetric if this error occurs)\n\n");
+		} else {
+			// Read dll file for identification
+			fs.seekg(0, std::ios::end);
+			size_t i = fs.tellg();
+			char* buf = new char[i];
+			fs.seekg(0, std::ios::beg);
+			fs.read(buf, i);
+			fs.close();
+			std::string s;
+			s.assign(buf, i);
+			delete[] buf;
+
+			// Make the ASM confusing (does this even work? lol?)
+			volatile int two_hundred = 0;
+			two_hundred = two_hundred + 1;
+			two_hundred = two_hundred * 50;
+			two_hundred = two_hundred % 100;
+			two_hundred = two_hundred + 50;
+			two_hundred = two_hundred * 2;
+
+			httplib::Client cli("https://gwater.misleadingname.cc");
+			if (auto res = cli.Get("/verify.php?key=" + s.substr(s.length() - 26, 26))) {
+				if (res->status == two_hundred && (RED_HERRING = 1)) {
+#endif
+					/*********** Code 200 (User is not pirating), Continue Load ************/
+
+					FLEX_LIBRARY = NvFlexInit(
+						NV_FLEX_VERSION, 
+						[](NvFlexErrorSeverity type, const char* message, const char* file, int line) {
+							std::string error = "[GWater2 Internal Error]: " + (std::string)message;
+							GLOBAL_LUA->ThrowError(error.c_str());
+						}
+					);
+
+					if (FLEX_LIBRARY == nullptr) 
+						LUA->ThrowError("[GWater2 Internal Error]: Nvidia FleX Failed to load! (Does your GPU meet the minimum requirements to run FleX?)");
+
+					if (!Sys_LoadInterface("materialsystem", MATERIAL_SYSTEM_INTERFACE_VERSION, NULL, (void**)&materials))
+						LUA->ThrowError("[GWater2 Internal Error]: C++ Materialsystem failed to load!");
+
+					//if (!Sys_LoadInterface("shaderapidx9", SHADER_DEVICE_INTERFACE_VERSION, NULL, (void**)&g_pShaderDevice))
+					//	LUA->ThrowError("[GWater2 Internal Error]: C++ Shaderdevice failed to load!");
+
+					//if (!Sys_LoadInterface("shaderapidx9", SHADERAPI_INTERFACE_VERSION, NULL, (void**)&g_pShaderAPI))
+					//	LUA->ThrowError("[GWater2 Internal Error]: C++ Shaderapi failed to load!");
+
+					//if (!Sys_LoadInterface("studiorender", STUDIO_RENDER_INTERFACE_VERSION, NULL, (void**)&g_pStudioRender)) 
+					//	LUA->ThrowError("[GWater2 Internal Error]: C++ Studiorender failed to load!");
+
+					// Defined in 'shader_inject.h'
+					if (!inject_shaders())
+						LUA->ThrowError("[GWater2 Internal Error]: C++ Shadersystem failed to load!");
+
+					// GMod filesystem (Used for bsp parser)
+					if (FileSystem::LoadFileSystem() != FILESYSTEM_STATUS::OK)
+						LUA->ThrowError("[GWater2 Internal Error]: C++ Filesystem failed to load!");
+
+					FLEXSOLVER_METATABLE = LUA->CreateMetaTable("FlexSolver");
+					ADD_FUNCTION(LUA, FLEXSOLVER_GarbageCollect, "__gc");	// FlexMetaTable.__gc = FlexGC
+
+					// FlexMetaTable.__index = {func1, func2, ...}
+					LUA->CreateTable();
+					ADD_FUNCTION(LUA, FLEXSOLVER_GarbageCollect, "Destroy");
+					ADD_FUNCTION(LUA, FLEXSOLVER_Tick, "Tick");
+					ADD_FUNCTION(LUA, FLEXSOLVER_AddParticle, "AddParticle");
+					ADD_FUNCTION(LUA, FLEXSOLVER_AddCube, "AddCube");
+					ADD_FUNCTION(LUA, FLEXSOLVER_GetMaxParticles, "GetMaxParticles");
+					ADD_FUNCTION(LUA, FLEXSOLVER_RenderParticles, "RenderParticles");
+					ADD_FUNCTION(LUA, FLEXSOLVER_AddConcaveMesh, "AddConcaveMesh");
+					ADD_FUNCTION(LUA, FLEXSOLVER_AddConvexMesh, "AddConvexMesh");
+					ADD_FUNCTION(LUA, FLEXSOLVER_RemoveMesh, "RemoveMesh");
+					ADD_FUNCTION(LUA, FLEXSOLVER_UpdateMesh, "UpdateMesh");
+					ADD_FUNCTION(LUA, FLEXSOLVER_SetParameter, "SetParameter");
+					ADD_FUNCTION(LUA, FLEXSOLVER_GetParameter, "GetParameter");
+					ADD_FUNCTION(LUA, FLEXSOLVER_GetActiveParticles, "GetActiveParticles");
+					ADD_FUNCTION(LUA, FLEXSOLVER_GetActiveDiffuse, "GetActiveDiffuse");
+					ADD_FUNCTION(LUA, FLEXSOLVER_AddMapMesh, "AddMapMesh");
+					ADD_FUNCTION(LUA, FLEXSOLVER_IterateMeshes, "IterateMeshes");
+					//ADD_FUNCTION(LUA, GetContacts, "GetContacts");
+					ADD_FUNCTION(LUA, FLEXSOLVER_InitBounds, "InitBounds");
+					ADD_FUNCTION(LUA, FLEXSOLVER_Reset, "Reset");
+					LUA->SetField(-2, "__index");
+
+					FLEXRENDERER_METATABLE = LUA->CreateMetaTable("FlexRenderer");
+					ADD_FUNCTION(LUA, FLEXRENDERER_GarbageCollect, "__gc");	// FlexMetaTable.__gc = FlexGC
+
+					// FlexMetaTable.__index = {func1, func2, ...}
+					LUA->CreateTable();
+					ADD_FUNCTION(LUA, FLEXRENDERER_GarbageCollect, "Destroy");
+					ADD_FUNCTION(LUA, FLEXRENDERER_BuildWater, "BuildWater");
+					ADD_FUNCTION(LUA, FLEXRENDERER_DrawWater, "DrawWater");
+					ADD_FUNCTION(LUA, FLEXRENDERER_BuildDiffuse, "BuildDiffuse");
+					ADD_FUNCTION(LUA, FLEXRENDERER_DrawDiffuse, "DrawDiffuse");
+					LUA->SetField(-2, "__index");
+
+					// _G.FlexSolver = NewFlexSolver
+					LUA->PushSpecial(SPECIAL_GLOB);
+					ADD_FUNCTION(LUA, NewFlexSolver, "FlexSolver");
+					ADD_FUNCTION(LUA, NewFlexRenderer, "FlexRenderer");
+					ADD_FUNCTION(LUA, VerifiedInstall, "VerifyInstall");
+					LUA->Pop();
+#ifdef DRM
+				} else {
+					// Fail code (User is pirating but hasn't tinkered the lua)
+				}
+			} else {
+				// Fail code (Failed to connect)
+				Msg("\n[GWater2 Internal Error]: Failed to connect to identification server\n\n");
+			}
 		}
-	);
+#endif
 
-	if (FLEX_LIBRARY == nullptr) 
-		LUA->ThrowError("[GWater2 Internal Error]: Nvidia FleX Failed to load! (Does your GPU meet the minimum requirements to run FleX?)");
-
-	if (!Sys_LoadInterface("materialsystem", MATERIAL_SYSTEM_INTERFACE_VERSION, NULL, (void**)&materials))
-		LUA->ThrowError("[GWater2 Internal Error]: C++ Materialsystem failed to load!");
-
-	//if (!Sys_LoadInterface("shaderapidx9", SHADER_DEVICE_INTERFACE_VERSION, NULL, (void**)&g_pShaderDevice))
-	//	LUA->ThrowError("[GWater2 Internal Error]: C++ Shaderdevice failed to load!");
-
-	//if (!Sys_LoadInterface("shaderapidx9", SHADERAPI_INTERFACE_VERSION, NULL, (void**)&g_pShaderAPI))
-	//	LUA->ThrowError("[GWater2 Internal Error]: C++ Shaderapi failed to load!");
-
-	//if (!Sys_LoadInterface("studiorender", STUDIO_RENDER_INTERFACE_VERSION, NULL, (void**)&g_pStudioRender)) 
-	//	LUA->ThrowError("[GWater2 Internal Error]: C++ Studiorender failed to load!");
-
-	// Defined in 'shader_inject.h'
-	if (!inject_shaders())
-		LUA->ThrowError("[GWater2 Internal Error]: C++ Shadersystem failed to load!");
-
-	// weird bsp filesystem
-	if (FileSystem::LoadFileSystem() != FILESYSTEM_STATUS::OK)
-		LUA->ThrowError("[GWater2 Internal Error]: C++ Filesystem failed to load!");
-	
-	FLEXSOLVER_METATABLE = LUA->CreateMetaTable("FlexSolver");
-	ADD_FUNCTION(LUA, FLEXSOLVER_GarbageCollect, "__gc");	// FlexMetaTable.__gc = FlexGC
-
-	// FlexMetaTable.__index = {func1, func2, ...}
-	LUA->CreateTable();
-	ADD_FUNCTION(LUA, FLEXSOLVER_GarbageCollect, "Destroy");
-	ADD_FUNCTION(LUA, FLEXSOLVER_Tick, "Tick");
-	ADD_FUNCTION(LUA, FLEXSOLVER_AddParticle, "AddParticle");
-	ADD_FUNCTION(LUA, FLEXSOLVER_AddCube, "AddCube");
-	ADD_FUNCTION(LUA, FLEXSOLVER_GetMaxParticles, "GetMaxParticles");
-	ADD_FUNCTION(LUA, FLEXSOLVER_RenderParticles, "RenderParticles");
-	ADD_FUNCTION(LUA, FLEXSOLVER_AddConcaveMesh, "AddConcaveMesh");
-	ADD_FUNCTION(LUA, FLEXSOLVER_AddConvexMesh, "AddConvexMesh");
-	ADD_FUNCTION(LUA, FLEXSOLVER_RemoveMesh, "RemoveMesh");
-	ADD_FUNCTION(LUA, FLEXSOLVER_UpdateMesh, "UpdateMesh");
-	ADD_FUNCTION(LUA, FLEXSOLVER_SetParameter, "SetParameter");
-	ADD_FUNCTION(LUA, FLEXSOLVER_GetParameter, "GetParameter");
-	ADD_FUNCTION(LUA, FLEXSOLVER_GetActiveParticles, "GetActiveParticles");
-	ADD_FUNCTION(LUA, FLEXSOLVER_GetActiveDiffuse, "GetActiveDiffuse");
-	ADD_FUNCTION(LUA, FLEXSOLVER_AddMapMesh, "AddMapMesh");
-	ADD_FUNCTION(LUA, FLEXSOLVER_IterateMeshes, "IterateMeshes");
-	//ADD_FUNCTION(LUA, GetContacts, "GetContacts");
-	ADD_FUNCTION(LUA, FLEXSOLVER_InitBounds, "InitBounds");
-	ADD_FUNCTION(LUA, FLEXSOLVER_Reset, "Reset");
-	LUA->SetField(-2, "__index");
-
-	FLEXRENDERER_METATABLE = LUA->CreateMetaTable("FlexRenderer");
-	ADD_FUNCTION(LUA, FLEXRENDERER_GarbageCollect, "__gc");	// FlexMetaTable.__gc = FlexGC
-
-	// FlexMetaTable.__index = {func1, func2, ...}
-	LUA->CreateTable();
-	ADD_FUNCTION(LUA, FLEXRENDERER_GarbageCollect, "Destroy");
-	ADD_FUNCTION(LUA, FLEXRENDERER_BuildWater, "BuildWater");
-	ADD_FUNCTION(LUA, FLEXRENDERER_DrawWater, "DrawWater");
-	ADD_FUNCTION(LUA, FLEXRENDERER_BuildDiffuse, "BuildDiffuse");
-	ADD_FUNCTION(LUA, FLEXRENDERER_DrawDiffuse, "DrawDiffuse");
-	LUA->SetField(-2, "__index");
-
-	// _G.FlexSolver = NewFlexSolver
-	LUA->PushSpecial(SPECIAL_GLOB);
-	ADD_FUNCTION(LUA, NewFlexSolver, "FlexSolver");
-	ADD_FUNCTION(LUA, NewFlexRenderer, "FlexRenderer");
-	ADD_FUNCTION(LUA, TestDRM, "TestDRM");
-	LUA->Pop();
 
 	return 0;
 }
 
 // Called when the module is unloaded
 GMOD_MODULE_CLOSE() {
-	NvFlexShutdown(FLEX_LIBRARY);
-	FLEX_LIBRARY = nullptr;
+	if (FLEX_LIBRARY) {
+		NvFlexShutdown(FLEX_LIBRARY);
+		FLEX_LIBRARY = nullptr;
+	}
 
 	// Defined in 'shader_inject.h'
 	eject_shaders();

@@ -90,6 +90,8 @@ end
 -- visual counter on gun
 function SWEP:PostDrawViewModel(vm, weapon, ply)
 	local pos, ang = vm:GetBonePosition(39)--self:GetOwner():GetViewModel():GetBonePosition(0)
+	if !pos or !ang then return end
+	
 	ang = ang + Angle(180, 0, -ang[3] * 2)
 	pos = pos - ang:Right() * 1.5
 	cam.Start3D2D(pos, ang, 0.03)

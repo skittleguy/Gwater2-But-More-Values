@@ -20,6 +20,5 @@ public:
 	void draw_water();
 	void draw_diffuse();
 
-	FlexRenderer();
 	~FlexRenderer();
 };

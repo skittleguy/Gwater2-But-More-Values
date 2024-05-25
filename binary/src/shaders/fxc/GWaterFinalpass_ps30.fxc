@@ -74,10 +74,10 @@ float4 main(const PS_INPUT i) : COLOR {
 	// Secondary lighting calculations
 	
 #if OPAQUE // Opaque
-	float3 absorption = COLOR2.xyz;
+	float3 absorption = COLOR2.xyz;// * (1.0 - fresnel);
 	float diffuse = dot(smoothed_normal, SUN_DIR) * 0.45 + 0.55;
 
-	float3 final_color = absorption * diffuse + float3(phong, phong, phong) + specular;
+	float3 final_color = absorption * diffuse  + float3(phong, phong, phong) + specular;
 	
 #else // Translucent
 	// Calculate refraction vector in 3d space and project it to screen

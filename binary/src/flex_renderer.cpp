@@ -45,6 +45,11 @@ void FlexRenderer::build_water(FlexSolver* solver, float radius) {
 	//    primative++
 	//  }
 	// }
+	/*
+	Vector forward = view_matrix.GetForward();
+	Vector right = view_matrix.GetUp();
+	Vector up = view_matrix.GetLeft();
+	Vector local_pos[3] = { (-up - right * SQRT3), up * 2.0, (-up + right * SQRT3) };*/
 
 	CMeshBuilder mesh_builder;
 	for (int particle_index = 0; particle_index < max_particles;) {
@@ -179,10 +184,6 @@ void FlexRenderer::draw_water() {
 	for (IMesh* mesh : water) {
 		mesh->Draw();
 	}
-};
-
-FlexRenderer::FlexRenderer() {
-
 };
 
 FlexRenderer::~FlexRenderer() {

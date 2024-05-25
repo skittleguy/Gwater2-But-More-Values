@@ -81,10 +81,8 @@ local function add_prop(ent)
 		for k, v in ipairs(convexes) do
 			if #v <= 64 * 3 then	-- hardcoded limits.. No more than 64 planes per convex as it is a FleX limitation
 				gwater2.solver:AddConvexMesh(ent:EntIndex(), v, ent:GetPos(), ent:GetAngles())
-				print("adding convex mesh")
 			else
 				gwater2.solver:AddConcaveMesh(ent:EntIndex(), v, ent:GetPos(), ent:GetAngles())
-				print("adding concave mesh")
 			end
 		end
 	else
@@ -109,7 +107,11 @@ local function get_map_vertices()
 end
 
 require((BRANCH == "x86-64" or BRANCH == "chromium" ) and "gwater2" or "gwater2_main")	-- carrying
-include("gwater2_shaders.lua")	-- also carrying
+if !VerifyInstall(200) then 
+	error("[GWater2]: Failed to verify!")
+	return 
+end
+include("gwater2_shaders.lua")
 
 gwater2 = {
 	solver = FlexSolver(100000),
@@ -117,7 +119,7 @@ gwater2 = {
 	old_ticker = false,
 	material = Material("gwater2/finalpass"),--Material("vgui/circle"),--Material("sprites/sent_ball"),
 	update_meshes = function(index, id, rep)
-		if id == 0 then return end	-- entity is world
+		if id == 0 then return end	-- skip, entity is world
 
 		local ent = Entity(id)
 		if !IsValid(ent) then 

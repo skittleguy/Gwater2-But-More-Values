@@ -16,7 +16,7 @@ extern IMaterialSystemHardwareConfig* g_pHardwareConfig = NULL;
 extern const MaterialSystem_Config_t* g_pConfig = NULL;
 IShaderSystem* g_pSLShaderSystem;	 // I literally no idea where this is defined in the source sdk. Fails to compile without it
 
-CShaderSystem::ShaderDLLInfo_t* shaderlibdll;	// our shader "directory"
+CShaderSystem::ShaderDLLInfo_t* shaderlibdll = NULL;	// our shader "directory"
 //int m_ShaderDLLs_index;
 
 // returns true if successful, false otherwise

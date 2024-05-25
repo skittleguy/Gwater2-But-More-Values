@@ -1,6 +1,6 @@
 AddCSLuaFile()
 
-if SERVER then return end
+if SERVER or !gwater2 then return end
 
 -- *Ehem*
 -- BEHOLD. THE GWATER MENU CODE
@@ -31,7 +31,7 @@ local options = {
 	performance_tab_header = "Performance Tab",
 	performance_tab_text = "This tab has options which can help and alter your performance.\n\nEach option is colored between green and red to indicate its performance hit.\n\nAll parameters directly impact the GPU.",
 	patron_tab_header = "Patron Tab",
-	patron_tab_text = "This tab has a list of all my patrons.\n\nThe list is sorted in alphabetical order\n\nIt will be updated routinely until release.",
+	patron_tab_text = "This tab has a list of all my patrons.\n\nThe list is sorted in alphabetical order.\n\nIt will be updated routinely until release.",
 
 	-- Physics Parameters
 	Cohesion = {text = "Controls how well particles hold together.\n\nHigher values make the fluid more solid/rigid, while lower values make it more fluid and loose."},
@@ -44,6 +44,7 @@ local options = {
 	["Timescale"] = {text = "Sets the speed of the simulation.\n\nNote that some parameters like cohesion and surface tension may behave differently due to smaller or larger compute times"},
 	["Collision Distance"] = {text = "Controls the collision distance between particles and objects.\n\nNote that a lower collision distance will cause particles to clip through objects more often."},
 	["Vorticity Confinement"] = {text = "Increases the vorticity effect by applying rotational forces to particles.\n\nThis exists because air pressure cannot be efficiently simulated."},
+	["Dynamic Friction"] = {text = "Controls the amount of friction particles receive on surfaces.\n\nCauses Adhesion to behave weirdly when set to 0."},
 	
 	-- Visual Parameters
 	Color = {text = "Controls the color of the fluid.\n\nThe alpha (transparency) channel controls the amount of color absorbsion.\n\nAn alpha value of 255 (maxxed) makes the fluid opaque."},
@@ -59,7 +60,7 @@ local options = {
 	["Absorption"] = {text = "Enables absorption of light over distance inside of fluid.\n\n(more depth = darker color)\n\nMedium performance impact."},
 	["Depth Fix"] = {text = "Makes particles appear spherical instead of flat, creating a cleaner and smoother water surface.\n\nCauses shader overdraw.\n\nMedium-High performance impact."},
 	["Particle Limit"] = {text = "USE THIS PARAMETER AT YOUR OWN RISK.\n\nChanges the limit of particles.\n\nNote that a higher limit will negatively impact performance even with the same number of particles spawned."},
-	["Old Solver"] = {text = "If checked, uses the solver used in 0.1b and 0.2b.\n\nThe old solver usually grants better performance, but has more particle leaking.\n\nI suggest using the old solver when recording."},
+	["Old Solver"] = {text = "If checked, uses the solver used in 0.1b and 0.2b.\n\nThe old solver usually grants better performance, but causes more particle leakage.\n\nI suggest using the old solver when recording."},
 }
 
 -- setup percentage values
@@ -191,7 +192,7 @@ local function set_gwater_parameter(option, val)
 		options.solver:SetParameter("collision_distance", val * gwater2["collision_distance"])
 	end
 
-	if option != "diffuse_threshold" then -- hack hack hack! fluid preview doesn't use diffuse particles
+	if option != "diffuse_threshold" and option != "dynamic_friction" then -- hack hack hack! fluid preview doesn't use diffuse particles
 		options.solver:SetParameter(option, val)
 	end
 end
@@ -549,17 +550,17 @@ concommand.Add("gwater2_menu", function()
 		presets:SetPos(240, 20)
 		presets:SetSize(135, 20)
 		presets:SetText("Presets (click to open)")
-		presets:AddChoice("Acid", "Color:240 255 0 200\nCohesion:\nAdhesion:0.1\nViscosity:0\nSurface Tension:\nFluid Rest Distance:")
+		presets:AddChoice("Acid", "Color:240 255 0 150\nCohesion:\nAdhesion:0.1\nViscosity:0\nSurface Tension:\nFluid Rest Distance:")
 		presets:AddChoice("Blood", "Color:240 0 0 250\nCohesion:0.45\nAdhesion:0.15\nViscosity:1\nSurface Tension:0\nFluid Rest Distance:0.55")	-- Parameters by GHM
 		presets:AddChoice("Glue", "Color:230 230 230 255\nCohesion:0.03\nAdhesion:0.1\nViscosity:10\nSurface Tension:\nFluid Rest Distance:")	-- yeah sure.. "glue"...
 		presets:AddChoice("Lava", "Color:255 210 0 200\nCohesion:0.1\nAdhesion:0.01\nViscosity:10\nSurface Tension:\nFluid Rest Distance:")
 		presets:AddChoice("Oil", "Color:0 0 0 255\nCohesion:0\nAdhesion:0\nViscosity:0\nSurface Tension:0\nFluid Rest Distance:")
 		presets:AddChoice("Goop", "Color:170 240 140 50\nCohesion:1\nAdhesion:0.1\nViscosity:0\nSurface Tension:0.25\nFluid Rest Distance:")
 
-		presets:AddChoice("Portal Gel (Blue)", "Color:0 127 255 255\nCohesion:0.05\nAdhesion:0.3\nViscosity:10\nSurface Tension:0.5\nFluid Rest Distance:")
-		presets:AddChoice("Portal Gel (Orange)", "Color:255 127 0 255\nCohesion:0.05\nAdhesion:0.3\nViscosity:10\nSurface Tension:0.5\nFluid Rest Distance:")
+		presets:AddChoice("Portal Gel (Blue)", "Color:0 127 255 255\nCohesion:0.1\nAdhesion:0.3\nViscosity:10\nSurface Tension:0.5\nFluid Rest Distance:")
+		presets:AddChoice("Portal Gel (Orange)", "Color:255 127 0 255\nCohesion:0.1\nAdhesion:0.3\nViscosity:10\nSurface Tension:0.5\nFluid Rest Distance:")
 
-		presets:AddChoice("(Default) Water", "Color:\nCohesion:\nAdhesion:\nViscosity:\nSurface Tension:")
+		presets:AddChoice("(Default) Water", "Color:\nCohesion:\nAdhesion:\nViscosity:\nSurface Tension:\nFluid Rest Distance:")
 
 		function presets:OnSelect(index, value, data)
 			--EmitSound("buttons/lightswitch2.wav", Vector(), -2, CHAN_AUTO, 1, nil, nil, 200)
@@ -638,7 +639,8 @@ concommand.Add("gwater2_menu", function()
 		create_label(scrollPanel, "Advanced Parameters", "These parameters also directly influence physics.", 5)
 		labels[1], sliders["Collision Distance"] = create_slider(scrollPanel, "Collision Distance", 0.1, 1, 2, 50, 315, 55)
 		labels[2], sliders["Fluid Rest Distance"] = create_slider(scrollPanel, "Fluid Rest Distance", 0.55, 0.85, 2, 80, 315, 55)
-		labels[3], sliders["Vorticity Confinement"] = create_slider(scrollPanel, "Vorticity Confinement", 0, 100, 0, 110, 300, 75)
+		labels[3], sliders["Dynamic Friction"] = create_slider(scrollPanel, "Dynamic Friction", 0, 1, 2, 110, 315, 55)
+		labels[4], sliders["Vorticity Confinement"] = create_slider(scrollPanel, "Vorticity Confinement", 0, 100, 0, 140, 300, 75)
 		
 		function scrollPanel:AnimationThink()
 			local mousex, mousey = self:LocalCursorPos()
@@ -1038,7 +1040,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 
 		local label = vgui.Create("DLabel", scrollPanel)
 		label:SetPos(0, 0)
-		label:SetSize(383, 10800)
+		label:SetSize(383, 14720)
 		label:SetText([[
 			Thanks to everyone here who supported me throughout the development of GWater2!
 			
@@ -1070,7 +1072,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 		local explanation = create_explanation(scrollPanel)
 		explanation:SetText(options.patron_tab_text)
 		function explanation:Paint(w, h)
-			self:SetPos(390, scrollPanel:GetVBar():GetScroll())
+			--self:SetPos(390, scrollPanel:GetVBar():GetScroll())
 			surface.SetDrawColor(0, 0, 0, 150)
 			surface.DrawRect(0, 0, w, h)
 			surface.SetDrawColor(255, 255, 255)
