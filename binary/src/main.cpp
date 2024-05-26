@@ -9,7 +9,7 @@
 #include "flex_renderer.h"
 #include "shader_inject.h"
 
-#define DRM
+//#define DRM
 
 // httplib and (compiled) opensll are required to build gwater2 with DRM
 #ifdef DRM

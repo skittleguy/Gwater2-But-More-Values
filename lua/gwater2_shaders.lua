@@ -7,7 +7,7 @@ local function GetRenderTargetGWater(name, mult, depth)
 	return GetRenderTargetEx(name, ScrW() * mult, ScrH() * mult,
 		RT_SIZE_DEFAULT,
 		depth or 0,
-		2 + 256,
+		2 + 4 + 8 + 256,
 		0,
 		IMAGE_FORMAT_RGBA16161616F
 	)
@@ -93,7 +93,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	-- render.SetRenderTarget(old_rt)	-- required if upcoming pipeline doesnt exist
 	gwater2.renderer:DrawDiffuse()
 
-	--render.BlurRenderTarget(render.GetScreenEffectTexture(), 2, 2, 0)
+	--render.BlurRenderTarget(render.GetScreenEffectTexture(), 0, 0, 1)
 	
 	-- Depth absorption (disabled when opaque liquids are enabled)
 	-- TODO: REMOVE SETRENDERTARGET

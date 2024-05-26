@@ -167,7 +167,7 @@ void FlexSolver::tick(float dt) {
 	);
 
 	// tick
-	NvFlexUpdateSolver(solver, dt * (*param_map["timescale"]), (int)(*param_map["substeps"]), false);
+	NvFlexUpdateSolver(solver, dt * get_parameter("timescale"), (int)get_parameter("substeps"), false);
 
 	// read back (async)
 	NvFlexGetParticles(solver, get_buffer("particle_pos"), copy_description);
