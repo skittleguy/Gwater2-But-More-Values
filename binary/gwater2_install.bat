@@ -12,7 +12,7 @@ cls
 FOR /F "tokens=2* skip=2" %%a in ('reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Valve\Steam" /v "InstallPath" 2^>nul') do set steam_dir=%%b
 FOR /F "tokens=2* skip=2" %%a in ('reg query "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Valve\Steam" /v "InstallPath" 2^>nul') do set steam_dir=%%b
 if not defined steam_dir (
-	echo "Steam installation path not found"
+	echo "Steam installation path not found. Please get gwater2 manually by downloading the .zip"
 	pause
 	exit
 )
@@ -21,7 +21,7 @@ for /f "usebackq tokens=2 skip=4" %%A in ("%steam_dir%\steamapps\libraryfolders.
   if exist "%%~A\steamapps\appmanifest_4000.acf" set "gmod_dir=%%~A\steamapps\common\GarrysMod"
 )
 if not defined gmod_dir (
-	echo "GMod installation path not found"
+	echo "GMod installation path not found. Please get gwater2 manually by downloading the .zip"
 	pause
 	exit
 )
@@ -30,7 +30,7 @@ echo Detected Directory: %gmod_dir%
 echo Make sure to close GMod before running the installer.
 echo.
 
-echo Select an option:
+echo Select an option (Type 1 or 2 and hit enter):
 echo 1) install
 echo 2) uninstall
 set /p choice="> "
@@ -43,11 +43,12 @@ pause
 goto prompt
 
 :install
-#pushd %gmod_dir%
+pushd %gmod_dir%
 echo Downloading gwater2...
-powershell -command [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest 'https://www.dropbox.com/scl/fi/6obzwiuf8hh6wphhog9q5/gwater2.zip?rlkey=qqksxq1qgg7fmf9xw2w4feosp"&"dl=1' -Out gwater2.zip
+powershell -command [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest 'https://cdn.discordapp.com/attachments/1022620767202050091/1245089205961490432/gwater2.zip?ex=66577b2f"&"is=665629af"&"hm=caa11601cea220d785c1973bd4de3315d95a4eada382722322e1fc5a87d3f453' -Out gwater2.zip
+
 if not exist gwater2.zip (
-	echo Download failed.
+	echo Download failed, Invalid Link
 	pause
 	exit
 )
@@ -65,7 +66,7 @@ pause
 exit
 
 :uninstall
-#pushd %gmod_dir%
+pushd %gmod_dir%
 echo Uninstalling...
 del ".\garrysmod\lua\bin\gmcl_gwater2_win32.dll"
 del ".\garrysmod\lua\bin\gmcl_gwater2_win64.dll"

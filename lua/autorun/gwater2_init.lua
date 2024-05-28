@@ -106,10 +106,6 @@ local function get_map_vertices()
 end
 
 require((BRANCH == "x86-64" or BRANCH == "chromium" ) and "gwater2" or "gwater2_main")	-- carrying
-if !VerifyInstall(200) then 
-	error("[GWater2]: Failed to verify!")
-	return 
-end
 include("gwater2_shaders.lua")
 
 gwater2 = {

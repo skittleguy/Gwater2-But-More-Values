@@ -1,6 +1,6 @@
 #include "flex_renderer.h"
 
-//extern IMaterialSystem* materials = NULL;	// stops main branch compile from bitching
+extern IMaterialSystem* materials = NULL;	// stops main branch compile from bitching
 
 // lord have mercy brothers
 void FlexRenderer::build_water(FlexSolver* solver, float radius) {
