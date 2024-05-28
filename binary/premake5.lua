@@ -25,6 +25,7 @@ CreateWorkspace({name = "gwater2", abi_compatible = true, path = ""})
 		--IncludeLuaShared()
 		--IncludeScanning()
 		--IncludeDetouring()
+		--IncludeSteamAPI()
 		IncludeSDKCommon()
 		IncludeSDKTier0()
 		IncludeSDKTier1()
@@ -35,7 +36,6 @@ CreateWorkspace({name = "gwater2", abi_compatible = true, path = ""})
 			"BSPParser",
 			"GMFS",
 			"src/sourceengine",
-			"cpp-httplib"
 		}
 
 		files {
@@ -47,36 +47,24 @@ CreateWorkspace({name = "gwater2", abi_compatible = true, path = ""})
 
 		filter({"system:windows", "platforms:x86"})
 			targetsuffix("_win32")
-			includedirs {
-				"openssl/x86/include"
-			}
 			libdirs {
 				"FleX/lib/win32",
-				"openssl/x86/lib"
 			}
 			links { 
 				"NvFlexReleaseD3D_x86",
 				"NvFlexDeviceRelease_x86",
 				"NvFlexExtReleaseD3D_x86",
-				"libcrypto",
-				"libssl"
 			}
 
 		filter({"system:windows", "platforms:x86_64"})
 			targetsuffix("_win64")
-			includedirs {
-				"openssl/x64/include"
-			}
 			libdirs {
 				"FleX/lib/win64",
-				"openssl/x64/lib"
 			}
 			links { 
 				"NvFlexReleaseD3D_x64",
 				"NvFlexDeviceRelease_x64",
 				"NvFlexExtReleaseD3D_x64",
-				"libcrypto",
-				"libssl"
 			}
 			
 		filter({"system:linux", "platforms:x86_64"})

@@ -87,7 +87,6 @@ local function add_prop(ent)
 		end
 	else
 		gwater2.solver:AddConcaveMesh(ent:EntIndex(), unfucked_get_mesh(ent, true), ent:GetPos(), ent:GetAngles())
-		print("adding concave mesh")
 	end
 
 end

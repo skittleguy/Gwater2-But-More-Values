@@ -113,6 +113,11 @@ bool FlexSolver::pretick(NvFlexMapFlags wait) {
 void FlexSolver::map_particles() {
 	if (particles.empty()) return;
 
+	NvFlexCopyDesc desc;
+	desc.dstOffset = copy_description->elementCount;
+	desc.elementCount = particles.size();
+	desc.srcOffset = desc.dstOffset;
+
 	// map buffers for reading / writing
 	Vector4D* positions = (Vector4D*)NvFlexMap(get_buffer("particle_pos"), eNvFlexMapWait);
 	Vector* velocities = (Vector*)NvFlexMap(get_buffer("particle_vel"), eNvFlexMapWait);
@@ -141,10 +146,10 @@ void FlexSolver::map_particles() {
 	NvFlexUnmap(get_buffer("particle_active"));
 
 	// Update particle information
-	NvFlexSetParticles(solver, get_buffer("particle_pos"), copy_description);	// TODO: Optimize this by creating another copy description
-	NvFlexSetVelocities(solver, get_buffer("particle_vel"), copy_description);
-	NvFlexSetPhases(solver, get_buffer("particle_phase"), copy_description);
-	NvFlexSetActive(solver, get_buffer("particle_active"), copy_description);
+	NvFlexSetParticles(solver, get_buffer("particle_pos"), &desc);
+	NvFlexSetVelocities(solver, get_buffer("particle_vel"), &desc);
+	NvFlexSetPhases(solver, get_buffer("particle_phase"), &desc);
+	NvFlexSetActive(solver, get_buffer("particle_active"), &desc);
 	NvFlexSetActiveCount(solver, copy_description->elementCount);
 
 	particles.clear();

@@ -71,9 +71,6 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	render.ClearRenderTarget(cache_bloom, Color(0, 0, 0, 0))
 	render.OverrideAlphaWriteEnable(true, true)	-- Required for GWater shaders as they use the alpha component
 
-
-	-- render.BlurRenderTarget(render.GetScreenEffectTexture(), 2, 2, 0)
-
 	-- cached variables
 	local scrw = ScrW()
 	local scrh = ScrH()
@@ -151,7 +148,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 
 	-- Debug Draw
 	--render.DrawTextureToScreenRect(cache_absorption, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
-	render.DrawTextureToScreenRect(cache_normals, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
+	--render.DrawTextureToScreenRect(cache_normals, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
 	--render.DrawTextureToScreenRect(cache_normals, 0, 0, ScrW(), ScrH())
 end)
 
