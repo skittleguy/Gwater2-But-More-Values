@@ -1,8 +1,7 @@
 #include "flex_mesh.h"
 
-#define _PI 3.14159265358979323846f
 float rad(float degree) {
-	return (degree * (_PI / 180));
+	return (degree * (M_PI / 180));
 }
 
 // provided by PotatoOS
@@ -207,8 +206,8 @@ NvFlexTriangleMeshId FlexMesh::get_id() {
 	return id;
 }
 
-int FlexMesh::get_mesh_id() {
-	return mesh_id;
+int FlexMesh::get_entity_id() {
+	return entity_id;
 }
 
 int FlexMesh::get_flags() {
@@ -216,5 +215,5 @@ int FlexMesh::get_flags() {
 }
 
 FlexMesh::FlexMesh(int id) {
-	mesh_id = id;
+	entity_id = id;
 }

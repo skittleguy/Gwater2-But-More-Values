@@ -9,13 +9,7 @@
 #include "flex_renderer.h"
 #include "shader_inject.h"
 
-// Sys_LoadInterface symbols
-/*#include "strtools_unicode.cpp"
-#include "utlbuffer.cpp"
-#include "utlstring.cpp"
-#include "characterset.cpp"
-#include "strtools.cpp"
-#include "interface.cpp"*/
+#include "sighack.h"	// for reaction forces
 
 using namespace GarrysMod::Lua;
 
@@ -23,6 +17,9 @@ NvFlexLibrary* FLEX_LIBRARY;	// Main FleX library, handles all solvers. ("The he
 ILuaBase* GLOBAL_LUA;			// used for flex error handling
 int FLEXSOLVER_METATABLE = 0;
 int FLEXRENDERER_METATABLE = 0;
+
+typedef void* (__cdecl* UTIL_EntityByIndexFN)(int);
+UTIL_EntityByIndexFN UTIL_EntityByIndex = nullptr;
 
 //#define GET_FLEX(type, stack_pos) LUA->GetUserType<type>(stack_pos, type == FlexSolver ? FLEXSOLVER_METATABLE : FLEXRENDERER_METATABLE)
 
@@ -293,43 +290,79 @@ LUA_FUNCTION(FLEXSOLVER_AddMapMesh) {
 	return 0;
 }
 
-/*
-* Returns a table of contact data. The table isnt sequential (do NOT use ipairs!) and in the format {[MeshIndex] = {ind1, cont1, pos1, vel1, ind2, cont2, pos2, vel2, ind3, cont3, pos3, vel3, etc...}
-* Note that this function is quite expensive! It is a large table being generated.
-* @param[in] solver The FlexSolver to return contact data for
-* @param[in] buoyancymul A multiplier to the velocity of prop->water interation
-*/
-//FIXME: MOVE THIS FUNCTION TO THE FLEX_SOLVER CLASS
-/*
-LUA_FUNCTION(GetContacts) {
-	LUA->CheckType(1, FlexMetaTable);
-	LUA->CheckNumber(2);	// multiplier
+// Applies reaction forces on serverside objects
+#include "vphysics_interface.h"
+LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	LUA->CheckNumber(2);	// buoyancy force
+	LUA->CheckNumber(3);	// dampening
+	LUA->CheckNumber(4);	// buoyancy 
 
-	FlexSolver* flex = GET_FLEX;
-	float4* pos = flex->get_host("particle_pos");
-	float3* vel = (float3*)NvFlexMap(flex->getBuffer("particle_vel"), eNvFlexMapWait);
-	float4* contact_vel = (float4*)NvFlexMap(flex->getBuffer("contact_vel"), eNvFlexMapWait);
-	float4* planes = (float4*)NvFlexMap(flex->getBuffer("contact_planes"), eNvFlexMapWait);
-	int* count = (int*)NvFlexMap(flex->getBuffer("contact_count"), eNvFlexMapWait);
-	int* indices = (int*)NvFlexMap(flex->getBuffer("contact_indices"), eNvFlexMapWait);
+	if (UTIL_EntityByIndex == nullptr) return 0;	// not hosting server
+
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+	Vector4D* particle_pos = (Vector4D*)flex->get_host("particle_pos");
+	Vector* particle_vel = (Vector*)flex->get_host("particle_vel");
+
+	Vector4D* contact_vel = (Vector4D*)flex->get_host("contact_vel");
+	Vector4D* contact_planes = (Vector4D*)flex->get_host("contact_planes");
+
+	int* contact_count = (int*)flex->get_host("contact_count");
+	int* contact_indices = (int*)flex->get_host("contact_indices");
 	int max_contacts = flex->get_max_contacts();
-	float radius = flex->get_parameter(LUA, "radius");
-	float buoyancy_mul = LUA->GetNumber(2);
-	std::map<int, Mesh*> props;
+	float radius = flex->get_parameter("radius");
+	float volume_mul = LUA->GetNumber(2) * 4.f * M_PI * (radius * radius);	// Surface area of sphere equation
+	float dampening_mul = LUA->GetNumber(3);
+	float buoyancy_mul = LUA->GetNumber(4);
+
+	std::vector<FlexMesh> meshes = *flex->get_meshes();
 
 	// Get all props and average them
 	for (int i = 0; i < flex->get_active_particles(); i++) {
-		int particle = indices[i];
-		for (int contact = 0; contact < count[particle]; contact++) {
-		
-			// Get force of impact (w/o friction) by multiplying plane direction by dot of hitnormal (incoming velocity)
-			// incase particles are being pushed by it subtract velocity of mesh 
+		int particle = contact_indices[i];
+		for (int contact = 0; contact < contact_count[particle]; contact++) {
 			int index = particle * max_contacts + contact;
-			int prop_id = contact_vel[index].w;
-			float3 plane = planes[index];
-			float3 prop_pos = float3(pos[i]) - plane * radius;
-			float3 impact_vel = plane * fmin(Dot(vel[i], plane), 0) - contact_vel[index] * buoyancy_mul;
+			FlexMesh prop = meshes[(int)contact_vel[index].w];
 
+			void* ent = UTIL_EntityByIndex(prop.get_entity_id());
+			if (ent == nullptr) {
+				//Warning("Couldn't find entity!\n");
+				continue;
+			}
+#ifdef WIN64
+			IPhysicsObject* phys = *(IPhysicsObject**)((uint64_t)ent + 0x288);
+#else
+			IPhysicsObject* phys = *(IPhysicsObject**)((uint64_t)ent + 0x1e0);
+#endif
+			if (phys == nullptr) {
+				//Warning("Couldn't find entity's physics object!\n");
+				continue;
+			}
+
+			Vector plane = contact_planes[index].AsVector3D();
+			Vector contact_pos = particle_pos[i].AsVector3D() - plane * radius * 0.5;	// Particle position is not directly *on* plane
+			Vector impact_vel = (plane * fmin(particle_vel[i].Dot(plane), 0) - contact_vel[index].AsVector3D() * dampening_mul) * volume_mul;
+
+			// Buoyancy (completely faked. not at all accurate)
+			Vector prop_pos;
+			phys->GetPosition(&prop_pos, NULL);
+			if (contact_pos.z < prop_pos.z + phys->GetMassCenterLocalSpace().z) {
+				impact_vel += Vector(0, 0, volume_mul * buoyancy_mul);
+			}
+
+			// Dampening (completely faked. not at all accurate)
+			//Vector prop_vel;
+			//phys->GetVelocityAtPoint(contact_pos, &prop_vel);
+			//impact_vel -= prop_vel * volume_mul * dampening_mul;
+
+			// Cap amount of force (vphysics crashes can occur without it)
+			float limit = 100 * phys->GetMass();
+			if (impact_vel.Dot(impact_vel) > limit * limit) {
+				impact_vel = impact_vel.Normalized() * limit;
+			}
+
+			phys->ApplyForceOffset(impact_vel, contact_pos);
+			/*
 			try {
 				Mesh* prop = props.at(prop_id);
 				prop->pos = prop->pos + float4(prop_pos.x, prop_pos.y, prop_pos.z, 1);
@@ -339,54 +372,12 @@ LUA_FUNCTION(GetContacts) {
 				props[prop_id] = new Mesh(flexLibrary);
 				props[prop_id]->pos = float4(prop_pos.x, prop_pos.y, prop_pos.z, 1);
 				props[prop_id]->ang = float4(impact_vel.x, impact_vel.y, impact_vel.z, 0);
-			}
+			}*/
 		}
 	}
-
-	NvFlexUnmap(flex->getBuffer("particle_vel"));
-	NvFlexUnmap(flex->getBuffer("contact_vel"));
-	NvFlexUnmap(flex->getBuffer("contact_planes"));
-	NvFlexUnmap(flex->getBuffer("contact_count"));
-	NvFlexUnmap(flex->getBuffer("contact_indices"));
 	
-	// Average data together
-	Vector pushvec = Vector();
-	LUA->CreateTable();
-	for (std::pair<int, Mesh*> prop : props) {
-		int len = LUA->ObjLen();
-
-		// Prop index
-		LUA->PushNumber(len + 1);
-		LUA->PushNumber(prop.first);
-		LUA->SetTable(-3);
-
-		// Number of particles contacting prop
-		float average = prop.second->pos.w;
-		LUA->PushNumber(len + 2);
-		LUA->PushNumber(average);
-		LUA->SetTable(-3);
-
-		// Average position
-		pushvec.x = prop.second->pos.x / average;
-		pushvec.y = prop.second->pos.y / average;
-		pushvec.z = prop.second->pos.z / average;
-		LUA->PushNumber(len + 3);
-		LUA->PushVector(pushvec);
-		LUA->SetTable(-3);
-
-		// Average velocity
-		pushvec.x = prop.second->ang.x / average;
-		pushvec.y = prop.second->ang.y / average;
-		pushvec.z = prop.second->ang.z / average;
-		LUA->PushNumber(len + 4);
-		LUA->PushVector(pushvec);
-		LUA->SetTable(-3);
-
-		delete prop.second;
-	}
-	
-	return 1;
-}*/
+	return 0;
+}
 
 // Original function written by andreweathan
 LUA_FUNCTION(FLEXSOLVER_AddCube) {
@@ -459,7 +450,7 @@ LUA_FUNCTION(FLEXSOLVER_IterateMeshes) {
 	int repeat = 0;
 	int previous_id;
 	for (FlexMesh mesh : *flex->get_meshes()) {
-		int id = mesh.get_mesh_id();
+		int id = mesh.get_entity_id();
 
 		repeat = (i != 0 && previous_id == id) ? repeat + 1 : 0;	// if (same as last time) {repeat = repeat + 1} else {repeat = 0}
 		previous_id = id;
@@ -495,6 +486,7 @@ LUA_FUNCTION(FLEXRENDERER_GarbageCollect) {
 }
 
 // FlexRenderer imesh related functions
+// Builds water particles to IMesh* structs
 LUA_FUNCTION(FLEXRENDERER_BuildWater) {
 	LUA->CheckType(1, FLEXRENDERER_METATABLE);
 	LUA->CheckType(2, FLEXSOLVER_METATABLE);
@@ -504,6 +496,7 @@ LUA_FUNCTION(FLEXRENDERER_BuildWater) {
 	return 0;
 }
 
+// Renders water IMesh* structs (built from func. above)
 LUA_FUNCTION(FLEXRENDERER_DrawWater) {
 	LUA->CheckType(1, FLEXRENDERER_METATABLE);
 	GET_FLEXRENDERER(1)->draw_water();
@@ -511,6 +504,7 @@ LUA_FUNCTION(FLEXRENDERER_DrawWater) {
 	return 0;
 }
 
+// Builds diffuse particles to IMesh* structs
 LUA_FUNCTION(FLEXRENDERER_BuildDiffuse) {
 	LUA->CheckType(1, FLEXRENDERER_METATABLE);
 	LUA->CheckType(2, FLEXSOLVER_METATABLE);
@@ -520,13 +514,13 @@ LUA_FUNCTION(FLEXRENDERER_BuildDiffuse) {
 	return 0;
 }
 
+// Renders diffuse IMesh* structs (built from func. above)
 LUA_FUNCTION(FLEXRENDERER_DrawDiffuse) {
 	LUA->CheckType(1, FLEXRENDERER_METATABLE);
 	GET_FLEXRENDERER(1)->draw_diffuse();
 
 	return 0;
 }
-
 
 /************************************* Global LUA Interface **********************************************/
 
@@ -600,7 +594,7 @@ GMOD_MODULE_OPEN() {
 
 	if (FLEX_LIBRARY == nullptr) 
 		LUA->ThrowError("[GWater2 Internal Error]: Nvidia FleX Failed to load! (Does your GPU meet the minimum requirements to run FleX?)");
-
+	
 	if (!Sys_LoadInterface("materialsystem", MATERIAL_SYSTEM_INTERFACE_VERSION, NULL, (void**)&materials))
 		LUA->ThrowError("[GWater2 Internal Error]: C++ Materialsystem failed to load!");
 
@@ -642,7 +636,7 @@ GMOD_MODULE_OPEN() {
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetActiveDiffuse, "GetActiveDiffuse");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddMapMesh, "AddMapMesh");
 	ADD_FUNCTION(LUA, FLEXSOLVER_IterateMeshes, "IterateMeshes");
-	//ADD_FUNCTION(LUA, GetContacts, "GetContacts");
+	ADD_FUNCTION(LUA, FLEXSOLVER_ApplyContacts, "ApplyContacts");
 	ADD_FUNCTION(LUA, FLEXSOLVER_InitBounds, "InitBounds");
 	ADD_FUNCTION(LUA, FLEXSOLVER_Reset, "Reset");
 	LUA->SetField(-2, "__index");
@@ -665,6 +659,19 @@ GMOD_MODULE_OPEN() {
 	ADD_FUNCTION(LUA, NewFlexRenderer, "FlexRenderer");
 	LUA->Pop();
 
+	// Get serverside physics objects from client DLL. Since server.dll exists in memory, we can find it and avoid networking.
+	// Pretty sure this is what hacked clients do
+#ifdef WIN64 
+	const char* sig = "48 83 EC ?? 8B D1 85 C9 7E ?? 48 8B ?? ?? ?? ?? ?? 48 8B";
+#else
+	const char* sig = "55 8B EC 8B ?? ?? 85 D2 ?? ?? 8B 0D ?? ?? ?? ?? 52 8B ?? FF 50 ?? 8B C8 85 C9";
+#endif
+	void* UTIL_EntityByIndexAddr = Scan("server.dll", sig);
+	if (UTIL_EntityByIndexAddr == nullptr) {
+		Warning("[GWater2 Internal Error] Couldn't find UTIL_EntityByIndex!\n");
+		return 0;
+	}
+	UTIL_EntityByIndex = (UTIL_EntityByIndexFN)UTIL_EntityByIndexAddr;
 	return 0;
 }
 

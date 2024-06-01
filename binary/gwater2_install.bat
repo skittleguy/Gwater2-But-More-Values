@@ -45,7 +45,7 @@ goto prompt
 :install
 pushd %gmod_dir%
 echo Downloading gwater2...
-powershell -command [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest 'https://cdn.discordapp.com/attachments/1022620767202050091/1245132424116047883/gwater2.zip?ex=6657a36f"&"is=665651ef"&"hm=209af9120a24db66ca74a8a6b93a6465ad941a3a99ba591ed6fc857a7aef8ff6' -Out gwater2.zip
+powershell -command [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest 'https://www.dropbox.com/scl/fi/zeg5vwverh4fruaubv4v7/gwater2.zip?rlkey=d28tyewk1pq47e684mz3h15ir"&"st=gwvla5ww"&"dl=1' -Out gwater2.zip
 
 if not exist gwater2.zip (
 	echo Download failed, Invalid Link
@@ -56,7 +56,7 @@ if not exist gwater2.zip (
 echo Decompressing...
 powershell -command Expand-Archive gwater2.zip -Force
 echo Installing...
-xcopy /e /y /q gwater2\gwater2 .
+xcopy /e /y /q gwater2 .
 rmdir /s /q gwater2
 del gwater2.zip
 echo.

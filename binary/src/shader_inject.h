@@ -5,6 +5,7 @@
 #include "shaders/GWaterFinalpass.h"
 
 // This file is intentionally overcommented because of how undocumented source shaders are
+// Note that this is *my* understanding of how this works. I very well could be butchering what this actually is doing
 
 #include "shadersystem.h"	// A conglomeration of valve structs shoved into a file.
 // ^ This file gives us access to CShaderSystem..

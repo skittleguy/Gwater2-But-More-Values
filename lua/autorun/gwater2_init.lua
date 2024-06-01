@@ -1,45 +1,6 @@
 AddCSLuaFile()
 
 if SERVER then 
-	/*util.AddNetworkString("gwater2_offsetprop")
-	local valid_materials = {
-        ["floating_metal_barrel"] = true,
-        ["wood"] = true,
-        ["wood_crate"] = true,
-        ["wood_furniture"] = true,
-        ["rubbertire"] = true,
-        ["wood_solid"] = true,
-        ["plastic"] = true,
-        ["watermelon"] = true,
-        ["default"] = true,
-        ["cardboard"] = true,
-        ["paper"] = true,
-        ["popcan"] = true,
-    }
-	util.AddNetworkString("gwater2_offsetprop")
-	net.Receive("gwater2_offsetprop", function(len, ply)
-		local prop = net.ReadEntity()
-		local pos = net.ReadVector()
-		local vel = net.ReadVector()
-		local num = net.ReadInt(8)
-
-		local phys = prop:GetPhysicsObject()
-		if phys:IsValid() then
-			vel = vel * math.sqrt(phys:GetMass())
-			if valid_materials[phys:GetMaterial()] then
-				if vel:Dot(Vector(0, 0, 1)) > 0 then 
-					vel = vel + Vector(0, 0, num * phys:GetMass() * 0.5) 
-				end
-				//vel = vel + Vector(0, 0, num * 0.3)
-				phys:SetAngleVelocity(phys:GetAngleVelocity() * 0.9)
-				//phys:SetVelocity(phys:GetVelocity() * 0.9)
-			end
-			phys:ApplyForceOffset(vel, pos)
-			//phys:SetAngleVelocity(phys:GetAngleVelocity() * 0.9)
-			//phys:SetVelocity(phys:GetVelocity() * 0.99)
-		end
-	end)*/
-
 	return 
 end
 
@@ -158,6 +119,11 @@ gwater2 = {
 	end
 }
 
+-- setup percentage values (used in menu)
+gwater2["surface_tension"] = gwater2.solver:GetParameter("surface_tension") * gwater2.solver:GetParameter("radius")^4	-- dont ask me why its a power of 4
+gwater2["fluid_rest_distance"] = gwater2.solver:GetParameter("fluid_rest_distance") / gwater2.solver:GetParameter("radius")
+gwater2["collision_distance"] = gwater2.solver:GetParameter("collision_distance") / gwater2.solver:GetParameter("radius")
+
 -- tick particle solver
 local cm_2_inch = 2.54 * 2.54	-- FleX is in centimeters, source is in inches
 local last_systime = os.clock()
@@ -177,6 +143,7 @@ end
 
 local function gwater_tick2()
 	last_systime = os.clock()
+	gwater2.solver:ApplyContacts(0.05 * FrameTime(), 2, 0)	-- 0.0361 mass of 1 inch cube of water. not sure why i squared it. magic number that works well
 	gwater2.solver:Tick(limit_fps * cm_2_inch, 0)
 end
 
@@ -194,6 +161,6 @@ timer.Create("gwater2_tick", limit_fps, 0, function()
 	gwater2.solver:IterateMeshes(gwater2.update_meshes)
 	gwater_tick2()
 end)
-
+gwater2.reset_solver()
 hook.Add("InitPostEntity", "gwater2_addprop", gwater2.reset_solver)
 hook.Add("OnEntityCreated", "gwater2_addprop", function(ent) timer.Simple(0, function() add_prop(ent) end) end)	// timer.0 so data values are setup correctly

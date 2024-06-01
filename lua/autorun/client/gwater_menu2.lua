@@ -63,11 +63,6 @@ local options = {
 	["Old Solver"] = {text = "If checked, uses the solver used in 0.1b and 0.2b.\n\nThe old solver usually grants better performance, but causes more particle leakage.\n\nI suggest using the old solver when recording."},
 }
 
--- setup percentage values
-gwater2["surface_tension"] = gwater2.solver:GetParameter("surface_tension") * gwater2.solver:GetParameter("radius")^4	-- dont ask me why its a power of 4
-gwater2["fluid_rest_distance"] = gwater2.solver:GetParameter("fluid_rest_distance") / gwater2.solver:GetParameter("radius")
-gwater2["collision_distance"] = gwater2.solver:GetParameter("collision_distance") / gwater2.solver:GetParameter("radius")
-
 -- garry, sincerely... fuck you
 timer.Simple(0, function() 
 	Material("gwater2/volumetric"):SetFloat("$alpha", options.absorption:GetBool() and 0.125 or 0)
@@ -426,12 +421,7 @@ concommand.Add("gwater2_menu", function()
 		surface.SetDrawColor(0, 0, 0, 100)
 		surface.DrawRect(0, 25, w, h - 25)
 
-		-- 2d simulation
 		local x, y = mainFrame:LocalToScreen()
-		options.solver:InitBounds(Vector(x, 0, y + 25), Vector(x + 192, options.solver:GetParameter("radius"), y + 390))
-		options.solver:AddCube(Vector(x + 60 + math.random(), 0, y + 50), Vector(0, 0, 50), Vector(4, 1, 1), options.solver:GetParameter("radius") * 0.65, color_white)
-		options.solver:Tick(average_fps * 10)
-		
 		local radius = options.solver:GetParameter("radius")
 		local function exp(v) return Vector(math.exp(v[1]), math.exp(v[2]), math.exp(v[3])) end
 		local is_translucent = options.color.a < 255
@@ -442,6 +432,11 @@ concommand.Add("gwater2_menu", function()
 			surface.SetDrawColor(absorption[1] * 255, absorption[2] * 255, absorption[3] * 255, 255)
 			surface.DrawTexturedRect(pos[1] - x, pos[3] - y, radius, radius)
 		end)
+
+		-- 2d simulation
+		options.solver:InitBounds(Vector(x, 0, y + 25), Vector(x + 192, options.solver:GetParameter("radius"), y + 390))
+		options.solver:AddCube(Vector(x + 60 + math.random(), 0, y + 50), Vector(0, 0, 50), Vector(4, 1, 1), options.solver:GetParameter("radius") * 0.65, color_white)
+		options.solver:Tick(average_fps * 10)
 		
 		average_fps = average_fps + (FrameTime() - average_fps) * 0.01
 

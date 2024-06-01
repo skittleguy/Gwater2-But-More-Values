@@ -13,6 +13,7 @@ void FlexSolver::add_buffer(std::string name, int type, int count) {
 	// Initialize CPU buffer memory
 	// this memory is automatically updated when 'NvFlexGet' is called
 	hosts[name] = NvFlexMap(buffer, eNvFlexMapWait);
+	memset(hosts[name], 0, type * count);
 	NvFlexUnmap(buffer);
 };
 
@@ -180,7 +181,7 @@ void FlexSolver::tick(float dt) {
 	NvFlexGetPhases(solver, get_buffer("particle_phase"), copy_description);
 	NvFlexGetActive(solver, get_buffer("particle_active"), copy_description);
 	NvFlexGetDiffuseParticles(solver, get_buffer("diffuse_pos"), NULL, get_buffer("diffuse_active"));
-	//NvFlexGetContacts(solver, get_buffer("contact_planes"), get_buffer("contact_vel"), get_buffer("contact_indices"), get_buffer("contact_count"));
+	NvFlexGetContacts(solver, get_buffer("contact_planes"), get_buffer("contact_vel"), get_buffer("contact_indices"), get_buffer("contact_count"));
 	if (get_parameter("anisotropy_scale") != 0) NvFlexGetAnisotropy(solver, get_buffer("particle_ani1"), get_buffer("particle_ani2"), get_buffer("particle_ani3"), copy_description);
 	if (get_parameter("smoothing") != 0) NvFlexGetSmoothParticles(solver, get_buffer("particle_smooth"), copy_description);
 }
@@ -197,7 +198,7 @@ void FlexSolver::remove_mesh(int id) {
 
 	// TODO: Optimize
 	for (int i = meshes.size() - 1; i >= 0; i--) {
-		if (meshes[i].get_mesh_id() == id) {
+		if (meshes[i].get_entity_id() == id) {
 			// Free mesh buffers
 			meshes[i].destroy(library);
 			meshes.erase(meshes.begin() + i);

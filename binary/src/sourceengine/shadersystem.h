@@ -209,7 +209,7 @@ public:
 
 // Meetric: I just shoved the CShadersystem class in here... hope thats fine
 // Meetric: Also added this since its not defined in tier0/dbg EVEN THOUGH IT SHOULD BE
-/*
+
 enum SpewType_t
 {
 	SPEW_MESSAGE = 0,
@@ -219,7 +219,7 @@ enum SpewType_t
 	SPEW_LOG,
 
 	SPEW_TYPE_COUNT
-};*/
+};
 
 //-----------------------------------------------------------------------------
 // Implementation of the shader system

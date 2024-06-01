@@ -87,10 +87,10 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	render.UpdateScreenEffectTexture()	-- _rt_framebuffer is used in refraction shader
 	render.SetRenderTarget(render.GetScreenEffectTexture())
 	render.SetMaterial(water_diffuse)
-	-- render.SetRenderTarget(old_rt)	-- required if upcoming pipeline doesnt exist
+	--render.SetRenderTarget(old_rt)	-- required if upcoming pipeline doesnt exist
 	gwater2.renderer:DrawDiffuse()
 
-	--render.BlurRenderTarget(render.GetScreenEffectTexture(), 0, 0, 1)
+	--render.BlurRenderTarget(render.GetScreenEffectTexture(), 1, 1, 0)
 	
 	-- Depth absorption (disabled when opaque liquids are enabled)
 	-- TODO: REMOVE SETRENDERTARGET
@@ -99,7 +99,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 		render.SetMaterial(water_volumetric)
 		render.SetRenderTarget(cache_absorption)
 		gwater2.renderer:DrawWater()
-		render.SetRenderTarget()
+		--render.SetRenderTarget()
 	end
 
 	-- grab normals
@@ -148,7 +148,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 
 	-- Debug Draw
 	--render.DrawTextureToScreenRect(cache_absorption, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
-	--render.DrawTextureToScreenRect(cache_normals, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
+	render.DrawTextureToScreenRect(cache_normals, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
 	--render.DrawTextureToScreenRect(cache_normals, 0, 0, ScrW(), ScrH())
 end)
 

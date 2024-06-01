@@ -7,7 +7,7 @@
 // Data wrapper for FleX collisions
 class FlexMesh {
 private:
-	int mesh_id;	// id associated with the entity its attached to in source, as some physmeshes have multiple colliders (eg. ragdolls)
+	int entity_id;	// id associated with the entity its attached to in source, as some physmeshes have multiple colliders (eg. ragdolls)
 	NvFlexTriangleMeshId id;
 	int flags;
 	NvFlexBuffer* vertices = nullptr;
@@ -35,7 +35,7 @@ public:
 	Vector4D get_pang();
 
 	NvFlexTriangleMeshId get_id();
-	int get_mesh_id();
+	int get_entity_id();
 	int get_flags();
 
 	void update();	// sets the previous position/angle to current position/angle (previous_pos = pos; previous_ang = ang)
