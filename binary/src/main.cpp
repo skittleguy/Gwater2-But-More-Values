@@ -372,13 +372,13 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 			Vector plane = contact_planes[plane_index].AsVector3D();
 			Vector contact_pos = particle_pos[i].AsVector3D() - plane * radius * 0.5;	// Particle position is not directly *on* plane
 			Vector prop_vel; phys->GetVelocityAtPoint(contact_pos, &prop_vel);
-			Vector local_vel = particle_vel[i] * CM_2_INCH - prop_vel;
+			Vector local_vel = (particle_vel[i] * CM_2_INCH - prop_vel) * flex->get_parameter("timescale");
 			Vector impact_vel = (plane * fmin(local_vel.Dot(plane), 0) - contact_vel[plane_index].AsVector3D() * dampening_mul) * volume_mul;
 
 			// Buoyancy (completely faked. not at all accurate)
 			Vector prop_pos;
 			phys->GetPosition(&prop_pos, NULL);
-			if (contact_pos.z < prop_pos.z + phys->GetMassCenterLocalSpace().z) {
+			if (plane.z < 0 && contact_pos.z < prop_pos.z + phys->GetMassCenterLocalSpace().z) {
 				impact_vel += Vector(0, 0, volume_mul * buoyancy_mul);
 			}
 
