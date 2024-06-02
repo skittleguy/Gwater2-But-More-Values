@@ -72,7 +72,7 @@ end)
 options.solver:SetParameter("gravity", 15.24)	-- flip gravity because y axis positive is down
 options.solver:SetParameter("static_friction", 0)	-- stop adhesion sticking to front and back walls
 options.solver:SetParameter("dynamic_friction", 0)	-- ^
-options.solver:SetParameter("diffuse_lifetime", math.huge)	-- no diffuse particles allowed in preview
+options.solver:SetParameter("diffuse_threshold", math.huge)	-- no diffuse particles allowed in preview
 
 -- designs for tabs and frames
 local function draw_tabs(self, w, h)
