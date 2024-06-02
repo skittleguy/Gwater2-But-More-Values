@@ -21,7 +21,7 @@ private:
 
 public:
 	bool init_concave(NvFlexLibrary* lib, std::vector<Vector> verts, bool dynamic);	
-	bool init_concave(NvFlexLibrary* lib, Vector* verts, int num_verts, bool dynamic);	
+	bool init_concave(NvFlexLibrary* lib, Vector* verts, int num_verts, bool dynamic);	// Used only for maps
 	bool init_convex(NvFlexLibrary* lib, std::vector<Vector> verts, bool dynamic);
 	void destroy(NvFlexLibrary* lib);
 

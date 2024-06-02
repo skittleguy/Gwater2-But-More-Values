@@ -117,7 +117,7 @@ void FlexRenderer::build_diffuse(FlexSolver* solver, float radius) {
 	}	
 	diffuse.clear();
 
-	int max_particles = ((int*)solver->get_host("diffuse_active"))[0];
+	int max_particles = ((int*)solver->get_host("diffuse_count"))[0];
 	if (max_particles == 0) return;
 
 	// View matrix, used in frustrum culling

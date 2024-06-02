@@ -436,7 +436,7 @@ concommand.Add("gwater2_menu", function()
 		-- 2d simulation
 		options.solver:InitBounds(Vector(x, 0, y + 25), Vector(x + 192, options.solver:GetParameter("radius"), y + 390))
 		options.solver:AddCube(Vector(x + 60 + math.random(), 0, y + 50), Vector(0, 0, 50), Vector(4, 1, 1), options.solver:GetParameter("radius") * 0.65, color_white)
-		options.solver:Tick(average_fps * 10)
+		options.solver:Tick(average_fps * 2)
 		
 		average_fps = average_fps + (FrameTime() - average_fps) * 0.01
 

@@ -125,7 +125,6 @@ gwater2["fluid_rest_distance"] = gwater2.solver:GetParameter("fluid_rest_distanc
 gwater2["collision_distance"] = gwater2.solver:GetParameter("collision_distance") / gwater2.solver:GetParameter("radius")
 
 -- tick particle solver
-local cm_2_inch = 2.54 * 2.54	-- FleX is in centimeters, source is in inches
 local last_systime = os.clock()
 local limit_fps = 1 / 60
 local average_frametime = limit_fps
@@ -134,8 +133,8 @@ local function gwater_tick()
 
 	local systime = os.clock()
 
-	if gwater2.solver:Tick(average_frametime * cm_2_inch, 1) then
-	//if gwater2.solver:Tick(1/165 * cm_2_inch, hang_thread and 0 or 1) then
+	if gwater2.solver:Tick(average_frametime, 1) then
+	//if gwater2.solver:Tick(1/165, hang_thread and 0 or 1) then
 		average_frametime = average_frametime + ((systime - last_systime) - average_frametime) * 0.03
 		last_systime = systime	// smooth out fps
 	end
@@ -143,8 +142,9 @@ end
 
 local function gwater_tick2()
 	last_systime = os.clock()
-	gwater2.solver:ApplyContacts(0.05 * FrameTime(), 2, 0)	-- 0.0361 mass of 1 inch cube of water. not sure why i squared it. magic number that works well
-	gwater2.solver:Tick(limit_fps * cm_2_inch, 0)
+	gwater2.solver:ApplyContacts(0.01 * limit_fps, 2, 0)	-- 0.0361 mass of 1 inch cube of water. not sure why i squared it. magic number that works well
+	gwater2.solver:IterateMeshes(gwater2.update_meshes)
+	gwater2.solver:Tick(limit_fps, 0)
 end
 
 // run whenever possible, as often as possible. we dont know when flex will finish calculations
@@ -158,7 +158,6 @@ end)
 
 timer.Create("gwater2_tick", limit_fps, 0, function()
 	if gwater2.old_ticker then return end
-	gwater2.solver:IterateMeshes(gwater2.update_meshes)
 	gwater_tick2()
 end)
 gwater2.reset_solver()

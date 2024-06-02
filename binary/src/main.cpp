@@ -21,6 +21,8 @@ int FLEXRENDERER_METATABLE = 0;
 typedef void* (__cdecl* UTIL_EntityByIndexFN)(int);
 UTIL_EntityByIndexFN UTIL_EntityByIndex = nullptr;
 
+float CM_2_INCH = 2.54 * 2.54;	// FleX is in centimeters, source is in inches
+
 //#define GET_FLEX(type, stack_pos) LUA->GetUserType<type>(stack_pos, type == FlexSolver ? FLEXSOLVER_METATABLE : FLEXRENDERER_METATABLE)
 
 /************************** Flex Solver LUA Interface *******************************/
@@ -64,7 +66,7 @@ LUA_FUNCTION(FLEXSOLVER_Tick) {
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 	
 	// Avoid ticking if the deltatime ends up being zero, as it invalidates the simulation
-	float dt = (float)LUA->GetNumber(2);
+	float dt = (float)LUA->GetNumber(2) * CM_2_INCH;
 	if (flex->get_parameter("timescale") == 0 || dt == 0 || flex->get_active_particles() == 0) {
 		LUA->PushBool(true);
 		return 1;
@@ -209,6 +211,14 @@ LUA_FUNCTION(FLEXSOLVER_UpdateMesh) {
 LUA_FUNCTION(FLEXSOLVER_Reset) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	FlexSolver* flex = GET_FLEXSOLVER(1);
+
+	int* diffuse_count = (int*)NvFlexMap(flex->get_buffer("diffuse_count"), eNvFlexMapWait);
+	int* contact_count = (int*)NvFlexMap(flex->get_buffer("contact_count"), eNvFlexMapWait);
+	memset(diffuse_count, 0, sizeof(int));
+	memset(contact_count, 0, sizeof(int) * flex->get_active_particles());
+	NvFlexUnmap(flex->get_buffer("diffuse_count"));
+	NvFlexUnmap(flex->get_buffer("contact_count"));
+
 	flex->set_active_particles(0);
 
 	return 0;
@@ -303,12 +313,20 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 	Vector4D* particle_pos = (Vector4D*)flex->get_host("particle_pos");
 	Vector* particle_vel = (Vector*)flex->get_host("particle_vel");
-
+	/*
 	Vector4D* contact_vel = (Vector4D*)flex->get_host("contact_vel");
 	Vector4D* contact_planes = (Vector4D*)flex->get_host("contact_planes");
 
 	int* contact_count = (int*)flex->get_host("contact_count");
-	int* contact_indices = (int*)flex->get_host("contact_indices");
+	int* contact_indices = (int*)flex->get_host("contact_indices");*/
+
+	// Stops random spazzing, but eats perf
+	Vector4D* contact_vel = (Vector4D*)NvFlexMap(flex->get_buffer("contact_vel"), eNvFlexMapWait);
+	Vector4D* contact_planes = (Vector4D*)NvFlexMap(flex->get_buffer("contact_planes"), eNvFlexMapWait);
+
+	int* contact_count = (int*)NvFlexMap(flex->get_buffer("contact_count"), eNvFlexMapWait);
+	int* contact_indices = (int*)NvFlexMap(flex->get_buffer("contact_indices"), eNvFlexMapWait);
+
 	int max_contacts = flex->get_max_contacts();
 	float radius = flex->get_parameter("radius");
 	float volume_mul = LUA->GetNumber(2) * 4.f * M_PI * (radius * radius);	// Surface area of sphere equation
@@ -319,12 +337,24 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 
 	// Get all props and average them
 	for (int i = 0; i < flex->get_active_particles(); i++) {
-		int particle = contact_indices[i];
-		for (int contact = 0; contact < contact_count[particle]; contact++) {
-			int index = particle * max_contacts + contact;
-			FlexMesh prop = meshes[(int)contact_vel[index].w];
+		int plane_id = contact_indices[i];
+		for (int contact = 0; contact < contact_count[plane_id]; contact++) {
+			int plane_index = plane_id * max_contacts + contact;
+			//int vel_index = i * max_contacts + contact;
+
+			float prop_id = (int)contact_vel[plane_index].w;
+			if (prop_id < 0) break;	//	planes defined by FleX will return -1
+
+			FlexMesh prop = FlexMesh(0);
+			try {
+				prop = meshes.at(prop_id);
+			} catch (std::exception e) {
+				Warning("[GWater2 Internal Error]: Prevented Crash! Tried to access invalid entity %i!\n", prop_id);
+				continue;
+			}
 
 			void* ent = UTIL_EntityByIndex(prop.get_entity_id());
+
 			if (ent == nullptr) {
 				//Warning("Couldn't find entity!\n");
 				continue;
@@ -339,9 +369,11 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 				continue;
 			}
 
-			Vector plane = contact_planes[index].AsVector3D();
+			Vector plane = contact_planes[plane_index].AsVector3D();
 			Vector contact_pos = particle_pos[i].AsVector3D() - plane * radius * 0.5;	// Particle position is not directly *on* plane
-			Vector impact_vel = (plane * fmin(particle_vel[i].Dot(plane), 0) - contact_vel[index].AsVector3D() * dampening_mul) * volume_mul;
+			Vector prop_vel; phys->GetVelocityAtPoint(contact_pos, &prop_vel);
+			Vector local_vel = particle_vel[i] * CM_2_INCH - prop_vel;
+			Vector impact_vel = (plane * fmin(local_vel.Dot(plane), 0) - contact_vel[plane_index].AsVector3D() * dampening_mul) * volume_mul;
 
 			// Buoyancy (completely faked. not at all accurate)
 			Vector prop_pos;
@@ -375,7 +407,12 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 			}*/
 		}
 	}
-	
+
+	NvFlexUnmap(flex->get_buffer("contact_vel"));
+	NvFlexUnmap(flex->get_buffer("contact_planes"));
+	NvFlexUnmap(flex->get_buffer("contact_count"));
+	NvFlexUnmap(flex->get_buffer("contact_indices"));
+
 	return 0;
 }
 

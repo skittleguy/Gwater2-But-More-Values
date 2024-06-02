@@ -34,7 +34,7 @@ int FlexSolver::get_active_particles() {
 }
 
 int FlexSolver::get_active_diffuse() {
-	return ((int*)hosts["diffuse_active"])[0];
+	return ((int*)hosts["diffuse_count"])[0];
 }
 
 int FlexSolver::get_max_particles() {
@@ -78,7 +78,7 @@ bool FlexSolver::pretick(NvFlexMapFlags wait) {
 	int* flag = (int*)NvFlexMap(get_buffer("geometry_flags"), eNvFlexMapWait);
 
 	// Update collider positions
-	for (int i = 0; i < meshes.size(); i++) {
+	for (int i = 0; i < imin(meshes.size(), MAX_COLLIDERS); i++) {
 		FlexMesh mesh = meshes[i];
 
 		flag[i] = mesh.get_flags();
@@ -180,7 +180,7 @@ void FlexSolver::tick(float dt) {
 	NvFlexGetVelocities(solver, get_buffer("particle_vel"), copy_description);
 	NvFlexGetPhases(solver, get_buffer("particle_phase"), copy_description);
 	NvFlexGetActive(solver, get_buffer("particle_active"), copy_description);
-	NvFlexGetDiffuseParticles(solver, get_buffer("diffuse_pos"), NULL, get_buffer("diffuse_active"));
+	NvFlexGetDiffuseParticles(solver, get_buffer("diffuse_pos"), NULL, get_buffer("diffuse_count"));
 	NvFlexGetContacts(solver, get_buffer("contact_planes"), get_buffer("contact_vel"), get_buffer("contact_indices"), get_buffer("contact_count"));
 	if (get_parameter("anisotropy_scale") != 0) NvFlexGetAnisotropy(solver, get_buffer("particle_ani1"), get_buffer("particle_ani2"), get_buffer("particle_ani3"), copy_description);
 	if (get_parameter("smoothing") != 0) NvFlexGetSmoothParticles(solver, get_buffer("particle_smooth"), copy_description);
@@ -420,7 +420,7 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 
 	add_buffer("diffuse_pos", sizeof(Vector4D), solver_description.maxDiffuseParticles);
 	//add_buffer("diffuse_vel", sizeof(Vector4D), solver_description.maxDiffuseParticles);
-	add_buffer("diffuse_active", sizeof(int), 1);	// "this may be updated by the GPU which is why it is passed back in a buffer"
+	add_buffer("diffuse_count", sizeof(int), 1);	// "this may be updated by the GPU which is why it is passed back in a buffer"
 };
 
 // Free memory

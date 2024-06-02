@@ -25,9 +25,11 @@ private:
 	std::vector<Particle> particles;	// Doesnt actually hold particles. Just a queue
 
 	void add_buffer(std::string name, int type, int count);
-	NvFlexBuffer* get_buffer(std::string name);
+	//NvFlexBuffer* get_buffer(std::string name);
 
 public:
+	NvFlexBuffer* get_buffer(std::string name);
+
 	void set_active_particles(int n);
 	int get_active_particles();
 	int get_active_diffuse();
