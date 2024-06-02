@@ -60,7 +60,7 @@ local options = {
 	["Absorption"] = {text = "Enables absorption of light over distance inside of fluid.\n\n(more depth = darker color)\n\nMedium performance impact."},
 	["Depth Fix"] = {text = "Makes particles appear spherical instead of flat, creating a cleaner and smoother water surface.\n\nCauses shader overdraw.\n\nMedium-High performance impact."},
 	["Particle Limit"] = {text = "USE THIS PARAMETER AT YOUR OWN RISK.\n\nChanges the limit of particles.\n\nNote that a higher limit will negatively impact performance even with the same number of particles spawned."},
-	["Old Solver"] = {text = "If checked, uses the solver used in 0.1b and 0.2b.\n\nThe old solver usually grants better performance, but causes more particle leakage.\n\nI suggest using the old solver when recording."},
+	["New Solver"] = {text = "If unchecked, uses the solver used in 0.1b and 0.2b.\n\nThe old solver usually grants better performance, but causes more particle leakage.\n\nI suggest using the old solver when recording."},
 }
 
 -- garry, sincerely... fuck you
@@ -925,16 +925,16 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 		label:SetPos(10, 230)
 		label:SetSize(100, 100)
 		label:SetFont("GWater2Param")
-		label:SetText("Old Solver")
+		label:SetText("New Solver")
 		label:SetContentAlignment(7)
 		labels[7] = label
 
 		local box = vgui.Create("DCheckBox", scrollPanel)
 		box:SetPos(132, 230)
 		box:SetSize(20, 20)
-		box:SetChecked(gwater2.old_ticker)
+		box:SetChecked(gwater2.new_ticker)
 		function box:OnChange(val)
-			gwater2.old_ticker = !gwater2.old_ticker
+			gwater2.new_ticker = !gwater2.new_ticker
 		end
 
 		-- light up & change explanation area

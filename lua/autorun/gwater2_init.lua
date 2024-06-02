@@ -72,7 +72,7 @@ include("gwater2_shaders.lua")
 gwater2 = {
 	solver = FlexSolver(100000),
 	renderer = FlexRenderer(),
-	old_ticker = false,
+	new_ticker = true,
 	material = Material("gwater2/finalpass"),--Material("vgui/circle"),--Material("sprites/sent_ball"),
 	update_meshes = function(index, id, rep)
 		if id == 0 then return end	-- skip, entity is world
@@ -129,7 +129,7 @@ local last_systime = os.clock()
 local limit_fps = 1 / 60
 local average_frametime = limit_fps
 local function gwater_tick()
-	if !gwater2.old_ticker then return end
+	if !gwater2.new_ticker then return end
 
 	local systime = os.clock()
 
@@ -152,12 +152,12 @@ local no = function() end
 hook.Add("PreRender", "gwater_tick", gwater_tick)
 hook.Add("PostRender", "gwater_tick", gwater_tick)
 hook.Add("Think", "gwater_tick", function()
-	if !gwater2.old_ticker then return end
+	if !gwater2.new_ticker then return end
 	gwater2.solver:IterateMeshes(gwater2.update_meshes)
 end)
 
 timer.Create("gwater2_tick", limit_fps, 0, function()
-	if gwater2.old_ticker then return end
+	if gwater2.new_ticker then return end
 	gwater_tick2()
 end)
 gwater2.reset_solver()
