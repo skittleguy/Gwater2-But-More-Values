@@ -321,6 +321,9 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 	int* contact_indices = (int*)flex->get_host("contact_indices");*/
 
 	// Stops random spazzing, but eats perf
+	//Vector4D* particle_pos = (Vector4D*)NvFlexMap(flex->get_buffer("particle_pos"), eNvFlexMapWait);
+	//Vector* particle_vel = (Vector*)NvFlexMap(flex->get_buffer("particle_vel"), eNvFlexMapWait);
+
 	Vector4D* contact_vel = (Vector4D*)NvFlexMap(flex->get_buffer("contact_vel"), eNvFlexMapWait);
 	Vector4D* contact_planes = (Vector4D*)NvFlexMap(flex->get_buffer("contact_planes"), eNvFlexMapWait);
 
@@ -408,6 +411,8 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 		}
 	}
 
+	//NvFlexUnmap(flex->get_buffer("particle_pos"));
+	//NvFlexUnmap(flex->get_buffer("particle_vel"));
 	NvFlexUnmap(flex->get_buffer("contact_vel"));
 	NvFlexUnmap(flex->get_buffer("contact_planes"));
 	NvFlexUnmap(flex->get_buffer("contact_count"));

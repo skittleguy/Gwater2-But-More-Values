@@ -45,10 +45,10 @@ void FlexRenderer::build_water(FlexSolver* solver, float radius) {
 	//    primative++
 	//  }
 	// }
-	/*
-	Vector forward = view_matrix.GetForward();
-	Vector right = view_matrix.GetUp();
-	Vector up = view_matrix.GetLeft();
+
+	/*Vector forward = Vector(view_matrix[2][0], view_matrix[2][1], view_matrix[2][2]);
+	Vector right = Vector(view_matrix[0][0], view_matrix[0][1], view_matrix[0][2]);
+	Vector up = Vector(view_matrix[1][0], view_matrix[1][1], view_matrix[1][2]);
 	Vector local_pos[3] = { (-up - right * SQRT3), up * 2.0, (-up + right * SQRT3) };*/
 
 	CMeshBuilder mesh_builder;
@@ -66,6 +66,7 @@ void FlexRenderer::build_water(FlexSolver* solver, float radius) {
 				}
 
 				// calculate triangle rotation
+				//Vector forward = (eye_pos - particle_pos).Normalized();
 				Vector forward = (particle_pos - eye_pos).Normalized();
 				Vector right = forward.Cross(Vector(0, 0, 1)).Normalized();
 				Vector up = right.Cross(forward);
@@ -135,6 +136,12 @@ void FlexRenderer::build_diffuse(FlexSolver* solver, float radius) {
 
 	Vector4D* particle_positions = (Vector4D*)solver->get_host("diffuse_pos");
 	//Vector4D* particle_velocities = (Vector4D*)solver->get_host("diffuse_vel");
+
+	Vector forward = Vector(view_matrix[2][0], view_matrix[2][1], view_matrix[2][2]);
+	Vector right = Vector(view_matrix[0][0], view_matrix[0][1], view_matrix[0][2]);
+	Vector up = Vector(view_matrix[1][0], view_matrix[1][1], view_matrix[1][2]);
+	Vector local_pos[3] = { (-up - right * SQRT3), up * 2.0, (-up + right * SQRT3) };
+
 	CMeshBuilder mesh_builder;
 	for (int particle_index = 0; particle_index < max_particles;) {
 		IMesh* imesh = render_context->CreateStaticMesh(VERTEX_POSITION | VERTEX_NORMAL | VERTEX_TEXCOORD0_2D, "");
@@ -149,11 +156,6 @@ void FlexRenderer::build_diffuse(FlexSolver* solver, float radius) {
 				continue;
 			}
 
-			// calculate triangle rotation
-			Vector forward = (particle_pos - eye_pos).Normalized();
-			Vector right = forward.Cross(Vector(0, 0, 1)).Normalized();
-			Vector up = right.Cross(forward);
-			Vector local_pos[3] = { (-up - right * SQRT3), up * 2.0, (-up + right * SQRT3) };
 			for (int i = 0; i < 3; i++) { 
 				//Vector pos_ani = local_pos[i];	// Warp based on velocity
 				//pos_ani = pos_ani + particle_velocities[particle_index].AsVector3D() * (pos_ani.Dot(particle_velocities[particle_index].AsVector3D()) * 0.01f);
