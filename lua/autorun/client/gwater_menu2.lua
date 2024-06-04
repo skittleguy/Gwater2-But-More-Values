@@ -557,6 +557,8 @@ concommand.Add("gwater2_menu", function()
 		presets:AddChoice("Portal Gel (Blue)", "Color:0 127 255 255\nCohesion:0.1\nAdhesion:0.3\nViscosity:10\nSurface Tension:0.5\nFluid Rest Distance:")
 		presets:AddChoice("Portal Gel (Orange)", "Color:255 127 0 255\nCohesion:0.1\nAdhesion:0.3\nViscosity:10\nSurface Tension:0.5\nFluid Rest Distance:")
 
+		presets:AddChoice("Soapy Water", "Color:215 240 255 20\nCohesion:\nAdhesion:\nViscosity:\nSurface Tension:\nFluid Rest Distance:\nDiffuse Threshold:30\nDiffuse Lifetime:20")
+
 		presets:AddChoice("(Default) Water", "Color:\nCohesion:\nAdhesion:\nViscosity:\nSurface Tension:\nFluid Rest Distance:")
 
 		function presets:OnSelect(index, value, data)
