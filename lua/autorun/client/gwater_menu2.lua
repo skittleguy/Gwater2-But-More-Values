@@ -193,7 +193,7 @@ local function set_gwater_parameter(option, val)
 end
 
 -- some helper functions
-local function create_slider(self, text, min, max, decimals, dock, length, out)
+local function create_slider(self, text, min, max, decimals, dock, length, out, func)
 	length = length or 450
 	out = out or -90
 
@@ -227,6 +227,7 @@ local function create_slider(self, text, min, max, decimals, dock, length, out)
 			self:SetValue(math.Round(val, decimals))
 			return
 		end
+		if func then func(val) end
 		set_gwater_parameter(option, val)
 	end
 
@@ -261,7 +262,7 @@ end
 
 -- color picker
 local function copy_color(c) return Color(c.r, c.g, c.b, c.a) end
-local function create_picker(self, text, dock, size)
+local function create_picker(self, text, dock)
 	local label = vgui.Create("DLabel", self)
 	label:SetPos(10, dock)
 	label:SetSize(100, 100)
@@ -691,7 +692,7 @@ concommand.Add("gwater2_menu", function()
 		labels[3], sliders["Anisotropy Scale"] = create_slider(scrollPanel, "Anisotropy Scale", 0, 2, 2, 110, 350, 20)
 		labels[4], sliders["Diffuse Threshold"] = create_slider(scrollPanel, "Diffuse Threshold", 1, 1000, 0, 140, 350, 20)
 		labels[5], sliders["Diffuse Lifetime"] = create_slider(scrollPanel, "Diffuse Lifetime", 0, 20, 1, 170, 350, 20)
-		labels[6], sliders["Color"] = create_picker(scrollPanel, "Color", 200, 200)
+		labels[6], sliders["Color"] = create_picker(scrollPanel, "Color", 200)
 		
 		function scrollPanel:AnimationThink()
 			local mousex, mousey = self:LocalCursorPos()
@@ -754,40 +755,9 @@ concommand.Add("gwater2_menu", function()
 		-- create_slider(self, text, min, max, decimals, dock, x_offset, length, label_offset_x, reset_offset_x)
 		labels[1] = create_slider(scrollPanel, "Iterations", 1, 10, 0, 50, 410, -50)
 		labels[2] = create_slider(scrollPanel, "Substeps", 1, 10, 0, 80, 410, -50)
-		--labels[3] = create_slider(scrollPanel, "Blur Passes", 0, 4, 0, 110) 
-
-		-- blur passes slider is special since it uses a convar
-		local label = vgui.Create("DLabel", scrollPanel)
-		label:SetPos(10, 110)
-		label:SetSize(200, 20)
-		label:SetText("Blur Passes")
-		label:SetFont("GWater2Param")
-		labels[3] = label
-
-		local slider = vgui.Create("DNumSlider", scrollPanel)
-		slider:SetPos(-50, 110)
-		slider:SetSize(410, 20)
-		slider:SetMinMax(0, 4)
-		slider:SetValue(options.blur_passes:GetInt())
-		slider:SetDecimals(0)
-		function slider:OnValueChanged(val)
-			if val != math.Round(val, decimals) then 
-				self:SetValue(math.Round(val, decimals))
-				return
-			end
-
-			options.blur_passes:SetInt(val)
-		end
-		local button = vgui.Create("DButton", scrollPanel)
-		button:SetPos(355, 110)
-		button:SetText("")
-		button:SetSize(20, 20)
-		button:SetImage("icon16/arrow_refresh.png")
-		button.Paint = nil
-		function button:DoClick()
-			slider:SetValue(3)
-			surface.PlaySound("buttons/button15.wav")
-		end
+		labels[3] = create_slider(scrollPanel, "Blur Passes", 0, 4, 0, 110, 410, -50, function(val) 
+			options.blur_passes:SetInt(val) 
+		end) 
 
 		-- particle limit box
 		local label = vgui.Create("DLabel", scrollPanel)

@@ -7,7 +7,7 @@ BEGIN_VS_SHADER(GWaterVolumetric, "gwater2 helper")
 
 // Shader parameters
 BEGIN_SHADER_PARAMS
-	SHADER_PARAM(ALPHA, SHADER_PARAM_TYPE_FLOAT, "0.025", "Alpha")
+	SHADER_PARAM(ALPHA, SHADER_PARAM_TYPE_FLOAT, "0.025", "Amount of transparency")
 END_SHADER_PARAMS
 
 SHADER_INIT_PARAMS() {

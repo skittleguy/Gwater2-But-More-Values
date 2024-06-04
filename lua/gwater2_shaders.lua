@@ -20,7 +20,8 @@ local cache_bloom = GetRenderTargetGWater("2gwater_cache_bloom", 1 / 2)	-- for b
 local water_blur = Material("gwater2/smooth")
 local water_volumetric = Material("gwater2/volumetric")
 local water_normals = Material("gwater2/normals")
-local water_diffuse = Material("gwater2/diffuse")	-- foam/bubbles
+local water_bubble = Material("gwater2/bubble")	-- bubbles
+local water_mist = Material("gwater2/mist")
 
 local blur_passes = CreateClientConVar("gwater2_blur_passes", "3", true)
 local antialias = GetConVar("mat_antialias")
@@ -81,12 +82,12 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	local up = EyeAngles():Up()
 	local right = EyeAngles():Right()
 	gwater2.renderer:BuildWater(gwater2.solver, radius * 0.5)
-	gwater2.renderer:BuildDiffuse(gwater2.solver, radius / 5)
+	gwater2.renderer:BuildDiffuse(gwater2.solver, radius)
 	--render.SetMaterial(Material("models/props_combine/combine_interface_disp"))
 	
 	render.UpdateScreenEffectTexture()	-- _rt_framebuffer is used in refraction shader
 	render.SetRenderTarget(render.GetScreenEffectTexture())
-	render.SetMaterial(water_diffuse)
+	render.SetMaterial(water_bubble)
 	--render.SetRenderTarget(old_rt)	-- required if upcoming pipeline doesnt exist
 	gwater2.renderer:DrawDiffuse()
 
@@ -143,7 +144,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 
 	render.OverrideAlphaWriteEnable(false, false)
 
-	render.SetMaterial(water_diffuse)
+	render.SetMaterial(water_mist)
 	gwater2.renderer:DrawDiffuse()
 
 	-- Debug Draw

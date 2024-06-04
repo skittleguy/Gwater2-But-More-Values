@@ -13,7 +13,7 @@
 
 using namespace GarrysMod::Lua;
 
-NvFlexLibrary* FLEX_LIBRARY;	// Main FleX library, handles all solvers. ("The heart of all that is FleX" - andreweathan)
+NvFlexLibrary* FLEX_LIBRARY;	// "The heart of all that is FleX" - AE
 ILuaBase* GLOBAL_LUA;			// used for flex error handling
 int FLEXSOLVER_METATABLE = 0;
 int FLEXRENDERER_METATABLE = 0;
@@ -21,7 +21,7 @@ int FLEXRENDERER_METATABLE = 0;
 typedef void* (__cdecl* UTIL_EntityByIndexFN)(int);
 UTIL_EntityByIndexFN UTIL_EntityByIndex = nullptr;
 
-float CM_2_INCH = 2.54 * 2.54;	// FleX is in centimeters, source is in inches
+float CM_2_INCH = 2.54 * 2.54;	// FleX is in centimeters, source is in inches. We need to convert units
 
 //#define GET_FLEX(type, stack_pos) LUA->GetUserType<type>(stack_pos, type == FlexSolver ? FLEXSOLVER_METATABLE : FLEXRENDERER_METATABLE)
 
@@ -212,14 +212,12 @@ LUA_FUNCTION(FLEXSOLVER_Reset) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 
-	int* diffuse_count = (int*)NvFlexMap(flex->get_buffer("diffuse_count"), eNvFlexMapWait);
 	int* contact_count = (int*)NvFlexMap(flex->get_buffer("contact_count"), eNvFlexMapWait);
-	memset(diffuse_count, 0, sizeof(int));
 	memset(contact_count, 0, sizeof(int) * flex->get_active_particles());
-	NvFlexUnmap(flex->get_buffer("diffuse_count"));
 	NvFlexUnmap(flex->get_buffer("contact_count"));
 
 	flex->set_active_particles(0);
+	flex->set_active_diffuse(0);
 
 	return 0;
 }
@@ -304,13 +302,15 @@ LUA_FUNCTION(FLEXSOLVER_AddMapMesh) {
 #include "vphysics_interface.h"
 LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	LUA->CheckNumber(2);	// buoyancy force
+	LUA->CheckNumber(2);	// radius
 	LUA->CheckNumber(3);	// dampening
 	LUA->CheckNumber(4);	// buoyancy 
 
 	if (UTIL_EntityByIndex == nullptr) return 0;	// not hosting server
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
+	if (!flex->get_parameter("coupling")) return 0;	// Coupling planes arent being generated.. bail
+
 	Vector4D* particle_pos = (Vector4D*)flex->get_host("particle_pos");
 	Vector* particle_vel = (Vector*)flex->get_host("particle_vel");
 	/*
@@ -320,10 +320,7 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 	int* contact_count = (int*)flex->get_host("contact_count");
 	int* contact_indices = (int*)flex->get_host("contact_indices");*/
 
-	// Stops random spazzing, but eats perf
-	//Vector4D* particle_pos = (Vector4D*)NvFlexMap(flex->get_buffer("particle_pos"), eNvFlexMapWait);
-	//Vector* particle_vel = (Vector*)NvFlexMap(flex->get_buffer("particle_vel"), eNvFlexMapWait);
-
+	// mapping planes stops random spazzing, but eats perf
 	Vector4D* contact_vel = (Vector4D*)NvFlexMap(flex->get_buffer("contact_vel"), eNvFlexMapWait);
 	Vector4D* contact_planes = (Vector4D*)NvFlexMap(flex->get_buffer("contact_planes"), eNvFlexMapWait);
 

@@ -28,15 +28,15 @@ private:
 	//NvFlexBuffer* get_buffer(std::string name);
 
 public:
-	NvFlexBuffer* get_buffer(std::string name);
-
 	void set_active_particles(int n);
+	void set_active_diffuse(int n);
 	int get_active_particles();
 	int get_active_diffuse();
 	int get_max_particles();
 	int get_max_contacts();
 	std::vector<FlexMesh>* get_meshes();
 
+	inline NvFlexBuffer* get_buffer(std::string name);
 	void* get_host(std::string name);	// Returns a host (pointer of float4s) where FleX buffer data is transferred to. 
 
 	void add_particle(Vector4D pos, Vector vel);

@@ -123,13 +123,14 @@ gwater2 = {
 gwater2["surface_tension"] = gwater2.solver:GetParameter("surface_tension") * gwater2.solver:GetParameter("radius")^4	-- dont ask me why its a power of 4
 gwater2["fluid_rest_distance"] = gwater2.solver:GetParameter("fluid_rest_distance") / gwater2.solver:GetParameter("radius")
 gwater2["collision_distance"] = gwater2.solver:GetParameter("collision_distance") / gwater2.solver:GetParameter("radius")
+gwater2["blur_passes"] = 3
 
 -- tick particle solver
 local last_systime = os.clock()
 local limit_fps = 1 / 60
 local average_frametime = limit_fps
 local function gwater_tick()
-	if !gwater2.new_ticker then return end
+	if gwater2.new_ticker then return end
 
 	local systime = os.clock()
 
@@ -152,12 +153,12 @@ local no = function() end
 hook.Add("PreRender", "gwater_tick", gwater_tick)
 hook.Add("PostRender", "gwater_tick", gwater_tick)
 hook.Add("Think", "gwater_tick", function()
-	if !gwater2.new_ticker then return end
+	if gwater2.new_ticker then return end
 	gwater2.solver:IterateMeshes(gwater2.update_meshes)
 end)
 
 timer.Create("gwater2_tick", limit_fps, 0, function()
-	if gwater2.new_ticker then return end
+	if !gwater2.new_ticker then return end
 	gwater_tick2()
 end)
 gwater2.reset_solver()

@@ -37,7 +37,7 @@ void FlexRenderer::build_water(FlexSolver* solver, float radius) {
 	// Create meshes and iterates through particles. We also need to abide by the source limits of 2^15 max vertices per mesh
 	// Does so in this structure:
 
-	// for (particle in particles) {
+	// for (particle through particles) {
 	//	create_mesh()
 	//	for (primative = 0 through maxprimatives) {
 	//    particle++

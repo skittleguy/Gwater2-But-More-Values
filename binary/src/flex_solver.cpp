@@ -17,7 +17,7 @@ void FlexSolver::add_buffer(std::string name, int type, int count) {
 	NvFlexUnmap(buffer);
 };
 
-inline NvFlexBuffer* FlexSolver::get_buffer(std::string name) {
+NvFlexBuffer* FlexSolver::get_buffer(std::string name) {
 	return buffers[name];
 }
 
@@ -28,6 +28,9 @@ void FlexSolver::set_active_particles(int n) {
 	copy_description->elementCount = n;
 }
 
+void FlexSolver::set_active_diffuse(int n) {
+	NvFlexSetDiffuseParticles(solver, NULL, NULL, n);
+}
 
 int FlexSolver::get_active_particles() {
 	return copy_description->elementCount;
@@ -114,6 +117,7 @@ bool FlexSolver::pretick(NvFlexMapFlags wait) {
 void FlexSolver::map_particles() {
 	if (particles.empty()) return;
 
+	// Only copy what we add
 	NvFlexCopyDesc desc;
 	desc.dstOffset = copy_description->elementCount;
 	desc.elementCount = particles.size();
@@ -181,7 +185,7 @@ void FlexSolver::tick(float dt) {
 	NvFlexGetPhases(solver, get_buffer("particle_phase"), copy_description);
 	NvFlexGetActive(solver, get_buffer("particle_active"), copy_description);
 	NvFlexGetDiffuseParticles(solver, get_buffer("diffuse_pos"), NULL, get_buffer("diffuse_count"));
-	NvFlexGetContacts(solver, get_buffer("contact_planes"), get_buffer("contact_vel"), get_buffer("contact_indices"), get_buffer("contact_count"));
+	if (get_parameter("coupling") != 0) NvFlexGetContacts(solver, get_buffer("contact_planes"), get_buffer("contact_vel"), get_buffer("contact_indices"), get_buffer("contact_count"));
 	if (get_parameter("anisotropy_scale") != 0) NvFlexGetAnisotropy(solver, get_buffer("particle_ani1"), get_buffer("particle_ani2"), get_buffer("particle_ani3"), copy_description);
 	if (get_parameter("smoothing") != 0) NvFlexGetSmoothParticles(solver, get_buffer("particle_smooth"), copy_description);
 }
@@ -395,7 +399,9 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	// Extra values we store which are not stored in flexes default parameters
 	param_map["substeps"] = new float(3);
 	param_map["timescale"] = new float(1);
+	param_map["coupling"] = new float(0);
 
+	// FleX GPU Buffers
 	add_buffer("particle_pos", sizeof(Vector4D), particles);
 	add_buffer("particle_vel", sizeof(Vector), particles);
 	add_buffer("particle_phase", sizeof(int), particles);
@@ -434,7 +440,9 @@ FlexSolver::~FlexSolver() {
 
 	delete param_map["substeps"];		// Seperate since its externally stored & not a default parameter
 	delete param_map["timescale"];		// ^
+	delete param_map["coupling"];		// ^
 	delete params;
+	delete copy_description;
 
 	// Free flex buffers
 	for (std::pair<std::string, NvFlexBuffer*> buffer : buffers) 
