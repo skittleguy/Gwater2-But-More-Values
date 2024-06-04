@@ -5,7 +5,7 @@ float rad(float degree) {
 }
 
 // provided by PotatoOS
-Vector4D unfuckQuat(Vector4D q) {
+inline Vector4D unfuckQuat(Vector4D q) {
 	return Vector4D(q.y, q.z, q.w, q.x);
 }
 
@@ -173,7 +173,7 @@ bool FlexMesh::init_concave(NvFlexLibrary* lib, Vector* verts, int num_verts, bo
 	return true;
 }
 
-
+// sets the previous position/angle to current position/angle (previous_pos = pos; previous_ang = ang)
 void FlexMesh::update() {
 	ppos = pos;
 	pang = ang;

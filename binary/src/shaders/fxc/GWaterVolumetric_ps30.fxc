@@ -1,7 +1,6 @@
 float ALPHA		: register(c0);
 
 struct PS_INPUT {
-	float2 P 		: VPOS;
 	float2 coord	: TEXCOORD0;
 };
 
