@@ -184,7 +184,7 @@ void FlexSolver::tick(float dt) {
 	NvFlexGetVelocities(solver, get_buffer("particle_vel"), copy_description);
 	NvFlexGetPhases(solver, get_buffer("particle_phase"), copy_description);
 	NvFlexGetActive(solver, get_buffer("particle_active"), copy_description);
-	NvFlexGetDiffuseParticles(solver, get_buffer("diffuse_pos"), NULL, get_buffer("diffuse_count"));
+	NvFlexGetDiffuseParticles(solver, get_buffer("diffuse_pos"), get_buffer("diffuse_vel"), get_buffer("diffuse_count"));
 	if (get_parameter("coupling") != 0) NvFlexGetContacts(solver, get_buffer("contact_planes"), get_buffer("contact_vel"), get_buffer("contact_indices"), get_buffer("contact_count"));
 	if (get_parameter("anisotropy_scale") != 0) NvFlexGetAnisotropy(solver, get_buffer("particle_ani1"), get_buffer("particle_ani2"), get_buffer("particle_ani3"), copy_description);
 	if (get_parameter("smoothing") != 0) NvFlexGetSmoothParticles(solver, get_buffer("particle_smooth"), copy_description);
@@ -349,11 +349,11 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	params->vorticityConfinement = 0.0f;
 	params->buoyancy = 1.0f;
 
-	params->diffuseThreshold = 200.f;
+	params->diffuseThreshold = 100.f;
 	params->diffuseBuoyancy = 1.f;
 	params->diffuseDrag = 0.8f;
 	params->diffuseBallistic = 16;
-	params->diffuseLifetime = 10.f;	// not actually in seconds
+	params->diffuseLifetime = 3.f;	// not actually in seconds
 
 	params->numPlanes = 0;
 
@@ -394,7 +394,7 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	param_map["diffuse_threshold"] = &params->diffuseThreshold;
 	param_map["diffuse_buoyancy"] = &params->diffuseBuoyancy;
 	param_map["diffuse_drag"] = &params->diffuseDrag;
-	//param_map["diffuse_ballistic"] = &params->diffuseBallistic;	// ^
+	param_map["diffuse_ballistic"] = (float *)& params->diffuseBallistic;	// ^
 	param_map["diffuse_lifetime"] = &params->diffuseLifetime;
 	// Extra values we store which are not stored in flexes default parameters
 	param_map["substeps"] = new float(3);
@@ -425,7 +425,7 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	add_buffer("particle_ani3", sizeof(Vector4D), particles);
 
 	add_buffer("diffuse_pos", sizeof(Vector4D), solver_description.maxDiffuseParticles);
-	//add_buffer("diffuse_vel", sizeof(Vector4D), solver_description.maxDiffuseParticles);
+	add_buffer("diffuse_vel", sizeof(Vector4D), solver_description.maxDiffuseParticles);
 	add_buffer("diffuse_count", sizeof(int), 1);	// "this may be updated by the GPU which is why it is passed back in a buffer"
 };
 
