@@ -474,6 +474,14 @@ LUA_FUNCTION(FLEXSOLVER_GetMaxParticles) {
 	return 1;
 }
 
+LUA_FUNCTION(FLEXSOLVER_GetMaxDiffuseParticles) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+
+	LUA->PushNumber(flex->get_max_particles());
+	return 1;
+}
+
 // Runs a lua function with some data on all FlexMeshes stored in a FlexSolver
 // This is faster then returning a table of values and using ipairs and also allows removal / additions during function execution
 // first parameter is the index of the mesh inside the vector
@@ -666,6 +674,7 @@ GMOD_MODULE_OPEN() {
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddParticle, "AddParticle");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddCube, "AddCube");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetMaxParticles, "GetMaxParticles");
+	ADD_FUNCTION(LUA, FLEXSOLVER_GetMaxDiffuseParticles, "GetMaxDiffuseParticles");
 	ADD_FUNCTION(LUA, FLEXSOLVER_RenderParticles, "RenderParticles");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddConcaveMesh, "AddConcaveMesh");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddConvexMesh, "AddConvexMesh");

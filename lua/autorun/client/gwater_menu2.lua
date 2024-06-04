@@ -13,7 +13,7 @@ if SERVER or !gwater2 then return end
 
 local version = "0.3.1b"
 local options = {
-	solver = FlexSolver(1000),
+	solver = FlexSolver(1000, 10),
 	tab = CreateClientConVar("gwater2_tab"..version, "1", true),
 	blur_passes = CreateClientConVar("gwater2_blur_passes", "3", true),
 	absorption = CreateClientConVar("gwater2_absorption", "1", true),
@@ -831,7 +831,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 			confirm.Paint = nil
 			function confirm:DoClick()
 				gwater2.solver:Destroy()
-				gwater2.solver = FlexSolver(slider:GetValue())
+				gwater2.solver = FlexSolver(slider:GetValue(), 100000)
 				gwater2.meshes = {}
 				gwater2.reset_solver(true)
 				frame:Close()

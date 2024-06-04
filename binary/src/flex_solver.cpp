@@ -44,6 +44,10 @@ int FlexSolver::get_max_particles() {
 	return solver_description.maxParticles;
 }
 
+int FlexSolver::get_max_diffuse_particles() {
+	return solver_description.maxDiffuseParticles;
+}
+
 int FlexSolver::get_max_contacts() {
 	return solver_description.maxContactsPerParticle;
 }

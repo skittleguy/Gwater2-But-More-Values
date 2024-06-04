@@ -33,6 +33,7 @@ public:
 	int get_active_particles();
 	int get_active_diffuse();
 	int get_max_particles();
+	int get_max_diffuse_particles();
 	int get_max_contacts();
 	std::vector<FlexMesh>* get_meshes();
 
