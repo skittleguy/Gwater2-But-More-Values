@@ -158,9 +158,14 @@ void FlexRenderer::build_diffuse(FlexSolver* solver, float radius) {
 
 			for (int i = 0; i < 3; i++) { 
 				Vector pos_ani = local_pos[i];	// Warp based on velocity
-				pos_ani = pos_ani + (particle_velocities[particle_index].AsVector3D() * (pos_ani.Dot(particle_velocities[particle_index].AsVector3D()) * 0.0008)).Min(Vector(1, 1, 1));
+				pos_ani = pos_ani + (particle_velocities[particle_index].AsVector3D() * (pos_ani.Dot(particle_velocities[particle_index].AsVector3D()) * 0.0008)).Min(Vector(4, 4, 4).Max(Vector(-4, -4, -4)));
 
-				Vector world_pos = particle_pos + pos_ani * radius * particle_positions[particle_index].w * (mult);;
+				float lifetime = particle_positions[particle_index].w * mult;
+				Vector world_pos = particle_pos + pos_ani * radius * lifetime;
+
+				// Todo: somehow only apply the rotation stuff to mist
+				//float u1 = ((u[i] - 0.5) * cos(lifetime * 8) + (v[i] - 0.5) * sin(lifetime * 8)) + 0.5;
+				//float v1 = ((u[i] - 0.5) * sin(lifetime * 8) - (v[i] - 0.5) * cos(lifetime * 8)) + 0.5;
 				mesh_builder.TexCoord2f(0, u[i], v[i]);
 				mesh_builder.Position3f(world_pos.x, world_pos.y, world_pos.z);
 				mesh_builder.Normal3f(-forward.x, -forward.y, -forward.z);
