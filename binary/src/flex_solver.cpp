@@ -293,12 +293,12 @@ void FlexSolver::disable_bounds() {
 }
 
 // Initializes a solver in a FleX library
-FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
+FlexSolver::FlexSolver(NvFlexLibrary* library, int particles, int diffuseparticles) {
 	if (library == nullptr) return;		// Panic
 
 	NvFlexSetSolverDescDefaults(&solver_description);
 	solver_description.maxParticles = particles;
-	solver_description.maxDiffuseParticles = 65536;
+	solver_description.maxDiffuseParticles = diffuseparticles;
 
 	this->library = library;
 	solver = NvFlexCreateSolver(library, &solver_description);

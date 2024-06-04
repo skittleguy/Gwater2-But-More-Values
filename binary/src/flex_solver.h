@@ -53,8 +53,9 @@ public:
 	void enable_bounds(Vector mins, Vector maxs);
 	void disable_bounds();
 
+
 	void map_particles();
 
-	FlexSolver(NvFlexLibrary* library, int particles);
+	FlexSolver(NvFlexLibrary* library, int particles, int diffuseparticles);
 	~FlexSolver();
 };
