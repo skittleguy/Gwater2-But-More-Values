@@ -24,6 +24,7 @@ local water_bubble = Material("gwater2/bubble")	-- bubbles
 local water_mist = Material("gwater2/mist")
 
 local blur_passes = CreateClientConVar("gwater2_blur_passes", "3", true)
+local blur_scale = CreateClientConVar("gwater2_blur_scale", "1", true)
 local antialias = GetConVar("mat_antialias")
 
 -- rebuild meshes every frame (unused atm since PostDrawOpaque is being a bitch)
@@ -121,7 +122,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	for i = 1, blur_passes:GetInt() do
 		-- Blur X
 		--local scale = (5 - i) * 0.05
-		local scale = 0.25 / i
+		local scale = (0.25 / i) * blur_scale:GetFloat()
 		water_blur:SetTexture("$normaltexture", cache_normals)	
 		water_blur:SetVector("$scrs", Vector(scale / scrw, 0))
 		render.SetRenderTarget(cache_bloom)	-- Bloom texture resolution is significantly lower than screen res, enabling for a faster blur
