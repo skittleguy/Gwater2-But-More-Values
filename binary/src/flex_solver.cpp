@@ -353,7 +353,7 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	params->diffuseBuoyancy = 1.f;
 	params->diffuseDrag = 0.8f;
 	params->diffuseBallistic = 16;
-	params->diffuseLifetime = 3.f;	// not actually in seconds
+	params->diffuseLifetime = 4.f;	// not actually in seconds
 
 	params->numPlanes = 0;
 
