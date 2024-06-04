@@ -158,7 +158,7 @@ void FlexRenderer::build_diffuse(FlexSolver* solver, float radius) {
 
 			for (int i = 0; i < 3; i++) { 
 				Vector pos_ani = local_pos[i];	// Warp based on velocity
-				pos_ani = pos_ani + (particle_velocities[particle_index].AsVector3D() * (pos_ani.Dot(particle_velocities[particle_index].AsVector3D()) * 0.0008)).Min(Vector(4, 4, 4).Max(Vector(-4, -4, -4)));
+				pos_ani = pos_ani + (particle_velocities[particle_index].AsVector3D() * (pos_ani.Dot(particle_velocities[particle_index].AsVector3D()) * 0.0004)).Min(Vector(4, 4, 4).Max(Vector(-4, -4, -4)));
 
 				float lifetime = particle_positions[particle_index].w * mult;
 				Vector world_pos = particle_pos + pos_ani * radius * lifetime;
