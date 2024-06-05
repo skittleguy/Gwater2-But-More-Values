@@ -135,7 +135,7 @@ void FlexRenderer::build_diffuse(FlexSolver* solver, float radius) {
 	float mult = 1.f / solver->get_parameter("diffuse_lifetime");
 
 	Vector4D* particle_positions = (Vector4D*)solver->get_host("diffuse_pos");
-	//Vector4D* particle_velocities = (Vector4D*)solver->get_host("diffuse_vel");
+	Vector4D* particle_velocities = (Vector4D*)solver->get_host("diffuse_vel");
 
 	Vector forward = Vector(view_matrix[2][0], view_matrix[2][1], view_matrix[2][2]);
 	Vector right = Vector(view_matrix[0][0], view_matrix[0][1], view_matrix[0][2]);
@@ -157,10 +157,15 @@ void FlexRenderer::build_diffuse(FlexSolver* solver, float radius) {
 			}
 
 			for (int i = 0; i < 3; i++) { 
-				//Vector pos_ani = local_pos[i];	// Warp based on velocity
-				//pos_ani = pos_ani + particle_velocities[particle_index].AsVector3D() * (pos_ani.Dot(particle_velocities[particle_index].AsVector3D()) * 0.01f);
+				Vector pos_ani = local_pos[i];	// Warp based on velocity
+				pos_ani = pos_ani + (particle_velocities[particle_index].AsVector3D() * ((pos_ani.Dot(particle_velocities[particle_index].AsVector3D()) * 0.0004) * solver->get_parameter("timescale"))).Min(Vector(4, 4, 4).Max(Vector(-4, -4, -4)));
 
-				Vector world_pos = particle_pos + local_pos[i] * radius * particle_positions[particle_index].w * mult;
+				float lifetime = particle_positions[particle_index].w * mult;
+				Vector world_pos = particle_pos + pos_ani * radius * lifetime;
+
+				// Todo: somehow only apply the rotation stuff to mist
+				//float u1 = ((u[i] - 0.5) * cos(lifetime * 8) + (v[i] - 0.5) * sin(lifetime * 8)) + 0.5;
+				//float v1 = ((u[i] - 0.5) * sin(lifetime * 8) - (v[i] - 0.5) * cos(lifetime * 8)) + 0.5;
 				mesh_builder.TexCoord2f(0, u[i], v[i]);
 				mesh_builder.Position3f(world_pos.x, world_pos.y, world_pos.z);
 				mesh_builder.Normal3f(-forward.x, -forward.y, -forward.z);
@@ -177,7 +182,7 @@ void FlexRenderer::build_diffuse(FlexSolver* solver, float radius) {
 
 
 void FlexRenderer::draw_diffuse() {
-	for (IMesh* mesh : diffuse) {
+	for (IMesh* mesh : diffuse) { 
 		mesh->Draw();
 	}
 }

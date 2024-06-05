@@ -474,6 +474,14 @@ LUA_FUNCTION(FLEXSOLVER_GetMaxParticles) {
 	return 1;
 }
 
+LUA_FUNCTION(FLEXSOLVER_GetMaxDiffuseParticles) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+
+	LUA->PushNumber(flex->get_max_particles());
+	return 1;
+}
+
 // Runs a lua function with some data on all FlexMeshes stored in a FlexSolver
 // This is faster then returning a table of values and using ipairs and also allows removal / additions during function execution
 // first parameter is the index of the mesh inside the vector
@@ -568,9 +576,11 @@ LUA_FUNCTION(FLEXRENDERER_DrawDiffuse) {
 // must be freed from memory
 LUA_FUNCTION(NewFlexSolver) {
 	LUA->CheckNumber(1);
+	LUA->CheckNumber(2);
 	if (LUA->GetNumber(1) <= 0) LUA->ThrowError("Max Particles must be a positive number!");
+	if (LUA->GetNumber(2) <= 0) LUA->ThrowError("Max Diffuse Particles must be a positive number!");
 
-	FlexSolver* flex = new FlexSolver(FLEX_LIBRARY, LUA->GetNumber(1));
+	FlexSolver* flex = new FlexSolver(FLEX_LIBRARY, LUA->GetNumber(1), LUA->GetNumber(2));
 	LUA->PushUserType(flex, FLEXSOLVER_METATABLE);
 	LUA->PushMetaTable(FLEXSOLVER_METATABLE);	// Add our meta functions
 	LUA->SetMetaTable(-2);
@@ -664,6 +674,7 @@ GMOD_MODULE_OPEN() {
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddParticle, "AddParticle");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddCube, "AddCube");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetMaxParticles, "GetMaxParticles");
+	ADD_FUNCTION(LUA, FLEXSOLVER_GetMaxDiffuseParticles, "GetMaxDiffuseParticles");
 	ADD_FUNCTION(LUA, FLEXSOLVER_RenderParticles, "RenderParticles");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddConcaveMesh, "AddConcaveMesh");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddConvexMesh, "AddConvexMesh");

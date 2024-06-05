@@ -13,7 +13,7 @@ if SERVER or !gwater2 then return end
 
 local version = "0.3.1b"
 local options = {
-	solver = FlexSolver(1000),
+	solver = FlexSolver(1000, 10),
 	tab = CreateClientConVar("gwater2_tab"..version, "1", true),
 	blur_passes = CreateClientConVar("gwater2_blur_passes", "3", true),
 	absorption = CreateClientConVar("gwater2_absorption", "1", true),
@@ -556,6 +556,8 @@ concommand.Add("gwater2_menu", function()
 		presets:AddChoice("Portal Gel (Blue)", "Color:0 127 255 255\nCohesion:0.1\nAdhesion:0.3\nViscosity:10\nSurface Tension:0.5\nFluid Rest Distance:")
 		presets:AddChoice("Portal Gel (Orange)", "Color:255 127 0 255\nCohesion:0.1\nAdhesion:0.3\nViscosity:10\nSurface Tension:0.5\nFluid Rest Distance:")
 
+		presets:AddChoice("Soapy Water", "Color:215 240 255 20\nCohesion:\nAdhesion:\nViscosity:\nSurface Tension:0.001\nFluid Rest Distance:\nDiffuse Threshold:30\nDiffuse Lifetime:20")
+
 		presets:AddChoice("(Default) Water", "Color:\nCohesion:\nAdhesion:\nViscosity:\nSurface Tension:\nFluid Rest Distance:")
 
 		function presets:OnSelect(index, value, data)
@@ -744,7 +746,7 @@ concommand.Add("gwater2_menu", function()
 			Color(250, 250, 0),
 			Color(255, 127, 0),
 			Color(127, 255, 0),
-			Color(255, 0, 0),
+			Color(255, 0, 0), 
 			Color(250, 250, 0),
 			Color(255, 127, 0),
 			Color(255, 0, 0),
@@ -815,23 +817,25 @@ concommand.Add("gwater2_menu", function()
 				-- main outline
 				surface.SetDrawColor(255, 255, 255)
 				surface.DrawOutlinedRect(0, 0, w, h)
+
+				-- from testing it seems each particle is around 0.8kb so you could probably do some math to figure out the memory required and show it here
 	
-				draw.DrawText("You are about to change the limit to " .. slider:GetValue() .. ".\nAre you sure?", "GWater2Title", 200, 30, color_white, TEXT_ALIGN_CENTER)
+				draw.DrawText("You are about to change the particle limit to \n" .. slider:GetValue() .. ".\nAre you sure?", "GWater2Title", 200, 30, color_white, TEXT_ALIGN_CENTER)
 				draw.DrawText([[This can be dangerous, because all particles must be allocated on the GPU.
 DO NOT set the limit to a number higher then you think your computer can handle.
-I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefault", 200, 90, color_white, TEXT_ALIGN_CENTER)
+I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefault", 200, 110, color_white, TEXT_ALIGN_CENTER)
 			
 			end
 
 			local confirm = vgui.Create("DButton", frame)
-			confirm:SetPos(260, 150)
+			confirm:SetPos(260, 160)
 			confirm:SetText("")
 			confirm:SetSize(20, 20)
 			confirm:SetImage("icon16/accept.png")
 			confirm.Paint = nil
-			function confirm:DoClick()
+			function confirm:DoClick() 
 				gwater2.solver:Destroy()
-				gwater2.solver = FlexSolver(slider:GetValue())
+				gwater2.solver = FlexSolver(slider:GetValue(), slider:GetValue())
 				gwater2.meshes = {}
 				gwater2.reset_solver(true)
 				frame:Close()
@@ -839,7 +843,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 			end
 
 			local deny = vgui.Create("DButton", frame)
-			deny:SetPos(110, 150)
+			deny:SetPos(110, 160)
 			deny:SetText("")
 			deny:SetSize(20, 20)
 			deny:SetImage("icon16/cross.png")
@@ -852,6 +856,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 			surface.PlaySound("buttons/button15.wav")
 		end
 
+
 		-- Absorption checkbox & label
 		local label = vgui.Create("DLabel", scrollPanel)	
 		label:SetPos(10, 170)
@@ -859,7 +864,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 		label:SetFont("GWater2Param")
 		label:SetText("Absorption")
 		label:SetContentAlignment(7)
-		labels[5] = label
+		labels[6] = label
 
 		local box = vgui.Create("DCheckBox", scrollPanel)
 		box:SetPos(132, 170)
@@ -878,7 +883,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 		label:SetFont("GWater2Param")
 		label:SetText("Depth Fix")
 		label:SetContentAlignment(7)
-		labels[6] = label
+		labels[7] = label
 
 		local box = vgui.Create("DCheckBox", scrollPanel)
 		box:SetPos(132, 200)
@@ -897,7 +902,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 		label:SetFont("GWater2Param")
 		label:SetText("New Solver")
 		label:SetContentAlignment(7)
-		labels[7] = label
+		labels[8] = label
 
 		local box = vgui.Create("DCheckBox", scrollPanel)
 		box:SetPos(132, 230)

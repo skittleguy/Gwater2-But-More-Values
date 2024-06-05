@@ -70,7 +70,7 @@ require((BRANCH == "x86-64" or BRANCH == "chromium" ) and "gwater2" or "gwater2_
 include("gwater2_shaders.lua")
 
 gwater2 = {
-	solver = FlexSolver(100000),
+	solver = FlexSolver(100000, 100000),
 	renderer = FlexRenderer(),
 	new_ticker = true,
 	material = Material("gwater2/finalpass"),--Material("vgui/circle"),--Material("sprites/sent_ball"),

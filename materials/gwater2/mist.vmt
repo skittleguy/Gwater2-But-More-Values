@@ -1,5 +1,6 @@
 UnlitGeneric {
-	$basetexture gwater2/splash
+	$basetexture "gwater2/splash"
 	$additive 1
-	$alpha 0.04
+	$alpha 0.3
+	$basetexturetransform "center .5 .5 scale 7 7 rotate 0 translate 0 0"
 }
