@@ -13,7 +13,7 @@ if SERVER or !gwater2 then return end
 
 local version = "0.3.1b"
 local options = {
-	solver = FlexSolver(1000, 10),
+	solver = FlexSolver(1000),
 	tab = CreateClientConVar("gwater2_tab"..version, "1", true),
 	blur_passes = CreateClientConVar("gwater2_blur_passes", "3", true),
 	absorption = CreateClientConVar("gwater2_absorption", "1", true),

@@ -576,11 +576,9 @@ LUA_FUNCTION(FLEXRENDERER_DrawDiffuse) {
 // must be freed from memory
 LUA_FUNCTION(NewFlexSolver) {
 	LUA->CheckNumber(1);
-	LUA->CheckNumber(2);
 	if (LUA->GetNumber(1) <= 0) LUA->ThrowError("Max Particles must be a positive number!");
-	if (LUA->GetNumber(2) <= 0) LUA->ThrowError("Max Diffuse Particles must be a positive number!");
 
-	FlexSolver* flex = new FlexSolver(FLEX_LIBRARY, LUA->GetNumber(1), LUA->GetNumber(2));
+	FlexSolver* flex = new FlexSolver(FLEX_LIBRARY, LUA->GetNumber(1));
 	LUA->PushUserType(flex, FLEXSOLVER_METATABLE);
 	LUA->PushMetaTable(FLEXSOLVER_METATABLE);	// Add our meta functions
 	LUA->SetMetaTable(-2);

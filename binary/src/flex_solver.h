@@ -57,6 +57,6 @@ public:
 
 	void map_particles();
 
-	FlexSolver(NvFlexLibrary* library, int particles, int diffuseparticles);
+	FlexSolver(NvFlexLibrary* library, int particles);
 	~FlexSolver();
 };
