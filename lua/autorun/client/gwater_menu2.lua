@@ -60,7 +60,6 @@ local options = {
 	["Absorption"] = {text = "Enables absorption of light over distance inside of fluid.\n\n(more depth = darker color)\n\nMedium performance impact."},
 	["Depth Fix"] = {text = "Makes particles appear spherical instead of flat, creating a cleaner and smoother water surface.\n\nCauses shader overdraw.\n\nMedium-High performance impact."},
 	["Particle Limit"] = {text = "USE THIS PARAMETER AT YOUR OWN RISK.\n\nChanges the limit of particles.\n\nNote that a higher limit will negatively impact performance even with the same number of particles spawned."},
-	["Foam Limit"] = {text = "USE THIS PARAMETER AT YOUR OWN RISK.\n\nChanges the limit of foam/diffusion particles.\n\nNote that a higher limit will negatively impact performance even with the same number of particles spawned."},
 	["New Solver"] = {text = "If unchecked, uses the solver used in 0.1b and 0.2b.\n\nThe old solver usually grants better performance, but causes more particle leakage.\n\nI suggest using the old solver when recording."},
 }
 
@@ -747,8 +746,7 @@ concommand.Add("gwater2_menu", function()
 			Color(250, 250, 0),
 			Color(255, 127, 0),
 			Color(127, 255, 0),
-			Color(255, 0, 0),
-			Color(255, 0, 0),
+			Color(255, 0, 0), 
 			Color(250, 250, 0),
 			Color(255, 127, 0),
 			Color(255, 0, 0),
@@ -835,10 +833,9 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 			confirm:SetSize(20, 20)
 			confirm:SetImage("icon16/accept.png")
 			confirm.Paint = nil
-			function confirm:DoClick()
-				local tempmax = gwater2.solver:GetMaxDiffuseParticles()
+			function confirm:DoClick() 
 				gwater2.solver:Destroy()
-				gwater2.solver = FlexSolver(slider:GetValue(), tempmax)
+				gwater2.solver = FlexSolver(slider:GetValue(), slider:GetValue())
 				gwater2.meshes = {}
 				gwater2.reset_solver(true)
 				frame:Close()
@@ -859,103 +856,10 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 			surface.PlaySound("buttons/button15.wav")
 		end
 
-		-- Foam limit box
-		local label = vgui.Create("DLabel", scrollPanel)
-		label:SetPos(10, 170)
-		label:SetSize(200, 20)
-		label:SetText("Foam Limit")
-		label:SetFont("GWater2Param")
-		labels[5] = label
-
-		local slider = vgui.Create("DNumSlider", scrollPanel)
-		slider:SetPos(0, 170)
-		slider:SetSize(330, 20)
-		slider:SetMinMax(1, 1000000)
-		slider:SetValue(gwater2.solver:GetMaxDiffuseParticles())
-		slider:SetDecimals(0)
-
-		local button = vgui.Create("DButton", scrollPanel)
-		button:SetPos(355, 170)
-		button:SetText("")
-		button:SetSize(20, 20)
-		button:SetImage("icon16/arrow_refresh.png")
-		button.Paint = nil
-		function button:DoClick()
-			slider:SetValue(100000)
-			surface.PlaySound("buttons/button15.wav")
-		end
-
-		-- 'confirm' particle limit button. Creates another DFrame
-		local button = vgui.Create("DButton", scrollPanel)
-		button:SetPos(330, 170)
-		button:SetText("")
-		button:SetSize(20, 20)
-		button:SetImage("icon16/accept.png")
-		button.Paint = nil
-		function button:DoClick()
-			local x, y = mainFrame:GetPos() x = x + 200 y = y + 100
-			local frame = vgui.Create("DFrame", mainFrame)
-			frame:SetSize(400, 200)
-			frame:SetPos(x, y)
-			frame:SetTitle("gwater2 (v" .. version .. ")")
-			frame:MakePopup()
-			frame:SetBackgroundBlur(true)
-			frame:SetScreenLock(true)
-			function frame:Paint(w, h)
-				-- Blur background
-				render.UpdateScreenEffectTexture()
-				render.BlurRenderTarget(render.GetScreenEffectTexture(), 5, 5, 1)
-				render.SetRenderTarget()
-				render.DrawScreenQuad()
-
-				-- dark background around 2d water sim
-				surface.SetDrawColor(0, 0, 0, 200)
-				surface.DrawRect(0, 0, w, h)
-
-				-- main outline
-				surface.SetDrawColor(255, 255, 255)
-				surface.DrawOutlinedRect(0, 0, w, h)
-	
-				draw.DrawText("You are about to change the foam limit to \n" .. slider:GetValue() .. ".\nAre you sure?", "GWater2Title", 200, 30, color_white, TEXT_ALIGN_CENTER)
-				draw.DrawText([[This can be dangerous, because all particles must be allocated on the GPU.
-DO NOT set the limit to a number higher then you think your computer can handle.
-I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefault", 200, 110, color_white, TEXT_ALIGN_CENTER)
-			
-			end
-
-			local confirm = vgui.Create("DButton", frame)
-			confirm:SetPos(260, 160)
-			confirm:SetText("")
-			confirm:SetSize(20, 20)
-			confirm:SetImage("icon16/accept.png")
-			confirm.Paint = nil
-			function confirm:DoClick()
-				local tempmax = gwater2.solver:GetMaxParticles()
-				gwater2.solver:Destroy()
-				gwater2.solver = FlexSolver(tempmax, slider:GetValue())
-				gwater2.meshes = {}
-				gwater2.reset_solver(true)
-				frame:Close()
-				surface.PlaySound("buttons/button15.wav")
-			end
-
-			local deny = vgui.Create("DButton", frame)
-			deny:SetPos(110, 160)
-			deny:SetText("")
-			deny:SetSize(20, 20)
-			deny:SetImage("icon16/cross.png")
-			deny.Paint = nil
-			function deny:DoClick() 
-				frame:Close()
-				surface.PlaySound("buttons/button15.wav")
-			end
-
-			surface.PlaySound("buttons/button15.wav")
-		end
 
 		-- Absorption checkbox & label
 		local label = vgui.Create("DLabel", scrollPanel)	
-		label:SetPos(10, 200)
+		label:SetPos(10, 170)
 		label:SetSize(100, 100)
 		label:SetFont("GWater2Param")
 		label:SetText("Absorption")
@@ -963,7 +867,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 		labels[6] = label
 
 		local box = vgui.Create("DCheckBox", scrollPanel)
-		box:SetPos(132, 200)
+		box:SetPos(132, 170)
 		box:SetSize(20, 20)
 		box:SetChecked(options.absorption:GetBool())
 		local water_volumetric = Material("gwater2/volumetric")
@@ -974,7 +878,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 
 		-- Depth fix checkbox & label
 		local label = vgui.Create("DLabel", scrollPanel)	
-		label:SetPos(10, 230)
+		label:SetPos(10, 200)
 		label:SetSize(100, 100)
 		label:SetFont("GWater2Param")
 		label:SetText("Depth Fix")
@@ -982,7 +886,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 		labels[7] = label
 
 		local box = vgui.Create("DCheckBox", scrollPanel)
-		box:SetPos(132, 230)
+		box:SetPos(132, 200)
 		box:SetSize(20, 20)
 		box:SetChecked(options.depth_fix:GetBool())
 		local water_normals = Material("gwater2/normals")
@@ -993,7 +897,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 
 		-- Solver checkbox
 		local label = vgui.Create("DLabel", scrollPanel)	
-		label:SetPos(10, 260)
+		label:SetPos(10, 230)
 		label:SetSize(100, 100)
 		label:SetFont("GWater2Param")
 		label:SetText("New Solver")
@@ -1001,7 +905,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 		labels[8] = label
 
 		local box = vgui.Create("DCheckBox", scrollPanel)
-		box:SetPos(132, 260)
+		box:SetPos(132, 230)
 		box:SetSize(20, 20)
 		box:SetChecked(gwater2.new_ticker)
 		function box:OnChange(val)
