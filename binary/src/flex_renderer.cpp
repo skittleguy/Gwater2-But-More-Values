@@ -132,8 +132,8 @@ void FlexRenderer::build_diffuse(FlexSolver* solver, float radius) {
 
 	float u[3] = { 0.5 - SQRT3 / 2, 0.5, 0.5 + SQRT3 / 2 };
 	float v[3] = { 1, -0.5, 1 };
-	float mult = 1.f / solver->get_parameter("diffuse_lifetime");
-	float timescale = solver->get_parameter("timescale");
+	float inv_max_lifetime = 1.f / solver->get_parameter("diffuse_lifetime");
+	float particle_scale = solver->get_parameter("timescale") * 0.0004;
 
 	Vector4D* particle_positions = (Vector4D*)solver->get_host("diffuse_pos");
 	Vector4D* particle_velocities = (Vector4D*)solver->get_host("diffuse_vel");
@@ -159,9 +159,9 @@ void FlexRenderer::build_diffuse(FlexSolver* solver, float radius) {
 
 			for (int i = 0; i < 3; i++) { 
 				Vector pos_ani = local_pos[i];	// Warp based on velocity
-				pos_ani = pos_ani + (particle_velocities[particle_index].AsVector3D() * ((pos_ani.Dot(particle_velocities[particle_index].AsVector3D()) * 0.0004) * timescale)).Min(Vector(4, 4, 4).Max(Vector(-4, -4, -4)));
+				pos_ani = pos_ani + (particle_velocities[particle_index].AsVector3D() * pos_ani.Dot(particle_velocities[particle_index].AsVector3D()) * particle_scale).Min(Vector(2, 2, 2)).Max(Vector(-2, -2, -2));
 
-				float lifetime = particle_positions[particle_index].w * mult;
+				float lifetime = particle_positions[particle_index].w * inv_max_lifetime;	// scale bubble size by life left
 				Vector world_pos = particle_pos + pos_ani * radius * lifetime;
 
 				// Todo: somehow only apply the rotation stuff to mist
