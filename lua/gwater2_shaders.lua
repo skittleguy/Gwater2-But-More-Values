@@ -83,7 +83,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	local up = EyeAngles():Up()
 	local right = EyeAngles():Right()
 	gwater2.renderer:BuildWater(gwater2.solver, radius * 0.5)
-	gwater2.renderer:BuildDiffuse(gwater2.solver, radius)
+	gwater2.renderer:BuildDiffuse(gwater2.solver, radius / 7)
 	--render.SetMaterial(Material("models/props_combine/combine_interface_disp"))
 	
 	render.UpdateScreenEffectTexture()	-- _rt_framebuffer is used in refraction shader
