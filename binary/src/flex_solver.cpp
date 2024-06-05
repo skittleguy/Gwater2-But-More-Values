@@ -357,7 +357,7 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	params->diffuseBuoyancy = 1.f;
 	params->diffuseDrag = 0.8f;
 	params->diffuseBallistic = 16;
-	params->diffuseLifetime = 4.f;	// not actually in seconds
+	params->diffuseLifetime = 5.f;	// not actually in seconds
 
 	params->numPlanes = 0;
 
@@ -398,7 +398,7 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	param_map["diffuse_threshold"] = &params->diffuseThreshold;
 	param_map["diffuse_buoyancy"] = &params->diffuseBuoyancy;
 	param_map["diffuse_drag"] = &params->diffuseDrag;
-	param_map["diffuse_ballistic"] = (float *)& params->diffuseBallistic;	// ^
+	//param_map["diffuse_ballistic"] = &params->diffuseBallistic;	// ^
 	param_map["diffuse_lifetime"] = &params->diffuseLifetime;
 	// Extra values we store which are not stored in flexes default parameters
 	param_map["substeps"] = new float(3);
