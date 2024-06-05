@@ -864,7 +864,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 		label:SetFont("GWater2Param")
 		label:SetText("Absorption")
 		label:SetContentAlignment(7)
-		labels[6] = label
+		labels[5] = label
 
 		local box = vgui.Create("DCheckBox", scrollPanel)
 		box:SetPos(132, 170)
@@ -883,7 +883,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 		label:SetFont("GWater2Param")
 		label:SetText("Depth Fix")
 		label:SetContentAlignment(7)
-		labels[7] = label
+		labels[6] = label
 
 		local box = vgui.Create("DCheckBox", scrollPanel)
 		box:SetPos(132, 200)
@@ -902,7 +902,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 		label:SetFont("GWater2Param")
 		label:SetText("New Solver")
 		label:SetContentAlignment(7)
-		labels[8] = label
+		labels[7] = label
 
 		local box = vgui.Create("DCheckBox", scrollPanel)
 		box:SetPos(132, 230)
