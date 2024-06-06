@@ -13,6 +13,8 @@ local function GetRenderTargetGWater(name, mult, depth)
 	)
 end
 
+local cache_screen0 = render.GetScreenEffectTexture()
+local cache_screen1 = render.GetScreenEffectTexture(1)
 local cache_depth = GetRenderTargetGWater("1gwater_cache_depth", 1 / 1)
 local cache_absorption = GetRenderTargetGWater("gwater_cache_absorption", 1 / 1, MATERIAL_RT_DEPTH_NONE)
 local cache_normals = GetRenderTargetGWater("1gwater_cache_normals", 1 / 1, MATERIAL_RT_DEPTH_SEPARATE)
@@ -25,7 +27,6 @@ local water_mist = Material("gwater2/mist")
 
 local blur_passes = CreateClientConVar("gwater2_blur_passes", "3", true)
 local blur_scale = CreateClientConVar("gwater2_blur_scale", "1", true)
-local antialiasing_allowed = CreateClientConVar("gwater2_allow_antialiasing", "1", false) -- don't save this
 local antialias = GetConVar("mat_antialias")
 
 -- rebuild meshes every frame (unused atm since PostDrawOpaque is being a bitch)
@@ -41,24 +42,6 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	if gwater2.solver:GetActiveParticles() < 1 then return end
 
 	--if EyePos():DistToSqr(LocalPlayer():EyePos()) > 1 then return end	-- bail if skybox is rendering (used in postdrawopaque)
-
-	-- A rendertargets depth is created separately when anti-aliasing is enabled
-	-- In order to have proper rendertarget capture which obeys the depth buffer, we need to use MATERIAL_RT_DEPTH_SHARED.
-	-- That way, our rendered particles don't render through walls. (Avoid render.ClearDepth! as it resets this buffer!!!)
-	-- Unfortunately MATERIAL_RT_DEPTH_SEPERATE is force enabled when MSAA is on.. 
-	-- This texture flag makes it so the shaders can't use the actual depth buffer provided by source. This causes things to render through walls
-	-- My solution at the moment is force disabling MSAA, which prevents the issue. (Although this is not an ideal solution)
-	-- Related gmod issues: 
-	-- https://github.com/Facepunch/garrysmod-issues/issues/4662
-	-- https://github.com/Facepunch/garrysmod-issues/issues/5039
-	-- https://github.com/Facepunch/garrysmod-issues/issues/5367
-	-- https://github.com/Facepunch/garrysmod-requests/issues/2308
-	if antialias:GetInt() > 1 and not antialiasing_allowed:GetBool() then
-		print("[GWater2]: Force disabling MSAA for technical reasons. (Feel free to ask me (Meetric) for more info)")
-		RunConsoleCommand("mat_antialias", 1)
-	end
-	
-	local old_rt = render.GetRenderTarget()
 
 	-- diffuse particles
 	--[[
@@ -88,79 +71,62 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	--render.SetMaterial(Material("models/props_combine/combine_interface_disp"))
 
 	render.UpdateScreenEffectTexture()	-- _rt_framebuffer is used in refraction shader
-
+	render.DrawTextureToScreenRect(cache_screen0, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
+	
 	-- Depth absorption (disabled when opaque liquids are enabled)
-	-- TODO: REMOVE SETRENDERTARGET
 	local _, _, _, a = water:GetVector4D("$color2")
 	if water_volumetric:GetFloat("$alpha") != 0 and a > 0 and a < 255 then
+		-- ANTIALIAS FIX! (courtesy of Xenthio)
+			-- how it works: 
+			-- Clear the main rendertarget, keeping depth
+			-- Render to main buffer (still has depth), and copy the contents to another rendertarget
+			-- Restore the main buffer
 		render.SetMaterial(water_volumetric)
-		if antialias:GetInt() then
-			-- Clear the main screen, we want a black backdrop with it's depth.
-			render.Clear(0,0,0,0,false,false)
-			gwater2.renderer:DrawWater()
-
-			-- Save what we drew to the spare effect texture
-			render.UpdateScreenEffectTexture(1)
-
-			-- draw it to cache_absorption (might be able to just use the texture directly though?)
-			render.PushRenderTarget(cache_absorption)
-			render.DrawTextureToScreen( render.GetScreenEffectTexture(1) )
-			render.PopRenderTarget()
-
-			-- Draw what we originally had back :)
-			render.DrawTextureToScreen( render.GetScreenEffectTexture() )
-		else
-			render.SetRenderTarget(cache_absorption)
-			gwater2.renderer:DrawWater()
-		end
+		render.Clear(0, 0, 0, 0)
+		gwater2.renderer:DrawWater()
+		render.CopyTexture(render.GetRenderTarget(), cache_absorption)
+		render.DrawTextureToScreen(cache_screen0)
 	end
 	
-	if antialias then
-		-- with anti aliasing we can't draw directly to the screen effect texture.
-		render.UpdateScreenEffectTexture(1)
-		render.SetMaterial(water_bubble)
-		gwater2.renderer:DrawDiffuse()
-		render.UpdateScreenEffectTexture()	-- _rt_framebuffer is used in refraction shader
-		render.DrawTextureToScreen( render.GetScreenEffectTexture(1) )
-	else 
-		render.SetRenderTarget(render.GetScreenEffectTexture())
-		render.SetMaterial(water_bubble)
-		--render.SetRenderTarget(old_rt)	-- required if upcoming pipeline doesnt exist
-		gwater2.renderer:DrawDiffuse()
-	end
-
+	-- Bubble particles inside water
+	-- Make sure the water screen texture has bubbles but the normal framebuffer does not
+	render.SetMaterial(water_bubble)
+	render.UpdateScreenEffectTexture(1)
+	gwater2.renderer:DrawDiffuse()
+	render.CopyTexture(render.GetRenderTarget(), cache_screen0)
+	render.DrawTextureToScreen(cache_screen1)
 
 	-- grab normals
 	water_normals:SetFloat("$radius", radius * 0.5)
 	render.SetMaterial(water_normals)
-	render.SetRenderTargetEx(0, cache_normals)
+	render.PushRenderTarget(cache_normals)
 	render.SetRenderTargetEx(1, cache_depth)
 	render.ClearDepth()
 	gwater2.renderer:DrawWater()
-	render.SetRenderTargetEx(0, nil)
+	render.PopRenderTarget()
 	render.SetRenderTargetEx(1, nil)
 	
 	-- Blur normals
 	water_blur:SetFloat("$radius", radius)
 	water_blur:SetTexture("$depthtexture", cache_depth)
 	render.SetMaterial(water_blur)
-	
 	for i = 1, blur_passes:GetInt() do
 		-- Blur X
 		--local scale = (5 - i) * 0.05
 		local scale = (0.25 / i) * blur_scale:GetFloat()
 		water_blur:SetTexture("$normaltexture", cache_normals)	
 		water_blur:SetVector("$scrs", Vector(scale / scrw, 0))
-		render.SetRenderTarget(cache_bloom)	-- Bloom texture resolution is significantly lower than screen res, enabling for a faster blur
+		render.PushRenderTarget(cache_bloom)	-- Bloom texture resolution is significantly lower than screen res, enabling for a faster blur
 		render.DrawScreenQuad()
+		render.PopRenderTarget()
 		
 		-- Blur Y
 		water_blur:SetTexture("$normaltexture", cache_bloom)
 		water_blur:SetVector("$scrs", Vector(0, scale / scrh))
-		render.SetRenderTarget(cache_normals)
+		render.PushRenderTarget(cache_normals)
 		render.DrawScreenQuad()
+		render.PopRenderTarget()
 	end
-	render.SetRenderTarget(old_rt)
 
 	-- Setup water material parameters
 	water:SetFloat("$radius", radius)
@@ -176,8 +142,8 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 
 	-- Debug Draw
 	--render.DrawTextureToScreenRect(cache_absorption, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
-	render.DrawTextureToScreenRect(cache_normals, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
-	--render.DrawTextureToScreenRect(cache_normals, 0, 0, ScrW(), ScrH())
+	render.DrawTextureToScreenRect(cache_absorption, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
+	--render.DrawTextureToScreenRect(cache_normals, 0, 0, ScrW(), ScrH())*/
 end)
 
 --hook.Add("NeedsDepthPass", "gwater2_depth", function()
