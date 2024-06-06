@@ -162,13 +162,15 @@ local function set_gwater_parameter(option, val)
 	if gwater2[option] then
 		gwater2[option] = val
 		if option == "surface_tension" then	-- hack hack hack! this parameter scales based on radius
-			local thing = val / gwater2.solver:GetParameter("radius")^4	-- cant think of a name for this variable rn
-			gwater2.solver:SetParameter(option, thing)
-			options.solver:SetParameter(option, thing)
+			local r1 = val / gwater2.solver:GetParameter("radius")^4	-- cant think of a name for this variable rn
+			local r2 = val / math.min(gwater2.solver:GetParameter("radius"), 15)^4
+			gwater2.solver:SetParameter(option, r1)
+			options.solver:SetParameter(option, r2)
 		elseif option == "fluid_rest_distance" or option == "collision_distance" then -- hack hack hack! this parameter scales based on radius
-			local thing = val * gwater2.solver:GetParameter("radius")
-			gwater2.solver:SetParameter(option, thing)
-			options.solver:SetParameter(option, thing)
+			local r1 = val * gwater2.solver:GetParameter("radius")
+			local r2 = val * math.min(gwater2.solver:GetParameter("radius"), 15)
+			gwater2.solver:SetParameter(option, r1)
+			options.solver:SetParameter(option, r2)
 		end
 		return
 	end
