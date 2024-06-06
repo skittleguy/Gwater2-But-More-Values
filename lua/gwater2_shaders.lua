@@ -14,7 +14,7 @@ local function GetRenderTargetGWater(name, mult, depth)
 end
 
 local cache_depth = GetRenderTargetGWater("1gwater_cache_depth", 1 / 1)
-local cache_absorption = GetRenderTargetGWater("gwater_cache_absorption")
+local cache_absorption = GetRenderTargetGWater("gwater_cache_absorption", 1 / 1, MATERIAL_RT_DEPTH_NONE)
 local cache_normals = GetRenderTargetGWater("1gwater_cache_normals", 1 / 1, MATERIAL_RT_DEPTH_SEPARATE)
 local cache_bloom = GetRenderTargetGWater("2gwater_cache_bloom", 1 / 2)	-- for blurring
 local water_blur = Material("gwater2/smooth")
@@ -25,6 +25,7 @@ local water_mist = Material("gwater2/mist")
 
 local blur_passes = CreateClientConVar("gwater2_blur_passes", "3", true)
 local blur_scale = CreateClientConVar("gwater2_blur_scale", "1", true)
+local antialiasing_allowed = CreateClientConVar("gwater2_allow_antialiasing", "1", false) -- don't save this
 local antialias = GetConVar("mat_antialias")
 
 -- rebuild meshes every frame (unused atm since PostDrawOpaque is being a bitch)
@@ -34,7 +35,12 @@ hook.Add("RenderScene", "gwater2_render", function(eye_pos, eye_angles, fov)
 		gwater2.renderer:BuildIMeshes(gwater2.solver, 1)	
 	cam.End3D()
 end)]]
+local function MyNeedsDepthPass()
+    return true
+end
 
+-- Add hook so that the _rt_ResolvedFullFrameDepth texture is updated
+hook.Add( "NeedsDepthPass", "MyNeedsDepthPass", MyNeedsDepthPass )
 -- gwater2 shader pipeline
 hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--PreDrawViewModels
 	if gwater2.solver:GetActiveParticles() < 1 then return end
@@ -52,7 +58,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	-- https://github.com/Facepunch/garrysmod-issues/issues/5039
 	-- https://github.com/Facepunch/garrysmod-issues/issues/5367
 	-- https://github.com/Facepunch/garrysmod-requests/issues/2308
-	if antialias:GetInt() > 1 then
+	if antialias:GetInt() > 1 and not antialiasing_allowed:GetBool() then
 		print("[GWater2]: Force disabling MSAA for technical reasons. (Feel free to ask me (Meetric) for more info)")
 		RunConsoleCommand("mat_antialias", 1)
 	end
@@ -85,24 +91,40 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	gwater2.renderer:BuildWater(gwater2.solver, radius * 0.5)
 	gwater2.renderer:BuildDiffuse(gwater2.solver, radius * 0.15)
 	--render.SetMaterial(Material("models/props_combine/combine_interface_disp"))
-	
-	render.UpdateScreenEffectTexture()	-- _rt_framebuffer is used in refraction shader
-	render.SetRenderTarget(render.GetScreenEffectTexture())
-	render.SetMaterial(water_bubble)
-	--render.SetRenderTarget(old_rt)	-- required if upcoming pipeline doesnt exist
-	gwater2.renderer:DrawDiffuse()
 
-	--render.BlurRenderTarget(render.GetScreenEffectTexture(), 1, 1, 0)
-	
+	render.UpdateScreenEffectTexture()	-- _rt_framebuffer is used in refraction shader
+
 	-- Depth absorption (disabled when opaque liquids are enabled)
 	-- TODO: REMOVE SETRENDERTARGET
 	local _, _, _, a = water:GetVector4D("$color2")
 	if water_volumetric:GetFloat("$alpha") != 0 and a > 0 and a < 255 then
 		render.SetMaterial(water_volumetric)
-		render.SetRenderTarget(cache_absorption)
-		gwater2.renderer:DrawWater()
-		--render.SetRenderTarget()
+		if antialias:GetInt() then
+			-- Clear the main screen, we want a black backdrop with it's depth.
+			render.Clear(0,0,0,0,false,false)
+			gwater2.renderer:DrawWater()
+
+			-- Save what we drew to the spare effect texture
+			render.UpdateScreenEffectTexture(1)
+
+			-- draw it to cache_absorption (might be able to just use the texture directly though?)
+			render.PushRenderTarget(cache_absorption)
+			render.DrawTextureToScreen( render.GetScreenEffectTexture(1) )
+			render.PopRenderTarget()
+
+			-- Draw what we originally had back :)
+			render.DrawTextureToScreen( render.GetScreenEffectTexture() )
+		else
+			render.SetRenderTarget(cache_absorption)
+			gwater2.renderer:DrawWater()
+		end
 	end
+	
+	render.SetRenderTarget(render.GetScreenEffectTexture())
+	render.SetMaterial(water_bubble)
+	--render.SetRenderTarget(old_rt)	-- required if upcoming pipeline doesnt exist
+	gwater2.renderer:DrawDiffuse()
+
 
 	-- grab normals
 	water_normals:SetFloat("$radius", radius * 0.5)
@@ -149,8 +171,8 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	gwater2.renderer:DrawDiffuse()
 
 	-- Debug Draw
-	--render.DrawTextureToScreenRect(cache_absorption, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
-	render.DrawTextureToScreenRect(cache_normals, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
+	render.DrawTextureToScreenRect(cache_absorption, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
+	render.DrawTextureToScreenRect(cache_normals, ScrW() * 0.75, ScrH() / 4, ScrW() / 4, ScrH() / 4)
 	--render.DrawTextureToScreenRect(cache_normals, 0, 0, ScrW(), ScrH())
 end)
 
