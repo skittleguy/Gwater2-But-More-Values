@@ -68,7 +68,7 @@ float4 main(const PS_INPUT i) : COLOR {
 	float3 reflected = reflect(i.view_dir, smoothed_normal);
 	float phong = min(pow(max(0, dot(reflected, SUN_DIR)), 100), 1);
 	float fresnel = fresnel_approx(1.0, 1.333, i.view_dir, smoothed_normal, 0.1); //is_zero(smoothed_normal) ? 0 : fresnel_approx(1.0, 1.333, i.view_dir, smoothed_normal, 0.1);
-	float3 specular = texCUBE(CUBEMAP, reflected).xyz * fresnel;
+	float3 specular = (ENV_MAP_SCALE * texCUBE(CUBEMAP, reflected)).xyz * fresnel;
 	//float3 specular = pow(texCUBE(CUBEMAP, reflected).xyz, 1.0 / 2.2) * 3.5 * fresnel;
 
 	// Secondary lighting calculations
