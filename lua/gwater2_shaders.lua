@@ -25,6 +25,11 @@ local water_normals = Material("gwater2/normals")
 local water_bubble = Material("gwater2/bubble")	-- bubbles
 local water_mist = Material("gwater2/mist")
 
+
+local debug_depth = CreateClientConVar("gwater2_debug_depth", "0", false)
+local debug_absorption = CreateClientConVar("gwater2_debug_absorption", "0", false)
+local debug_normals = CreateClientConVar("gwater2_debug_normals", "0", false)
+
 local blur_passes = CreateClientConVar("gwater2_blur_passes", "3", true)
 local blur_scale = CreateClientConVar("gwater2_blur_scale", "1", true)
 local antialias = GetConVar("mat_antialias")
@@ -141,9 +146,10 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	gwater2.renderer:DrawDiffuse()
 
 	-- Debug Draw
-	--render.DrawTextureToScreenRect(cache_absorption, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
-	render.DrawTextureToScreenRect(cache_absorption, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
-	--render.DrawTextureToScreenRect(cache_normals, 0, 0, ScrW(), ScrH())*/
+	local dbg = 0
+	if debug_absorption:GetBool() then render.DrawTextureToScreenRect(cache_absorption, ScrW() * 0.75, (ScrH() / 4) * dbg, ScrW() / 4, ScrH() / 4); dbg = dbg + 1 end
+	if debug_normals:GetBool() then render.DrawTextureToScreenRect(cache_normals, ScrW() * 0.75, (ScrH() / 4) * dbg, ScrW() / 4, ScrH() / 4); dbg = dbg + 1 end
+	if debug_depth:GetBool() then render.DrawTextureToScreenRect(cache_depth, ScrW() * 0.75, (ScrH() / 4) * dbg, ScrW() / 4, ScrH() / 4); dbg = dbg + 1 end
 end)
 
 --hook.Add("NeedsDepthPass", "gwater2_depth", function()

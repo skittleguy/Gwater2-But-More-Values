@@ -157,7 +157,7 @@ void FlexRenderer::build_diffuse(FlexSolver* solver, float radius) {
 				continue;
 			}
 
-			for (int i = 0; i < 3; i++) { 
+			for (int i = 0; i < 3; i++) {
 				Vector pos_ani = local_pos[i];	// Warp based on velocity
 				pos_ani = pos_ani + (particle_velocities[particle_index].AsVector3D() * pos_ani.Dot(particle_velocities[particle_index].AsVector3D()) * particle_scale).Min(Vector(2, 2, 2)).Max(Vector(-2, -2, -2));
 
@@ -181,12 +181,11 @@ void FlexRenderer::build_diffuse(FlexSolver* solver, float radius) {
 	}
 };
 
-
 void FlexRenderer::draw_diffuse() {
 	for (IMesh* mesh : diffuse) { 
 		mesh->Draw();
 	}
-}
+};
 
 void FlexRenderer::draw_water() {
 	for (IMesh* mesh : water) {
