@@ -35,12 +35,7 @@ hook.Add("RenderScene", "gwater2_render", function(eye_pos, eye_angles, fov)
 		gwater2.renderer:BuildIMeshes(gwater2.solver, 1)	
 	cam.End3D()
 end)]]
-local function MyNeedsDepthPass()
-    return true
-end
 
--- Add hook so that the _rt_ResolvedFullFrameDepth texture is updated
-hook.Add( "NeedsDepthPass", "MyNeedsDepthPass", MyNeedsDepthPass )
 -- gwater2 shader pipeline
 hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--PreDrawViewModels
 	if gwater2.solver:GetActiveParticles() < 1 then return end
