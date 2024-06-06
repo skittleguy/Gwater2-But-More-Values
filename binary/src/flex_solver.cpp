@@ -85,7 +85,7 @@ bool FlexSolver::pretick(NvFlexMapFlags wait) {
 	int* flag = (int*)NvFlexMap(get_buffer("geometry_flags"), eNvFlexMapWait);
 
 	// Update collider positions
-	for (int i = 0; i < imin(meshes.size(), MAX_COLLIDERS); i++) {
+	for (int i = 0; i < meshes.size(); i++) {
 		FlexMesh mesh = meshes[i];
 
 		flag[i] = mesh.get_flags();
