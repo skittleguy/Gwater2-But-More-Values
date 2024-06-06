@@ -175,8 +175,8 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	gwater2.renderer:DrawDiffuse()
 
 	-- Debug Draw
-	render.DrawTextureToScreenRect(cache_absorption, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
-	render.DrawTextureToScreenRect(cache_normals, ScrW() * 0.75, ScrH() / 4, ScrW() / 4, ScrH() / 4)
+	--render.DrawTextureToScreenRect(cache_absorption, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
+	render.DrawTextureToScreenRect(cache_normals, ScrW() * 0.75, 0, ScrW() / 4, ScrH() / 4)
 	--render.DrawTextureToScreenRect(cache_normals, 0, 0, ScrW(), ScrH())
 end)
 
