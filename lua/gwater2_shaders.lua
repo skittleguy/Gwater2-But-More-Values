@@ -115,10 +115,19 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 		end
 	end
 	
-	render.SetRenderTarget(render.GetScreenEffectTexture())
-	render.SetMaterial(water_bubble)
-	--render.SetRenderTarget(old_rt)	-- required if upcoming pipeline doesnt exist
-	gwater2.renderer:DrawDiffuse()
+	if antialias then
+		-- with anti aliasing we can't draw directly to the screen effect texture.
+		render.UpdateScreenEffectTexture(1)
+		render.SetMaterial(water_bubble)
+		gwater2.renderer:DrawDiffuse()
+		render.UpdateScreenEffectTexture()	-- _rt_framebuffer is used in refraction shader
+		render.DrawTextureToScreen( render.GetScreenEffectTexture(1) )
+	else 
+		render.SetRenderTarget(render.GetScreenEffectTexture())
+		render.SetMaterial(water_bubble)
+		--render.SetRenderTarget(old_rt)	-- required if upcoming pipeline doesnt exist
+		gwater2.renderer:DrawDiffuse()
+	end
 
 
 	-- grab normals
