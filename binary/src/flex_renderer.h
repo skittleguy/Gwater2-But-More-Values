@@ -19,7 +19,6 @@ private:
 public:
 	IMesh** get_water();
 
-	void build_mesh(FlexSolver* flex, float radius, int thread_id);
 	void build_water(float radius);
 	void build_diffuse(float radius);
 

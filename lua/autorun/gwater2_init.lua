@@ -74,7 +74,6 @@ include("gwater2_shaders.lua")
 
 gwater2 = {
 	solver = FlexSolver(100000),
-	renderer = FlexRenderer(),
 	new_ticker = true,
 	material = Material("gwater2/finalpass"),--Material("vgui/circle"),--Material("sprites/sent_ball"),
 	update_meshes = function(index, id, rep)
@@ -121,6 +120,8 @@ gwater2 = {
 		gwater2.solver:InitBounds(Vector(-16384, -16384, -16384), Vector(16384, 16384, 16384))	-- source bounds
 	end
 }
+
+gwater2.renderer = FlexRenderer(gwater2.solver)
 
 -- setup percentage values (used in menu)
 gwater2["surface_tension"] = gwater2.solver:GetParameter("surface_tension") * gwater2.solver:GetParameter("radius")^4	-- dont ask me why its a power of 4
