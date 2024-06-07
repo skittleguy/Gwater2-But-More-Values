@@ -5,10 +5,6 @@
 // Not sure why this isn't defined in the standard math library
 #define min(a, b) a < b ? a : b
 
-FlexSolver* FlexRenderer::get_flex() {
-	return flex;
-}
-
 IMesh** FlexRenderer::get_water() {
 	return water;
 }
@@ -18,7 +14,7 @@ float v[3] = { 1, -0.5, 1 };
 
 void build_mesh(
 	FlexRenderer* renderer,
-	int max_particles,
+	IMatRenderContext* render_context,
 	Vector eye_pos,
 	VMatrix view_projection_matrix,
 	Vector4D* particle_positions,
@@ -26,14 +22,19 @@ void build_mesh(
 	//Vector4D* particle_ani1,
 	//Vector4D* particle_ani2,
 	//bool particle_ani,
+	int max_particles,
 	float radius,
 	int thread_id 
 ) {
+
 	int start = thread_id * MAX_PRIMATIVES;
 	int end = min((thread_id + 1) * MAX_PRIMATIVES, max_particles);
 
+	IMesh* mesh = render_context->CreateStaticMesh(VERTEX_POSITION | VERTEX_NORMAL | VERTEX_TEXCOORD0_2D, "");
+	renderer->get_water()[thread_id] = mesh;
+
 	CMeshBuilder mesh_builder;
-	mesh_builder.Begin(renderer->get_water()[thread_id], MATERIAL_TRIANGLES, MAX_PRIMATIVES);
+	mesh_builder.Begin(mesh, MATERIAL_TRIANGLES, MAX_PRIMATIVES);
 	for (int particle_index = start; particle_index < end; ++particle_index) {
 		Vector particle_pos = particle_positions[particle_index].AsVector3D();
 
@@ -123,10 +124,11 @@ void FlexRenderer::build_water(float radius) {
 		threads[mesh_index] = std::thread(
 			build_mesh,
 			this,
-			flex->get_active_particles(),
+			render_context,
 			eye_pos, 
 			view_projection_matrix, 
 			particle_positions,
+			flex->get_active_particles(),
 			radius,
 			mesh_index
 		);	
