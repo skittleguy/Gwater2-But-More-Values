@@ -84,6 +84,12 @@ void build_mesh(
 #endif
 		//}
 	}
+
+	// mesh had no indices, bail
+	if (mesh_builder.GetCurrentIndex() == 0) {
+		render_context->DestroyStaticMesh(mesh);
+		renderer->get_water()[thread_id] = nullptr;
+	}
 }
 
 // lord have mercy brothers
