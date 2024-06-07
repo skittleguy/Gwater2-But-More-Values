@@ -26,7 +26,6 @@ void build_mesh(
 	float radius,
 	int thread_id 
 ) {
-
 	int start = thread_id * MAX_PRIMATIVES;
 	int end = min((thread_id + 1) * MAX_PRIMATIVES, max_particles);
 
@@ -84,6 +83,7 @@ void build_mesh(
 #endif
 		//}
 	}
+	mesh_builder.End();
 
 	// mesh had no indices, bail
 	if (mesh_builder.GetCurrentIndex() == 0) {
@@ -124,10 +124,9 @@ void FlexRenderer::build_water(float radius) {
 	bool particle_ani = flex->get_parameter("anisotropy_scale") != 0;
 
 	// Split each mesh into its own thread
-	std::thread* threads = (std::thread*)malloc(water_max * sizeof(std::thread));
+	std::thread** threads = (std::thread**)malloc(water_max * sizeof(std::thread*));
 	for (int mesh_index = 0; mesh_index < water_max; mesh_index++) {
-		water[mesh_index] = render_context->CreateStaticMesh(VERTEX_POSITION | VERTEX_NORMAL | VERTEX_TEXCOORD0_2D, "");
-		threads[mesh_index] = std::thread(
+		threads[mesh_index] = new std::thread(
 			build_mesh,
 			this,
 			render_context,
@@ -138,12 +137,13 @@ void FlexRenderer::build_water(float radius) {
 			radius,
 			mesh_index
 		);	
-		threads[mesh_index].detach();
 	}
 
 	for (int mesh_index = 0; mesh_index < water_max; mesh_index++) {
-		threads[mesh_index].join();
+		threads[mesh_index]->join();
 	}
+
+	free(threads);
 };
 
 void FlexRenderer::build_diffuse(float radius) {
@@ -156,7 +156,7 @@ void FlexRenderer::draw_diffuse() {
 
 void FlexRenderer::draw_water() {
 	for (int mesh = 0; mesh < water_max; mesh++) {
-		if (!water[mesh]) continue;
+		if (water[mesh] == nullptr) continue;
 
 		water[mesh]->Draw();
 	}
@@ -168,12 +168,15 @@ FlexRenderer::FlexRenderer(FlexSolver* flex) {
 	this->flex = flex;
 	water_max = (int)ceil(flex->get_max_particles() / (float)MAX_PRIMATIVES);
 	water = (IMesh**)malloc(water_max * sizeof(IMesh*));
+	for (int i = 0; i < water_max; i++) {
+		water[i] = nullptr;
+	}
 };
 
 FlexRenderer::~FlexRenderer() {
 	IMatRenderContext* render_context = materials->GetRenderContext();
 	for (int mesh = 0; mesh < water_max; mesh++) {
-		if (!water[mesh]) continue;
+		if (water[mesh] == nullptr) continue;
 		render_context->DestroyStaticMesh(water[mesh]);
 	}
 
