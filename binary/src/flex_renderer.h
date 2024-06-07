@@ -11,15 +11,17 @@
 
 class FlexRenderer {
 private:
-	FlexSolver* flex;
-	int max_water;
-	IMesh** water;
-	std::vector<IMesh*> diffuse;
+	FlexSolver* flex = nullptr;
+	IMesh** water = nullptr;	// water meshes used in rendering
+	int water_max = 0;
+	//std::vector<IMesh*> diffuse;
 
 public:
-	void build_mesh(FlexSolver* solver, float radius, int start, int end);
-	void build_water(FlexSolver* solver, float radius);
-	void build_diffuse(FlexSolver* solver, float radius);
+	IMesh** get_water();
+
+	void build_mesh(FlexSolver* flex, float radius, int thread_id);
+	void build_water(float radius);
+	void build_diffuse(float radius);
 
 	void draw_water();
 	void draw_diffuse();
