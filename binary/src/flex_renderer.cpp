@@ -151,17 +151,18 @@ void FlexRenderer::draw_water() {
 	}
 };
 
+// Allocate buffers
 FlexRenderer::FlexRenderer(int max_meshes) {
 	allocated = max_meshes;
 	water = (IMesh**)malloc(allocated * sizeof(IMesh*));
-
 	thread_status = (ThreadStatus*)malloc(allocated * sizeof(ThreadStatus));
 	if (thread_status) {
 		memset(thread_status, MESH_NONE, allocated * sizeof(ThreadStatus));
 	}
 
 	thread_data = (FlexRendererThreadData*)malloc(allocated * sizeof(FlexRendererThreadData));
-	if (thread_data) {
+	threads = (std::thread**)malloc(allocated * sizeof(std::thread*));
+	if (threads && thread_data) {
 		for (int i = 0; i < allocated; i++) {
 			threads[i] = new std::thread(build_mesh, i, thread_data[i]);
 		}
@@ -186,8 +187,9 @@ FlexRenderer::~FlexRenderer() {
 		render_context->DestroyStaticMesh(water[mesh]);
 	}
 
+	// Free memory
 	if (threads != nullptr) free(threads);
-	if (water != nullptr)free(water);
-	if (thread_status != nullptr)free(thread_status);
-	if (thread_data != nullptr)free(thread_data);
+	if (water != nullptr) free(water);
+	if (thread_status != nullptr) free(thread_status);
+	if (thread_data != nullptr) free(thread_data);
 };
