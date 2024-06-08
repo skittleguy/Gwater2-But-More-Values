@@ -10,7 +10,7 @@ std::mutex MUTEX;
 float u[3] = { 0.5 - SQRT3 / 2, 0.5, 0.5 + SQRT3 / 2 };
 float v[3] = { 1, -0.5, 1 };
 
-void build_mesh(int id, FlexRendererThreadData& data) {
+void build_mesh(int id, FlexRendererThreadData data) {
 	while (true) {
 		if (data.thread_status == MESH_KILL) return;
 
@@ -155,17 +155,22 @@ void FlexRenderer::draw_water() {
 FlexRenderer::FlexRenderer(int max_meshes) {
 	allocated = max_meshes;
 	water = (IMesh**)malloc(allocated * sizeof(IMesh*));
+	if (!water) return;	// wtf?
+
 	thread_status = (ThreadStatus*)malloc(allocated * sizeof(ThreadStatus));
-	if (thread_status) {
-		memset(thread_status, MESH_NONE, allocated * sizeof(ThreadStatus));
-	}
+	if (!thread_status) return;
+	memset(thread_status, MESH_NONE, allocated * sizeof(ThreadStatus));
 
 	thread_data = (FlexRendererThreadData*)malloc(allocated * sizeof(FlexRendererThreadData));
-	threads = (std::thread**)malloc(allocated * sizeof(std::thread*));
-	if (threads && thread_data) {
-		for (int i = 0; i < allocated; i++) {
-			threads[i] = new std::thread(build_mesh, i, thread_data[i]);
-		}
+	if (!thread_data) return;
+
+	threads = (std::thread*)malloc(allocated * sizeof(std::thread));
+	if (!threads) return;
+
+	for (int i = 0; i < allocated; i++) {
+		thread_data->water = water[i];
+		thread_data->thread_status = thread_status[i];
+		threads[i] = std::thread(build_mesh, i, thread_data[i]);
 	}
 };
 
@@ -178,10 +183,9 @@ FlexRenderer::~FlexRenderer() {
 			MUTEX.lock();
 			thread_status[mesh] = MESH_KILL;
 			MUTEX.unlock();
-			threads[mesh]->join();	// kill yourself, NOW!
+			threads[mesh].join();	// kill yourself, NOW!
 		}
 
-		delete threads[mesh];
 		if (thread_status[mesh] == MESH_NONE) continue;
 
 		render_context->DestroyStaticMesh(water[mesh]);
