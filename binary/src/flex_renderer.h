@@ -5,17 +5,24 @@
 #include "flex_solver.h"
 #include <vector>
 #include <thread>
+#include <mutex>
 
 #define MAX_PRIMATIVES 21845
 #define SQRT3 1.73205081
 
+std::mutex MUTEX;
+
 enum ThreadStatus {
-	MESH_NONE = 0,
+	MESH_NONE = -2,
+	MESH_NONE_BUILDING = -1,
+	MESH_KILL = 0,	// tell thread to kill itself
 	MESH_EXISTS = 1,
-	MESH_BUILDING = 2,
+	MESH_EXISTS_BUILDING = 2,
 };
 
 struct FlexRendererThreadData {
+	IMesh*& water;
+	ThreadStatus& thread_status;
 	IMatRenderContext* render_context;
 	Vector eye_pos;
 	VMatrix view_projection_matrix;
@@ -26,7 +33,6 @@ struct FlexRendererThreadData {
 	//bool particle_ani;
 	int max_particles;
 	float radius;
-	int id;
 };
 
 class FlexRenderer {
@@ -36,11 +42,12 @@ private:
 public:
 	int allocated = 0;
 	IMesh** water;	// water meshes used in rendering
+	std::thread** threads;	// actual thread objects
 	ThreadStatus* thread_status;	// status of threads
 	FlexRendererThreadData* thread_data;	// data passed to threads
 
-	void build_water(float radius);
-	void build_diffuse(float radius);
+	void build_water(FlexSolver* flex, float radius);
+	void build_diffuse(FlexSolver* flex, float radius);
 
 	void draw_water();
 	void draw_diffuse();
