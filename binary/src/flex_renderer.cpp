@@ -112,7 +112,7 @@ void FlexRenderer::build_water(FlexSolver* flex, float radius) {
 	bool particle_ani = flex->get_parameter("anisotropy_scale") != 0;
 
 	// Update time!!!
-	int max_meshes = min(max_particles / (float)MAX_PRIMATIVES, allocated);
+	int max_meshes = min(ceil(max_particles / (float)MAX_PRIMATIVES), allocated);
 	std::vector<std::future<IMesh*>> queue;
 	for (int mesh_index = 0; mesh_index < max_meshes; mesh_index++) {
 		// update thread data
