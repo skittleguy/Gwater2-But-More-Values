@@ -164,13 +164,13 @@ FlexRenderer::FlexRenderer(int max_meshes) {
 	thread_data = (FlexRendererThreadData*)malloc(allocated * sizeof(FlexRendererThreadData));
 	if (!thread_data) return;
 
-	threads = (std::thread*)malloc(allocated * sizeof(std::thread));
+	threads = (std::thread**)malloc(allocated * sizeof(std::thread*));
 	if (!threads) return;
 
 	for (int i = 0; i < allocated; i++) {
-		thread_data->water = water[i];
-		thread_data->thread_status = thread_status[i];
-		threads[i] = std::thread(build_mesh, i, thread_data[i]);
+		thread_data[i].water = water[i];
+		thread_data[i].thread_status = thread_status[i];
+		threads[i] = new std::thread(build_mesh, i, thread_data[i]);
 	}
 };
 
@@ -183,8 +183,10 @@ FlexRenderer::~FlexRenderer() {
 			MUTEX.lock();
 			thread_status[mesh] = MESH_KILL;
 			MUTEX.unlock();
-			threads[mesh].join();	// kill yourself, NOW!
+			threads[mesh]->join();	// kill yourself, NOW!
 		}
+
+		delete threads[mesh];
 
 		if (thread_status[mesh] == MESH_NONE) continue;
 

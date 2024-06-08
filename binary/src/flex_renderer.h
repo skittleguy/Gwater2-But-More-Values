@@ -40,7 +40,7 @@ private:
 public:
 	int allocated = 0;
 	IMesh** water = nullptr;	// water meshes used in rendering
-	std::thread* threads = nullptr;	// actual thread objects
+	std::thread** threads = nullptr;	// actual thread objects
 	ThreadStatus* thread_status = nullptr;	// status of threads
 	FlexRendererThreadData* thread_data = nullptr;	// data passed to threads
 
