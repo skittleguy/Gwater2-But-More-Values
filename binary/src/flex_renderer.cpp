@@ -67,12 +67,12 @@ IMesh* build_mesh(int id, FlexRendererThreadData data) {
 	}
 	mesh_builder.End();	// DONE. 
 
-	if (mesh_builder.GetCurrentIndex() > 0) {
+	//if (mesh_builder.GetCurrentIndex() > 0) {
 		return mesh;
-	} else {
+	//} else {
 		//data.render_context->DestroyStaticMesh(mesh);
 		return nullptr;
-	}
+	//}
 }
 
 // Destroys all meshes related to water
