@@ -6,21 +6,14 @@
 #include <vector>
 #include <thread>
 #include <mutex>
+#include "ThreadPool.h"
 
 #define MAX_PRIMATIVES 21845
+#define MAX_THREADS 8
 #define SQRT3 1.73205081
 
-enum ThreadStatus {
-	MESH_NONE = -2,
-	MESH_NONE_BUILDING = -1,
-	MESH_KILL = 0,	// tell thread to kill itself
-	MESH_EXISTS = 1,
-	MESH_EXISTS_BUILDING = 2,
-};
-
 struct FlexRendererThreadData {
-	IMesh*& water;
-	ThreadStatus& thread_status;
+	//IMesh*& water;
 	IMatRenderContext* render_context;
 	Vector eye_pos;
 	VMatrix view_projection_matrix;
@@ -39,11 +32,10 @@ private:
 
 public:
 	int allocated = 0;
+	ThreadPool* threads = nullptr;
 	IMesh** water = nullptr;	// water meshes used in rendering
-	std::thread** threads = nullptr;	// actual thread objects
-	ThreadStatus* thread_status = nullptr;	// status of threads
-	FlexRendererThreadData* thread_data = nullptr;	// data passed to threads
 
+	void destroy_water();
 	void build_water(FlexSolver* flex, float radius);
 	void build_diffuse(FlexSolver* flex, float radius);
 
