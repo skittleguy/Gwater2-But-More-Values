@@ -70,7 +70,7 @@ IMesh* build_mesh(int id, FlexRendererThreadData data) {
 	if (mesh_builder.GetCurrentIndex() > 0) {
 		return mesh;
 	} else {
-		data.render_context->DestroyStaticMesh(mesh);
+		//data.render_context->DestroyStaticMesh(mesh);
 		return nullptr;
 	}
 }
