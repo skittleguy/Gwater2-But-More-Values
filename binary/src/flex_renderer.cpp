@@ -145,7 +145,6 @@ void FlexRenderer::draw_water() {
 	for (int mesh = 0; mesh < allocated; mesh++) {
 		if (water[mesh] == nullptr) continue;
 
-		Msg("Drawing Mesh %i\n", mesh);
 		water[mesh]->Draw();
 		//if (thread_status[mesh] != nullptr)
 		//if (thread_status[mesh] < 0) continue;	// mesh doesn't exist, bail
