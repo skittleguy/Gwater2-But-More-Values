@@ -551,6 +551,14 @@ LUA_FUNCTION(FLEXRENDERER_DrawWater) {
 	return 0;
 }
 
+// Forces threading meshes to join queue
+LUA_FUNCTION(FLEXRENDERER_UpdateWater) {
+	LUA->CheckType(1, FLEXRENDERER_METATABLE);
+	GET_FLEXRENDERER(1)->update_water();
+
+	return 0;
+}
+
 // Builds diffuse particles to IMesh* structs
 LUA_FUNCTION(FLEXRENDERER_BuildDiffuse) {
 	LUA->CheckType(1, FLEXRENDERER_METATABLE);
@@ -733,6 +741,7 @@ GMOD_MODULE_OPEN() {
 	ADD_FUNCTION(LUA, FLEXRENDERER_GarbageCollect, "Destroy");
 	ADD_FUNCTION(LUA, FLEXRENDERER_BuildWater, "BuildWater");
 	ADD_FUNCTION(LUA, FLEXRENDERER_DrawWater, "DrawWater");
+	ADD_FUNCTION(LUA, FLEXRENDERER_UpdateWater, "UpdateWater");
 	ADD_FUNCTION(LUA, FLEXRENDERER_BuildDiffuse, "BuildDiffuse");
 	ADD_FUNCTION(LUA, FLEXRENDERER_DrawDiffuse, "DrawDiffuse");
 	LUA->SetField(-2, "__index");

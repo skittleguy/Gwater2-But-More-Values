@@ -71,7 +71,7 @@ IMesh* build_mesh(int id, FlexRendererThreadData data) {
 		return mesh;
 	//} else {
 		//data.render_context->DestroyStaticMesh(mesh);
-		return nullptr;
+		//return nullptr;
 	//}
 }
 
@@ -113,7 +113,6 @@ void FlexRenderer::build_water(FlexSolver* flex, float radius) {
 
 	// Update time!!!
 	int max_meshes = min(ceil(max_particles / (float)MAX_PRIMATIVES), allocated);
-	std::vector<std::future<IMesh*>> queue;
 	for (int mesh_index = 0; mesh_index < max_meshes; mesh_index++) {
 		// update thread data
 		FlexRendererThreadData data;
@@ -125,12 +124,12 @@ void FlexRenderer::build_water(FlexSolver* flex, float radius) {
 		data.radius = radius;
 
 		// Launch thread
-		queue.push_back(threads->enqueue(build_mesh, mesh_index, data));
+		queue[mesh_index] = threads->enqueue(build_mesh, mesh_index, data);
 	}
 
-	for (int mesh_index = 0; mesh_index < max_meshes; mesh_index++) {
-		water[mesh_index] = queue.at(mesh_index).get();
-	}
+	//for (int mesh_index = 0; mesh_index < max_meshes; mesh_index++) {
+	//	water[mesh_index] = queue.at(mesh_index).get();
+	//}
 };
 
 void FlexRenderer::build_diffuse(FlexSolver* flex, float radius) {
@@ -141,13 +140,22 @@ void FlexRenderer::draw_diffuse() {
 	// IMPLEMENT ME!
 };
 
+void FlexRenderer::update_water() {
+	IMatRenderContext* render_context = materials->GetRenderContext();
+	for (int mesh = 0; mesh < allocated; mesh++) {
+		if (queue[mesh].valid()) {
+			if (water[mesh] != nullptr) render_context->DestroyStaticMesh(water[mesh]);
+			water[mesh] = queue[mesh].get();
+		}
+	}
+}
+
 void FlexRenderer::draw_water() {
+	IMatRenderContext* render_context = materials->GetRenderContext();
 	for (int mesh = 0; mesh < allocated; mesh++) {
 		if (water[mesh] == nullptr) continue;
 
 		water[mesh]->Draw();
-		//if (thread_status[mesh] != nullptr)
-		//if (thread_status[mesh] < 0) continue;	// mesh doesn't exist, bail
 	}
 };
 
@@ -155,18 +163,27 @@ void FlexRenderer::draw_water() {
 FlexRenderer::FlexRenderer(int max_meshes) {
 	allocated = max_meshes;
 
-	water = (IMesh**)malloc(sizeof(IMesh*) * allocated);
-	if (!water) return;	// out of ram?
-	for (int i = 0; i < allocated; ++i) water[i] = nullptr;
+	water = (IMesh**)calloc(sizeof(IMesh*), allocated);
+	if (!water) return;	// TODO: Fix undefined behavior if this statement runs
+
+	queue = (std::future<IMesh*>*)calloc(sizeof(std::future<IMesh*>), allocated);	// Needs to be zero initialized
+	if (!queue) return;	// out of ram?
 
 	threads = new ThreadPool(MAX_THREADS);
 };
 
 FlexRenderer::~FlexRenderer() {
 	if (water == nullptr) return;	// Never allocated (out of ram?)
-
+	
 	// Destroy existing meshes
 	destroy_water();
 
 	delete threads;
+
+	// Redestroy water that was being built in threads
+	update_water();
+	destroy_water();
+
+	free(water);
+	free(queue);
 };

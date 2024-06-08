@@ -34,8 +34,10 @@ public:
 	int allocated = 0;
 	ThreadPool* threads = nullptr;
 	IMesh** water = nullptr;	// water meshes used in rendering
+	std::future<IMesh*>* queue;
 
 	void destroy_water();
+	void update_water();
 	void build_water(FlexSolver* flex, float radius);
 	void build_diffuse(FlexSolver* flex, float radius);
 

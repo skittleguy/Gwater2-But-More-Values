@@ -74,7 +74,7 @@ include("gwater2_shaders.lua")
 
 gwater2 = {
 	solver = FlexSolver(100000),
-	renderer = FlexRenderer(5),
+	renderer = FlexRenderer(50),
 	new_ticker = true,
 	material = Material("gwater2/finalpass"),--Material("vgui/circle"),--Material("sprites/sent_ball"),
 	update_meshes = function(index, id, rep)
@@ -163,6 +163,9 @@ end)
 timer.Create("gwater2_tick", limit_fps, 0, function()
 	if !gwater2.new_ticker then return end
 	gwater_tick2()
+	cam.Start3D()
+	gwater2.renderer:BuildWater(gwater2.solver, gwater2.solver:GetParameter("radius") * 0.5)
+	cam.End3D()
 end)
 gwater2.reset_solver()
 hook.Add("InitPostEntity", "gwater2_addprop", gwater2.reset_solver)
