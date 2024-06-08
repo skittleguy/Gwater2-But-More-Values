@@ -10,8 +10,6 @@
 #define MAX_PRIMATIVES 21845
 #define SQRT3 1.73205081
 
-std::mutex MUTEX;
-
 enum ThreadStatus {
 	MESH_NONE = -2,
 	MESH_NONE_BUILDING = -1,
@@ -41,10 +39,10 @@ private:
 
 public:
 	int allocated = 0;
-	IMesh** water;	// water meshes used in rendering
-	std::thread** threads;	// actual thread objects
-	ThreadStatus* thread_status;	// status of threads
-	FlexRendererThreadData* thread_data;	// data passed to threads
+	IMesh** water = nullptr;	// water meshes used in rendering
+	std::thread** threads = nullptr;	// actual thread objects
+	ThreadStatus* thread_status = nullptr;	// status of threads
+	FlexRendererThreadData* thread_data = nullptr;	// data passed to threads
 
 	void build_water(FlexSolver* flex, float radius);
 	void build_diffuse(FlexSolver* flex, float radius);

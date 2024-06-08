@@ -536,8 +536,9 @@ LUA_FUNCTION(FLEXRENDERER_GarbageCollect) {
 // Builds water particles to IMesh* structs
 LUA_FUNCTION(FLEXRENDERER_BuildWater) {
 	LUA->CheckType(1, FLEXRENDERER_METATABLE);
-	LUA->CheckNumber(2);
-	GET_FLEXRENDERER(1)->build_water(LUA->GetNumber(2));
+	LUA->CheckType(2, FLEXSOLVER_METATABLE);
+	LUA->CheckNumber(3);
+	GET_FLEXRENDERER(1)->build_water(GET_FLEXSOLVER(2), LUA->GetNumber(3));
 
 	return 0;
 }
@@ -553,8 +554,9 @@ LUA_FUNCTION(FLEXRENDERER_DrawWater) {
 // Builds diffuse particles to IMesh* structs
 LUA_FUNCTION(FLEXRENDERER_BuildDiffuse) {
 	LUA->CheckType(1, FLEXRENDERER_METATABLE);
-	LUA->CheckNumber(2);
-	GET_FLEXRENDERER(1)->build_diffuse(LUA->GetNumber(2));
+	LUA->CheckType(2, FLEXSOLVER_METATABLE);
+	LUA->CheckNumber(3);
+	GET_FLEXRENDERER(1)->build_diffuse(GET_FLEXSOLVER(2), LUA->GetNumber(3));
 
 	return 0;
 }
@@ -602,9 +604,8 @@ LUA_FUNCTION(NewFlexSolver) {
 }
 
 LUA_FUNCTION(NewFlexRenderer) {
-	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-
-	FlexRenderer* flex_renderer = new FlexRenderer(GET_FLEXSOLVER(1));
+	LUA->CheckNumber(1);
+	FlexRenderer* flex_renderer = new FlexRenderer(LUA->GetNumber(1));
 	LUA->PushUserType(flex_renderer, FLEXRENDERER_METATABLE);
 	LUA->PushMetaTable(FLEXRENDERER_METATABLE);
 	LUA->SetMetaTable(-2);
