@@ -82,20 +82,19 @@ void FlexRenderer::destroy_water() {
 		if (water[mesh] == nullptr) continue;
 
 		render_context->DestroyStaticMesh(water[mesh]);
+		water[mesh] = nullptr;
 	}
 }
 
 // lord have mercy brothers
 void FlexRenderer::build_water(FlexSolver* flex, float radius) {
 	// Clear previous imeshes since they are being rebuilt
-	IMatRenderContext* render_context = materials->GetRenderContext();
-	for (int mesh_index = 0; mesh_index < allocated; mesh_index++) {
-		if (water[mesh_index] == nullptr) continue;
-		render_context->DestroyStaticMesh(water[mesh_index]);
-	}
+	destroy_water();
 	
 	int max_particles = flex->get_active_particles();
 	if (max_particles == 0) return;
+
+	IMatRenderContext* render_context = materials->GetRenderContext();
 
 	// View matrix, used in frustrum culling
 	VMatrix view_matrix, projection_matrix, view_projection_matrix;
@@ -144,7 +143,10 @@ void FlexRenderer::draw_diffuse() {
 
 void FlexRenderer::draw_water() {
 	for (int mesh = 0; mesh < allocated; mesh++) {
-		if (water[mesh] != nullptr) water[mesh]->Draw();
+		if (water[mesh] == nullptr) continue;
+
+		Msg("Drawing Mesh %i\n", mesh);
+		water[mesh]->Draw();
 		//if (thread_status[mesh] != nullptr)
 		//if (thread_status[mesh] < 0) continue;	// mesh doesn't exist, bail
 	}
