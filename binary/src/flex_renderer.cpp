@@ -33,37 +33,34 @@ IMesh* build_mesh(int id, FlexRendererThreadData data) {
 		Vector up = right.Cross(forward);
 		Vector local_pos[3] = { (-up - right * SQRT3), up * 2.0, (-up + right * SQRT3) };
 
-#if 0
-		//if (particle_ani) {
-		Vector4D ani1 = particle_ani1[particle_index];
-		Vector4D ani2 = particle_ani2[particle_index];
-		Vector4D ani3 = particle_ani3[particle_index];
 
-		for (int i = 0; i < 3; i++) {
-			// Anisotropy warping (code provided by Spanky)
-			Vector pos_ani = local_pos[i];
-			pos_ani = pos_ani + ani1.AsVector3D() * (local_pos[i].Dot(ani1.AsVector3D()) * ani1.w);
-			pos_ani = pos_ani + ani2.AsVector3D() * (local_pos[i].Dot(ani2.AsVector3D()) * ani2.w);
-			pos_ani = pos_ani + ani3.AsVector3D() * (local_pos[i].Dot(ani3.AsVector3D()) * ani3.w);
+		if (data.particle_ani) {
+			Vector4D ani1 = data.particle_ani0[particle_index];
+			Vector4D ani2 = data.particle_ani1[particle_index];
+			Vector4D ani3 = data.particle_ani2[particle_index];
 
-			Vector world_pos = particle_pos + pos_ani;
-			mesh_builder.TexCoord2f(0, u[i], v[i]);
-			mesh_builder.Position3f(world_pos.x, world_pos.y, world_pos.z);
-			mesh_builder.Normal3f(-forward.x, -forward.y, -forward.z);
-			mesh_builder.AdvanceVertex();
+			for (int i = 0; i < 3; i++) {
+				// Anisotropy warping (code provided by Spanky)
+				Vector pos_ani = local_pos[i];
+				pos_ani = pos_ani + ani1.AsVector3D() * (local_pos[i].Dot(ani1.AsVector3D()) * ani1.w);
+				pos_ani = pos_ani + ani2.AsVector3D() * (local_pos[i].Dot(ani2.AsVector3D()) * ani2.w);
+				pos_ani = pos_ani + ani3.AsVector3D() * (local_pos[i].Dot(ani3.AsVector3D()) * ani3.w);
+
+				Vector world_pos = particle_pos + pos_ani;
+				mesh_builder.TexCoord2f(0, u[i], v[i]);
+				mesh_builder.Position3f(world_pos.x, world_pos.y, world_pos.z);
+				mesh_builder.Normal3f(-forward.x, -forward.y, -forward.z);
+				mesh_builder.AdvanceVertex();
+			}
+		} else {
+			for (int i = 0; i < 3; i++) { // Same as above w/o anisotropy warping
+				Vector world_pos = particle_pos + local_pos[i] * data.radius;
+				mesh_builder.TexCoord2f(0, u[i], v[i]);
+				mesh_builder.Position3f(world_pos.x, world_pos.y, world_pos.z);
+				mesh_builder.Normal3f(-forward.x, -forward.y, -forward.z);
+				mesh_builder.AdvanceVertex();
+			}
 		}
-	}
-	//else {
-#else
-		for (int i = 0; i < 3; i++) { // Same as above w/o anisotropy warping
-			Vector world_pos = particle_pos + local_pos[i] * data.radius;
-			mesh_builder.TexCoord2f(0, u[i], v[i]);
-			mesh_builder.Position3f(world_pos.x, world_pos.y, world_pos.z);
-			mesh_builder.Normal3f(-forward.x, -forward.y, -forward.z);
-			mesh_builder.AdvanceVertex();
-		}
-#endif
-		//}
 	}
 	mesh_builder.End();
 
@@ -109,7 +106,7 @@ void FlexRenderer::build_water(FlexSolver* flex, float radius) {
 	Vector4D* particle_ani0 = (Vector4D*)flex->get_host("particle_ani1");
 	Vector4D* particle_ani1 = (Vector4D*)flex->get_host("particle_ani2");
 	Vector4D* particle_ani2 = (Vector4D*)flex->get_host("particle_ani3");
-	bool particle_ani = flex->get_parameter("anisotropy_scale") != 0;
+	bool particle_ani = flex->get_parameter("anisotropy_scale") != 0;	// Should we do anisotropy calculations?
 
 	// Update time!!!
 	int max_meshes = min(ceil(max_particles / (float)MAX_PRIMATIVES), allocated);
@@ -121,6 +118,10 @@ void FlexRenderer::build_water(FlexSolver* flex, float radius) {
 		data.particle_positions = particle_positions;
 		data.max_particles = max_particles;
 		data.radius = radius;
+		data.particle_ani = particle_ani;
+		data.particle_ani0 = particle_ani0;
+		data.particle_ani1 = particle_ani1;
+		data.particle_ani2 = particle_ani2;
 
 		// Launch thread
 		queue[mesh_index] = threads->enqueue(build_mesh, mesh_index, data);

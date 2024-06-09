@@ -36,12 +36,14 @@ bool inject_shaders() {
 	s_ShaderSystem = (CShaderSystem*)g_pSLShaderSystem;
 
 	// Create new shader directory (dll)
-	//m_ShaderDLLs_index = g_pCShaderSystem->m_ShaderDLLs.AddToTail();	// adding more than 8 TOTAL shader dlls crashes the game!!!
-	//shaderlibdll = &cshadersystem->m_ShaderDLLs[m_ShaderDLLs_index];
+	//m_ShaderDLLs_index = s_ShaderSystem->m_ShaderDLLs.AddToTail();	// adding more than 8 TOTAL shader dlls crashes the game!!!
+	//shaderlibdll = &s_ShaderSystem->m_ShaderDLLs[m_ShaderDLLs_index];
 
 	// if the above code is uncommented, m_ShaderDLLs_index ends up being equal to 7 (I think the maximum allowed number of shader directories)
 	// im not sure what indexes 0-6 actually mean in terms of the gmod source code but ive found injecting into 0 tends to be the most stable
 	// in theory you could have an unlimited amount of shaders on this index, you just need to make sure to remove them on module unload
+	//s_ShaderSystem->m_ShaderDLLs.Remove(0);
+	//s_ShaderSystem->m_ShaderDLLs.AddToHead();
 	shaderlibdll = &s_ShaderSystem->m_ShaderDLLs[0];
 
 	//shaderlibdll->m_pFileName = strdup("gwater_shaders.dll");	// name likely doesnt matter
@@ -65,9 +67,10 @@ bool eject_shaders() {
 		shaderlibdll->m_ShaderDict.Remove("GWaterSmooth");
 		shaderlibdll->m_ShaderDict.Remove("GWaterVolumetric");
 		shaderlibdll->m_ShaderDict.Remove("GWaterFinalpass");
+		//shaderlibdll->m_ShaderDict.PurgeAndDeleteElements();
 
 		// Remove our added shader directory (dll?) in material system
-		//cshadersystem->m_ShaderDLLs.Remove(m_ShaderDLLs_index);
+		//s_ShaderSystem->m_ShaderDLLs.Remove(0);
 
 		return true;
 	}

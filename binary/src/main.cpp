@@ -648,6 +648,11 @@ LUA_FUNCTION(NewRenderer) {
 	return 0;
 }
 
+LUA_FUNCTION(EjectShaders) {
+	LUA->PushBool(eject_shaders());
+	return 1;
+}
+
 // `mat_antialias 0` but shit
 /*LUA_FUNCTION(SetMSAAEnabled) {
 	MaterialSystem_Config_t config = materials->GetCurrentConfigForVideoCard();
@@ -742,6 +747,7 @@ GMOD_MODULE_OPEN() {
 	ADD_FUNCTION(LUA, NewFlexSolver, "FlexSolver");
 	ADD_FUNCTION(LUA, NewFlexRenderer, "FlexRenderer");
 	ADD_FUNCTION(LUA, NewRenderer, "NewRenderer");
+	ADD_FUNCTION(LUA, EjectShaders, "EjectShaders");
 	LUA->Pop();
 
 	// Get serverside physics objects from client DLL. Since server.dll exists in memory, we can find it and avoid networking.

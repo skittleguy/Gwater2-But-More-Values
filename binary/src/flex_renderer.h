@@ -17,10 +17,10 @@ struct FlexRendererThreadData {
 	Vector eye_pos;
 	VMatrix view_projection_matrix;
 	Vector4D* particle_positions;
-	//Vector4D* particle_ani0;
-	//Vector4D* particle_ani1;
-	//Vector4D* particle_ani2;
-	//bool particle_ani;
+	Vector4D* particle_ani0;
+	Vector4D* particle_ani1;
+	Vector4D* particle_ani2;
+	bool particle_ani;
 	int max_particles;
 	float radius;
 };
