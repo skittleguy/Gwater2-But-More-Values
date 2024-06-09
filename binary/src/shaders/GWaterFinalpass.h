@@ -48,14 +48,11 @@ SHADER_DRAW {
 			pShaderShadow->EnableSRGBRead(SHADER_SAMPLER2, true);	// Doesn't seem to do anything?
 		}
 		pShaderShadow->EnableTexture(SHADER_SAMPLER3, true);	// Depth
-		pShaderShadow->EnableTexture(SHADER_SAMPLER5, true);	// RandomRotationSampler (used in pixel shader)
+		pShaderShadow->EnableTexture(SHADER_SAMPLER5, true);	// RandomRotationSampler (used in pixel shader) 
 
-		// Always enable...will bind white if nothing specified...
-		pShaderShadow->EnableTexture(SHADER_SAMPLER0, true);		// Base (albedo) map
-		pShaderShadow->EnableSRGBRead(SHADER_SAMPLER0, true);
-
+		bool bHasFlashlight = UsingFlashlight(params);
 		int nShadowFilterMode = 0;
-		if (true)
+		if (bHasFlashlight)
 		{
 			pShaderShadow->EnableTexture(SHADER_SAMPLER4, true);	// Shadow depth map
 			pShaderShadow->SetShadowDepthFiltering(SHADER_SAMPLER4);
@@ -71,6 +68,7 @@ SHADER_DRAW {
 
 		DECLARE_STATIC_PIXEL_SHADER(GWaterFinalpass_ps30);
 		SET_STATIC_PIXEL_SHADER_COMBO(FLASHLIGHTDEPTHFILTERMODE, nShadowFilterMode);
+		SET_STATIC_PIXEL_SHADER_COMBO(FLASHLIGHT, bHasFlashlight);
 		SET_STATIC_PIXEL_SHADER(GWaterFinalpass_ps30);
 	}
 

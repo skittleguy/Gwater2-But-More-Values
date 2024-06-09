@@ -18,11 +18,22 @@
 #include "shaderlib/cshader.h"
 class GWaterFinalpass_ps30_Static_Index
 {
+	unsigned int m_nFLASHLIGHT : 2;
 	unsigned int m_nFLASHLIGHTDEPTHFILTERMODE : 2;
 #ifdef _DEBUG
+	bool m_bFLASHLIGHT : 1;
 	bool m_bFLASHLIGHTDEPTHFILTERMODE : 1;
 #endif	// _DEBUG
 public:
+	void SetFLASHLIGHT( int i )
+	{
+		Assert( i >= 0 && i <= 1 );
+		m_nFLASHLIGHT = i;
+#ifdef _DEBUG
+		m_bFLASHLIGHT = true;
+#endif	// _DEBUG
+	}
+
 	void SetFLASHLIGHTDEPTHFILTERMODE( int i )
 	{
 		Assert( i >= 0 && i <= 2 );
@@ -34,30 +45,33 @@ public:
 
 	GWaterFinalpass_ps30_Static_Index()
 	{
+		m_nFLASHLIGHT = 0;
 		m_nFLASHLIGHTDEPTHFILTERMODE = 0;
 #ifdef _DEBUG
+		m_bFLASHLIGHT = false;
 		m_bFLASHLIGHTDEPTHFILTERMODE = false;
 #endif	// _DEBUG
 	}
 
 	int GetIndex() const
 	{
-		Assert( m_bFLASHLIGHTDEPTHFILTERMODE );
-		return ( 20 * m_nFLASHLIGHTDEPTHFILTERMODE ) + 0;
+		Assert( m_bFLASHLIGHT && m_bFLASHLIGHTDEPTHFILTERMODE );
+		return ( 40 * m_nFLASHLIGHT ) + ( 80 * m_nFLASHLIGHTDEPTHFILTERMODE ) + 0;
 	}
 };
 
-#define shaderStaticTest_GWaterFinalpass_ps30 psh_forgot_to_set_static_FLASHLIGHTDEPTHFILTERMODE
+#define shaderStaticTest_GWaterFinalpass_ps30 psh_forgot_to_set_static_FLASHLIGHT + psh_forgot_to_set_static_FLASHLIGHTDEPTHFILTERMODE
 
 
 class GWaterFinalpass_ps30_Dynamic_Index
 {
 	unsigned int m_nOPAQUE : 2;
 	unsigned int m_nNUM_LIGHTS : 3;
-	unsigned int m_nFLASHLIGHTSHADOWS : 2;
+	unsigned int m_nFLASHLIGHTSHADOWS : 2; 
 #ifdef _DEBUG
 	bool m_bOPAQUE : 1;
 	bool m_bNUM_LIGHTS : 1;
+	bool m_bFLASHLIGHTSHADOWS : 1;
 	bool m_bFLASHLIGHTSHADOWS : 1;
 #endif	// _DEBUG
 public:
@@ -86,26 +100,28 @@ public:
 #ifdef _DEBUG
 		m_bFLASHLIGHTSHADOWS = true;
 #endif	// _DEBUG
-	}
+	} 
 
 	GWaterFinalpass_ps30_Dynamic_Index()
 	{
 		m_nOPAQUE = 0;
 		m_nNUM_LIGHTS = 0;
 		m_nFLASHLIGHTSHADOWS = 0;
+		m_nFLASHLIGHTSHADOWS = 0;
 #ifdef _DEBUG
 		m_bOPAQUE = false;
 		m_bNUM_LIGHTS = false;
+		m_bFLASHLIGHTSHADOWS = false;
 		m_bFLASHLIGHTSHADOWS = false;
 #endif	// _DEBUG
 	}
 
 	int GetIndex() const
 	{
-		Assert( m_bOPAQUE && m_bNUM_LIGHTS && m_bFLASHLIGHTSHADOWS );
-		return ( 1 * m_nOPAQUE ) + ( 2 * m_nNUM_LIGHTS ) + ( 10 * m_nFLASHLIGHTSHADOWS ) + 0;
+		Assert( m_bOPAQUE && m_bNUM_LIGHTS && m_bFLASHLIGHTSHADOWS && m_bFLASHLIGHTSHADOWS );
+		return ( 1 * m_nOPAQUE ) + ( 2 * m_nNUM_LIGHTS ) + ( 10 * m_nFLASHLIGHTSHADOWS ) + ( 20 * m_nFLASHLIGHTSHADOWS ) + 0;
 	}
 };
 
-#define shaderDynamicTest_GWaterFinalpass_ps30 psh_forgot_to_set_dynamic_OPAQUE + psh_forgot_to_set_dynamic_NUM_LIGHTS + psh_forgot_to_set_dynamic_FLASHLIGHTSHADOWS
+#define shaderDynamicTest_GWaterFinalpass_ps30 psh_forgot_to_set_dynamic_OPAQUE + psh_forgot_to_set_dynamic_NUM_LIGHTS + psh_forgot_to_set_dynamic_FLASHLIGHTSHADOWS + psh_forgot_to_set_dynamic_FLASHLIGHTSHADOWS
 

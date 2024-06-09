@@ -1,8 +1,9 @@
 // DYNAMIC: "OPAQUE" "0..1"
 // DYNAMIC: "NUM_LIGHTS"				"0..4"
+// STATIC: "FLASHLIGHT"					"0..1"
 // STATIC: "FLASHLIGHTDEPTHFILTERMODE"	"0..2"
 
-// DYNAMIC: "FLASHLIGHTSHADOWS"			"0..1"
+// DYNAMIC: "FLASHLIGHTSHADOWS"			"0..1" 
 
 #include "common_flashlight_fxc.h"
 #include "shader_constant_register_map.h" 
@@ -33,7 +34,7 @@ struct PS_INPUT {
 	float3 view_dir		: TEXCOORD1;
 	float3 pos			: TEXCOORD2;
 	float4x4 proj		: TEXCOORD3; 
-	float4 lightAtten	: TEXCOORD7; // Scalar light attenuation factors for FOUR lights
+	float4 lightAtten	: TEXCOORD8; // Scalar light attenuation factors for FOUR lights
 };
 
 #define OFFSET float2(0.5, 0.5)
@@ -92,33 +93,40 @@ float4 main(const PS_INPUT i) : COLOR {
 
 	float SpecularExponent = 80;
 
-	//float4 lightAtten = float4(1,1,1,1);
-	// Local lights
-	float3 rimLightingLL;
-    float3 specularLightingLL;
-	PixelShaderDoSpecularLighting( i.pos, smoothed_normal,
-				SpecularExponent, i.view_dir * -1, i.lightAtten,
-				NUM_LIGHTS, cLightInfo, false, 0, false, NULL, fresnel, false, 1,
 
-				// Outputs
-				specularLightingLL, rimLightingLL );
 
-	specularLighting += specularLightingLL;
+	if (FLASHLIGHT)
+	{
+		// Flashlight lighting
+		float3 diffuseLightingFL;
+		float3 specularLightingFL;
+		float4 flashlightSpacePosition = mul( float4( i.pos, 1.0f ), g_FlashlightWorldToTexture );	
+		DoSpecularFlashlight( g_FlashlightPos, i.pos, flashlightSpacePosition, smoothed_normal, 	
+					g_FlashlightAttenuationFactors.xyz, g_FlashlightAttenuationFactors.w,
+					FlashlightSampler, ShadowDepthSampler, NormalizeRandRotSampler, FLASHLIGHTDEPTHFILTERMODE, FLASHLIGHTSHADOWS, true, projPos,
+					SpecularExponent, i.view_dir * -1, false, NULL, fresnel, float4(3/1024.0f, 0.0005f, 0.0f, 0.0f),
 
-	// Flashlight lighting
-	float3 diffuseLightingFL;
-    float3 specularLightingFL;
-	float4 flashlightSpacePosition = mul( float4( i.pos, 1.0f ), g_FlashlightWorldToTexture );	
-	DoSpecularFlashlight( g_FlashlightPos, i.pos, flashlightSpacePosition, smoothed_normal, 	
-				g_FlashlightAttenuationFactors.xyz, g_FlashlightAttenuationFactors.w,
-				FlashlightSampler, ShadowDepthSampler, NormalizeRandRotSampler, FLASHLIGHTDEPTHFILTERMODE, FLASHLIGHTSHADOWS, true, projPos,
-				SpecularExponent, i.view_dir * -1, false, NULL, fresnel, float4(3/1024.0f, 0.0005f, 0.0f, 0.0f),
+					// These two values are output
+					diffuseLightingFL, specularLightingFL );
 
-				// These two values are output
-				diffuseLightingFL, specularLightingFL );
+		diffuseLighting += diffuseLightingFL;
+		specularLighting += specularLightingFL;
+	} 
+	else 
+	{
+		//float4 lightAtten = float4(1,1,1,1);
+		// Local lights
+		float3 rimLightingLL;
+		float3 specularLightingLL;
+		PixelShaderDoSpecularLighting( i.pos, smoothed_normal,
+					SpecularExponent, i.view_dir * -1, i.lightAtten,
+					NUM_LIGHTS, cLightInfo, false, 0, false, NULL, fresnel, false, 1,
 
-	diffuseLighting += diffuseLightingFL;
-	specularLighting += specularLightingFL;
+					// Outputs
+					specularLightingLL, rimLightingLL );
+
+		specularLighting += specularLightingLL;
+	}
 
 	// Primary lighting calculations
 	float3 reflected = reflect(i.view_dir, smoothed_normal);

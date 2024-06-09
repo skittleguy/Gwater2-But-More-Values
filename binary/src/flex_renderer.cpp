@@ -56,14 +56,10 @@ void FlexRenderer::build_water(FlexSolver* solver, float radius) {
 		IMesh* imesh = render_context->CreateStaticMesh(VERTEX_POSITION | VERTEX_NORMAL | VERTEX_TEXCOORD0_2D, "");
 		mesh_builder.Begin(imesh, MATERIAL_TRIANGLES, MAX_PRIMATIVES);
 			for (int primative = 0; primative < MAX_PRIMATIVES && particle_index < max_particles; particle_index++) {
+				
+				
+				
 				Vector particle_pos = particle_positions[particle_index].AsVector3D();
-
-				// Frustrum culling
-				Vector4D dst;
-				Vector4DMultiply(view_projection_matrix, Vector4D(particle_pos.x, particle_pos.y, particle_pos.z, 1), dst);
-				if (dst.z < 0 || -dst.x - dst.w > 0 || dst.x - dst.w > 0 || -dst.y - dst.w > 0 || dst.y - dst.w > 0) {
-					continue;
-				}
 
 				// calculate triangle rotation
 				//Vector forward = (eye_pos - particle_pos).Normalized();
@@ -71,6 +67,24 @@ void FlexRenderer::build_water(FlexSolver* solver, float radius) {
 				Vector right = forward.Cross(Vector(0, 0, 1)).Normalized();
 				Vector up = right.Cross(forward);
 				Vector local_pos[3] = { (-up - right * SQRT3), up * 2.0, (-up + right * SQRT3) };
+
+				if (primative == 0) {
+					for (int i = 0; i < 3; i++) {
+						Vector world_pos = (eye_pos + forward*-32) + local_pos[i];
+						mesh_builder.TexCoord2f(0, u[i], v[i]);
+						mesh_builder.Position3f(world_pos.x, world_pos.y, world_pos.z);
+						mesh_builder.Normal3f(-forward.x, -forward.y, -forward.z);
+						mesh_builder.AdvanceVertex();
+					}
+					primative++;
+				}
+
+				// Frustrum culling
+				Vector4D dst;
+				Vector4DMultiply(view_projection_matrix, Vector4D(particle_pos.x, particle_pos.y, particle_pos.z, 1), dst);
+				if (dst.z < 0 || -dst.x - dst.w > 0 || dst.x - dst.w > 0 || -dst.y - dst.w > 0 || dst.y - dst.w > 0) {
+					continue;
+				}
 
 				if (particle_ani) {
 					Vector4D ani1 = particle_ani1[particle_index];
@@ -157,6 +171,7 @@ void FlexRenderer::build_diffuse(FlexSolver* solver, float radius) {
 		for (int primative = 0; primative < MAX_PRIMATIVES && particle_index < max_particles; particle_index++) {
 			Vector particle_pos = particle_positions[particle_index].AsVector3D();
 
+			
 			// Frustrum culling
 			Vector4D dst;
 			Vector4DMultiply(view_projection_matrix, Vector4D(particle_pos.x, particle_pos.y, particle_pos.z, 1), dst);
