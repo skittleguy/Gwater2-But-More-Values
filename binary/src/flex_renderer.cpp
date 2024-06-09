@@ -151,6 +151,8 @@ void FlexRenderer::update_water() {
 }
 
 void FlexRenderer::draw_water() {
+	update_water();	// Update status of water meshes
+
 	IMatRenderContext* render_context = materials->GetRenderContext();
 	for (int mesh = 0; mesh < allocated; mesh++) {
 		if (water[mesh] == nullptr) continue;
