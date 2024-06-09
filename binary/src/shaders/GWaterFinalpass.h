@@ -53,7 +53,8 @@ SHADER_DRAW {
 		// Always enable...will bind white if nothing specified...
 		pShaderShadow->EnableTexture(SHADER_SAMPLER0, true);		// Base (albedo) map
 		pShaderShadow->EnableSRGBRead(SHADER_SAMPLER0, true);
-		 
+
+		int nShadowFilterMode = 0;
 		if (true)
 		{
 			pShaderShadow->EnableTexture(SHADER_SAMPLER4, true);	// Shadow depth map
@@ -62,12 +63,14 @@ SHADER_DRAW {
 			pShaderShadow->EnableTexture(SHADER_SAMPLER5, true);	// Noise map
 			pShaderShadow->EnableTexture(SHADER_SAMPLER6, true);	// Flashlight cookie
 			pShaderShadow->EnableSRGBRead(SHADER_SAMPLER6, true); 
+			nShadowFilterMode = g_pHardwareConfig->GetShadowFilterMode();
 		} 
 		
 		DECLARE_STATIC_VERTEX_SHADER(GWaterFinalpass_vs30);
 		SET_STATIC_VERTEX_SHADER(GWaterFinalpass_vs30);
 
 		DECLARE_STATIC_PIXEL_SHADER(GWaterFinalpass_ps30);
+		SET_STATIC_PIXEL_SHADER_COMBO(FLASHLIGHTDEPTHFILTERMODE, nShadowFilterMode);
 		SET_STATIC_PIXEL_SHADER(GWaterFinalpass_ps30);
 	}
 
@@ -81,8 +84,10 @@ SHADER_DRAW {
 		const float* color2 = params[COLOR2]->GetVecValue();
 		const float color2_normalized[4] = { color2[0] / 255.0, color2[1] / 255.0, color2[2] / 255.0, color2[3] / 255.0 };
 
+		bool bHasFlashlight = UsingFlashlight(params);
+		LightState_t lightState = { 0, false, false };
 		bool bFlashlightShadows = false;
-		if (true) {
+		if (bHasFlashlight) {
 			//Assert(info.m_nFlashlightTexture >= 0 && info.m_nFlashlightTextureFrame >= 0);
 			BindTexture(SHADER_SAMPLER6, FLASHLIGHTTEXTURE, FLASHLIGHTTEXTUREFRAME);
 			VMatrix worldToTexture;
@@ -97,6 +102,9 @@ SHADER_DRAW {
 				BindTexture(SHADER_SAMPLER4, pFlashlightDepthTexture, 0);
 				pShaderAPI->BindStandardTexture(SHADER_SAMPLER5, TEXTURE_SHADOW_NOISE_2D);
 			}
+		}
+		else {
+			pShaderAPI->GetDX9LightState(&lightState);
 		}
 
 		pShaderAPI->SetPixelShaderConstant(0, scr_s);
@@ -127,14 +135,20 @@ SHADER_DRAW {
 		BindTexture(SHADER_SAMPLER2, ENVMAP);
 		BindTexture(SHADER_SAMPLER3, DEPTHTEXTURE);
 		
+		//	pShaderAPI->SetPixelShaderStateAmbientLightCube( PSREG_AMBIENT_CUBE, !lightState.m_bAmbientLight );	// Force to black if not bAmbientLight
+		pShaderAPI->CommitPixelShaderLighting( PSREG_LIGHT_INFO_ARRAY );
+
 		DECLARE_DYNAMIC_VERTEX_SHADER(GWaterFinalpass_vs30);
+		SET_DYNAMIC_VERTEX_SHADER_COMBO(NUM_LIGHTS, lightState.m_nNumLights);
 		SET_DYNAMIC_VERTEX_SHADER(GWaterFinalpass_vs30);
 
 		DECLARE_DYNAMIC_PIXEL_SHADER(GWaterFinalpass_ps30);
+		SET_DYNAMIC_PIXEL_SHADER_COMBO(NUM_LIGHTS, lightState.m_nNumLights);
+		SET_DYNAMIC_PIXEL_SHADER_COMBO(FLASHLIGHTSHADOWS, bFlashlightShadows);
 		SET_DYNAMIC_PIXEL_SHADER_COMBO(OPAQUE, color2[3] > 254);
 		SET_DYNAMIC_PIXEL_SHADER(GWaterFinalpass_ps30);
 
-		if (true)//bHasFlashlight)
+		if (bHasFlashlight)//bHasFlashlight)
 		{
 			VMatrix worldToTexture;
 			float atten[4], pos[4], tweaks[4];
