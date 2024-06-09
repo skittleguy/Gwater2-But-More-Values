@@ -177,7 +177,6 @@ FlexRenderer::~FlexRenderer() {
 	if (water == nullptr) return;	// Never allocated (out of ram?)
 
 	//if (materials->GetRenderContext() == nullptr) return;	// wtf?
-	
 	// Destroy existing meshes
 	destroy_water();
 	
