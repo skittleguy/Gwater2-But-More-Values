@@ -12,7 +12,7 @@ IMesh* build_mesh(int id, FlexRendererThreadData data) {
 	int start = id * MAX_PRIMATIVES;
 	int end = min((id + 1) * MAX_PRIMATIVES, data.max_particles);
 
-	IMesh* mesh = data.render_context->CreateStaticMesh(VERTEX_POSITION | VERTEX_NORMAL | VERTEX_TEXCOORD0_2D, "");
+	IMesh* mesh = materials->GetRenderContext()->CreateStaticMesh(VERTEX_POSITION | VERTEX_NORMAL | VERTEX_TEXCOORD0_2D, "");
 
 	CMeshBuilder mesh_builder;
 	mesh_builder.Begin(mesh, MATERIAL_TRIANGLES, end - start);
@@ -65,14 +65,14 @@ IMesh* build_mesh(int id, FlexRendererThreadData data) {
 #endif
 		//}
 	}
-	mesh_builder.End();	// DONE. 
+	mesh_builder.End();
 
-	//if (mesh_builder.GetCurrentIndex() > 0) {
+	if (mesh_builder.GetCurrentIndex() > 0) {
 		return mesh;
-	//} else {
-		//data.render_context->DestroyStaticMesh(mesh);
-		//return nullptr;
-	//}
+	} else {
+		materials->GetRenderContext()->DestroyStaticMesh(mesh);	// THIS MAY CRASH
+		return nullptr;
+	}
 }
 
 // Destroys all meshes related to water
@@ -116,7 +116,6 @@ void FlexRenderer::build_water(FlexSolver* flex, float radius) {
 	for (int mesh_index = 0; mesh_index < max_meshes; mesh_index++) {
 		// update thread data
 		FlexRendererThreadData data;
-		data.render_context = render_context;
 		data.eye_pos = eye_pos;
 		data.view_projection_matrix = view_projection_matrix;
 		data.particle_positions = particle_positions;
@@ -176,15 +175,17 @@ FlexRenderer::FlexRenderer(int max_meshes) {
 
 FlexRenderer::~FlexRenderer() {
 	if (water == nullptr) return;	// Never allocated (out of ram?)
+
+	//if (materials->GetRenderContext() == nullptr) return;	// wtf?
 	
 	// Destroy existing meshes
 	destroy_water();
-
-	delete threads;
-
+	
 	// Redestroy water that was being built in threads
 	update_water();
 	destroy_water();
+
+	delete threads;
 
 	free(water);
 	free(queue);

@@ -14,7 +14,6 @@
 
 struct FlexRendererThreadData {
 	//IMesh*& water;
-	IMatRenderContext* render_context;
 	Vector eye_pos;
 	VMatrix view_projection_matrix;
 	Vector4D* particle_positions;
