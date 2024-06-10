@@ -61,23 +61,6 @@ void FlexRenderer::build_water(FlexSolver* solver, float radius) {
 				
 				Vector particle_pos = particle_positions[particle_index].AsVector3D();
 
-				// calculate triangle rotation
-				//Vector forward = (eye_pos - particle_pos).Normalized();
-				Vector forward = (particle_pos - eye_pos).Normalized();
-				Vector right = forward.Cross(Vector(0, 0, 1)).Normalized();
-				Vector up = right.Cross(forward);
-				Vector local_pos[3] = { (-up - right * SQRT3), up * 2.0, (-up + right * SQRT3) };
-
-				/*if (primative == 0) {
-					for (int i = 0; i < 3; i++) {
-						Vector world_pos = (eye_pos + forward*-32) + local_pos[i];
-						mesh_builder.TexCoord2f(0, u[i], v[i]);
-						mesh_builder.Position3f(world_pos.x, world_pos.y, world_pos.z);
-						mesh_builder.Normal3f(-forward.x, -forward.y, -forward.z);
-						mesh_builder.AdvanceVertex();
-					}
-					primative++;
-				}*/
 
 				// Frustrum culling
 				Vector4D dst;
@@ -85,6 +68,13 @@ void FlexRenderer::build_water(FlexSolver* solver, float radius) {
 				if (dst.z < 0 || -dst.x - dst.w > 0 || dst.x - dst.w > 0 || -dst.y - dst.w > 0 || dst.y - dst.w > 0) {
 					continue;
 				}
+
+				// calculate triangle rotation
+				//Vector forward = (eye_pos - particle_pos).Normalized();
+				Vector forward = (particle_pos - eye_pos).Normalized();
+				Vector right = forward.Cross(Vector(0, 0, 1)).Normalized();
+				Vector up = right.Cross(forward);
+				Vector local_pos[3] = { (-up - right * SQRT3), up * 2.0, (-up + right * SQRT3) };
 
 				if (particle_ani) {
 					Vector4D ani1 = particle_ani1[particle_index];
@@ -210,8 +200,6 @@ void FlexRenderer::draw_diffuse() {
 };
 
 void FlexRenderer::draw_water() {
-
-	IMatRenderContext* render_context = materials->GetRenderContext(); 
 
 	for (IMesh* mesh : water) {  
 		mesh->Draw();
