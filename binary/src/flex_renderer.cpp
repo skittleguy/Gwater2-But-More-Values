@@ -68,7 +68,7 @@ void FlexRenderer::build_water(FlexSolver* solver, float radius) {
 				Vector up = right.Cross(forward);
 				Vector local_pos[3] = { (-up - right * SQRT3), up * 2.0, (-up + right * SQRT3) };
 
-				if (primative == 0) {
+				/*if (primative == 0) {
 					for (int i = 0; i < 3; i++) {
 						Vector world_pos = (eye_pos + forward*-32) + local_pos[i];
 						mesh_builder.TexCoord2f(0, u[i], v[i]);
@@ -77,7 +77,7 @@ void FlexRenderer::build_water(FlexSolver* solver, float radius) {
 						mesh_builder.AdvanceVertex();
 					}
 					primative++;
-				}
+				}*/
 
 				// Frustrum culling
 				Vector4D dst;
@@ -203,20 +203,25 @@ void FlexRenderer::build_diffuse(FlexSolver* solver, float radius) {
 	}
 };
 
-void FlexRenderer::draw_diffuse() {
+void FlexRenderer::draw_diffuse() { 
 	for (IMesh* mesh : diffuse) { 
 		mesh->Draw();
 	}
 };
 
 void FlexRenderer::draw_water() {
-	for (IMesh* mesh : water) {
+
+	IMatRenderContext* render_context = materials->GetRenderContext(); 
+
+	for (IMesh* mesh : water) {  
 		mesh->Draw();
 	}
 };
 
 FlexRenderer::~FlexRenderer() {
 	IMatRenderContext* render_context = materials->GetRenderContext();
+
+
 	for (IMesh* mesh : water) {
 		render_context->DestroyStaticMesh(mesh);
 	}

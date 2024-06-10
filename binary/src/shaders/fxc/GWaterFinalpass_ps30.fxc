@@ -15,7 +15,7 @@ float REFLECTANCE 	: register(c3);
 float4 COLOR2		: register(c4); 
 PixelShaderLightInfo cLightInfo[3]			: register( PSREG_LIGHT_INFO_ARRAY );				// 2 registers each - 6 registers total (4th light spread across w's)
 
-// const float4 g_ShadowTweaks					: register( PSREG_ENVMAP_TINT__SHADOW_TWEAKS );
+const float4 g_ShadowTweaks					: register( c26 ); // PSREG_ENVMAP_TINT__SHADOW_TWEAKS is c2, we're using that already, so use c26 instead
 const float4 g_FlashlightAttenuationFactors	: register( PSREG_FLASHLIGHT_ATTENUATION );			// On non-flashlight pass
 const float4 g_FlashlightPos_RimBoost		: register( PSREG_FLASHLIGHT_POSITION_RIM_BOOST );
 const float4x4 g_FlashlightWorldToTexture	: register( PSREG_FLASHLIGHT_TO_WORLD_TEXTURE );
@@ -104,7 +104,7 @@ float4 main(const PS_INPUT i) : COLOR {
 		DoSpecularFlashlight( g_FlashlightPos, i.pos, flashlightSpacePosition, smoothed_normal, 	
 					g_FlashlightAttenuationFactors.xyz, g_FlashlightAttenuationFactors.w,
 					FlashlightSampler, ShadowDepthSampler, NormalizeRandRotSampler, FLASHLIGHTDEPTHFILTERMODE, FLASHLIGHTSHADOWS, true, projPos,
-					SpecularExponent, i.view_dir * -1, false, NULL, fresnel, float4(3/1024.0f, 0.0005f, 0.0f, 0.0f),
+					SpecularExponent, i.view_dir * -1, false, NULL, fresnel, g_ShadowTweaks,
 
 					// These two values are output
 					diffuseLightingFL, specularLightingFL );
@@ -112,7 +112,8 @@ float4 main(const PS_INPUT i) : COLOR {
 		diffuseLighting += diffuseLightingFL;
 		specularLighting += specularLightingFL;
 	} 
-	else 
+	
+	if (true)
 	{
 		//float4 lightAtten = float4(1,1,1,1);
 		// Local lights

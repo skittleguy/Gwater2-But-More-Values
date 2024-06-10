@@ -20,8 +20,10 @@ BEGIN_SHADER_PARAMS
 	SHADER_PARAM(FLASHLIGHTTEXTURE, SHADER_PARAM_TYPE_TEXTURE, "effects/flashlight001", "Flashlight")
 END_SHADER_PARAMS
 
-SHADER_INIT_PARAMS() {
-	
+SHADER_INIT_PARAMS() { 
+	SET_FLAGS2(MATERIAL_VAR2_LIGHTING_VERTEX_LIT); 
+	SET_FLAGS2(MATERIAL_VAR2_SUPPORTS_FLASHLIGHT);
+	SET_FLAGS2(MATERIAL_VAR2_USE_FLASHLIGHT); 
 }
 
 SHADER_INIT {
@@ -29,7 +31,11 @@ SHADER_INIT {
 	LoadTexture(SCREENTEXTURE);
 	LoadTexture(NORMALTEXTURE);
 	LoadTexture(DEPTHTEXTURE);
-	LoadTexture(FLASHLIGHTTEXTURE, TEXTUREFLAGS_SRGB);
+
+	if (FLASHLIGHTTEXTURE != -1)
+	{
+		LoadTexture(FLASHLIGHTTEXTURE, TEXTUREFLAGS_SRGB);
+	}
 }
 
 SHADER_FALLBACK{
@@ -50,7 +56,7 @@ SHADER_DRAW {
 		pShaderShadow->EnableTexture(SHADER_SAMPLER3, true);	// Depth
 		pShaderShadow->EnableTexture(SHADER_SAMPLER5, true);	// RandomRotationSampler (used in pixel shader) 
 
-		bool bHasFlashlight = UsingFlashlight(params);
+		bool bHasFlashlight = true;// UsingFlashlight(params);
 		int nShadowFilterMode = 0;
 		if (bHasFlashlight)
 		{
@@ -67,8 +73,8 @@ SHADER_DRAW {
 		SET_STATIC_VERTEX_SHADER(GWaterFinalpass_vs30);
 
 		DECLARE_STATIC_PIXEL_SHADER(GWaterFinalpass_ps30);
-		SET_STATIC_PIXEL_SHADER_COMBO(FLASHLIGHTDEPTHFILTERMODE, nShadowFilterMode);
 		SET_STATIC_PIXEL_SHADER_COMBO(FLASHLIGHT, bHasFlashlight);
+		SET_STATIC_PIXEL_SHADER_COMBO(FLASHLIGHTDEPTHFILTERMODE, nShadowFilterMode);
 		SET_STATIC_PIXEL_SHADER(GWaterFinalpass_ps30);
 	}
 
@@ -82,7 +88,7 @@ SHADER_DRAW {
 		const float* color2 = params[COLOR2]->GetVecValue();
 		const float color2_normalized[4] = { color2[0] / 255.0, color2[1] / 255.0, color2[2] / 255.0, color2[3] / 255.0 };
 
-		bool bHasFlashlight = UsingFlashlight(params);
+		bool bHasFlashlight = true;// UsingFlashlight(params);
 		LightState_t lightState = { 0, false, false };
 		bool bFlashlightShadows = false;
 		if (bHasFlashlight) {
@@ -101,9 +107,7 @@ SHADER_DRAW {
 				pShaderAPI->BindStandardTexture(SHADER_SAMPLER5, TEXTURE_SHADOW_NOISE_2D);
 			}
 		}
-		else {
-			pShaderAPI->GetDX9LightState(&lightState);
-		}
+		pShaderAPI->GetDX9LightState(&lightState); 
 
 		pShaderAPI->SetPixelShaderConstant(0, scr_s);
 		pShaderAPI->SetPixelShaderConstant(1, &radius);
@@ -126,14 +130,14 @@ SHADER_DRAW {
 			int x = i % 4;
 			int y = i / 4;
 			matrix[i] = inverseViewProjectionMatrix[y][x];
-		}*/
-
+		}*/ 
 		BindTexture(SHADER_SAMPLER0, NORMALTEXTURE);
 		BindTexture(SHADER_SAMPLER1, SCREENTEXTURE);
 		BindTexture(SHADER_SAMPLER2, ENVMAP);
 		BindTexture(SHADER_SAMPLER3, DEPTHTEXTURE);
 		
 		//	pShaderAPI->SetPixelShaderStateAmbientLightCube( PSREG_AMBIENT_CUBE, !lightState.m_bAmbientLight );	// Force to black if not bAmbientLight
+		
 		pShaderAPI->CommitPixelShaderLighting( PSREG_LIGHT_INFO_ARRAY );
 
 		DECLARE_DYNAMIC_VERTEX_SHADER(GWaterFinalpass_vs30);
@@ -172,8 +176,8 @@ SHADER_DRAW {
 			// Tweaks associated with a given flashlight
 			tweaks[0] = ShadowFilterFromState(flashlightState);
 			tweaks[1] = ShadowAttenFromState(flashlightState);
-			//HashShadow2DJitter(flashlightState.m_flShadowJitterSeed, &tweaks[2], &tweaks[3]);
-			pShaderAPI->SetPixelShaderConstant(PSREG_ENVMAP_TINT__SHADOW_TWEAKS, tweaks, 1);
+			HashShadow2DJitter(flashlightState.m_flShadowJitterSeed, &tweaks[2], &tweaks[3]);
+			pShaderAPI->SetPixelShaderConstant(26, tweaks, 1); // PSREG_ENVMAP_TINT__SHADOW_TWEAKS is c2, we're using that already for the cubemap, so use c26 instead.
 
 			// Dimensions of screen, used for screen-space noise map sampling
 			float vScreenScale[4] = { 1280.0f / 32.0f, 720.0f / 32.0f, 0, 0 };

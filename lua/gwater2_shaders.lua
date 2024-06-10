@@ -71,6 +71,9 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	-- Build imeshes for multiple passes
 	local up = EyeAngles():Up()
 	local right = EyeAngles():Right()
+	local forward = EyeAngles():Forward()
+	render.Model({model="models/extras/info_speech.mdl",pos=EyePos() + (EyeAngles():Forward() * -2),angle=EyeAngles()})
+	//render.SetLightingOrigin(EyePos() + (EyeAngles():Forward() * 128))
 	gwater2.renderer:BuildWater(gwater2.solver, radius * 0.5)
 	gwater2.renderer:BuildDiffuse(gwater2.solver, radius * 0.15)
 	--render.SetMaterial(Material("models/props_combine/combine_interface_disp"))
@@ -118,7 +121,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 		-- Blur X
 		--local scale = (5 - i) * 0.05
 		local scale = (0.25 / i) * blur_scale:GetFloat()
-		water_blur:SetTexture("$normaltexture", cache_normals)	
+		water_blur:SetTexture("$normaltexture", cache_normals)
 		water_blur:SetVector("$scrs", Vector(scale / scrw, 0))
 		render.PushRenderTarget(cache_bloom)	-- Bloom texture resolution is significantly lower than screen res, enabling for a faster blur
 		render.DrawScreenQuad()

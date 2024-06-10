@@ -21,14 +21,14 @@ public:
 
 class GWaterFinalpass_vs30_Dynamic_Index
 {
-	unsigned int m_nNUM_LIGHTS : 2;
+	unsigned int m_nNUM_LIGHTS : 3;
 #ifdef _DEBUG
 	bool m_bNUM_LIGHTS : 1;
 #endif	// _DEBUG
 public:
 	void SetNUM_LIGHTS( int i )
 	{
-		Assert( i >= 0 && i <= 2 );
+		Assert( i >= 0 && i <= 4 );
 		m_nNUM_LIGHTS = i;
 #ifdef _DEBUG
 		m_bNUM_LIGHTS = true;
