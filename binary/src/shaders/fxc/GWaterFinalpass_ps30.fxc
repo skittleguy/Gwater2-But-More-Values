@@ -12,13 +12,15 @@ float2 SCR_S		: register(c0);
 float RADIUS		: register(c1);
 float IOR 			: register(c2);
 float REFLECTANCE 	: register(c3);
-float4 COLOR2		: register(c4); 
-PixelShaderLightInfo cLightInfo[3]			: register( PSREG_LIGHT_INFO_ARRAY );				// 2 registers each - 6 registers total (4th light spread across w's)
+float4 COLOR2		: register(c12); 	
 
-const float4 g_ShadowTweaks					: register( c26 ); // PSREG_ENVMAP_TINT__SHADOW_TWEAKS is c2, we're using that already, so use c26 instead
-const float4 g_FlashlightAttenuationFactors	: register( PSREG_FLASHLIGHT_ATTENUATION );			// On non-flashlight pass
-const float4 g_FlashlightPos_RimBoost		: register( PSREG_FLASHLIGHT_POSITION_RIM_BOOST );
-const float4x4 g_FlashlightWorldToTexture	: register( PSREG_FLASHLIGHT_TO_WORLD_TEXTURE );
+PixelShaderLightInfo cLightInfo[3]			: register( PSREG_LIGHT_INFO_ARRAY ); // c20 - c25, 2 registers each - 6 registers total (4th light spread across w's)
+const float4 g_ShadowTweaks					: register( c26 ); // PSREG_ENVMAP_TINT__SHADOW_TWEAKS is supposed to be c2, we're using that already, so use c26 instead
+const float4 g_FlashlightAttenuationFactors	: register( PSREG_FLASHLIGHT_ATTENUATION );			// c13, On non-flashlight pass
+const float4 g_FlashlightPos_RimBoost		: register( PSREG_FLASHLIGHT_POSITION_RIM_BOOST ); // c14
+const float4x4 g_FlashlightWorldToTexture	: register( PSREG_FLASHLIGHT_TO_WORLD_TEXTURE ); // c15
+const float3 cAmbientCube[6]				: register( PSREG_AMBIENT_CUBE ); // c4 - c9
+const float4 g_DiffuseModulation			: register( c11 ); // PSREG_DIFFUSE_MODULATION is supposed to be c2, but we're using that already, so use c11 instead
 
 sampler NORMALS 	: register(s0);
 sampler FRAMEBUFFER : register(s1);
@@ -91,7 +93,7 @@ float4 main(const PS_INPUT i) : COLOR {
 
 	float4 uv = mul(float4(i.pos + uv_offset, 1), i.proj); uv.xy /= uv.w; 
 
-	float SpecularExponent = 80;
+	float SpecularExponent = 150;
 
 
 
@@ -129,6 +131,22 @@ float4 main(const PS_INPUT i) : COLOR {
 		specularLighting += specularLightingLL;
 	}
 
+	if (true)
+	{ 
+		float3 diffuseLightingLL;
+		diffuseLightingLL = PixelShaderDoLighting( i.pos, smoothed_normal,
+			float3( 0.0f, 0.0f, 0.0f ), false, true, i.lightAtten,
+			cAmbientCube, NormalizeRandRotSampler, NUM_LIGHTS, cLightInfo, true,
+
+			// These are dummy parameters:
+			false, 1.0f,
+			false, NULL ); 
+
+		diffuseLighting += diffuseLightingLL;
+	}
+	diffuseLighting = pow(diffuseLighting, 1.0f/2.2f);
+	specularLighting = pow(specularLighting, 1.0f/2.2f);
+
 	// Primary lighting calculations
 	float3 reflected = reflect(i.view_dir, smoothed_normal);
 	float phong = length(specularLighting);//min(pow(max(0, dot(reflected, SUN_DIR)), 100), 1);
@@ -140,10 +158,9 @@ float4 main(const PS_INPUT i) : COLOR {
 	
 	
 #if OPAQUE // Opaque
-	float3 absorption = COLOR2.xyz;// * (1.0 - fresnel);
-	float diffuse = dot(smoothed_normal, SUN_DIR) * 0.45 + 0.55;
+	float3 absorption = COLOR2.xyz;// * (1.0 - fresnel); 
 
-	float3 final_color = absorption * diffuse  + specularLighting + specular;// * diffuseLighting;
+	float3 final_color = (absorption * diffuseLighting) + (specularLighting + specular);
 	
 #else // Translucent
 	// Calculate refraction vector in 3d space and project it to screen

@@ -113,7 +113,7 @@ SHADER_DRAW {
 		pShaderAPI->SetPixelShaderConstant(1, &radius);
 		pShaderAPI->SetPixelShaderConstant(2, &ior);
 		pShaderAPI->SetPixelShaderConstant(3, &reflectance);
-		pShaderAPI->SetPixelShaderConstant(4, color2_normalized);
+		pShaderAPI->SetPixelShaderConstant(12, color2_normalized); // used to be 4, but that was overlapping with ambient cube.
 
 		/*
 		CMatRenderContextPtr pRenderContext(materials);
@@ -136,7 +136,7 @@ SHADER_DRAW {
 		BindTexture(SHADER_SAMPLER2, ENVMAP);
 		BindTexture(SHADER_SAMPLER3, DEPTHTEXTURE);
 		
-		//	pShaderAPI->SetPixelShaderStateAmbientLightCube( PSREG_AMBIENT_CUBE, !lightState.m_bAmbientLight );	// Force to black if not bAmbientLight
+		pShaderAPI->SetPixelShaderStateAmbientLightCube( PSREG_AMBIENT_CUBE, false );	// Force to black if not bAmbientLight
 		
 		pShaderAPI->CommitPixelShaderLighting( PSREG_LIGHT_INFO_ARRAY );
 
