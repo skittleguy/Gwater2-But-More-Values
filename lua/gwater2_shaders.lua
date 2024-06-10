@@ -35,7 +35,7 @@ local blur_scale = CreateClientConVar("gwater2_blur_scale", "1", true)
 local antialias = GetConVar("mat_antialias")
 
 local lightmodel = ClientsideModel( "models/props_debris/metal_panel01a.mdl", RENDERGROUP_OTHER );
-
+local lightpos = EyePos()
 -- rebuild meshes every frame (unused atm since PostDrawOpaque is being a bitch)
 --[[
 hook.Add("RenderScene", "gwater2_render", function(eye_pos, eye_angles, fov)
@@ -79,10 +79,14 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	-- HACK HACK! hack to make lighting work properly
 	render.UpdateScreenEffectTexture()	-- _rt_framebuffer is used in refraction shader
 	render.OverrideDepthEnable( true , false )
-	local tr = util.QuickTrace( EyePos(), LocalPlayer():GetRenderAngles():Forward() * 20000, LocalPlayer())
-	local dist = math.min(300, (tr.HitPos - tr.StartPos):Length() / 2)
-	print(dist);
-	render.Model({model="models/mechanics/solid_steel/sheetmetal_plusb_4.mdl",pos=EyePos() + (LocalPlayer():GetRenderAngles():Forward() * dist) + (LocalPlayer():GetRenderAngles():Up() * 24),angle=LocalPlayer():GetRenderAngles()}, lightmodel)
+	local tr = util.QuickTrace( EyePos(), LocalPlayer():EyeAngles():Forward() * 800, LocalPlayer())
+	local dist = math.min(230, (tr.HitPos - tr.StartPos):Length() / 1.25)
+	lightpos = LerpVector(0.015, lightpos, EyePos() + (LocalPlayer():EyeAngles():Forward() * dist))
+	-- print(dist);
+	-- This one sets the cubemap
+	render.Model({model="models/props_junk/TrafficCone001a.mdl",pos=EyePos(),angle=LocalPlayer():GetRenderAngles()})
+	-- This one takes care of lights
+	render.Model({model="models/props_junk/CinderBlock01a.mdl",pos=lightpos,angle=LocalPlayer():GetRenderAngles()}, lightmodel)
 	render.OverrideDepthEnable( false, true )
 	render.DrawTextureToScreen(cache_screen0)
 
