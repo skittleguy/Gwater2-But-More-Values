@@ -77,7 +77,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	-- render.SetLightingOrigin(EyePos() + (EyeAngles():Forward() * 128))
 
 	-- HACK HACK! hack to make lighting work properly
-	render.Model({model="models/mechanics/solid_steel/sheetmetal_plusb_4.mdl",pos=EyePos() + (EyeAngles():Up() * 24),angle=EyeAngles()}, lightmodel)
+	render.Model({model="models/mechanics/solid_steel/sheetmetal_plusb_4.mdl",pos=EyePos() + (EyeAngles():Forward() * -2),angle=EyeAngles()}, lightmodel)
 	gwater2.renderer:BuildWater(gwater2.solver, radius * 0.5)
 	gwater2.renderer:BuildDiffuse(gwater2.solver, radius * 0.15)
 	--render.SetMaterial(Material("models/props_combine/combine_interface_disp"))

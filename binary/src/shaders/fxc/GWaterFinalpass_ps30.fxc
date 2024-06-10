@@ -95,7 +95,7 @@ float4 main(const PS_INPUT i) : COLOR {
 
 	float4 uv = mul(float4(i.pos + uv_offset, 1), i.proj); uv.xy /= uv.w; 
 
-	float SpecularExponent = 150;
+	float SpecularExponent = 256;
 
 
 
@@ -156,7 +156,7 @@ float4 main(const PS_INPUT i) : COLOR {
 	//}
 
 	diffuseLighting = pow(diffuseLighting, 1.0f/2.2f);
-	specularLighting = pow(specularLighting, 1.0f/2.2f);
+	specularLighting = pow(specularLighting, 1.0f/2.2f) * 2; // times 2 because looks nice and also makes up for some weird distance quirk
 
 	// Primary lighting calculations
 	float3 reflected = reflect(i.view_dir, smoothed_normal);
