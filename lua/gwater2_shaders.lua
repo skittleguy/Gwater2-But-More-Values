@@ -77,7 +77,16 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	-- render.SetLightingOrigin(EyePos() + (EyeAngles():Forward() * 128))
 
 	-- HACK HACK! hack to make lighting work properly
-	render.Model({model="models/mechanics/solid_steel/sheetmetal_plusb_4.mdl",pos=EyePos() + (EyeAngles():Forward() * -2),angle=EyeAngles()}, lightmodel)
+	render.UpdateScreenEffectTexture()	-- _rt_framebuffer is used in refraction shader
+	render.OverrideDepthEnable( true , false )
+	local tr = util.QuickTrace( EyePos(), LocalPlayer():GetRenderAngles():Forward() * 20000, LocalPlayer())
+	local dist = math.min(300, (tr.HitPos - tr.StartPos):Length() / 2)
+	print(dist);
+	render.Model({model="models/mechanics/solid_steel/sheetmetal_plusb_4.mdl",pos=EyePos() + (LocalPlayer():GetRenderAngles():Forward() * dist) + (LocalPlayer():GetRenderAngles():Up() * 24),angle=LocalPlayer():GetRenderAngles()}, lightmodel)
+	render.OverrideDepthEnable( false, true )
+	render.DrawTextureToScreen(cache_screen0)
+
+
 	gwater2.renderer:BuildWater(gwater2.solver, radius * 0.5)
 	gwater2.renderer:BuildDiffuse(gwater2.solver, radius * 0.15)
 	--render.SetMaterial(Material("models/props_combine/combine_interface_disp"))
