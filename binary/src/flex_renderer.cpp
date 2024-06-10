@@ -12,19 +12,30 @@ IMesh* build_mesh(int id, FlexRendererThreadData data) {
 	int start = id * MAX_PRIMATIVES;
 	int end = min((id + 1) * MAX_PRIMATIVES, data.max_particles);
 
-	IMesh* mesh = materials->GetRenderContext()->CreateStaticMesh(VERTEX_POSITION | VERTEX_NORMAL | VERTEX_TEXCOORD0_2D, "");
-
-	CMeshBuilder mesh_builder;
-	mesh_builder.Begin(mesh, MATERIAL_TRIANGLES, end - start);
+	// We need to figure out how many and which particles are going to be rendered
+	int particles_to_render = 0;
 	for (int particle_index = start; particle_index < end; ++particle_index) {
 		Vector particle_pos = data.particle_positions[particle_index].AsVector3D();
 
 		// Frustrum culling
 		Vector4D dst;
 		Vector4DMultiply(data.view_projection_matrix, Vector4D(particle_pos.x, particle_pos.y, particle_pos.z, 1), dst);
-		if (dst.z < 0 || -dst.x - dst.w > 0 || dst.x - dst.w > 0 || -dst.y - dst.w > 0 || dst.y - dst.w > 0) {
-			continue;
-		}
+		if (dst.z < 0 || -dst.x - dst.w > 0 || dst.x - dst.w > 0 || -dst.y - dst.w > 0 || dst.y - dst.w > 0) continue;
+		
+		// Add to our buffer
+		data.render_buffer[start + particles_to_render] = particle_index;
+		particles_to_render++;
+	}
+
+	// Don't even bother
+	if (particles_to_render == 0) return nullptr;
+
+	IMesh* mesh = materials->GetRenderContext()->CreateStaticMesh(VERTEX_POSITION | VERTEX_NORMAL | VERTEX_TEXCOORD0_2D, "");
+	CMeshBuilder mesh_builder;
+	mesh_builder.Begin(mesh, MATERIAL_TRIANGLES, particles_to_render);
+	for (int i = start; i < start + particles_to_render; ++i) {
+		int particle_index = data.render_buffer[i];
+		Vector particle_pos = data.particle_positions[particle_index].AsVector3D();
 
 		// calculate triangle rotation
 		//Vector forward = (eye_pos - particle_pos).Normalized();
@@ -64,12 +75,7 @@ IMesh* build_mesh(int id, FlexRendererThreadData data) {
 	}
 	mesh_builder.End();
 
-	if (mesh_builder.GetCurrentIndex() > 0) {
-		return mesh;
-	} else {
-		materials->GetRenderContext()->DestroyStaticMesh(mesh);	// THIS MAY CRASH
-		return nullptr;
-	}
+	return mesh;
 }
 
 // Destroys all meshes related to water
@@ -122,6 +128,7 @@ void FlexRenderer::build_water(FlexSolver* flex, float radius) {
 		data.particle_ani0 = particle_ani0;
 		data.particle_ani1 = particle_ani1;
 		data.particle_ani2 = particle_ani2;
+		data.render_buffer = render_buffer;
 
 		// Launch thread
 		queue[mesh_index] = threads->enqueue(build_mesh, mesh_index, data);
@@ -168,10 +175,13 @@ FlexRenderer::FlexRenderer(int max_meshes) {
 	water = (IMesh**)calloc(sizeof(IMesh*), allocated);
 	if (!water) return;	// TODO: Fix undefined behavior if this statement runs
 
+	threads = new ThreadPool(MAX_THREADS);
+
 	queue = (std::future<IMesh*>*)calloc(sizeof(std::future<IMesh*>), allocated);	// Needs to be zero initialized
 	if (!queue) return;	// out of ram?
 
-	threads = new ThreadPool(MAX_THREADS);
+	render_buffer = (int*)malloc(sizeof(int) * allocated * MAX_PRIMATIVES);
+	if (!render_buffer) return;
 };
 
 FlexRenderer::~FlexRenderer() {
@@ -187,6 +197,7 @@ FlexRenderer::~FlexRenderer() {
 
 	delete threads;
 
+	free(render_buffer);
 	free(water);
 	free(queue);
 };
