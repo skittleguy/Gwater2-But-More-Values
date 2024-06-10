@@ -34,6 +34,8 @@ local blur_passes = CreateClientConVar("gwater2_blur_passes", "3", true)
 local blur_scale = CreateClientConVar("gwater2_blur_scale", "1", true)
 local antialias = GetConVar("mat_antialias")
 
+local lightmodel = ClientsideModel( "models/props_debris/metal_panel01a.mdl", RENDERGROUP_OTHER );
+
 -- rebuild meshes every frame (unused atm since PostDrawOpaque is being a bitch)
 --[[
 hook.Add("RenderScene", "gwater2_render", function(eye_pos, eye_angles, fov)
@@ -73,7 +75,9 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	local right = EyeAngles():Right()
 	local forward = EyeAngles():Forward()
 	-- render.SetLightingOrigin(EyePos() + (EyeAngles():Forward() * 128))
-	render.Model({model="models/props_debris/metal_panel01a.mdl",pos=EyePos() + (EyeAngles():Forward() * -2),angle=EyeAngles()})
+
+	-- HACK HACK! hack to make lighting work properly
+	render.Model({model="models/props_debris/metal_panel01a.mdl",pos=EyePos() + (EyeAngles():Forward() * -2),angle=EyeAngles()}, lightmodel)
 	gwater2.renderer:BuildWater(gwater2.solver, radius * 0.5)
 	gwater2.renderer:BuildDiffuse(gwater2.solver, radius * 0.15)
 	--render.SetMaterial(Material("models/props_combine/combine_interface_disp"))

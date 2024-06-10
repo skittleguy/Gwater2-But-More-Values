@@ -72,6 +72,7 @@ float fresnel_approx(float n1, float n2, float3 normal, float3 incident, float r
         return ret % 1.0;
 }
 
+ 
 
 float4 main(const PS_INPUT i) : COLOR {
 	// kill pixels outside of sphere
@@ -79,6 +80,7 @@ float4 main(const PS_INPUT i) : COLOR {
 	float radius2 = dot(offset, offset);
 	if (radius2 > 1) discard;
 	float3 diffuseLighting = float3(0.0f, 0.0f, 0.0f);
+	float3 ambientLighting = float3(0.0f, 0.0f, 0.0f);
     float3 specularLighting = float3(0.0f, 0.0f, 0.0f);
 
 	float3 smoothed_normal = tex2D(NORMALS, i.P * SCR_S).xyz;
@@ -134,7 +136,7 @@ float4 main(const PS_INPUT i) : COLOR {
 	if (true)
 	{ 
 		float3 diffuseLightingLL;
-		diffuseLightingLL = PixelShaderDoLighting( i.pos, smoothed_normal,
+		diffuseLightingLL = PixelShaderDoLightingLinear( i.pos, smoothed_normal,
 			float3( 0.0f, 0.0f, 0.0f ), false, true, i.lightAtten,
 			cAmbientCube, NormalizeRandRotSampler, NUM_LIGHTS, cLightInfo, true,
 
@@ -144,6 +146,15 @@ float4 main(const PS_INPUT i) : COLOR {
 
 		diffuseLighting += diffuseLightingLL;
 	}
+
+	//if (true)
+	//{ 
+	//	float3 diffuseLightingAL;
+	//	diffuseLightingAL = float3(0.2,0.2,0.2);
+	//
+	//	diffuseLighting += diffuseLightingAL;
+	//}
+
 	diffuseLighting = pow(diffuseLighting, 1.0f/2.2f);
 	specularLighting = pow(specularLighting, 1.0f/2.2f);
 
@@ -175,5 +186,5 @@ float4 main(const PS_INPUT i) : COLOR {
 #endif
 
 	// Calculate final color & return
-	return FinalOutput(float4(final_color, 1), 0, 0, TONEMAP_SCALE_NONE);	// For HDR
+	return FinalOutput(float4(final_color, 1), 0, 0, TONEMAP_SCALE_LINEAR);	// For HDR
 };
