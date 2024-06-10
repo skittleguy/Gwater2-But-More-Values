@@ -43,7 +43,7 @@ public:
 #endif	// _DEBUG
 	}
 
-	GWaterFinalpass_ps30_Static_Index( IShaderShadow* pShaderShadow, IMaterialVar** params )
+	GWaterFinalpass_ps30_Static_Index()
 	{
 		m_nFLASHLIGHT = 0;
 		m_nFLASHLIGHTDEPTHFILTERMODE = 0;
@@ -101,7 +101,7 @@ public:
 #endif	// _DEBUG
 	}
 
-	GWaterFinalpass_ps30_Dynamic_Index( IShaderDynamicAPI* pShaderAPI )
+	GWaterFinalpass_ps30_Dynamic_Index()
 	{
 		m_nOPAQUE = 0;
 		m_nNUM_LIGHTS = 0;
