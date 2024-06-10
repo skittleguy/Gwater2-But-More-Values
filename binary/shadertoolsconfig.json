@@ -1,8 +1,8 @@
 {
     "hlsl.preprocessorDefinitions": { 
-      "FLASHLIGHT": true,
+      "FLASHLIGHT": 1,
       "FLASHLIGHTDEPTHFILTERMODE": 1,
-      "FLASHLIGHTSHADOWS": true,
+      "FLASHLIGHTSHADOWS": 1,
       "NUM_LIGHTS": 4
     },
     "hlsl.additionalIncludeDirectories": [ 
