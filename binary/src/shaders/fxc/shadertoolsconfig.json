@@ -1,0 +1,12 @@
+{
+    "hlsl.preprocessorDefinitions": { 
+      "FLASHLIGHT": true,
+      "FLASHLIGHTDEPTHFILTERMODE": 1,
+      "FLASHLIGHTSHADOWS": true,
+      "NUM_LIGHTS": 4
+    },
+    "hlsl.additionalIncludeDirectories": [ 
+      ".",
+      "D:\\source-sdk-2013-master\\sp\\src\\materialsystem\\stdshaders"
+    ] 
+  }
