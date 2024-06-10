@@ -108,7 +108,7 @@ float4 main(const PS_INPUT i) : COLOR {
 		DoSpecularFlashlight( g_FlashlightPos, i.pos, flashlightSpacePosition, smoothed_normal, 	
 					g_FlashlightAttenuationFactors.xyz, g_FlashlightAttenuationFactors.w,
 					FlashlightSampler, ShadowDepthSampler, NormalizeRandRotSampler, FLASHLIGHTDEPTHFILTERMODE, FLASHLIGHTSHADOWS, true, projPos,
-					SpecularExponent, i.view_dir * -1, false, NULL, fresnel, g_ShadowTweaks,
+					SpecularExponent, i.view_dir * -1, false, FRAMEBUFFER, fresnel, g_ShadowTweaks,
 
 					// These two values are output
 					diffuseLightingFL, specularLightingFL );
@@ -125,7 +125,7 @@ float4 main(const PS_INPUT i) : COLOR {
 		float3 specularLightingLL;
 		PixelShaderDoSpecularLighting( i.pos, smoothed_normal,
 					SpecularExponent, i.view_dir * -1, i.lightAtten,
-					NUM_LIGHTS, cLightInfo, false, 0, false, NULL, fresnel, false, 1,
+					NUM_LIGHTS, cLightInfo, false, 0, false, FRAMEBUFFER, fresnel, false, 1,
 
 					// Outputs
 					specularLightingLL, rimLightingLL );
@@ -142,7 +142,7 @@ float4 main(const PS_INPUT i) : COLOR {
 
 			// These are dummy parameters:
 			false, 1.0f,
-			false, NULL ); 
+			false, FRAMEBUFFER);
 
 		diffuseLighting += diffuseLightingLL;
 	}
