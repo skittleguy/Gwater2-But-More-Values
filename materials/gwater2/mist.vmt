@@ -1,4 +1,4 @@
-UnlitGeneric {
+VertexLitGeneric {
 	$basetexture "gwater2/splash"
 	$additive 1
 	$alpha 0.3

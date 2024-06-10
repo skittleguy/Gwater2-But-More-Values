@@ -167,7 +167,6 @@ float4 main(const PS_INPUT i) : COLOR {
 	// Secondary lighting calculations
 	
 	
-	
 #if OPAQUE // Opaque
 	float3 absorption = COLOR2.xyz;// * (1.0 - fresnel); 
 
@@ -179,12 +178,14 @@ float4 main(const PS_INPUT i) : COLOR {
 	float2 refract_pos = float2(uv.x / 2.0 + 0.5, 0.5 - uv.y / 2.0);
 	float3 refracted = tex2D(FRAMEBUFFER, refract_pos).xyz * (1.0 - fresnel);
 
+	refracted = refracted / LINEAR_LIGHT_SCALE;
+	
 	float absorption_distance = (tex2D(DEPTH, refract_pos).x * 100 - dot(smoothed_normal, i.view_dir) * 10) * COLOR2.w;
 	float3 absorption = exp((COLOR2.xyz - float3(1, 1, 1)) * absorption_distance);	// Beers law
 
 	float3 final_color = absorption * refracted + specularLighting + specular;// * diffuseLighting;
 #endif
-
+	final_color = final_color * LINEAR_LIGHT_SCALE;
 	// Calculate final color & return
-	return FinalOutput(float4(final_color, 1), 0, 0, TONEMAP_SCALE_LINEAR);	// For HDR
+	return FinalOutput(float4(final_color, 1), 0, 0, TONEMAP_SCALE_NONE);	// For HDR
 };
