@@ -3,8 +3,8 @@
       "FLASHLIGHT": 1,
       "FLASHLIGHTDEPTHFILTERMODE": 1,
       "FLASHLIGHTSHADOWS": 1,
-      "NUM_LIGHTS": 4
-      "NULL": 0,
+      "NUM_LIGHTS": 4,
+      "NULL": 0
     },
     "hlsl.additionalIncludeDirectories": [ 
       ".",
