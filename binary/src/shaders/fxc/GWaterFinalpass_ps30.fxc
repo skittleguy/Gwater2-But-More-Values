@@ -114,11 +114,13 @@ float4 main(const PS_INPUT i) : COLOR {
 
 		//diffuseLighting += diffuseLightingFL;
 		//specularLighting += specularLightingFL;
+		//diffuseLightingFL = pow(diffuseLightingFL, 1.0f / 2.2f);
+		//specularLightingFL = pow(specularLightingFL, 1.0f / 2.2f) * 1.25; // times 1.25 because looks nice and also makes up for some weird distance quirk
 		
 #if OPAQUE // Opaque
 		float3 absorption = COLOR2.xyz;// * (1.0 - fresnel); 
 
-		float3 final_color = diffuseLightingFL + (specularLightingFL);
+		float3 final_color = (absorption * diffuseLightingFL) + (specularLightingFL);
 	
 #else // Translucent
 		float3 final_color = specularLightingFL;
@@ -126,7 +128,7 @@ float4 main(const PS_INPUT i) : COLOR {
 		return FinalOutput(float4(final_color, 1), 0, 0, TONEMAP_SCALE_LINEAR); // For HDR
 		
 	}
-	if (!FLASHLIGHT)
+	else
 	{
 		//float4 lightAtten = float4(1,1,1,1);
 		// Local lights

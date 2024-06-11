@@ -138,7 +138,10 @@ SHADER_DRAW {
 				pShaderAPI->BindStandardTexture(SHADER_SAMPLER5, TEXTURE_SHADOW_NOISE_2D);
 			}
 		}
-		pShaderAPI->GetDX9LightState(&lightState); 
+		else 
+		{
+			pShaderAPI->GetDX9LightState(&lightState);
+		}
 
 		pShaderAPI->SetPixelShaderConstant(0, scr_s);
 		pShaderAPI->SetPixelShaderConstant(1, &radius);
