@@ -52,9 +52,11 @@ IMesh* _build_water_anisotropy(int id, FlexRendererThreadData data) {
 		for (int i = 0; i < 3; i++) {
 			// Anisotropy warping (code provided by Spanky)
 			Vector pos_ani = local_pos[i];
-			pos_ani = pos_ani + ani0.AsVector3D() * (local_pos[i].Dot(ani0.AsVector3D()) * ani0.w);
-			pos_ani = pos_ani + ani1.AsVector3D() * (local_pos[i].Dot(ani1.AsVector3D()) * ani1.w);
-			pos_ani = pos_ani + ani2.AsVector3D() * (local_pos[i].Dot(ani2.AsVector3D()) * ani2.w);
+      float dot1 = pos_ani.Dot(ani1.AsVector3D());
+      float dot2 = pos_ani.Dot(ani2.AsVector3D());
+      float dot3 = pos_ani.Dot(ani3.AsVector3D());
+      
+      pos_ani = local_pos[i] + ani1.AsVector3D() * ani1.w * dot1 + ani2.AsVector3D() * ani2.w * dot2 + ani3.AsVector3D() * ani3.w * dot3;
 
 			Vector world_pos = particle_pos + pos_ani;
 			mesh_builder.TexCoord2f(0, u[i], v[i]);
