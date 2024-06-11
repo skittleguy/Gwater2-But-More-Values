@@ -89,10 +89,8 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	render.Model({model="models/props_junk/CinderBlock01a.mdl",pos=lightpos,angle=LocalPlayer():GetRenderAngles()}, lightmodel)
 	render.OverrideDepthEnable( false, true )
 	render.DrawTextureToScreen(cache_screen0)
-
-
-	gwater2.renderer:BuildWater(gwater2.solver, radius * 0.5)
-	gwater2.renderer:BuildDiffuse(gwater2.solver, radius * 0.15)
+	
+	gwater2.renderer:BuildMeshes(gwater2.solver, radius * 0.5, radius * 0.15)
 	--render.SetMaterial(Material("models/props_combine/combine_interface_disp"))
 
 	render.UpdateScreenEffectTexture()	-- _rt_framebuffer is used in refraction shader
