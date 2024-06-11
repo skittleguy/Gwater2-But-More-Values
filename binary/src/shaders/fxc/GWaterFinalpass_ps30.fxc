@@ -91,8 +91,7 @@ float4 main(const PS_INPUT i) : COLOR {
 	float3 uv_offset = smoothed_normal * -RADIUS * IOR;
 	float4 uv = mul(float4(i.pos + uv_offset, 1), i.proj); uv.xy /= uv.w; 
 	
-	float3 uvnorefract_offset = smoothed_normal * -RADIUS;
-	float4 uvnorefract = mul(float4(i.pos + uvnorefract_offset, 1), i.proj); uvnorefract.xy /= uvnorefract.w;
+	float4 uvnorefract = mul(float4(i.pos, 1), i.proj); uvnorefract.xy /= uvnorefract.w;
 	float2 projPos = float2(uvnorefract.x / 2.0 + 0.5, 0.5 - uvnorefract.y / 2.0);
 
 	float SpecularExponent = 200;
