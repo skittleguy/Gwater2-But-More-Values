@@ -837,8 +837,8 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 			confirm.Paint = nil
 			function confirm:DoClick() 
 				gwater2.solver:Destroy()
-				gwater2.solver = FlexSolver(slider:GetValue(), slider:GetValue())
-				gwater2.meshes = {}
+				gwater2.solver = FlexSolver(slider:GetValue())
+				gwater2.renderer = FlexRenderer(46)
 				gwater2.reset_solver(true)
 				frame:Close()
 				surface.PlaySound("buttons/button15.wav")

@@ -74,7 +74,7 @@ include("gwater2_shaders.lua")
 
 gwater2 = {
 	solver = FlexSolver(100000),
-	renderer = FlexRenderer(),
+	renderer = FlexRenderer(46),
 	new_ticker = true,
 	material = Material("gwater2/finalpass"),--Material("vgui/circle"),--Material("sprites/sent_ball"),
 	update_meshes = function(index, id, rep)
