@@ -116,6 +116,7 @@ float4 main(const PS_INPUT i) : COLOR {
 		//specularLighting += specularLightingFL;
 		//diffuseLightingFL = pow(diffuseLightingFL, 1.0f / 2.2f);
 		//specularLightingFL = pow(specularLightingFL, 1.0f / 2.2f) * 1.25; // times 1.25 because looks nice and also makes up for some weird distance quirk
+		specularLightingFL = specularLightingFL * 1.25; // times 1.25 because looks nice and also makes up for some weird distance quirk
 		
 #if OPAQUE // Opaque
 		float3 absorption = COLOR2.xyz;// * (1.0 - fresnel); 
