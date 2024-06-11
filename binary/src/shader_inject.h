@@ -48,7 +48,7 @@ bool inject_shaders() {
 
 	//shaderlibdll->m_pFileName = strdup("gwater_shaders.dll");	// name likely doesnt matter
 	//shaderlibdll->m_bModShaderDLL = true;	
-
+	
 	// Insert our shaders into the shader directory
 	// you need the COMPILED .vcs shaders in GarrysMod/garrysmod/shaders/fxc for the shaders to appear ingame!
 	shaderlibdll->m_ShaderDict.Insert("GWaterNormals", &GWaterNormals::s_ShaderInstance);

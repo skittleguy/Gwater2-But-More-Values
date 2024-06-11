@@ -533,12 +533,13 @@ LUA_FUNCTION(FLEXRENDERER_GarbageCollect) {
 }
 
 // FlexRenderer imesh related functions
-// Builds water particles to IMesh* structs
-LUA_FUNCTION(FLEXRENDERER_BuildWater) {
+// Builds all meshes related to FlexSolver
+LUA_FUNCTION(FLEXRENDERER_BuildMeshes) {
 	LUA->CheckType(1, FLEXRENDERER_METATABLE);
 	LUA->CheckType(2, FLEXSOLVER_METATABLE);
 	LUA->CheckNumber(3);
-	GET_FLEXRENDERER(1)->build_water(GET_FLEXSOLVER(2), LUA->GetNumber(3));
+	LUA->CheckNumber(4);
+	GET_FLEXRENDERER(1)->build_meshes(GET_FLEXSOLVER(2), LUA->GetNumber(3), LUA->GetNumber(4));
 
 	return 0;
 }
@@ -547,16 +548,6 @@ LUA_FUNCTION(FLEXRENDERER_BuildWater) {
 LUA_FUNCTION(FLEXRENDERER_DrawWater) {
 	LUA->CheckType(1, FLEXRENDERER_METATABLE);
 	GET_FLEXRENDERER(1)->draw_water();
-
-	return 0;
-}
-
-// Builds diffuse particles to IMesh* structs
-LUA_FUNCTION(FLEXRENDERER_BuildDiffuse) {
-	LUA->CheckType(1, FLEXRENDERER_METATABLE);
-	LUA->CheckType(2, FLEXSOLVER_METATABLE);
-	LUA->CheckNumber(3);
-	GET_FLEXRENDERER(1)->build_diffuse(GET_FLEXSOLVER(2), LUA->GetNumber(3));
 
 	return 0;
 }
@@ -736,9 +727,8 @@ GMOD_MODULE_OPEN() {
 	// FlexMetaTable.__index = {func1, func2, ...}
 	LUA->CreateTable();
 	ADD_FUNCTION(LUA, FLEXRENDERER_GarbageCollect, "Destroy");
-	ADD_FUNCTION(LUA, FLEXRENDERER_BuildWater, "BuildWater");
+	ADD_FUNCTION(LUA, FLEXRENDERER_BuildMeshes, "BuildMeshes");
 	ADD_FUNCTION(LUA, FLEXRENDERER_DrawWater, "DrawWater");
-	ADD_FUNCTION(LUA, FLEXRENDERER_BuildDiffuse, "BuildDiffuse");
 	ADD_FUNCTION(LUA, FLEXRENDERER_DrawDiffuse, "DrawDiffuse");
 	LUA->SetField(-2, "__index");
 

@@ -21,29 +21,26 @@ struct FlexRendererThreadData {
 	Vector4D* particle_ani1;
 	Vector4D* particle_ani2;
 	int* render_buffer;
-	bool particle_ani;
 	int max_particles;
 	float radius;
 };
 
 class FlexRenderer {
 private:
-	//std::vector<IMesh*> diffuse;
-
-public:
 	int allocated = 0;
 	ThreadPool* threads = nullptr;
-	IMesh** water = nullptr;	// water meshes used in rendering
-	int* render_buffer = nullptr;	// which particles should be rendered?
+	IMesh** meshes = nullptr;	// water meshes 
+	int* water_buffer = nullptr;	// which particles should be rendered?
+	int* diffuse_buffer = nullptr;	// ^
 	std::future<IMesh*>* queue;
-
-	void destroy_water();
-	void update_water();
-	void build_water(FlexSolver* flex, float radius);
-	void build_diffuse(FlexSolver* flex, float radius);
-
+	
+	void destroy_meshes();
+	void update_meshes();
+public:
 	void draw_water();
 	void draw_diffuse();
+
+	void build_meshes(FlexSolver* flex, float radius, float radius2);
 
 	FlexRenderer(int max_meshes);
 	~FlexRenderer();
