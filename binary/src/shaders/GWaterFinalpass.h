@@ -20,10 +20,20 @@ BEGIN_SHADER_PARAMS
 	SHADER_PARAM(FLASHLIGHTTEXTURE, SHADER_PARAM_TYPE_TEXTURE, "effects/flashlight001", "Flashlight")
 END_SHADER_PARAMS
 
-SHADER_INIT_PARAMS() { 
-	SET_FLAGS2(MATERIAL_VAR2_LIGHTING_VERTEX_LIT); 
+SHADER_INIT_PARAMS() {
+	Assert(info.m_nFlashlightTexture >= 0);
+	if (g_pHardwareConfig->SupportsBorderColor())
+	{
+		params[FLASHLIGHTTEXTURE]->SetStringValue("effects/flashlight_border");
+	}
+	else
+	{
+		params[FLASHLIGHTTEXTURE]->SetStringValue("effects/flashlight001");
+	}
+	// This shader can be used with hw skinning
+	SET_FLAGS2(MATERIAL_VAR2_SUPPORTS_HW_SKINNING);
+	SET_FLAGS2(MATERIAL_VAR2_LIGHTING_VERTEX_LIT);
 	SET_FLAGS2(MATERIAL_VAR2_SUPPORTS_FLASHLIGHT);
-	SET_FLAGS2(MATERIAL_VAR2_USE_FLASHLIGHT); 
 }
 
 SHADER_INIT {
@@ -43,6 +53,7 @@ SHADER_FALLBACK{
 }
 
 SHADER_DRAW {
+	bool bHasFlashlight = UsingFlashlight(params);
 	SHADOW_STATE {
 		// Note: Removing VERTEX_COLOR makes the shader work on all objects (Like props)
 		unsigned int flags = VERTEX_POSITION | VERTEX_NORMAL | VERTEX_TEXCOORD0_2D;
@@ -56,8 +67,30 @@ SHADER_DRAW {
 		pShaderShadow->EnableTexture(SHADER_SAMPLER3, true);	// Depth
 		pShaderShadow->EnableTexture(SHADER_SAMPLER5, true);	// RandomRotationSampler (used in pixel shader) 
 
-		bool bHasFlashlight = true;// UsingFlashlight(params);
 		int nShadowFilterMode = 0;
+
+		if (bHasFlashlight)
+		{ 
+			if (SCREENTEXTURE != -1)
+			{
+				SetAdditiveBlendingShadowState(SCREENTEXTURE, true);
+			}
+			pShaderShadow->EnableBlending(true);
+			pShaderShadow->EnableDepthWrites(false);
+
+			// Be sure not to write to dest alpha
+			pShaderShadow->EnableAlphaWrites(false);
+
+			nShadowFilterMode = g_pHardwareConfig->GetShadowFilterMode();	// Based upon vendor and device dependent formats
+		}
+		else {
+
+			if (SCREENTEXTURE != -1)
+			{
+				SetDefaultBlendingShadowState(SCREENTEXTURE, true);
+			}
+		}
+
 		if (bHasFlashlight)
 		{
 			pShaderShadow->EnableTexture(SHADER_SAMPLER4, true);	// Shadow depth map
@@ -66,7 +99,6 @@ SHADER_DRAW {
 			pShaderShadow->EnableTexture(SHADER_SAMPLER5, true);	// Noise map
 			pShaderShadow->EnableTexture(SHADER_SAMPLER6, true);	// Flashlight cookie
 			pShaderShadow->EnableSRGBRead(SHADER_SAMPLER6, true); 
-			nShadowFilterMode = g_pHardwareConfig->GetShadowFilterMode();
 		} 
 		
 		DECLARE_STATIC_VERTEX_SHADER(GWaterFinalpass_vs30);
@@ -87,8 +119,7 @@ SHADER_DRAW {
 		float reflectance = params[REFLECTANCE]->GetFloatValue();
 		const float* color2 = params[COLOR2]->GetVecValue();
 		const float color2_normalized[4] = { color2[0] / 255.0, color2[1] / 255.0, color2[2] / 255.0, color2[3] / 255.0 };
-
-		bool bHasFlashlight = true;// UsingFlashlight(params);
+		 
 		LightState_t lightState = { 0, false, false };
 		bool bFlashlightShadows = false;
 		if (bHasFlashlight) {
@@ -189,10 +220,9 @@ SHADER_DRAW {
 		}
 
 		//pShaderAPI->SetVertexShaderConstant(4, matrix, 4, true);	// FORCE into cModelViewProj!
-	}
-	
-	Draw();
+	} 
 
+	Draw();
 }
 
 END_SHADER

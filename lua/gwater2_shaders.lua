@@ -158,6 +158,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	water:SetTexture("$depthtexture", cache_absorption)
 	render.SetMaterial(water)
 	gwater2.renderer:DrawWater()
+	render.RenderFlashlights( function() gwater2.renderer:DrawWater() end )
 
 	render.OverrideAlphaWriteEnable(false, false)
 
