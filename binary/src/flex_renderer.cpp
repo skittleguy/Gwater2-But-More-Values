@@ -1,4 +1,7 @@
 #include "flex_renderer.h"
+#include "cdll_client_int.h"
+
+extern IVEngineClient* engine = NULL;
 
 //extern IMaterialSystem* materials = NULL;	// stops main branch compile from bitching
 
@@ -22,6 +25,9 @@ IMesh* _build_water_anisotropy(int id, FlexRendererThreadData data) {
 		Vector4D dst;
 		Vector4DMultiply(data.view_projection_matrix, Vector4D(particle_pos.x, particle_pos.y, particle_pos.z, 1), dst);
 		if (dst.z < 0 || -dst.x - dst.w > 0 || dst.x - dst.w > 0 || -dst.y - dst.w > 0 || dst.y - dst.w > 0) continue;
+
+		// PVS Culling
+		if (!engine->IsBoxVisible(particle_pos, particle_pos)) continue;
 		
 		// Add to our buffer
 		data.render_buffer[start + particles_to_render] = particle_index;
@@ -85,6 +91,9 @@ IMesh* _build_water(int id, FlexRendererThreadData data) {
 		Vector4DMultiply(data.view_projection_matrix, Vector4D(particle_pos.x, particle_pos.y, particle_pos.z, 1), dst);
 		if (dst.z < 0 || -dst.x - dst.w > 0 || dst.x - dst.w > 0 || -dst.y - dst.w > 0 || dst.y - dst.w > 0) continue;
 
+		// PVS Culling
+		if (!engine->IsBoxVisible(particle_pos, particle_pos)) continue;
+
 		// Add to our buffer
 		data.render_buffer[start + particles_to_render] = particle_index;
 		particles_to_render++;
@@ -134,6 +143,9 @@ IMesh* _build_diffuse(int id, FlexRendererThreadData data) {
 		Vector4D dst;
 		Vector4DMultiply(data.view_projection_matrix, Vector4D(particle_pos.x, particle_pos.y, particle_pos.z, 1), dst);
 		if (dst.z < 0 || -dst.x - dst.w > 0 || dst.x - dst.w > 0 || -dst.y - dst.w > 0 || dst.y - dst.w > 0) continue;
+
+		// PVS Culling
+		if (!engine->IsBoxVisible(particle_pos, particle_pos)) continue;
 
 		// Add to our buffer
 		data.render_buffer[start + particles_to_render] = particle_index;

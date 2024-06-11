@@ -8,6 +8,7 @@
 #include "flex_solver.h"
 #include "flex_renderer.h"
 #include "shader_inject.h"
+#include "cdll_client_int.h"
 
 #include "sighack.h"	// for reaction forces
 
@@ -673,7 +674,10 @@ GMOD_MODULE_OPEN() {
 
 	if (FLEX_LIBRARY == nullptr) 
 		LUA->ThrowError("[GWater2 Internal Error]: Nvidia FleX Failed to load! (Does your GPU meet the minimum requirements to run FleX?)");
-	
+
+	if (!Sys_LoadInterface("engine", VENGINE_CLIENT_INTERFACE_VERSION, NULL, (void**)&engine))
+		LUA->ThrowError("[GWater2 Internal Error]: C++ EngineClient failed to load!");
+
 	if (!Sys_LoadInterface("materialsystem", MATERIAL_SYSTEM_INTERFACE_VERSION, NULL, (void**)&materials))
 		LUA->ThrowError("[GWater2 Internal Error]: C++ Materialsystem failed to load!");
 
