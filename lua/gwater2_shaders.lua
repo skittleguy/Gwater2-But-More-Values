@@ -34,7 +34,7 @@ local blur_passes = CreateClientConVar("gwater2_blur_passes", "3", true)
 local blur_scale = CreateClientConVar("gwater2_blur_scale", "1", true)
 local antialias = GetConVar("mat_antialias")
 
-local lightmodel = ClientsideModel( "models/props_debris/metal_panel01a.mdl", RENDERGROUP_OTHER );
+local lightmodel = ClientsideModel( "models/kleiner_animations.mdl", RENDERGROUP_OTHER );
 local lightpos = EyePos()
 -- rebuild meshes every frame (unused atm since PostDrawOpaque is being a bitch)
 --[[
