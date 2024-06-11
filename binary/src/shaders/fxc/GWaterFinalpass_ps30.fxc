@@ -170,7 +170,6 @@ float4 main(const PS_INPUT i) : COLOR {
 
 	// Primary lighting calculations
 	float3 reflected = reflect(i.view_dir, smoothed_normal);
-	float phong = length(specularLighting);//min(pow(max(0, dot(reflected, SUN_DIR)), 100), 1);
 	float3 specular = (ENV_MAP_SCALE * texCUBE(CUBEMAP, reflected)).xyz * fresnel;
 	//float3 specular = pow(texCUBE(CUBEMAP, reflected).xyz, 1.0 / 2.2) * 3.5 * fresnel;
 
@@ -179,8 +178,11 @@ float4 main(const PS_INPUT i) : COLOR {
 	
 #if OPAQUE // Opaque
 	float3 absorption = COLOR2.xyz;// * (1.0 - fresnel); 
+	float phong = min(pow(max(0, dot(reflected, SUN_DIR)), 100), 1);
+	float diffuse = dot(smoothed_normal, SUN_DIR) * 0.45 + 0.55;
 
-	float3 final_color = (absorption * diffuseLighting) + (specularLighting + specular);
+	float3 final_color = (absorption * diffuse) + (float3(phong, phong, phong) + specular);
+	//float3 final_color = (absorption * diffuseLighting) + (specularLighting + specular);
 	
 #else // Translucent
 	// Calculate refraction vector in 3d space and project it to screen
