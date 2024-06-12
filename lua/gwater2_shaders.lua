@@ -70,9 +70,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	local water = gwater2.material
 	local radius = gwater2.solver:GetParameter("radius")
 
-	-- Build imeshes for multiple passes
-	local up = EyeAngles():Up()
-	local right = EyeAngles():Right()
+	-- Build imeshes for multiple passes 
 	local forward = EyeAngles():Forward()
 	-- render.SetLightingOrigin(EyePos() + (EyeAngles():Forward() * 128))
 
