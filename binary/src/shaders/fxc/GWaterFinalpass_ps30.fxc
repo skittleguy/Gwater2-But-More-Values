@@ -19,7 +19,7 @@ const float4 g_ShadowTweaks					: register( c26 ); // PSREG_ENVMAP_TINT__SHADOW_
 const float4 g_FlashlightAttenuationFactors	: register( PSREG_FLASHLIGHT_ATTENUATION );			// c13, On non-flashlight pass
 const float4 g_FlashlightPos_RimBoost		: register( PSREG_FLASHLIGHT_POSITION_RIM_BOOST ); // c14
 const float4x4 g_FlashlightWorldToTexture	: register( PSREG_FLASHLIGHT_TO_WORLD_TEXTURE ); // c15
-const float3 cAmbientCube[6]				: register( PSREG_AMBIENT_CUBE ); // c4 - c9
+//const float3 cAmbientCube[6]				: register( PSREG_AMBIENT_CUBE ); // c4 - c9
 const float4 g_DiffuseModulation			: register( c11 ); // PSREG_DIFFUSE_MODULATION is supposed to be c2, but we're using that already, so use c11 instead
 
 sampler NORMALS 	: register(s0);
@@ -98,8 +98,7 @@ float4 main(const PS_INPUT i) : COLOR {
 
 
 
-	if (FLASHLIGHT)
-	{
+	if (FLASHLIGHT) {
 		// Flashlight lighting
 		float3 diffuseLightingFL;
 		float3 specularLightingFL;
@@ -128,9 +127,7 @@ float4 main(const PS_INPUT i) : COLOR {
 #endif
 		return FinalOutput(float4(final_color, 1), 0, 0, TONEMAP_SCALE_LINEAR); // For HDR
 		
-	}
-	else
-	{
+	} else {
 		//float4 lightAtten = float4(1,1,1,1);
 		// Local lights
 		float3 rimLightingLL;
@@ -147,7 +144,7 @@ float4 main(const PS_INPUT i) : COLOR {
 		float3 diffuseLightingLL;
 		diffuseLightingLL = PixelShaderDoLightingLinear( i.pos, smoothed_normal,
 			float3( 0.0f, 0.0f, 0.0f ), false, true, i.lightAtten,
-			cAmbientCube, NormalizeRandRotSampler, NUM_LIGHTS, cLightInfo, true,
+			NULL, NormalizeRandRotSampler, NUM_LIGHTS, cLightInfo, true, // First NULL on this line used to be ambientcube, note here if it needs to be added back.
 
 			// These are dummy parameters:
 			false, 1.0f,
@@ -156,14 +153,6 @@ float4 main(const PS_INPUT i) : COLOR {
 		diffuseLighting += diffuseLightingLL;
 	}
 	float fresnel = fresnel_approx(1.0, 1.333, i.view_dir, smoothed_normal, 0.1); //is_zero(smoothed_normal) ? 0 : fresnel_approx(1.0, 1.333, i.view_dir, smoothed_normal, 0.1);
-
-	//if (true)
-	//{ 
-	//	float3 diffuseLightingAL;
-	//	diffuseLightingAL = float3(0.2,0.2,0.2);
-	//
-	//	diffuseLighting += diffuseLightingAL;
-	//}
 
 	diffuseLighting = pow(diffuseLighting, 1.0f/2.2f);
 	specularLighting = pow(specularLighting, 1.0f/2.2f) * 1.25; // times 1.25 because looks nice and also makes up for some weird distance quirk

@@ -22,12 +22,9 @@ END_SHADER_PARAMS
 
 SHADER_INIT_PARAMS() {
 	Assert(info.m_nFlashlightTexture >= 0);
-	if (g_pHardwareConfig->SupportsBorderColor())
-	{
+	if (g_pHardwareConfig->SupportsBorderColor()) {
 		params[FLASHLIGHTTEXTURE]->SetStringValue("effects/flashlight_border");
-	}
-	else
-	{
+	} else {
 		params[FLASHLIGHTTEXTURE]->SetStringValue("effects/flashlight001");
 	}
 	// This shader can be used with hw skinning
@@ -42,8 +39,7 @@ SHADER_INIT {
 	LoadTexture(NORMALTEXTURE);
 	LoadTexture(DEPTHTEXTURE);
 
-	if (FLASHLIGHTTEXTURE != -1)
-	{
+	if (FLASHLIGHTTEXTURE != -1) {
 		LoadTexture(FLASHLIGHTTEXTURE, TEXTUREFLAGS_SRGB);
 	}
 }
@@ -69,10 +65,8 @@ SHADER_DRAW {
 
 		int nShadowFilterMode = 0;
 
-		if (bHasFlashlight)
-		{ 
-			if (SCREENTEXTURE != -1)
-			{
+		if (bHasFlashlight) { 
+			if (SCREENTEXTURE != -1) {
 				SetAdditiveBlendingShadowState(SCREENTEXTURE, true);
 			}
 			pShaderShadow->EnableBlending(true);
@@ -82,11 +76,8 @@ SHADER_DRAW {
 			pShaderShadow->EnableAlphaWrites(false);
 
 			nShadowFilterMode = g_pHardwareConfig->GetShadowFilterMode();	// Based upon vendor and device dependent formats
-		}
-		else {
-
-			if (SCREENTEXTURE != -1)
-			{
+		} else {
+			if (SCREENTEXTURE != -1) {
 				SetDefaultBlendingShadowState(SCREENTEXTURE, true);
 			}
 		}
@@ -137,9 +128,7 @@ SHADER_DRAW {
 				BindTexture(SHADER_SAMPLER4, pFlashlightDepthTexture, 0);
 				pShaderAPI->BindStandardTexture(SHADER_SAMPLER5, TEXTURE_SHADOW_NOISE_2D);
 			}
-		}
-		else 
-		{
+		} else {
 			pShaderAPI->GetDX9LightState(&lightState);
 		}
 
@@ -184,8 +173,7 @@ SHADER_DRAW {
 		SET_DYNAMIC_PIXEL_SHADER_COMBO(OPAQUE, color2[3] > 254);
 		SET_DYNAMIC_PIXEL_SHADER(GWaterFinalpass_ps30);
 
-		if (bHasFlashlight)//bHasFlashlight)
-		{
+		if (bHasFlashlight) {
 			VMatrix worldToTexture;
 			float atten[4], pos[4], tweaks[4];
 
