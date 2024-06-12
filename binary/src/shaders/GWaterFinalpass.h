@@ -159,7 +159,7 @@ SHADER_DRAW {
 		BindTexture(SHADER_SAMPLER2, ENVMAP);
 		BindTexture(SHADER_SAMPLER3, DEPTHTEXTURE);
 		
-		pShaderAPI->SetPixelShaderStateAmbientLightCube( PSREG_AMBIENT_CUBE, false );	// Force to black if not bAmbientLight
+		// pShaderAPI->SetPixelShaderStateAmbientLightCube( PSREG_AMBIENT_CUBE, false );	// Force to black if not bAmbientLight
 		
 		pShaderAPI->CommitPixelShaderLighting( PSREG_LIGHT_INFO_ARRAY );
 
