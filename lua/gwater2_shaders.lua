@@ -1,7 +1,3 @@
-local function screen_plane(x, y, c)
-	return gui.ScreenToVector(x, y):Cross(c)
-end
-
 local function GetRenderTargetGWater(name, mult, depth) 
 	mult = mult or 1
 	return GetRenderTargetEx(name, ScrW() * mult, ScrH() * mult,
