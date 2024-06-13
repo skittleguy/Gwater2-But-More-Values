@@ -33,10 +33,11 @@ local antialias = GetConVar("mat_antialias")
 local lightmodel = ClientsideModel( "models/kleiner_animations.mdl", RENDERGROUP_OTHER );
 local lightpos = EyePos()
 -- rebuild meshes every frame (unused atm since PostDrawOpaque is being a bitch)
---[[
+--[[[
 hook.Add("RenderScene", "gwater2_render", function(eye_pos, eye_angles, fov)
 	cam.Start3D(eye_pos, eye_angles, fov) -- BuildIMeshes requires a 3d cam context (for frustrum culling)
-		gwater2.renderer:BuildIMeshes(gwater2.solver, 1)	
+		local radius = gwater2.solver:GetParameter("radius")
+		gwater2.renderer:BuildMeshes(gwater2.solver, radius * 0.5, radius * 0.15)
 	cam.End3D()
 end)]]
 
