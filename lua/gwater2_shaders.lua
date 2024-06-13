@@ -78,9 +78,9 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	lightpos = LerpVector(0.8 * FrameTime(), lightpos, EyePos() + (LocalPlayer():EyeAngles():Forward() * dist))
 	-- print(dist);
 	-- This one sets the cubemap
-	render.Model({model="models/props_junk/TrafficCone001a.mdl",pos=EyePos(),angle=LocalPlayer():GetRenderAngles()})
+	render.Model({model="models/shadertest/envballs.mdl",pos=EyePos(),angle=LocalPlayer():GetRenderAngles()})
 	-- This one takes care of lights
-	render.Model({model="models/props_junk/CinderBlock01a.mdl",pos=lightpos,angle=LocalPlayer():GetRenderAngles()}, lightmodel)
+	render.Model({model="models/shadertest/vertexlit.mdl",pos=lightpos,angle=LocalPlayer():GetRenderAngles()}, lightmodel)
 	render.OverrideDepthEnable( false, true )
 	render.DrawTextureToScreen(cache_screen0)
 	
