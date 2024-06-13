@@ -171,10 +171,10 @@ float4 main(const PS_INPUT i) : COLOR {
 	
 #if OPAQUE // Opaque
 	float3 absorption = COLOR2.xyz;// * (1.0 - fresnel); 
-	float phong = min(pow(max(0, dot(reflected, SUN_DIR)), 100), 1);
+	//float phong = min(pow(max(0, dot(reflected, SUN_DIR)), 100), 1);
 	float diffuse = dot(smoothed_normal, SUN_DIR) * 0.45 + 0.55;
 
-	float3 final_color = (absorption * diffuse) + (float3(phong, phong, phong) + specular);
+	float3 final_color = (absorption * diffuse) + (specularLighting + specular);
 	//float3 final_color = (absorption * diffuseLighting) + (specularLighting + specular);
 	
 #else // Translucent
