@@ -72,8 +72,8 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	-- render.SetLightingOrigin(EyePos() + (EyeAngles():Forward() * 128))
 
 	-- HACK HACK! hack to make lighting work properly
-	render.UpdateScreenEffectTexture()	-- _rt_framebuffer is used in refraction shader
-	render.OverrideDepthEnable( true , false )
+	render.PushRenderTarget(cache_screen0)
+	render.DepthRange(1, 1)
 	local tr = util.QuickTrace( EyePos(), LocalPlayer():EyeAngles():Forward() * 800, LocalPlayer())
 	local dist = math.min(230, (tr.HitPos - tr.StartPos):Length() / 1.25)
 	lightpos = LerpVector(0.8 * FrameTime(), lightpos, EyePos() + (LocalPlayer():EyeAngles():Forward() * dist))
@@ -82,8 +82,8 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	render.Model({model="models/shadertest/envballs.mdl",pos=EyePos(),angle=LocalPlayer():GetRenderAngles()})
 	-- This one takes care of lights
 	render.Model({model="models/shadertest/vertexlit.mdl",pos=lightpos,angle=LocalPlayer():GetRenderAngles()}, lightmodel)
-	render.OverrideDepthEnable( false, true )
-	render.DrawTextureToScreen(cache_screen0)
+	render.DepthRange(0, 1)
+	render.PopRenderTarget()
 	
 	gwater2.renderer:BuildMeshes(gwater2.solver, radius * 0.5, radius * 0.15)
 	--render.SetMaterial(Material("models/props_combine/combine_interface_disp"))
