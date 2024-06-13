@@ -75,7 +75,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	render.OverrideDepthEnable( true , false )
 	local tr = util.QuickTrace( EyePos(), LocalPlayer():EyeAngles():Forward() * 800, LocalPlayer())
 	local dist = math.min(230, (tr.HitPos - tr.StartPos):Length() / 1.25)
-	lightpos = LerpVector(0.015, lightpos, EyePos() + (LocalPlayer():EyeAngles():Forward() * dist))
+	lightpos = LerpVector(0.8 * FrameTime(), lightpos, EyePos() + (LocalPlayer():EyeAngles():Forward() * dist))
 	-- print(dist);
 	-- This one sets the cubemap
 	render.Model({model="models/props_junk/TrafficCone001a.mdl",pos=EyePos(),angle=LocalPlayer():GetRenderAngles()})
