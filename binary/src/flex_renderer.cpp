@@ -34,6 +34,10 @@ IMesh* _build_water_anisotropy(int id, FlexRendererThreadData data) {
 		particles_to_render++;
 	}
 
+
+	// TODO: Try probe a bunch of points in a grid for lighting and blend smoothly between them
+	// Vector colour = engine->GetLightForPoint(particle_pos, false);
+
 	// Don't even bother
 	if (particles_to_render == 0) return nullptr;
 
