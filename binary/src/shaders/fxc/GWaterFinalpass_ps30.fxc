@@ -79,6 +79,7 @@ float4 main(const PS_INPUT i) : COLOR {
 	float2 offset = (i.coord - 0.5) * 2.0;
 	float radius2 = dot(offset, offset);
 	if (radius2 > 1) discard;
+
 	float3 diffuseLighting = float3(0.0f, 0.0f, 0.0f);
 	float3 ambientLighting = float3(0.0f, 0.0f, 0.0f);
     float3 specularLighting = float3(0.0f, 0.0f, 0.0f);
@@ -100,16 +101,18 @@ float4 main(const PS_INPUT i) : COLOR {
 
 	#if FLASHLIGHT
 		// Flashlight lighting
-		float3 diffuseLightingFL;
-		float3 specularLightingFL;
+		float3 diffuseLightingFL = 0;
+		float3 specularLightingFL = 0;
 		float4 flashlightSpacePosition = mul(float4(i.pos, 1.0f), g_FlashlightWorldToTexture);
-		DoSpecularFlashlight(g_FlashlightPos, i.pos, flashlightSpacePosition, smoothed_normal,
-					g_FlashlightAttenuationFactors.xyz, g_FlashlightAttenuationFactors.w,
-					FlashlightSampler, ShadowDepthSampler, NormalizeRandRotSampler, FLASHLIGHTDEPTHFILTERMODE, FLASHLIGHTSHADOWS, true, projPos,
-					SpecularExponent, i.view_dir * -1, false, FRAMEBUFFER, 0, g_ShadowTweaks,
+		if (flashlightSpacePosition.z > 0) {
+			DoSpecularFlashlight(g_FlashlightPos, i.pos, flashlightSpacePosition, smoothed_normal,
+						g_FlashlightAttenuationFactors.xyz, g_FlashlightAttenuationFactors.w,
+						FlashlightSampler, ShadowDepthSampler, NormalizeRandRotSampler, FLASHLIGHTDEPTHFILTERMODE, FLASHLIGHTSHADOWS, true, projPos,
+						SpecularExponent, i.view_dir * -1, false, FRAMEBUFFER, 0, g_ShadowTweaks,
 
-					// These two values are output
-					diffuseLightingFL, specularLightingFL );
+						// These two values are output
+						diffuseLightingFL, specularLightingFL );
+		}
 
 		//diffuseLighting += diffuseLightingFL;
 		//specularLighting += specularLightingFL;
