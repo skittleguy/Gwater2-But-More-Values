@@ -42,10 +42,10 @@ hook.Add("RenderScene", "gwater2_render", function(eye_pos, eye_angles, fov)
 end)]]
 
 -- gwater2 shader pipeline
-hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--PreDrawViewModels
+hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky3d)	--PreDrawViewModels
 	if gwater2.solver:GetActiveParticles() < 1 then return end
 
-	--if sky3d or render.GetRenderTarget() then return end
+	if sky3d or render.GetRenderTarget() then return end
 
 	--if EyePos():DistToSqr(LocalPlayer():EyePos()) > 1 then return end	-- bail if skybox is rendering (used in postdrawopaque)
 
@@ -74,6 +74,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	-- render.SetLightingOrigin(EyePos() + (EyeAngles():Forward() * 128))
 
 	-- HACK HACK! hack to make lighting work properly
+	render.PushRenderTarget(cache_screen0)
 	render.DepthRange(1, 1)
 	local tr = util.QuickTrace( EyePos(), LocalPlayer():EyeAngles():Forward() * 800, LocalPlayer())
 	local dist = math.min(230, (tr.HitPos - tr.StartPos):Length() / 1.5)
@@ -84,6 +85,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	-- This one takes care of lights
 	render.Model({model="models/shadertest/vertexlit.mdl",pos=lightpos,angle=LocalPlayer():GetRenderAngles()}, lightmodel)
 	render.DepthRange(0, 1)
+	render.PopRenderTarget()
 	
 	gwater2.renderer:BuildMeshes(gwater2.solver, radius * 0.5, radius * 0.15)
 	--render.SetMaterial(Material("models/props_combine/combine_interface_disp"))
