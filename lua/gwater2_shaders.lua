@@ -12,7 +12,7 @@ end
 local cache_screen0 = render.GetScreenEffectTexture()
 local cache_screen1 = render.GetScreenEffectTexture(1)
 local cache_depth = GetRenderTargetGWater("1gwater_cache_depth", 1 / 1)
-local cache_absorption = GetRenderTargetGWater("gwater_cache_absorption", 1 / 1, MATERIAL_RT_DEPTH_NONE)
+local cache_absorption = GetRenderTargetGWater("gwater_cache_absorption", 1 / 1)
 local cache_normals = GetRenderTargetGWater("1gwater_cache_normals", 1 / 1, MATERIAL_RT_DEPTH_SEPARATE)
 local cache_bloom = GetRenderTargetGWater("2gwater_cache_bloom", 1 / 2)	-- for blurring
 local water_blur = Material("gwater2/smooth")
@@ -33,7 +33,7 @@ local antialias = GetConVar("mat_antialias")
 local lightmodel = ClientsideModel( "models/kleiner_animations.mdl", RENDERGROUP_OTHER );
 local lightpos = EyePos()
 -- rebuild meshes every frame (unused atm since PostDrawOpaque is being a bitch)
---[[[
+--[[
 hook.Add("RenderScene", "gwater2_render", function(eye_pos, eye_angles, fov)
 	cam.Start3D(eye_pos, eye_angles, fov) -- BuildIMeshes requires a 3d cam context (for frustrum culling)
 		local radius = gwater2.solver:GetParameter("radius")
@@ -42,8 +42,10 @@ hook.Add("RenderScene", "gwater2_render", function(eye_pos, eye_angles, fov)
 end)]]
 
 -- gwater2 shader pipeline
-hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--PreDrawViewModels
+hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky3d)	--PreDrawViewModels
 	if gwater2.solver:GetActiveParticles() < 1 then return end
+
+	if sky3d or render.GetRenderTarget() then return end
 
 	--if EyePos():DistToSqr(LocalPlayer():EyePos()) > 1 then return end	-- bail if skybox is rendering (used in postdrawopaque)
 
@@ -72,7 +74,6 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	-- render.SetLightingOrigin(EyePos() + (EyeAngles():Forward() * 128))
 
 	-- HACK HACK! hack to make lighting work properly
-	render.PushRenderTarget(cache_screen0)
 	render.DepthRange(1, 1)
 	local tr = util.QuickTrace( EyePos(), LocalPlayer():EyeAngles():Forward() * 800, LocalPlayer())
 	local dist = math.min(230, (tr.HitPos - tr.StartPos):Length() / 1.5)
@@ -83,7 +84,6 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	-- This one takes care of lights
 	render.Model({model="models/shadertest/vertexlit.mdl",pos=lightpos,angle=LocalPlayer():GetRenderAngles()}, lightmodel)
 	render.DepthRange(0, 1)
-	render.PopRenderTarget()
 	
 	gwater2.renderer:BuildMeshes(gwater2.solver, radius * 0.5, radius * 0.15)
 	--render.SetMaterial(Material("models/props_combine/combine_interface_disp"))
