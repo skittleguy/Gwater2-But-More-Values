@@ -42,10 +42,10 @@ hook.Add("RenderScene", "gwater2_render", function(eye_pos, eye_angles, fov)
 end)]]
 
 -- gwater2 shader pipeline
-hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky3d)	--PreDrawViewModels
+hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--PreDrawViewModels
 	if gwater2.solver:GetActiveParticles() < 1 then return end
 
-	if sky3d or render.GetRenderTarget() then return end
+	--if sky3d or render.GetRenderTarget() then return end
 
 	--if EyePos():DistToSqr(LocalPlayer():EyePos()) > 1 then return end	-- bail if skybox is rendering (used in postdrawopaque)
 
