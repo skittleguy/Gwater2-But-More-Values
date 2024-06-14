@@ -75,7 +75,7 @@ hook.Add("PreDrawViewModels", "gwater2_render", function(depth, sky, sky3d)	--Pr
 	render.PushRenderTarget(cache_screen0)
 	render.DepthRange(1, 1)
 	local tr = util.QuickTrace( EyePos(), LocalPlayer():EyeAngles():Forward() * 800, LocalPlayer())
-	local dist = math.min(230, (tr.HitPos - tr.StartPos):Length() / 1.25)
+	local dist = math.min(230, (tr.HitPos - tr.StartPos):Length() / 1.5)
 	lightpos = LerpVector(0.8 * FrameTime(), lightpos, EyePos() + (LocalPlayer():EyeAngles():Forward() * dist))
 	-- print(dist);
 	-- This one sets the cubemap
