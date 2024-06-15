@@ -512,13 +512,13 @@ concommand.Add("gwater2_menu", function()
 		local labels = {}
 
 		create_label(scrollPanel, "Physics Parameters", "These parameters directly influence physics.", 5)
-		labels[1], sliders["Radius"] = create_slider(scrollPanel, "Radius", 1, 100, 1, 50)
+		labels[1], sliders["Adhesion"] = create_slider(scrollPanel, "Adhesion", 0, 0.2, 3, 50)
 		labels[2], sliders["Cohesion"] = create_slider(scrollPanel, "Cohesion", 0, 2, 3, 80)
-		labels[3], sliders["Adhesion"] = create_slider(scrollPanel, "Adhesion", 0, 0.2, 3, 110)
+		labels[3], sliders["Radius"] = create_slider(scrollPanel, "Radius", 1, 100, 1, 110)
 		labels[4], sliders["Gravity"] = create_slider(scrollPanel, "Gravity", -30.48, 30.48, 2, 140)
 		labels[5], sliders["Viscosity"] = create_slider(scrollPanel, "Viscosity", 0, 20, 2, 170)
-		labels[6], sliders["Timescale"] = create_slider(scrollPanel, "Timescale", 0, 2, 2, 200)
-		labels[7], sliders["Surface Tension"] = create_slider(scrollPanel, "Surface Tension", 0, 1, 2, 230, 350, 10)
+		labels[6], sliders["Surface Tension"] = create_slider(scrollPanel, "Surface Tension", 0, 1, 2, 200, 350, 10)
+		labels[7], sliders["Timescale"] = create_slider(scrollPanel, "Timescale", 0, 2, 2, 230)
 		
 		function scrollPanel:AnimationThink()
 			local mousex, mousey = self:LocalCursorPos()
@@ -558,7 +558,7 @@ concommand.Add("gwater2_menu", function()
 		presets:AddChoice("Portal Gel (Blue)", "Color:0 127 255 255\nCohesion:0.1\nAdhesion:0.3\nViscosity:10\nSurface Tension:0.5\nFluid Rest Distance:")
 		presets:AddChoice("Portal Gel (Orange)", "Color:255 127 0 255\nCohesion:0.1\nAdhesion:0.3\nViscosity:10\nSurface Tension:0.5\nFluid Rest Distance:")
 
-		presets:AddChoice("Soapy Water", "Color:215 240 255 20\nCohesion:\nAdhesion:\nViscosity:\nSurface Tension:0.001\nFluid Rest Distance:\nDiffuse Threshold:30\nDiffuse Lifetime:20")
+		//presets:AddChoice("Soapy Water", "Color:215 240 255 20\nCohesion:\nAdhesion:\nViscosity:\nSurface Tension:0.001\nFluid Rest Distance:\nDiffuse Threshold:30\nDiffuse Lifetime:20")
 
 		presets:AddChoice("(Default) Water", "Color:\nCohesion:\nAdhesion:\nViscosity:\nSurface Tension:\nFluid Rest Distance:")
 
@@ -691,11 +691,11 @@ concommand.Add("gwater2_menu", function()
 		-- parameters
 		local labels = {}
 		create_label(scrollPanel, "Visual Parameters", "These parameters directly influence visuals.", 5)
-		labels[1], sliders["Diffuse Lifetime"] = create_slider(scrollPanel, "Diffuse Lifetime", 0, 20, 1, 50, 350, 20)
-		labels[2], sliders["Diffuse Threshold"] = create_slider(scrollPanel, "Diffuse Threshold", 1, 500, 1, 80, 350, 20)
-		labels[3], sliders["Anisotropy Min"] = create_slider(scrollPanel, "Anisotropy Min", 0, 1, 2, 110, 350, 20)
-		labels[4], sliders["Anisotropy Max"] = create_slider(scrollPanel, "Anisotropy Max", 0, 2, 2, 140, 350, 20)
-		labels[5], sliders["Anisotropy Scale"] = create_slider(scrollPanel, "Anisotropy Scale", 0, 2, 2, 170, 350, 20)
+		labels[1], sliders["Diffuse Threshold"] = create_slider(scrollPanel, "Diffuse Threshold", 1, 500, 1, 50, 350, 20)
+		labels[2], sliders["Diffuse Lifetime"] = create_slider(scrollPanel, "Diffuse Lifetime", 0, 20, 1, 80, 350, 20)
+		labels[3], sliders["Anisotropy Scale"] = create_slider(scrollPanel, "Anisotropy Scale", 0, 2, 2, 110, 350, 20)
+		labels[4], sliders["Anisotropy Min"] = create_slider(scrollPanel, "Anisotropy Min", 0, 1, 2, 140, 350, 20)
+		labels[5], sliders["Anisotropy Max"] = create_slider(scrollPanel, "Anisotropy Max", 0, 2, 2, 170, 350, 20)
 		labels[6], sliders["Color"] = create_picker(scrollPanel, "Color", 200)
 		
 		function scrollPanel:AnimationThink()
