@@ -321,6 +321,9 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 
 	int* contact_count = (int*)flex->get_host("contact_count");
 	int* contact_indices = (int*)flex->get_host("contact_indices");*/
+	
+	//Vector4D* particle_pos = (Vector4D*)NvFlexMap(flex->get_buffer("particle_pos"), eNvFlexMapWait);
+	//Vector* particle_vel = (Vector*)NvFlexMap(flex->get_buffer("particle_vel"), eNvFlexMapWait);
 
 	// mapping planes stops random spazzing, but eats perf
 	Vector4D* contact_vel = (Vector4D*)NvFlexMap(flex->get_buffer("contact_vel"), eNvFlexMapWait);
@@ -387,7 +390,7 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 			// Dampening (completely faked. not at all accurate)
 			//Vector prop_vel;
 			//phys->GetVelocityAtPoint(contact_pos, &prop_vel);
-			//impact_vel -= prop_vel * volume_mul;
+			//impact_vel -= prop_vel * 0.1 * volume_mul;
 
 			// Cap amount of force (vphysics crashes can occur without it)
 			float limit = 100 * phys->GetMass();
