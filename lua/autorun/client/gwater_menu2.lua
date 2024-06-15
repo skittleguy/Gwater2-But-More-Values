@@ -266,7 +266,7 @@ end
 local function copy_color(c) return Color(c.r, c.g, c.b, c.a) end
 local function create_picker(self, text, dock)
 	local label = vgui.Create("DLabel", self)
-	label:SetPos(10, dock)
+	label:SetPos(9, dock)
 	label:SetSize(100, 100)
 	label:SetFont("GWater2Param")
 	label:SetText(text)
@@ -472,7 +472,7 @@ concommand.Add("gwater2_menu", function()
 		surface.PlaySound("buttons/button15.wav")
 	end
 
-	input.SetCursorPos(ScrW() / 2 - 80, ScrH() / 2 - 188)
+	input.SetCursorPos(ScrW() / 2 + 20, ScrH() / 2 - 188)
 
 	-- 2d simulation
 	options.solver:Reset()
