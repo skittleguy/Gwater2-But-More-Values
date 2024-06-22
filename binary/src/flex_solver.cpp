@@ -132,6 +132,11 @@ void FlexSolver::map_particles() {
 	Vector* velocities = (Vector*)NvFlexMap(get_buffer("particle_vel"), eNvFlexMapWait);
 	int* phases = (int*)NvFlexMap(get_buffer("particle_phase"), eNvFlexMapWait);
 	int* active = (int*)NvFlexMap(get_buffer("particle_active"), eNvFlexMapWait);
+	
+	//Vector4D* positions = (Vector4D*)get_host("particle_pos");
+	//Vector* velocities = (Vector*)get_host("particle_vel");
+	//int* phases = (int*)get_host("particle_phase");
+	//int* active = (int*)get_host("particle_active");
 
 	// Add particle
 	for (Particle particle : particles) {
