@@ -409,10 +409,6 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	param_map["substeps"] = new float(3);
 	param_map["timescale"] = new float(1);
 	param_map["coupling"] = new float(0);
-	// Watergun specific variables
-	param_map["size"] = new float(4);
-	param_map["density"] = new float(1);
-	param_map["forward_velocity"] = new float(100);
 
 	// FleX GPU Buffers
 	add_buffer("particle_pos", sizeof(Vector4D), particles);
