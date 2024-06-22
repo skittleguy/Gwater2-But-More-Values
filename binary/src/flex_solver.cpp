@@ -453,7 +453,7 @@ FlexSolver::~FlexSolver() {
 	delete params;
 	delete copy_description;
 
-	// Free flex buffers
+	// Free buffers / hosts
 	for (std::pair<std::string, NvFlexBuffer*> buffer : buffers) 
 		NvFlexFreeBuffer(buffer.second);
 

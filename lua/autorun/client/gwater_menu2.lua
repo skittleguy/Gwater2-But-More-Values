@@ -33,7 +33,7 @@ local options = {
 	patron_tab_header = "Patron Tab",
 	patron_tab_text = "This tab has a list of all my patrons.\n\nThe list is sorted in alphabetical order.\n\nIt will be updated routinely until release.",
 	watergun_tab_header = "Water Gun Tab",
-	watergun_tab_text = "These options affect the water pistol.",
+	watergun_tab_text = "These options affect the water pistol.\n\nThis tab is temporary and will be removed in 0.6b.",
 
 	-- Physics Parameters
 	Cohesion = {text = "Controls how well particles hold together.\n\nHigher values make the fluid more solid/rigid, while lower values make it more fluid and loose."},
@@ -907,27 +907,17 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 	local function watergun_tab(tabs)
 		local scrollPanel = vgui.Create("DScrollPanel", tabs)
 		local scrollEditTab = tabs:AddSheet("Water Gun", scrollPanel, "icon16/gun.png").Tab
-		scrollEditTab.Paint = draw_tabs
-
-		-- explanation area 
-		local explanation = create_explanation(scrollPanel)
-		explanation:SetText(options.watergun_tab_text)
-		local explanation_header = options.watergun_tab_header
-		function explanation:Paint(w, h)
-			self:SetPos(390, scrollPanel:GetVBar():GetScroll())
-			surface.SetDrawColor(0, 0, 0, 150)
-			surface.DrawRect(0, 0, w, h)
-			surface.SetDrawColor(255, 255, 255)
-			surface.DrawOutlinedRect(0, 0, w, h)
-			draw.DrawText(explanation_header, "GWater2Title", 6, 6, Color(0, 0, 0), TEXT_ALIGN_LEFT)
-			draw.DrawText(explanation_header, "GWater2Title", 5, 5, Color(187, 245, 255), TEXT_ALIGN_LEFT)
+		scrollEditTab.Paint = function(self, x, y)
+			draw_tabs(self, x, y)
+			explanation:SetText(options.watergun_tab_text)
+			explanation_header = options.watergun_tab_header
 		end
 
 		-- parameters
 		local labels = {}
 		create_label(scrollPanel, "Water Gun", "Settings for the water pistol.", 5)
-		labels[1], sliders["Size"] = create_slider(scrollPanel, "Size", 0.5, 24, 1, 50, 315, 55)
-		labels[2], sliders["Density"] = create_slider(scrollPanel, "Density", 0.1, 5, 1, 80, 315, 55)
+		labels[1], sliders["Size"] = create_slider(scrollPanel, "Size", 1, 10, 0, 50, 315, 55)
+		labels[2], sliders["Density"] = create_slider(scrollPanel, "Density", 0.5, 5, 1, 80, 315, 55)
 		labels[3], sliders["Forward Velocity"] = create_slider(scrollPanel, "Forward Velocity", 0, 300, 0, 110, 315, 55)
 		
 	end
@@ -939,7 +929,6 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 		-- Hi - Xenthio
 
 		-- DONT FORGET TO ADD 'Xenthio' 
-		-- & Spaghetti Regretti
 		local patrons = file.Read("gwater2_patrons.lua", "LUA") or "<Failed to load patron data!>"
 		local patrons_table = string.Split(patrons, "\n")
 
@@ -1002,11 +991,11 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 
 	-- create tabs in order
 	about_tab(tabs)
-    parameter_tab(tabs)
-	visuals_tab(tabs)
-    performance_tab(tabs)
-	patron_tab(tabs)
 	watergun_tab(tabs)
+	parameter_tab(tabs)
+	visuals_tab(tabs)
+	performance_tab(tabs)
+	patron_tab(tabs)
 
 	-- explanation area creation
 	explanation = create_explanation(tabsFrame)

@@ -127,6 +127,9 @@ gwater2["surface_tension"] = gwater2.solver:GetParameter("surface_tension") * gw
 gwater2["fluid_rest_distance"] = gwater2.solver:GetParameter("fluid_rest_distance") / gwater2.solver:GetParameter("radius")
 gwater2["collision_distance"] = gwater2.solver:GetParameter("collision_distance") / gwater2.solver:GetParameter("radius")
 gwater2["blur_passes"] = 3
+gwater2["size"] = 4
+gwater2["density"] = 1
+gwater2["forward_velocity"] = 100
 
 -- tick particle solver
 local last_systime = os.clock()
