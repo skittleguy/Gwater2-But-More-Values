@@ -56,16 +56,16 @@ IMesh* _build_water_anisotropy(int id, FlexRendererThreadData data) {
 		Vector up = right.Cross(forward);
 		Vector local_pos[3] = { (-up - right * SQRT3), up * 2.0, (-up + right * SQRT3) };
 
-		Vector4D ani0 = data.particle_ani0[particle_index];
-		Vector4D ani1 = data.particle_ani1[particle_index];
-		Vector4D ani2 = data.particle_ani2[particle_index];
+		Vector4D ani0 = data.particle_ani0[particle_index]; ani0.w *= scale_mult;
+		Vector4D ani1 = data.particle_ani1[particle_index]; ani1.w *= scale_mult;
+		Vector4D ani2 = data.particle_ani2[particle_index]; ani2.w *= scale_mult;
 
 		for (int i = 0; i < 3; i++) {
 			// Anisotropy warping (code provided by Spanky)
 			Vector pos_ani = local_pos[i] / scale_mult;
-			float dot0 = pos_ani.Dot(ani0.AsVector3D()) * ani0.w * scale_mult;
-			float dot1 = pos_ani.Dot(ani1.AsVector3D()) * ani1.w * scale_mult;
-			float dot2 = pos_ani.Dot(ani2.AsVector3D()) * ani2.w * scale_mult;
+			float dot0 = pos_ani.Dot(ani0.AsVector3D()) * ani0.w;
+			float dot1 = pos_ani.Dot(ani1.AsVector3D()) * ani1.w;
+			float dot2 = pos_ani.Dot(ani2.AsVector3D()) * ani2.w;
 
 			pos_ani += ani0.AsVector3D() * dot0 + ani1.AsVector3D() * dot1 + ani2.AsVector3D() * dot2;
 			Vector world_pos = particle_pos + pos_ani;
