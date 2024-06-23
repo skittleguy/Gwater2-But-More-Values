@@ -519,10 +519,10 @@ concommand.Add("gwater2_menu", function()
 		labels[7], sliders["Timescale"] = create_slider(scrollPanel, "Timescale", 0, 2, 2, 230)
 
 		create_label(scrollPanel, "Advanced Physics Parameters", "More technical settings.", 275, 265)
-		labels[8], sliders["Collision Distance"] = create_slider(scrollPanel, "Collision Distance", 0.1, 1, 2, 320, 315, 55)
-		labels[9], sliders["Fluid Rest Distance"] = create_slider(scrollPanel, "Fluid Rest Distance", 0.55, 0.85, 2, 350, 315, 55)
-		labels[10], sliders["Dynamic Friction"] = create_slider(scrollPanel, "Dynamic Friction", 0, 1, 2, 380, 315, 55)
-		labels[11], sliders["Vorticity Confinement"] = create_slider(scrollPanel, "Vorticity Confinement", 0, 200, 0, 410, 300, 75)
+		labels[8], sliders["Collision Distance"] = create_slider(scrollPanel, "Collision Distance", 0.1, 1, 2, 327, 315, 55)
+		labels[9], sliders["Fluid Rest Distance"] = create_slider(scrollPanel, "Fluid Rest Distance", 0.55, 0.85, 2, 357, 315, 55)
+		labels[10], sliders["Dynamic Friction"] = create_slider(scrollPanel, "Dynamic Friction", 0, 1, 2, 385, 317, 55)
+		labels[11], sliders["Vorticity Confinement"] = create_slider(scrollPanel, "Vorticity Confinement", 0, 200, 0, 417, 300, 75)
 		
 		function scrollPanel:AnimationThink()
 			local mousex, mousey = self:LocalCursorPos()
@@ -631,7 +631,7 @@ concommand.Add("gwater2_menu", function()
 		labels[1], sliders["Diffuse Threshold"] = create_slider(scrollPanel, "Diffuse Threshold", 1, 500, 1, 50, 350, 20)
 		labels[2], sliders["Diffuse Lifetime"] = create_slider(scrollPanel, "Diffuse Lifetime", 0, 20, 1, 80, 350, 20)
 		labels[3], sliders["Anisotropy Scale"] = create_slider(scrollPanel, "Anisotropy Scale", 0, 2, 2, 110, 350, 20)
-		labels[4], sliders["Anisotropy Min"] = create_slider(scrollPanel, "Anisotropy Min", 0, 1, 2, 140, 350, 20)
+		labels[4], sliders["Anisotropy Min"] = create_slider(scrollPanel, "Anisotropy Min", -0.1, 1, 2, 140, 350, 20)
 		labels[5], sliders["Anisotropy Max"] = create_slider(scrollPanel, "Anisotropy Max", 0, 2, 2, 170, 350, 20)
 		labels[6], sliders["Color"] = create_picker(scrollPanel, "Color", 200)
 		
@@ -699,8 +699,8 @@ concommand.Add("gwater2_menu", function()
 		slider:SetPos(0, 140)
 		slider:SetSize(330, 20)
 		slider:SetMinMax(1, 1000000)
-		slider:SetValue(gwater2.solver:GetMaxParticles())
 		slider:SetDecimals(0)
+		slider:SetValue(gwater2.solver:GetMaxParticles())
 
 		local button = vgui.Create("DButton", scrollPanel)
 		button:SetPos(355, 140)
@@ -746,7 +746,7 @@ concommand.Add("gwater2_menu", function()
 
 				-- from testing it seems each particle is around 0.8kb so you could probably do some math to figure out the memory required and show it here
 	
-				draw.DrawText("You are about to change the particle limit to \n" .. slider:GetValue() .. ".\nAre you sure?", "GWater2Title", 200, 30, color_white, TEXT_ALIGN_CENTER)
+				draw.DrawText("You are about to change the particle limit to \n" .. math.floor(slider:GetValue()) .. ".\nAre you sure?", "GWater2Title", 200, 30, color_white, TEXT_ALIGN_CENTER)
 				draw.DrawText([[This can be dangerous, because all particles must be allocated on the GPU.
 DO NOT set the limit to a number higher then you think your computer can handle.
 I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefault", 200, 110, color_white, TEXT_ALIGN_CENTER)
@@ -762,7 +762,6 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 			function confirm:DoClick() 
 				gwater2.solver:Destroy()
 				gwater2.solver = FlexSolver(slider:GetValue())
-				gwater2.renderer = FlexRenderer(46)
 				gwater2.reset_solver(true)
 				frame:Close()
 				surface.PlaySound("buttons/button15.wav")
@@ -904,23 +903,27 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 			explanation_header = options.about_tab_header
 		end
     end
+
 	local function watergun_tab(tabs)
 		local scrollPanel = vgui.Create("DScrollPanel", tabs)
 		local scrollEditTab = tabs:AddSheet("Water Gun", scrollPanel, "icon16/gun.png").Tab
-		scrollEditTab.Paint = function(self, x, y)
-			draw_tabs(self, x, y)
+		scrollEditTab.Paint = draw_tabs
+
+		-- parameters
+		local labels = {}
+		local label = create_label(scrollPanel, "Water Gun", "Settings for the water pistol.")
+		local old = label.Paint
+		label.Paint = function(self, x, y)
+			old(self, x, y)
 			explanation:SetText(options.watergun_tab_text)
 			explanation_header = options.watergun_tab_header
 		end
 
-		-- parameters
-		local labels = {}
-		create_label(scrollPanel, "Water Gun", "Settings for the water pistol.", 5)
-		labels[1], sliders["Size"] = create_slider(scrollPanel, "Size", 1, 10, 0, 50, 315, 55)
-		labels[2], sliders["Density"] = create_slider(scrollPanel, "Density", 0.5, 5, 1, 80, 315, 55)
-		labels[3], sliders["Forward Velocity"] = create_slider(scrollPanel, "Forward Velocity", 0, 300, 0, 110, 315, 55)
-		
+		labels[1], sliders["Size"] = create_slider(scrollPanel, "Size", 1, 10, 0, 50, 370, 0)
+		labels[2], sliders["Density"] = create_slider(scrollPanel, "Density", 0.5, 5, 1, 80, 370, 0)
+		labels[3], sliders["Forward Velocity"] = create_slider(scrollPanel, "Forward Velocity", 0, 300, 0, 110, 370, 0)
 	end
+
 	local function patron_tab(tabs)
         local scrollPanel = vgui.Create("DScrollPanel", tabs)
         local scrollEditTab = tabs:AddSheet("Patrons", scrollPanel, "icon16/award_star_gold_3.png").Tab

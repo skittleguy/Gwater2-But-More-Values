@@ -75,7 +75,7 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 
 	-- HACK HACK! hack to make lighting work properly
 	render.PushRenderTarget(cache_screen0)
-	render.DepthRange(1, 1)
+	render.OverrideDepthEnable(true, false)
 	local tr = util.QuickTrace( EyePos(), LocalPlayer():EyeAngles():Forward() * 800, LocalPlayer())
 	local dist = math.min(230, (tr.HitPos - tr.StartPos):Length() / 1.5)
 	lightpos = LerpVector(0.8 * FrameTime(), lightpos, EyePos() + (LocalPlayer():EyeAngles():Forward() * dist))
@@ -84,10 +84,10 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	render.Model({model="models/shadertest/envballs.mdl",pos=EyePos(),angle=LocalPlayer():GetRenderAngles()})
 	-- This one takes care of lights
 	render.Model({model="models/shadertest/vertexlit.mdl",pos=lightpos,angle=LocalPlayer():GetRenderAngles()}, lightmodel)
-	render.DepthRange(0, 1)
+	render.OverrideDepthEnable(false, false)
 	render.PopRenderTarget()
 	
-	gwater2.renderer:BuildMeshes(gwater2.solver, radius * 0.5, radius * 0.15)
+	gwater2.renderer:BuildMeshes(gwater2.solver, 0.15)
 	--render.SetMaterial(Material("models/props_combine/combine_interface_disp"))
 
 	render.UpdateScreenEffectTexture()	-- _rt_framebuffer is used in refraction shader
@@ -126,7 +126,7 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	render.SetRenderTargetEx(1, nil)
 	
 	-- Blur normals
-	water_blur:SetFloat("$radius", radius)
+	water_blur:SetFloat("$radius", radius * 1.5)
 	water_blur:SetTexture("$depthtexture", cache_depth)
 	render.SetMaterial(water_blur)
 	for i = 1, blur_passes:GetInt() do
