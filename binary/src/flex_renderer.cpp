@@ -42,6 +42,8 @@ IMesh* _build_water_anisotropy(int id, FlexRendererThreadData data) {
 	if (particles_to_render == 0) return nullptr;
 
 	float scale_mult = 10.f / data.radius;	// no fucking clue why this works
+	float inv_scale_mult = data.radius / 10.f;	// microoptimization
+
 	IMesh* mesh = materials->GetRenderContext()->CreateStaticMesh(VERTEX_POSITION | VERTEX_NORMAL | VERTEX_TEXCOORD0_2D, "");
 	CMeshBuilder mesh_builder;
 	mesh_builder.Begin(mesh, MATERIAL_TRIANGLES, particles_to_render);
@@ -54,7 +56,7 @@ IMesh* _build_water_anisotropy(int id, FlexRendererThreadData data) {
 		Vector forward = (particle_pos - data.eye_pos).Normalized();
 		Vector right = forward.Cross(Vector(0, 0, 1)).Normalized();
 		Vector up = right.Cross(forward);
-		Vector local_pos[3] = { (-up - right * SQRT3), up * 2.0, (-up + right * SQRT3) };
+		Vector local_pos[3] = { (-up - right * SQRT3), up * 2.0, (-up + right * SQRT3) };	// equalateral triangle
 
 		Vector4D ani0 = data.particle_ani0[particle_index]; ani0.w *= scale_mult;
 		Vector4D ani1 = data.particle_ani1[particle_index]; ani1.w *= scale_mult;
@@ -62,12 +64,13 @@ IMesh* _build_water_anisotropy(int id, FlexRendererThreadData data) {
 
 		for (int i = 0; i < 3; i++) {
 			// Anisotropy warping (code provided by Spanky)
-			Vector pos_ani = local_pos[i] / scale_mult;
+			Vector pos_ani = local_pos[i] * inv_scale_mult;
 			float dot0 = pos_ani.Dot(ani0.AsVector3D()) * ani0.w;
 			float dot1 = pos_ani.Dot(ani1.AsVector3D()) * ani1.w;
 			float dot2 = pos_ani.Dot(ani2.AsVector3D()) * ani2.w;
 
 			pos_ani += ani0.AsVector3D() * dot0 + ani1.AsVector3D() * dot1 + ani2.AsVector3D() * dot2;
+
 			Vector world_pos = particle_pos + pos_ani;
 			mesh_builder.TexCoord2f(0, u[i], v[i]);
 			mesh_builder.Position3f(world_pos.x, world_pos.y, world_pos.z);
@@ -118,7 +121,7 @@ IMesh* _build_water(int id, FlexRendererThreadData data) {
 		Vector forward = (particle_pos - data.eye_pos).Normalized();
 		Vector right = forward.Cross(Vector(0, 0, 1)).Normalized();
 		Vector up = right.Cross(forward);
-		Vector local_pos[3] = { (-up - right * SQRT3) * 0.5, up, (-up + right * SQRT3) * 0.5 };
+		Vector local_pos[3] = { (-up - right * SQRT3) * 0.5, up, (-up + right * SQRT3) * 0.5 };	
 
 		for (int i = 0; i < 3; i++) { // Same as above w/o anisotropy warping
 			Vector world_pos = particle_pos + local_pos[i] * data.radius;

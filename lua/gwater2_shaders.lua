@@ -105,15 +105,15 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 		gwater2.renderer:DrawWater()
 		render.CopyTexture(render.GetRenderTarget(), cache_absorption)
 		render.DrawTextureToScreen(cache_screen0)
+		
+		-- Bubble particles inside water
+		-- Make sure the water screen texture has bubbles but the normal framebuffer does not
+		render.SetMaterial(water_bubble)
+		render.UpdateScreenEffectTexture(1)
+		gwater2.renderer:DrawDiffuse()
+		render.CopyTexture(render.GetRenderTarget(), cache_screen0)
+		render.DrawTextureToScreen(cache_screen1)
 	end
-	
-	-- Bubble particles inside water
-	-- Make sure the water screen texture has bubbles but the normal framebuffer does not
-	render.SetMaterial(water_bubble)
-	render.UpdateScreenEffectTexture(1)
-	gwater2.renderer:DrawDiffuse()
-	render.CopyTexture(render.GetRenderTarget(), cache_screen0)
-	render.DrawTextureToScreen(cache_screen1)
 
 	-- grab normals
 	water_normals:SetFloat("$radius", radius * 0.5)

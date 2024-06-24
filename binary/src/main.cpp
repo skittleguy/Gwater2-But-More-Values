@@ -3,6 +3,7 @@
 #include "GMFS.h"
 #include "BSPParser.h"
 
+#include "GarrysMod/Lua/LuaShared.h"
 #include "GarrysMod/Lua/Interface.h"
 
 #include "flex_solver.h"
@@ -15,7 +16,7 @@
 using namespace GarrysMod::Lua;
 
 NvFlexLibrary* FLEX_LIBRARY;	// "The heart of all that is FleX" - AE
-ILuaBase* GLOBAL_LUA;			// used for flex error handling
+ILuaShared* GLOBAL_LUA;			// used for flex error handling
 int FLEXSOLVER_METATABLE = 0;
 int FLEXRENDERER_METATABLE = 0;
 
@@ -626,12 +627,15 @@ LUA_FUNCTION(NewFlexRenderer) {
 }*/
 
 GMOD_MODULE_OPEN() {
-	GLOBAL_LUA = LUA;
+	if (!Sys_LoadInterface("lua_shared.dll", GMOD_LUASHARED_INTERFACE, NULL, (void**)&GLOBAL_LUA))
+		LUA->ThrowError("[GWater2 Internal Error]: LuaShared failed to load!");
+
 	FLEX_LIBRARY = NvFlexInit(
 		NV_FLEX_VERSION, 
 		[](NvFlexErrorSeverity type, const char* message, const char* file, int line) {
 			std::string error = "[GWater2 Internal Error]: " + (std::string)message;
-			GLOBAL_LUA->ThrowError(error.c_str());
+			ILuaBase* LUA = (ILuaBase*)GLOBAL_LUA->GetLuaInterface(State::CLIENT);//->ThrowError(error.c_str());
+			LUA->ThrowError(error.c_str());
 		}
 	);
 
@@ -717,6 +721,7 @@ GMOD_MODULE_OPEN() {
 		Warning("[GWater2 Internal Error] Couldn't find UTIL_EntityByIndex!\n");
 		return 0;
 	}
+
 	UTIL_EntityByIndex = (UTIL_EntityByIndexFN)UTIL_EntityByIndexAddr;
 	return 0;
 }
