@@ -1,58 +1,13 @@
 AddCSLuaFile()
 
+include("gwater2_swimming.lua")
+
 if SERVER then 
-	-- swimming code
-	local gravity_convar = GetConVar("sv_gravity")
-	local function in_water(ply) 
-		return ply.GWATER2_CONTACTS and ply.GWATER2_CONTACTS > 50
-	end
-
-	-- swim code provided by kodya
-	hook.Add("CalcMainActivity", "gwater2_water_swimming", function(ply)
-		if !in_water(ply) or ply:InVehicle() then return end
-		return ACT_MP_SWIM, -1
-	end)
-
-	hook.Add("Move", "gwater2_water_swimming", function(ply, move)
-		if !in_water(ply) then return end
-
-		local vel = move:GetVelocity()
-		local ang = move:GetMoveAngles()
-
-		local acel =
-		(ang:Forward() * move:GetForwardSpeed()) +
-		(ang:Right() * move:GetSideSpeed()) +
-		(ang:Up() * move:GetUpSpeed())
-
-		local aceldir = acel:GetNormalized()
-		local acelspeed = math.min(acel:Length(), ply:GetMaxSpeed())
-		acel = aceldir * acelspeed * 2
-
-		if bit.band(move:GetButtons(), IN_JUMP) ~= 0 then
-			acel.z = acel.z + ply:GetMaxSpeed()
-		end
-
-		vel = vel + acel * FrameTime()
-		vel = vel * (1 - FrameTime() * 2)
-
-		local pgrav = ply:GetGravity() == 0 and 1 or ply:GetGravity()
-		local gravity = pgrav * gravity_convar:GetFloat() * 0.5
-		vel.z = vel.z + FrameTime() * gravity
-
-		move:SetVelocity(vel * 0.99)
-	end)
-
-	hook.Add("FinishMove", "gwater2_water_swimming", function(ply, move)
-		if !in_water(ply) then return end
-		local vel = move:GetVelocity()
-		local pgrav = ply:GetGravity() == 0 and 1 or ply:GetGravity()
-		local gravity = pgrav * gravity_convar:GetFloat() * 0.5
-
-		vel.z = vel.z + FrameTime() * gravity
-		move:SetVelocity(vel)
-	end)
 	return 
 end
+
+require((BRANCH == "x86-64" or BRANCH == "chromium" ) and "gwater2" or "gwater2_main")	-- carrying
+include("gwater2_shaders.lua")
 
 -- GetMeshConvexes but for client
 local function unfucked_get_mesh(ent, raw)
@@ -118,9 +73,6 @@ local function get_map_vertices()
 
 	return all_vertices
 end
-
-require((BRANCH == "x86-64" or BRANCH == "chromium" ) and "gwater2" or "gwater2_main")	-- carrying
-include("gwater2_shaders.lua")
 
 gwater2 = {
 	solver = FlexSolver(100000),
@@ -188,8 +140,11 @@ local average_frametime = limit_fps
 local function gwater_tick()
 	if gwater2.new_ticker then return end
 
-	local systime = os.clock()
+	-- Defined in C++
+	GWATER2_QuickHackRemoveMeASAP(LocalPlayer():EntIndex(), 0)	-- TODO: REMOVE THIS HACKY SHIT!!!!!!!!!!!!!
+	LocalPlayer().GWATER2_CONTACTS = 0
 
+	local systime = os.clock()
 	if gwater2.solver:Tick(average_frametime, 1) then
 	//if gwater2.solver:Tick(1/165, hang_thread and 0 or 1) then
 		average_frametime = average_frametime + ((systime - last_systime) - average_frametime) * 0.03
@@ -200,6 +155,14 @@ end
 local function gwater_tick2()
 	last_systime = os.clock()
 	gwater2.solver:ApplyContacts(limit_fps * 0.01, 3, 0)
+
+	local particles_in_radius = gwater2.solver:GetParticlesInRadius(LocalPlayer():GetPos(), gwater2.solver:GetParameter("fluid_rest_distance") * 2, GWATER2_PARTICLES_TO_SWIM)
+	GWATER2_QuickHackRemoveMeASAP(	-- TODO: REMOVE THIS HACKY SHIT!!!!!!!!!!!!!
+		LocalPlayer():EntIndex(), 
+		particles_in_radius
+	)
+	LocalPlayer().GWATER2_CONTACTS = particles_in_radius
+
 	gwater2.solver:IterateMeshes(gwater2.update_meshes)
 	gwater2.solver:Tick(limit_fps, 0)
 end

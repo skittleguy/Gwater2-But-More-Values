@@ -884,6 +884,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 			- Added swimming
 			- Added temporary weapons tab in menu
 			- Added some padding to the frustrum culling calculations
+			- Added PVS particle culling
 			- Improved lighting calculations (flashlights, lamps, and lights now properly interact with water reflection)
 			- Improved diffuse particle visuals
 			- Improved anisotropy calculations at smaller radii

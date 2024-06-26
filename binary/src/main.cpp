@@ -396,32 +396,6 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 
 		// Average the position of the force
 		force_pos /= contacts;
-
-		// Apply serverside data
-		ILuaBase* LUA_SERVER = (ILuaBase*)GLOBAL_LUA->GetLuaInterface(State::SERVER);
-		if (LUA_SERVER) {
-			// _G.Entity(index).GWATER2_CONTACTS = contacts;
-			LUA_SERVER->PushSpecial(SPECIAL_GLOB);
-			LUA_SERVER->GetField(-1, "Entity");
-			if (LUA_SERVER->IsType(-1, Type::FUNCTION)) {
-				LUA_SERVER->PushNumber(force.first);
-				if (!LUA_SERVER->PCall(1, 1, 0)) {
-					if (LUA_SERVER->IsType(-1, Type::ENTITY)) {
-						if (LUA_SERVER->GetMetaTable(-1)) {
-							LUA_SERVER->PushNumber(contacts);
-							LUA_SERVER->SetField(-2, "GWATER2_CONTACTS");
-							LUA_SERVER->Pop();	// Pop metatable
-						}
-					} else {
-						Warning("[GWater2 Internal Error]: _G.Entity() Is returning a non-entity! (%i)\n", LUA_SERVER->GetType(-1));
-					}
-					LUA_SERVER->Pop();	// Pop entity
-				}
-			} else {
-				Warning("[GWater2 Internal Error]: _G.Entity Is returning a non-function! (%i)\n", LUA_SERVER->GetType(-1));
-			}
-			LUA_SERVER->Pop();	// Pop _G
-		}
 		
 		// Apply the force
 		void* ent = UTIL_EntityByIndex(force.first);
@@ -463,6 +437,33 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 	}
 
 	return 0;
+}
+
+// Gets the total number of particles near a specified location.
+// 4th parameter specifies if the calculations should end early (small optimization to avoid looping over all particles)
+// As of now this is a quick hack to get swimming working for 0.4b
+LUA_FUNCTION(FLEXSOLVER_GetParticlesInRadius) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	LUA->CheckType(2, Type::Vector);
+	LUA->CheckNumber(3);
+
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+	Vector pos = LUA->GetVector(2);
+	float radius = LUA->GetNumber(3) * LUA->GetNumber(3);	// calculation is squared to avoid sqrt()
+	int early_exit = (int)LUA->GetNumber(4);	// returns 0 if nil
+
+	Vector4D* particle_pos = (Vector4D*)flex->get_host("particle_pos");
+	int num_particles = 0;
+	
+	for (int i = 0; i < flex->get_active_particles(); i++) {
+		if (particle_pos[i].AsVector3D().DistToSqr(pos) > radius) continue;
+
+		num_particles++;
+		if (early_exit && num_particles >= early_exit) break;
+	}
+
+	LUA->PushNumber(num_particles);
+	return 1;
 }
 
 // Original function written by andreweathan
@@ -650,6 +651,42 @@ LUA_FUNCTION(NewFlexRenderer) {
 	return 1;
 }
 
+// TODO: REMOVE!!!
+LUA_FUNCTION(GWATER2_QuickHackRemoveMeASAP) {
+	LUA->CheckNumber(1);	// index
+	LUA->CheckNumber(2);	// contacts
+
+	ILuaBase* LUA_SERVER = (ILuaBase*)GLOBAL_LUA->GetLuaInterface(State::SERVER);
+	if (LUA_SERVER) {
+
+		// _G.Entity(index).GWATER2_CONTACTS = contacts;
+		LUA_SERVER->PushSpecial(SPECIAL_GLOB);
+		LUA_SERVER->GetField(-1, "Entity");
+		if (LUA_SERVER->IsType(-1, Type::Function)) {
+			LUA_SERVER->PushNumber(LUA->GetNumber(1));
+			if (!LUA_SERVER->PCall(1, 1, 0)) {
+				if (LUA_SERVER->IsType(-1, Type::Entity)) {
+					if (LUA_SERVER->GetMetaTable(-1)) {
+						LUA_SERVER->PushNumber(LUA->GetNumber(2));
+						LUA_SERVER->SetField(-2, "GWATER2_CONTACTS");
+						LUA_SERVER->Pop();	// Pop metatable
+					}
+				}
+				else {
+					Warning("[GWater2 Internal Error]: _G.Entity() Is returning a non-entity! (%i)\n", LUA_SERVER->GetType(-1));
+				}
+				LUA_SERVER->Pop();	// Pop entity
+			}
+		}
+		else {
+			Warning("[GWater2 Internal Error]: _G.Entity Is returning a non-function! (%i)\n", LUA_SERVER->GetType(-1));
+		}
+		LUA_SERVER->Pop();	// Pop _G*/
+	}
+
+	return 0;
+}
+
 // `mat_antialias 0` but shit
 /*LUA_FUNCTION(SetMSAAEnabled) {
 	MaterialSystem_Config_t config = materials->GetCurrentConfigForVideoCard();
@@ -726,6 +763,7 @@ GMOD_MODULE_OPEN() {
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetParameter, "GetParameter");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetActiveParticles, "GetActiveParticles");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetActiveDiffuse, "GetActiveDiffuse");
+	ADD_FUNCTION(LUA, FLEXSOLVER_GetParticlesInRadius, "GetParticlesInRadius");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddMapMesh, "AddMapMesh");
 	ADD_FUNCTION(LUA, FLEXSOLVER_IterateMeshes, "IterateMeshes");
 	ADD_FUNCTION(LUA, FLEXSOLVER_ApplyContacts, "ApplyContacts");
@@ -748,6 +786,7 @@ GMOD_MODULE_OPEN() {
 	LUA->PushSpecial(SPECIAL_GLOB);
 	ADD_FUNCTION(LUA, NewFlexSolver, "FlexSolver");
 	ADD_FUNCTION(LUA, NewFlexRenderer, "FlexRenderer");
+	ADD_FUNCTION(LUA, GWATER2_QuickHackRemoveMeASAP, "GWATER2_QuickHackRemoveMeASAP");
 	LUA->Pop();
 
 	// Get serverside physics objects from client DLL. Since server.dll exists in memory, we can find it and avoid networking.
