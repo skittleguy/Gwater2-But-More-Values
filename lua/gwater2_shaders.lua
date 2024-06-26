@@ -11,9 +11,9 @@ end
 
 local cache_screen0 = render.GetScreenEffectTexture()
 local cache_screen1 = render.GetScreenEffectTexture(1)
-local cache_depth = GetRenderTargetGWater("2gwater_cache_depth", 1 / 2)
+local cache_depth = GetRenderTargetGWater("1gwater_cache_depth", 1 / 1)
 local cache_absorption = GetRenderTargetGWater("8gwater_cache_absorption", 1 / 8, MATERIAL_RT_DEPTH_NONE)
-local cache_normals = GetRenderTargetGWater("2gwater_cache_normals", 1 / 2, MATERIAL_RT_DEPTH_SEPARATE)
+local cache_normals = GetRenderTargetGWater("1gwater_cache_normals", 1 / 1, MATERIAL_RT_DEPTH_SEPARATE)
 local cache_bloom = GetRenderTargetGWater("2gwater_cache_bloom", 1 / 2)	-- for blurring
 local water_blur = Material("gwater2/smooth")
 local water_volumetric = Material("gwater2/volumetric")
@@ -132,7 +132,7 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	for i = 1, blur_passes:GetInt() do
 		-- Blur X
 		--local scale = (5 - i) * 0.05
-		local scale = (0.5 / i) * blur_scale:GetFloat()
+		local scale = (0.25 / i) * blur_scale:GetFloat()
 		water_blur:SetTexture("$normaltexture", cache_normals)
 		water_blur:SetVector("$scrs", Vector(scale / scrw, 0))
 		render.PushRenderTarget(cache_bloom)	-- Bloom texture resolution is significantly lower than screen res, enabling for a faster blur
