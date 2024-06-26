@@ -1,6 +1,56 @@
 AddCSLuaFile()
 
 if SERVER then 
+	-- swimming code
+	local gravity_convar = GetConVar("sv_gravity")
+	local function in_water(ply) 
+		return ply.GWATER2_CONTACTS and ply.GWATER2_CONTACTS > 50
+	end
+
+	-- swim code provided by kodya
+	hook.Add("CalcMainActivity", "gwater2_water_swimming", function(ply)
+		if !in_water(ply) or ply:InVehicle() then return end
+		return ACT_MP_SWIM, -1
+	end)
+
+	hook.Add("Move", "gwater2_water_swimming", function(ply, move)
+		if !in_water(ply) then return end
+
+		local vel = move:GetVelocity()
+		local ang = move:GetMoveAngles()
+
+		local acel =
+		(ang:Forward() * move:GetForwardSpeed()) +
+		(ang:Right() * move:GetSideSpeed()) +
+		(ang:Up() * move:GetUpSpeed())
+
+		local aceldir = acel:GetNormalized()
+		local acelspeed = math.min(acel:Length(), ply:GetMaxSpeed())
+		acel = aceldir * acelspeed * 2
+
+		if bit.band(move:GetButtons(), IN_JUMP) ~= 0 then
+			acel.z = acel.z + ply:GetMaxSpeed()
+		end
+
+		vel = vel + acel * FrameTime()
+		vel = vel * (1 - FrameTime() * 2)
+
+		local pgrav = ply:GetGravity() == 0 and 1 or ply:GetGravity()
+		local gravity = pgrav * gravity_convar:GetFloat() * 0.5
+		vel.z = vel.z + FrameTime() * gravity
+
+		move:SetVelocity(vel * 0.99)
+	end)
+
+	hook.Add("FinishMove", "gwater2_water_swimming", function(ply, move)
+		if !in_water(ply) then return end
+		local vel = move:GetVelocity()
+		local pgrav = ply:GetGravity() == 0 and 1 or ply:GetGravity()
+		local gravity = pgrav * gravity_convar:GetFloat() * 0.5
+
+		vel.z = vel.z + FrameTime() * gravity
+		move:SetVelocity(vel)
+	end)
 	return 
 end
 
@@ -149,7 +199,7 @@ end
 
 local function gwater_tick2()
 	last_systime = os.clock()
-	gwater2.solver:ApplyContacts(limit_fps * 0.05, 3, 0)
+	gwater2.solver:ApplyContacts(limit_fps * 0.01, 3, 0)
 	gwater2.solver:IterateMeshes(gwater2.update_meshes)
 	gwater2.solver:Tick(limit_fps, 0)
 end
@@ -167,6 +217,6 @@ timer.Create("gwater2_tick", limit_fps, 0, function()
 	if !gwater2.new_ticker then return end
 	gwater_tick2()
 end)
-
+gwater2.reset_solver()
 hook.Add("InitPostEntity", "gwater2_addprop", gwater2.reset_solver)
 hook.Add("OnEntityCreated", "gwater2_addprop", function(ent) timer.Simple(0, function() add_prop(ent) end) end)	// timer.0 so data values are setup correctly

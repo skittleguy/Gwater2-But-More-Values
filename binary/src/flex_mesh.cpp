@@ -182,8 +182,13 @@ void FlexMesh::update() {
 Vector4D FlexMesh::get_pos() {
 	return pos;
 }
+
 void FlexMesh::set_pos(Vector p) {
 	pos = Vector4D(p.x, p.y, p.z, 0);	// unsure what the last number is for. FleX requires it to exist
+}
+
+void FlexMesh::set_pos(Vector4D p) {
+	pos = p;
 }
 
 Vector4D FlexMesh::get_ang() {
@@ -202,6 +207,10 @@ void FlexMesh::set_ang(QAngle a) {
 	ang = angle_to_quat(a);
 }
 
+void FlexMesh::set_ang(Vector4D a) {
+	ang = a;
+}
+
 NvFlexTriangleMeshId FlexMesh::get_id() {
 	return id;
 }
@@ -214,6 +223,11 @@ int FlexMesh::get_flags() {
 	return flags;
 }
 
+FlexMesh::FlexMesh() {
+	
+}
+
 FlexMesh::FlexMesh(int id) {
 	entity_id = id;
 }
+

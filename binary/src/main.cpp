@@ -340,6 +340,7 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 	float buoyancy_mul = LUA->GetNumber(4);
 
 	std::vector<FlexMesh> meshes = *flex->get_meshes();
+	std::map<int, FlexMesh> forces;
 
 	// Get all props and average them
 	for (int i = 0; i < flex->get_active_particles(); i++) {
@@ -349,7 +350,7 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 			//int vel_index = i * max_contacts + contact;
 
 			float prop_id = (int)contact_vel[plane_index].w;
-			if (prop_id < 0) break;	//	planes defined by FleX will return -1
+			if (prop_id <= 0) break;	//	planes defined by FleX will return -1
 
 			FlexMesh prop = FlexMesh(0);
 			try {
@@ -359,58 +360,24 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 				continue;
 			}
 
-			void* ent = UTIL_EntityByIndex(prop.get_entity_id());
-
-			if (ent == nullptr) {
-				//Warning("Couldn't find entity!\n");
-				continue;
-			}
-#ifdef WIN64
-			IPhysicsObject* phys = *(IPhysicsObject**)((uint64_t)ent + 0x288);
-#else
-			IPhysicsObject* phys = *(IPhysicsObject**)((uint64_t)ent + 0x1e0);
-#endif
-			if (phys == nullptr) {
-				//Warning("Couldn't find entity's physics object!\n");
-				continue;
-			}
-
+			int prop_entity_id = prop.get_entity_id();
+			
 			Vector plane = contact_planes[plane_index].AsVector3D();
 			Vector contact_pos = particle_pos[i].AsVector3D() - plane * radius * 0.5;	// Particle position is not directly *on* plane
-			Vector prop_vel; phys->GetVelocityAtPoint(contact_pos, &prop_vel);
-			Vector local_vel = (particle_vel[i] * CM_2_INCH - prop_vel) * flex->get_parameter("timescale");
+			Vector local_vel = particle_vel[i] * flex->get_parameter("timescale");
 			Vector impact_vel = (plane * fmin(local_vel.Dot(plane), 0) - contact_vel[plane_index].AsVector3D() * dampening_mul) * volume_mul;
 
-			// Buoyancy (completely faked. not at all accurate)
-			Vector prop_pos;
-			phys->GetPosition(&prop_pos, NULL);
-			if (contact_pos.z < prop_pos.z + phys->GetMassCenterLocalSpace().z) {
-				impact_vel += Vector(0, 0, volume_mul * buoyancy_mul);
-			}
-
-			// Dampening (completely faked. not at all accurate)
-			//Vector prop_vel;
-			//phys->GetVelocityAtPoint(contact_pos, &prop_vel);
-			//impact_vel -= prop_vel * 0.1 * volume_mul;
-
-			// Cap amount of force (vphysics crashes can occur without it)
-			float limit = 100 * phys->GetMass();
-			if (impact_vel.Dot(impact_vel) > limit * limit) {
-				impact_vel = impact_vel.NormalizedSafe(Vector(0, 0, 0)) * limit;
-			}
-
-			phys->ApplyForceOffset(impact_vel, contact_pos);
-			/*
+			//phys->ApplyForceOffset(impact_vel, contact_pos);
+			// dont really like this try/catch, but I'm not aware of a better method
 			try {
-				Mesh* prop = props.at(prop_id);
-				prop->pos = prop->pos + float4(prop_pos.x, prop_pos.y, prop_pos.z, 1);
-				prop->ang = prop->ang + float4(impact_vel.x, impact_vel.y, impact_vel.z, 0);
+				FlexMesh& prop = forces.at(prop_entity_id);
+				prop.set_pos(prop.get_pos() + Vector4D(contact_pos.x, contact_pos.y, contact_pos.z, 1));
+				prop.set_ang(prop.get_ang() + Vector4D(impact_vel.x, impact_vel.y, impact_vel.z, 0));
+			} catch (std::exception e) {
+				forces[prop_entity_id] = FlexMesh(prop_entity_id);
+				forces[prop_entity_id].set_pos(Vector4D(contact_pos.x, contact_pos.y, contact_pos.z, 1));
+				forces[prop_entity_id].set_ang(Vector4D(impact_vel.x, impact_vel.y, impact_vel.z, 0));
 			}
-			catch (std::exception e) {
-				props[prop_id] = new Mesh(flexLibrary);
-				props[prop_id]->pos = float4(prop_pos.x, prop_pos.y, prop_pos.z, 1);
-				props[prop_id]->ang = float4(impact_vel.x, impact_vel.y, impact_vel.z, 0);
-			}*/
 		}
 	}
 
@@ -420,6 +387,80 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 	NvFlexUnmap(flex->get_buffer("contact_planes"));
 	NvFlexUnmap(flex->get_buffer("contact_count"));
 	NvFlexUnmap(flex->get_buffer("contact_indices"));
+
+	// Now that we have all our contact data, iterate and apply forces
+	for (std::pair<int, FlexMesh> force : forces) {
+		float contacts = force.second.get_pos().w;
+		Vector force_pos = force.second.get_pos().AsVector3D();
+		Vector force_vel = force.second.get_ang().AsVector3D();
+
+		// Average the position of the force
+		force_pos /= contacts;
+
+		// Apply serverside data
+		ILuaBase* LUA_SERVER = (ILuaBase*)GLOBAL_LUA->GetLuaInterface(State::SERVER);
+		if (LUA_SERVER) {
+			// _G.Entity(index).GWATER2_CONTACTS = contacts;
+			LUA_SERVER->PushSpecial(SPECIAL_GLOB);
+			LUA_SERVER->GetField(-1, "Entity");
+			if (LUA_SERVER->IsType(-1, Type::FUNCTION)) {
+				LUA_SERVER->PushNumber(force.first);
+				if (!LUA_SERVER->PCall(1, 1, 0)) {
+					if (LUA_SERVER->IsType(-1, Type::ENTITY)) {
+						if (LUA_SERVER->GetMetaTable(-1)) {
+							LUA_SERVER->PushNumber(contacts);
+							LUA_SERVER->SetField(-2, "GWATER2_CONTACTS");
+							LUA_SERVER->Pop();	// Pop metatable
+						}
+					} else {
+						Warning("[GWater2 Internal Error]: _G.Entity() Is returning a non-entity! (%i)\n", LUA_SERVER->GetType(-1));
+					}
+					LUA_SERVER->Pop();	// Pop entity
+				}
+			} else {
+				Warning("[GWater2 Internal Error]: _G.Entity Is returning a non-function! (%i)\n", LUA_SERVER->GetType(-1));
+			}
+			LUA_SERVER->Pop();	// Pop _G
+		}
+		
+		// Apply the force
+		void* ent = UTIL_EntityByIndex(force.first);
+
+		if (ent == nullptr) {
+			//Warning("Couldn't find entity!\n");
+			continue;
+		}
+#ifdef WIN64
+		IPhysicsObject* phys = *(IPhysicsObject**)((uint64_t)ent + 0x288);
+#else
+		IPhysicsObject* phys = *(IPhysicsObject**)((uint64_t)ent + 0x1e0);
+#endif
+		if (phys == nullptr) {
+			//Warning("Couldn't find entity's physics object!\n");
+			continue;
+		}
+
+		// Buoyancy (completely faked. not at all accurate)
+		Vector prop_pos;
+		phys->GetPosition(&prop_pos, NULL);
+		if (force_pos.z < prop_pos.z + phys->GetMassCenterLocalSpace().z) {
+			force_vel += Vector(0, 0, volume_mul * buoyancy_mul);
+		}
+
+		// Dampening (completely faked. not at all accurate)
+		//Vector prop_vel;
+		//phys->GetVelocityAtPoint(contact_pos, &prop_vel);
+		//impact_vel -= prop_vel * 0.1 * volume_mul;
+
+		// Cap amount of force (vphysics crashes can occur without it)
+		float limit = 100 * phys->GetMass();
+		if (force_vel.Dot(force_vel) > limit * limit) {
+			force_vel = force_vel.NormalizedSafe(Vector(0, 0, 0)) * limit;
+		}
+
+		Vector prop_vel; phys->GetVelocityAtPoint(force_pos, &prop_vel);
+		phys->ApplyForceOffset(force_vel * CM_2_INCH - prop_vel, force_pos);
+	}
 
 	return 0;
 }
