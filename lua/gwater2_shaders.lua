@@ -73,7 +73,7 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	local forward = EyeAngles():Forward()
 	-- render.SetLightingOrigin(EyePos() + (EyeAngles():Forward() * 128))
 
-	-- HACK HACK! hack to make lighting work properly
+	-- HACK HACK HACK! Makes lighting work properly in sourceengine
 	render.PushRenderTarget(cache_screen0)
 	render.OverrideDepthEnable(true, false)
 	local tr = util.QuickTrace( EyePos(), LocalPlayer():EyeAngles():Forward() * 800, LocalPlayer())

@@ -217,6 +217,6 @@ timer.Create("gwater2_tick", limit_fps, 0, function()
 	if !gwater2.new_ticker then return end
 	gwater_tick2()
 end)
-gwater2.reset_solver()
+
 hook.Add("InitPostEntity", "gwater2_addprop", gwater2.reset_solver)
 hook.Add("OnEntityCreated", "gwater2_addprop", function(ent) timer.Simple(0, function() add_prop(ent) end) end)	// timer.0 so data values are setup correctly

@@ -879,11 +879,18 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 			Make sure to read the changelog to see what has been updated!
 
 			Changelog (v0.4b):
-			- Improved diffuse particle fidelity
-			- Improved renderer so it runs on multiple cores (multithreaded)
-			- Added reaction forces (turned off by default)
+			- Rewrote renderer so it runs on multiple cores (multithreaded, should run faster though it may depend on your hardware)
+			- Added reaction forces
+			- Added swimming
 			- Added temporary weapons tab in menu
+			- Added some padding to the frustrum culling calculations
+			- Improved lighting calculations (flashlights, lamps, and lights now properly interact with water reflection)
+			- Improved diffuse particle visuals
+			- Improved anisotropy calculations at smaller radii
+			- Improved performance of absorption calculations by 63,900% (not kidding. I really fucked up the original implementation)
 			- Tweaked settings in menu
+			- Fixed HDR breaking cubemap reflections
+			- (Properly) Fixed MSAA breaking water reflections
 		]])
 		label:SetColor(Color(255, 255, 255))
 		label:SetTextInset(5, 30)
