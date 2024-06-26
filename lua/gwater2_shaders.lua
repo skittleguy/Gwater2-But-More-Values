@@ -12,7 +12,7 @@ end
 local cache_screen0 = render.GetScreenEffectTexture()
 local cache_screen1 = render.GetScreenEffectTexture(1)
 local cache_depth = GetRenderTargetGWater("1gwater_cache_depth", 1 / 1)
-local cache_absorption = GetRenderTargetGWater("gwater_cache_absorption", 1 / 1, MATERIAL_RT_DEPTH_NONE)
+local cache_absorption = GetRenderTargetGWater("8gwater_cache_absorption", 1 / 8, MATERIAL_RT_DEPTH_NONE)
 local cache_normals = GetRenderTargetGWater("1gwater_cache_normals", 1 / 1, MATERIAL_RT_DEPTH_SEPARATE)
 local cache_bloom = GetRenderTargetGWater("2gwater_cache_bloom", 1 / 2)	-- for blurring
 local water_blur = Material("gwater2/smooth")
