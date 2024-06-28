@@ -4,6 +4,7 @@ local GWATER2_PARTICLES_TO_SWIM = 30	-- TODO: Move to separate file
 -- swimming code
 local gravity_convar = GetConVar("sv_gravity")
 local function in_water(ply) 
+	if ply:OnGround() then return false end
 	return ply.GWATER2_CONTACTS and ply.GWATER2_CONTACTS >= GWATER2_PARTICLES_TO_SWIM
 end
 

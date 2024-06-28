@@ -196,6 +196,8 @@ IMesh* _build_diffuse(int id, FlexRendererThreadData data) {
 }
 
 // lord have mercy brothers
+
+// Launches 1 thread for each mesh. particles are split into meshes with MAX_PRIMATIVES number of primatives
 void FlexRenderer::build_meshes(FlexSolver* flex, float diffuse_radius) {
 	// Clear previous imeshes since they are being rebuilt
 	destroy_meshes();

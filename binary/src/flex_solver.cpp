@@ -191,7 +191,7 @@ void FlexSolver::tick(float dt) {
 	// read back (async)
 	NvFlexGetParticles(solver, get_buffer("particle_pos"), copy_description);
 	NvFlexGetVelocities(solver, get_buffer("particle_vel"), copy_description);
-	NvFlexGetPhases(solver, get_buffer("particle_phase"), copy_description);
+	//NvFlexGetPhases(solver, get_buffer("particle_phase"), copy_description);
 	//NvFlexGetActive(solver, get_buffer("particle_active"), copy_description);
 	NvFlexGetDiffuseParticles(solver, get_buffer("diffuse_pos"), get_buffer("diffuse_vel"), get_buffer("diffuse_count"));
 	if (get_parameter("coupling") != 0) NvFlexGetContacts(solver, get_buffer("contact_planes"), get_buffer("contact_vel"), get_buffer("contact_indices"), get_buffer("contact_count"));

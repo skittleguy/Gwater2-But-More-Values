@@ -128,6 +128,7 @@ gwater2 = {
 gwater2["surface_tension"] = gwater2.solver:GetParameter("surface_tension") * gwater2.solver:GetParameter("radius")^4	-- dont ask me why its a power of 4
 gwater2["fluid_rest_distance"] = gwater2.solver:GetParameter("fluid_rest_distance") / gwater2.solver:GetParameter("radius")
 gwater2["collision_distance"] = gwater2.solver:GetParameter("collision_distance") / gwater2.solver:GetParameter("radius")
+gwater2["cohesion"] = gwater2.solver:GetParameter("cohesion") * gwater2.solver:GetParameter("radius") * 0.1	-- cohesion scales by radius, for some reason..
 gwater2["blur_passes"] = 3
 gwater2["size"] = 4
 gwater2["density"] = 1
@@ -145,9 +146,9 @@ local function gwater_tick()
 	LocalPlayer().GWATER2_CONTACTS = 0
 
 	local systime = os.clock()
-	if gwater2.solver:Tick(average_frametime, 1) then
+	if gwater2.solver:Tick(limit_fps, 1) then
 	//if gwater2.solver:Tick(1/165, hang_thread and 0 or 1) then
-		average_frametime = average_frametime + ((systime - last_systime) - average_frametime) * 0.03
+		average_frametime = average_frametime + (limit_fps - average_frametime) * 0.03
 		last_systime = systime	// smooth out fps
 	end
 end
@@ -156,7 +157,7 @@ local function gwater_tick2()
 	last_systime = os.clock()
 	gwater2.solver:ApplyContacts(limit_fps * 0.01, 3, 0)
 
-	local particles_in_radius = gwater2.solver:GetParticlesInRadius(LocalPlayer():GetPos(), gwater2.solver:GetParameter("fluid_rest_distance") * 2, GWATER2_PARTICLES_TO_SWIM)
+	local particles_in_radius = gwater2.solver:GetParticlesInRadius(LocalPlayer():GetPos() + LocalPlayer():OBBCenter(), gwater2.solver:GetParameter("fluid_rest_distance") * 2.5, GWATER2_PARTICLES_TO_SWIM)
 	GWATER2_QuickHackRemoveMeASAP(	-- TODO: REMOVE THIS HACKY SHIT!!!!!!!!!!!!!
 		LocalPlayer():EntIndex(), 
 		particles_in_radius
