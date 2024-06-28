@@ -181,7 +181,7 @@ local function set_gwater_parameter(option, val)
 			gwater2.solver:SetParameter(option, r1)
 			options.solver:SetParameter(option, r2)
 		elseif option == "cohesion" then	-- also scales by radius
-			local r1 = math.min(val / gwater2.solver:GetParameter("radius") * 10)
+			local r1 = math.min(val / gwater2.solver:GetParameter("radius") * 10, 1)
 			gwater2.solver:SetParameter(option, r1)
 			options.solver:SetParameter(option, r1)
 		end
@@ -195,13 +195,13 @@ local function set_gwater_parameter(option, val)
 		gwater2.solver:SetParameter("surface_tension", gwater2["surface_tension"] / val^4)	-- literally no idea why this is a power of 4
 		gwater2.solver:SetParameter("fluid_rest_distance", val * gwater2["fluid_rest_distance"])
 		gwater2.solver:SetParameter("collision_distance", val * gwater2["collision_distance"])
-		gwater2.solver:SetParameter("cohesion", math.min(gwater2["cohesion"] / val * 10, 2))
+		gwater2.solver:SetParameter("cohesion", math.min(gwater2["cohesion"] / val * 10, 1))
 		
 		if val > 15 then val = 15 end	-- explody
 		options.solver:SetParameter("surface_tension", gwater2["surface_tension"] / val^4)
 		options.solver:SetParameter("fluid_rest_distance", val * gwater2["fluid_rest_distance"])
 		options.solver:SetParameter("collision_distance", val * gwater2["collision_distance"])
-		options.solver:SetParameter("cohesion", math.min(gwater2["cohesion"] / val * 10))
+		options.solver:SetParameter("cohesion", math.min(gwater2["cohesion"] / val * 10, 1))
 	end
 
 	if option != "diffuse_threshold" and option != "dynamic_friction" then -- hack hack hack! fluid preview doesn't use diffuse particles
@@ -896,7 +896,6 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 			- Improved lighting calculations (flashlights, lamps, and lights now properly interact with water reflection)
 			- Improved diffuse particle visuals
 			- Improved anisotropy calculations at smaller radii
-			- Improved performance of absorption calculations by 63,900% (not kidding. I really fucked up the original implementation)
 			- Tweaked settings in menu
 			- Fixed HDR breaking cubemap reflections
 			- (Properly) Fixed MSAA breaking water reflections
