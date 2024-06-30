@@ -62,8 +62,8 @@ local options = {
 	["Absorption"] = {text = "Enables absorption of light over distance inside of fluid.\n\n(more depth = darker color)\n\nMedium performance impact."},
 	["Depth Fix"] = {text = "Makes particles appear spherical instead of flat, creating a cleaner and smoother water surface.\n\nCauses shader overdraw.\n\nMedium-High performance impact."},
 	["Particle Limit"] = {text = "USE THIS PARAMETER AT YOUR OWN RISK.\n\nChanges the limit of particles.\n\nNote that a higher limit will negatively impact performance even with the same number of particles spawned."},
+	["Reaction Forces"] = {text = "0 = No reaction forces\n\n1 = Simple reaction forces. Enables swimming\n\n2 = Full reaction forces, Any prop can be moved by water."},
 	["New Solver"] = {text = "If unchecked, uses the solver used in 0.1b and 0.2b.\n\nThe old solver usually grants better performance, but causes more particle leakage.\n\nI suggest using the old solver when recording."},
-
 	
 	["Size"] = {text = "Size of the box the particles spawn in"},
 	["Density"] = {text = "Density of particles.\n Controls how far apart they are"},
@@ -679,6 +679,7 @@ concommand.Add("gwater2_menu", function()
 			Color(255, 127, 0),
 			Color(127, 255, 0),
 			Color(255, 0, 0), 
+			Color(255, 0, 0), 
 			Color(250, 250, 0),
 			Color(255, 127, 0),
 			Color(255, 0, 0),
@@ -694,7 +695,7 @@ concommand.Add("gwater2_menu", function()
 			options.blur_passes:SetInt(val) 
 		end) 
 		slider:SetValue(options.blur_passes:GetInt())
-
+	
 		-- particle limit box
 		local label = vgui.Create("DLabel", scrollPanel)
 		label:SetPos(10, 140)
@@ -704,8 +705,8 @@ concommand.Add("gwater2_menu", function()
 		labels[4] = label
 
 		local slider = vgui.Create("DNumSlider", scrollPanel)
-		slider:SetPos(0, 140)
-		slider:SetSize(330, 20)
+		slider:SetPos(10, 140)
+		slider:SetSize(322, 20)
 		slider:SetMinMax(1, 1000000)
 		slider:SetDecimals(0)
 		slider:SetValue(gwater2.solver:GetMaxParticles())
@@ -723,7 +724,7 @@ concommand.Add("gwater2_menu", function()
 
 		-- 'confirm' particle limit button. Creates another DFrame
 		local button = vgui.Create("DButton", scrollPanel)
-		button:SetPos(330, 140)
+		button:SetPos(332, 140)
 		button:SetText("")
 		button:SetSize(20, 20)
 		button:SetImage("icon16/accept.png")
@@ -789,18 +790,19 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 			surface.PlaySound("buttons/button15.wav")
 		end
 
+		labels[5] = create_slider(scrollPanel, "Reaction Forces", 0, 2, 0, 170, 370, -10)
 
 		-- Absorption checkbox & label
 		local label = vgui.Create("DLabel", scrollPanel)	
-		label:SetPos(10, 170)
+		label:SetPos(10, 200)
 		label:SetSize(100, 100)
 		label:SetFont("GWater2Param")
 		label:SetText("Absorption")
 		label:SetContentAlignment(7)
-		labels[5] = label
+		labels[6] = label
 
 		local box = vgui.Create("DCheckBox", scrollPanel)
-		box:SetPos(132, 170)
+		box:SetPos(132, 200)
 		box:SetSize(20, 20)
 		box:SetChecked(options.absorption:GetBool())
 		local water_volumetric = Material("gwater2/volumetric")
@@ -811,15 +813,15 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 
 		-- Depth fix checkbox & label
 		local label = vgui.Create("DLabel", scrollPanel)	
-		label:SetPos(10, 200)
+		label:SetPos(10, 230)
 		label:SetSize(100, 100)
 		label:SetFont("GWater2Param")
 		label:SetText("Depth Fix")
 		label:SetContentAlignment(7)
-		labels[6] = label
+		labels[7] = label
 
 		local box = vgui.Create("DCheckBox", scrollPanel)
-		box:SetPos(132, 200)
+		box:SetPos(132, 230)
 		box:SetSize(20, 20)
 		box:SetChecked(options.depth_fix:GetBool())
 		local water_normals = Material("gwater2/normals")
@@ -830,15 +832,15 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 
 		-- Solver checkbox
 		local label = vgui.Create("DLabel", scrollPanel)	
-		label:SetPos(10, 230)
+		label:SetPos(10, 260)
 		label:SetSize(100, 100)
 		label:SetFont("GWater2Param")
 		label:SetText("New Solver")
 		label:SetContentAlignment(7)
-		labels[7] = label
+		labels[8] = label
 
 		local box = vgui.Create("DCheckBox", scrollPanel)
-		box:SetPos(132, 230)
+		box:SetPos(132, 260)
 		box:SetSize(20, 20)
 		box:SetChecked(gwater2.new_ticker)
 		function box:OnChange(val)
@@ -895,7 +897,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 			- Added PVS particle culling
 			- Improved lighting calculations (flashlights, lamps, and lights now properly interact with water reflection)
 			- Improved diffuse particle visuals
-			- Improved anisotropy calculations at smaller radii
+			- Improved anisotropy calculations / visuals at smaller and larger radii
 			- Tweaked settings in menu
 			- Fixed HDR breaking cubemap reflections
 			- (Properly) Fixed MSAA breaking water reflections

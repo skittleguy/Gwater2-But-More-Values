@@ -105,7 +105,10 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 		gwater2.renderer:DrawWater()
 		render.CopyTexture(render.GetRenderTarget(), cache_absorption)
 		render.DrawTextureToScreen(cache_screen0)
-		
+	end
+
+	-- dont render bubbles underwater if opaque
+	if a < 255 then
 		-- Bubble particles inside water
 		-- Make sure the water screen texture has bubbles but the normal framebuffer does not
 		render.SetMaterial(water_bubble)

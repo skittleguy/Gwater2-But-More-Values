@@ -452,14 +452,15 @@ LUA_FUNCTION(FLEXSOLVER_GetParticlesInRadius) {
 	float radius = LUA->GetNumber(3) * LUA->GetNumber(3);	// calculation is squared to avoid sqrt()
 	int early_exit = (int)LUA->GetNumber(4);	// returns 0 if nil
 
-	Vector4D* particle_pos = (Vector4D*)flex->get_host("particle_pos");
 	int num_particles = 0;
-	
-	for (int i = 0; i < flex->get_active_particles(); i++) {
-		if (particle_pos[i].AsVector3D().DistToSqr(pos) > radius) continue;
+	if (flex->get_parameter("reaction_forces") > 0) {
+		Vector4D* particle_pos = (Vector4D*)flex->get_host("particle_pos");
+		for (int i = 0; i < flex->get_active_particles(); i++) {
+			if (particle_pos[i].AsVector3D().DistToSqr(pos) > radius) continue;
 
-		num_particles++;
-		if (early_exit && num_particles >= early_exit) break;
+			num_particles++;
+			if (early_exit && num_particles >= early_exit) break;
+		}
 	}
 
 	LUA->PushNumber(num_particles);

@@ -156,7 +156,6 @@ end
 local function gwater_tick2()
 	last_systime = os.clock()
 	gwater2.solver:ApplyContacts(limit_fps * 0.01, 3, 0)
-
 	local particles_in_radius = gwater2.solver:GetParticlesInRadius(LocalPlayer():GetPos() + LocalPlayer():OBBCenter(), gwater2.solver:GetParameter("fluid_rest_distance") * 2.5, GWATER2_PARTICLES_TO_SWIM)
 	GWATER2_QuickHackRemoveMeASAP(	-- TODO: REMOVE THIS HACKY SHIT!!!!!!!!!!!!!
 		LocalPlayer():EntIndex(), 

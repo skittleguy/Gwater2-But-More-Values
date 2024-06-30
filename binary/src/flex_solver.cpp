@@ -3,8 +3,6 @@
 
 #define MAX_COLLIDERS 8192	// source can't go over this number of props so.. might as well just have it as the limit
 
-// todo: add smartcomments
-
 // Struct that holds FleX solver data
 void FlexSolver::add_buffer(std::string name, int type, int count) {
 	NvFlexBuffer* buffer = NvFlexAllocBuffer(library, count, type, eNvFlexBufferHost);
@@ -190,13 +188,15 @@ void FlexSolver::tick(float dt) {
 
 	// read back (async)
 	NvFlexGetParticles(solver, get_buffer("particle_pos"), copy_description);
-	NvFlexGetVelocities(solver, get_buffer("particle_vel"), copy_description);
 	//NvFlexGetPhases(solver, get_buffer("particle_phase"), copy_description);
 	//NvFlexGetActive(solver, get_buffer("particle_active"), copy_description);
 	NvFlexGetDiffuseParticles(solver, get_buffer("diffuse_pos"), get_buffer("diffuse_vel"), get_buffer("diffuse_count"));
-	if (get_parameter("coupling") != 0) NvFlexGetContacts(solver, get_buffer("contact_planes"), get_buffer("contact_vel"), get_buffer("contact_indices"), get_buffer("contact_count"));
 	if (get_parameter("anisotropy_scale") != 0) NvFlexGetAnisotropy(solver, get_buffer("particle_ani0"), get_buffer("particle_ani1"), get_buffer("particle_ani2"), copy_description);
 	if (get_parameter("smoothing") != 0) NvFlexGetSmoothParticles(solver, get_buffer("particle_smooth"), copy_description);
+	if (get_parameter("reaction_forces") > 1) {
+		NvFlexGetVelocities(solver, get_buffer("particle_vel"), copy_description);
+		NvFlexGetContacts(solver, get_buffer("contact_planes"), get_buffer("contact_vel"), get_buffer("contact_indices"), get_buffer("contact_count"));
+	}
 }
 
 void FlexSolver::add_mesh(FlexMesh mesh) {
@@ -407,7 +407,7 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	// Extra values we store which are not stored in flexes default parameters
 	param_map["substeps"] = new float(3);
 	param_map["timescale"] = new float(1);
-	param_map["coupling"] = new float(0);
+	param_map["reaction_forces"] = new float(1);
 
 	// FleX GPU Buffers
 	add_buffer("particle_pos", sizeof(Vector4D), particles);
@@ -448,7 +448,7 @@ FlexSolver::~FlexSolver() {
 
 	delete param_map["substeps"];		// Seperate since its externally stored & not a default parameter
 	delete param_map["timescale"];		// ^
-	delete param_map["coupling"];		// ^
+	delete param_map["reaction_forces"];// ^
 	delete params;
 	delete copy_description;
 

@@ -5,7 +5,6 @@ extern IVEngineClient* engine = NULL;
 
 //extern IMaterialSystem* materials = NULL;	// stops main branch compile from bitching
 
-// Not sure why this isn't defined in the standard math library
 #define min(a, b) a < b ? a : b
 
 float u[3] = { 0.5 - SQRT3 / 2, 0.5, 0.5 + SQRT3 / 2 };
@@ -29,7 +28,7 @@ IMesh* _build_water_anisotropy(int id, FlexRendererThreadData data) {
 		// PVS Culling
 		if (!engine->IsBoxVisible(particle_pos, particle_pos)) continue;
 		
-		// Add to our buffer
+		// Particle is good, render it
 		data.render_buffer[start + particles_to_render] = particle_index;
 		particles_to_render++;
 	}
@@ -321,7 +320,7 @@ FlexRenderer::FlexRenderer(int max_meshes) {
 	meshes = (IMesh**)calloc(sizeof(IMesh*), allocated * 2);
 	if (!meshes) return;	// TODO: Fix undefined behavior if this statement runs
 
-	threads = new ThreadPool(allocated * 2);
+	threads = new ThreadPool(MAX_THREADS);
 
 	queue = (std::future<IMesh*>*)calloc(sizeof(std::future<IMesh*>), allocated * 2);	// Needs to be zero initialized
 	if (!queue) return;
