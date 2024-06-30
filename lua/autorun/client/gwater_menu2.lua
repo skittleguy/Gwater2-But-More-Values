@@ -62,12 +62,15 @@ local options = {
 	["Absorption"] = {text = "Enables absorption of light over distance inside of fluid.\n\n(more depth = darker color)\n\nMedium performance impact."},
 	["Depth Fix"] = {text = "Makes particles appear spherical instead of flat, creating a cleaner and smoother water surface.\n\nCauses shader overdraw.\n\nMedium-High performance impact."},
 	["Particle Limit"] = {text = "USE THIS PARAMETER AT YOUR OWN RISK.\n\nChanges the limit of particles.\n\nNote that a higher limit will negatively impact performance even with the same number of particles spawned."},
-	["Reaction Forces"] = {text = "0 = No reaction forces\n\n1 = Simple reaction forces. Enables swimming\n\n2 = Full reaction forces, Any prop can be moved by water."},
+	["Reaction Forces"] = {text = "0 = No reaction forces\n\n1 = Simple reaction forces. (Swimming)\n\n2 = Full reaction forces (Water can move props).\n\nNote that reaction forces only work with 'New Solver' on."},
 	["New Solver"] = {text = "If unchecked, uses the solver used in 0.1b and 0.2b.\n\nThe old solver usually grants better performance, but causes more particle leakage.\n\nI suggest using the old solver when recording."},
 	
 	["Size"] = {text = "Size of the box the particles spawn in"},
 	["Density"] = {text = "Density of particles.\n Controls how far apart they are"},
 	["Forward Velocity"] = {text = "The forward facing velocity the particles spawn with"},
+
+	["Force Multiplier"] = {text = "Determines the amount of force which is applied to props by water.\n\nNote that 'Reaction Forces' in the performance tab must be set to 2 in order for this to take effect."},
+	["Force Buoyancy"] = {text = "Buoyant force which is applied to props in water.\n\nThe implementation is by no means accurate and may cause phantom forces"},
 }
 
 -- garry, sincerely... fuck you
@@ -526,11 +529,15 @@ concommand.Add("gwater2_menu", function()
 		labels[6], sliders["Surface Tension"] = create_slider(scrollPanel, "Surface Tension", 0, 1, 2, 200, 350, 10)
 		labels[7], sliders["Timescale"] = create_slider(scrollPanel, "Timescale", 0, 2, 2, 230)
 
-		create_label(scrollPanel, "Advanced Physics Parameters", "More technical settings.", 275, 265)
+		create_label(scrollPanel, "Advanced Physics Parameters", "More technical settings.", 275, 182)
 		labels[8], sliders["Collision Distance"] = create_slider(scrollPanel, "Collision Distance", 0.1, 1, 2, 327, 315, 55)
 		labels[9], sliders["Fluid Rest Distance"] = create_slider(scrollPanel, "Fluid Rest Distance", 0.55, 0.85, 2, 357, 315, 55)
 		labels[10], sliders["Dynamic Friction"] = create_slider(scrollPanel, "Dynamic Friction", 0, 1, 2, 385, 317, 55)
 		labels[11], sliders["Vorticity Confinement"] = create_slider(scrollPanel, "Vorticity Confinement", 0, 200, 0, 417, 300, 75)
+
+		create_label(scrollPanel, "Reaction Force Parameters", "Physics settings related to water forcing props.", 462, 265)
+		labels[12], sliders["Force Multiplier"] = create_slider(scrollPanel, "Force Multiplier", 0.001, 0.02, 3, 514, 315, 55)
+		labels[13], sliders["Force Buoyancy"] = create_slider(scrollPanel, "Force Buoyancy", 0, 300, 1, 544, 315, 55)
 		
 		function scrollPanel:AnimationThink()
 			local mousex, mousey = self:LocalCursorPos()

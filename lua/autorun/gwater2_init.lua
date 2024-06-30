@@ -130,9 +130,13 @@ gwater2["fluid_rest_distance"] = gwater2.solver:GetParameter("fluid_rest_distanc
 gwater2["collision_distance"] = gwater2.solver:GetParameter("collision_distance") / gwater2.solver:GetParameter("radius")
 gwater2["cohesion"] = gwater2.solver:GetParameter("cohesion") * gwater2.solver:GetParameter("radius") * 0.1	-- cohesion scales by radius, for some reason..
 gwater2["blur_passes"] = 3
+-- watergun specific
 gwater2["size"] = 4
 gwater2["density"] = 1
 gwater2["forward_velocity"] = 100
+-- reaction force specific
+gwater2["force_multiplier"] = 0.01
+gwater2["force_buoyancy"] = 0
 
 -- tick particle solver
 local last_systime = os.clock()
@@ -155,7 +159,7 @@ end
 
 local function gwater_tick2()
 	last_systime = os.clock()
-	gwater2.solver:ApplyContacts(limit_fps * 0.01, 3, 0)
+	gwater2.solver:ApplyContacts(limit_fps * gwater2["force_multiplier"], 3, gwater2["force_buoyancy"])
 	local particles_in_radius = gwater2.solver:GetParticlesInRadius(LocalPlayer():GetPos() + LocalPlayer():OBBCenter(), gwater2.solver:GetParameter("fluid_rest_distance") * 2.5, GWATER2_PARTICLES_TO_SWIM)
 	GWATER2_QuickHackRemoveMeASAP(	-- TODO: REMOVE THIS HACKY SHIT!!!!!!!!!!!!!
 		LocalPlayer():EntIndex(), 

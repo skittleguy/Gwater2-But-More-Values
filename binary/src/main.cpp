@@ -415,11 +415,11 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 		}
 
 		// Buoyancy (completely faked. not at all accurate)
-		Vector prop_pos;
-		phys->GetPosition(&prop_pos, NULL);
-		if (force_pos.z < prop_pos.z + phys->GetMassCenterLocalSpace().z) {
+		//Vector prop_pos;
+		//phys->GetPosition(&prop_pos, NULL);
+		//if (force_pos.z < prop_pos.z + phys->GetMassCenterLocalSpace().z) {
 			force_vel += Vector(0, 0, volume_mul * buoyancy_mul);
-		}
+		//}
 
 		// Dampening (completely faked. not at all accurate)
 		//Vector prop_vel;
