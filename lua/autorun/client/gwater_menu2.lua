@@ -954,7 +954,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 
 		local label = vgui.Create("DLabel", scrollPanel)
 		label:SetPos(0, 0)
-		label:SetSize(383, 14720)
+		label:SetSize(383, math.max(#patrons_table * 20, 1000) + 180)
 		label:SetText([[
 			Thanks to everyone here who supported me throughout the development of GWater2!
 			
@@ -1055,6 +1055,7 @@ hook.Add("PopulateToolMenu", "gwater2_menu", function()
 	end)
 end)
 
+-- hate this
 function OpenGW2Menu(ply, key)
 	if key != options.menu_key:GetInt() or just_closed == true then return end
 	RunConsoleCommand("gwater2_menu")
