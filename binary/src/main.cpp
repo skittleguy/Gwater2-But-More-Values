@@ -308,6 +308,7 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 	LUA->CheckNumber(2);	// radius
 	LUA->CheckNumber(3);	// dampening
 	LUA->CheckNumber(4);	// buoyancy 
+	LUA->CheckNumber(5);	// dampening
 
 	if (UTIL_EntityByIndex == nullptr) return 0;	// not hosting server
 
@@ -336,8 +337,9 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 	int max_contacts = flex->get_max_contacts();
 	float radius = flex->get_parameter("radius");
 	float volume_mul = LUA->GetNumber(2) * 4.f * M_PI * (radius * radius);	// Surface area of sphere equation
-	float dampening_mul = LUA->GetNumber(3);
+	float feedback_mul = LUA->GetNumber(3);
 	float buoyancy_mul = LUA->GetNumber(4);
+	float dampening_mul = LUA->GetNumber(5);
 
 	std::vector<FlexMesh> meshes = *flex->get_meshes();
 	std::map<int, FlexMesh> forces;
@@ -350,7 +352,7 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 			//int vel_index = i * max_contacts + contact;
 
 			float prop_id = (int)contact_vel[plane_index].w;
-			if (prop_id <= 0) break;	//	planes defined by FleX will return -1
+			if (prop_id < 0) break;	//	planes defined by FleX will return -1
 
 			FlexMesh prop = FlexMesh(0);
 			try {
@@ -365,10 +367,10 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 			Vector plane = contact_planes[plane_index].AsVector3D();
 			Vector contact_pos = particle_pos[i].AsVector3D() - plane * radius * 0.5;	// Particle position is not directly *on* plane
 			Vector local_vel = particle_vel[i] * flex->get_parameter("timescale");
-			Vector impact_vel = (plane * fmin(local_vel.Dot(plane), 0) - contact_vel[plane_index].AsVector3D() * dampening_mul) * volume_mul;
+			Vector impact_vel = (plane * fmin(local_vel.Dot(plane), 0) - contact_vel[plane_index].AsVector3D() * feedback_mul) * volume_mul;
 
 			//phys->ApplyForceOffset(impact_vel, contact_pos);
-			// dont really like this try/catch, but I'm not aware of a better method
+			// dont really like this try/catch tbh
 			try {
 				FlexMesh& prop = forces.at(prop_entity_id);
 				prop.set_pos(prop.get_pos() + Vector4D(contact_pos.x, contact_pos.y, contact_pos.z, 1));
@@ -413,18 +415,17 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 			//Warning("Couldn't find entity's physics object!\n");
 			continue;
 		}
+		
+		Vector prop_pos; phys->GetPosition(&prop_pos, NULL);
+		
+		// Dampening (completely faked. not at all accurate)
+		Vector prop_vel; phys->GetVelocityAtPoint(force_pos, &prop_vel);
+		force_vel -= prop_vel * dampening_mul;
 
 		// Buoyancy (completely faked. not at all accurate)
-		//Vector prop_pos;
-		//phys->GetPosition(&prop_pos, NULL);
-		//if (force_pos.z < prop_pos.z + phys->GetMassCenterLocalSpace().z) {
+		if (force_pos.z < prop_pos.z + phys->GetMassCenterLocalSpace().z) {
 			force_vel += Vector(0, 0, volume_mul * buoyancy_mul);
-		//}
-
-		// Dampening (completely faked. not at all accurate)
-		//Vector prop_vel;
-		//phys->GetVelocityAtPoint(contact_pos, &prop_vel);
-		//impact_vel -= prop_vel * 0.1 * volume_mul;
+		}
 
 		// Cap amount of force (vphysics crashes can occur without it)
 		float limit = 100 * phys->GetMass();
@@ -432,7 +433,6 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 			force_vel = force_vel.NormalizedSafe(Vector(0, 0, 0)) * limit;
 		}
 
-		Vector prop_vel; phys->GetVelocityAtPoint(force_pos, &prop_vel);
 		phys->ApplyForceOffset(force_vel * CM_2_INCH - prop_vel, force_pos);
 	}
 

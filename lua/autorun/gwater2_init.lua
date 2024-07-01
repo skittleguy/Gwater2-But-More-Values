@@ -137,6 +137,7 @@ gwater2["forward_velocity"] = 100
 -- reaction force specific
 gwater2["force_multiplier"] = 0.01
 gwater2["force_buoyancy"] = 0
+gwater2["force_dampening"] = 0
 
 -- tick particle solver
 local last_systime = os.clock()
@@ -159,8 +160,8 @@ end
 
 local function gwater_tick2()
 	last_systime = os.clock()
-	gwater2.solver:ApplyContacts(limit_fps * gwater2["force_multiplier"], 3, gwater2["force_buoyancy"])
-	local particles_in_radius = gwater2.solver:GetParticlesInRadius(LocalPlayer():GetPos() + LocalPlayer():OBBCenter(), gwater2.solver:GetParameter("fluid_rest_distance") * 2.5, GWATER2_PARTICLES_TO_SWIM)
+	gwater2.solver:ApplyContacts(limit_fps * gwater2["force_multiplier"], 3, gwater2["force_buoyancy"], gwater2["force_dampening"])
+	local particles_in_radius = gwater2.solver:GetParticlesInRadius(LocalPlayer():GetPos() + LocalPlayer():OBBCenter(), gwater2.solver:GetParameter("fluid_rest_distance") * 3, GWATER2_PARTICLES_TO_SWIM)
 	GWATER2_QuickHackRemoveMeASAP(	-- TODO: REMOVE THIS HACKY SHIT!!!!!!!!!!!!!
 		LocalPlayer():EntIndex(), 
 		particles_in_radius

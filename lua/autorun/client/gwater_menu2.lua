@@ -69,8 +69,9 @@ local options = {
 	["Density"] = {text = "Density of particles.\n Controls how far apart they are"},
 	["Forward Velocity"] = {text = "The forward facing velocity the particles spawn with"},
 
-	["Force Multiplier"] = {text = "Determines the amount of force which is applied to props by water.\n\nNote that 'Reaction Forces' in the performance tab must be set to 2 in order for this to take effect."},
-	["Force Buoyancy"] = {text = "Buoyant force which is applied to props in water.\n\nThe implementation is by no means accurate and may cause phantom forces"},
+	["Force Multiplier"] = {text = "Determines the amount of force which is applied to props by water."},
+	["Force Buoyancy"] = {text = "Buoyant force which is applied to props in water.\n\nThe implementation is by no means accurate and probably should not be used for prop boats."},
+	["Force Dampening"] = {text = "Dampening force applied to props.\n\nHelps a little bit if props tend to bounce on the water surface."},
 }
 
 -- garry, sincerely... fuck you
@@ -153,7 +154,7 @@ function GFScrollPanel:Init()
         -- If it didn't, we feed the mousehweeling to the parent panel
         if self.CurrentScroll == nil then self.CurrentScroll = self:GetScroll() end
         self.CurrentScroll = math.Clamp(self.CurrentScroll + (dlta * -scrollPanel:GetScrollDistance()), 0, self.CanvasSize)
-        self:AnimateTo(self.CurrentScroll, 0.1, 0, 0.5)
+        self:AnimateTo(self.CurrentScroll, 0.05, 0, 0.1)
         return self:AddScroll( dlta * -2 )
     end
     function vbar:OnMouseReleased()
@@ -535,9 +536,10 @@ concommand.Add("gwater2_menu", function()
 		labels[10], sliders["Dynamic Friction"] = create_slider(scrollPanel, "Dynamic Friction", 0, 1, 2, 385, 317, 55)
 		labels[11], sliders["Vorticity Confinement"] = create_slider(scrollPanel, "Vorticity Confinement", 0, 200, 0, 417, 300, 75)
 
-		create_label(scrollPanel, "Reaction Force Parameters", "Physics settings related to water forcing props.", 462, 265)
+		create_label(scrollPanel, "Reaction Force Parameters", "'Reaction Forces' (in performance tab) must be set to 2 for these to work!", 462, 200)
 		labels[12], sliders["Force Multiplier"] = create_slider(scrollPanel, "Force Multiplier", 0.001, 0.02, 3, 514, 315, 55)
-		labels[13], sliders["Force Buoyancy"] = create_slider(scrollPanel, "Force Buoyancy", 0, 300, 1, 544, 315, 55)
+		labels[13], sliders["Force Buoyancy"] = create_slider(scrollPanel, "Force Buoyancy", 0, 500, 1, 544, 315, 55)
+		labels[14], sliders["Force Dampening"] = create_slider(scrollPanel, "Force Dampening", 0, 1, 2, 574, 315, 55)
 		
 		function scrollPanel:AnimationThink()
 			local mousex, mousey = self:LocalCursorPos()
