@@ -373,9 +373,12 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 			// dont really like this try/catch tbh
 			try {
 				FlexMesh& prop = forces.at(prop_entity_id);
-				prop.set_pos(prop.get_pos() + Vector4D(contact_pos.x, contact_pos.y, contact_pos.z, 1));
-				prop.set_ang(prop.get_ang() + Vector4D(impact_vel.x, impact_vel.y, impact_vel.z, 0));
-			} catch (std::exception e) {
+				Vector4D pos = prop.get_pos(); pos += Vector4D(contact_pos.x, contact_pos.y, contact_pos.z, 1);	// main branch vector4d only has += operator? wtf?
+				Vector4D ang = prop.get_ang(); ang += Vector4D(impact_vel.x, impact_vel.y, impact_vel.z, 0);	// ^
+				prop.set_pos(pos);
+				prop.set_ang(ang);
+			}
+			catch (std::exception e) {
 				forces[prop_entity_id] = FlexMesh(prop_entity_id);
 				forces[prop_entity_id].set_pos(Vector4D(contact_pos.x, contact_pos.y, contact_pos.z, 1));
 				forces[prop_entity_id].set_ang(Vector4D(impact_vel.x, impact_vel.y, impact_vel.z, 0));
@@ -430,7 +433,7 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 		// Cap amount of force (vphysics crashes can occur without it)
 		float limit = 100 * phys->GetMass();
 		if (force_vel.Dot(force_vel) > limit * limit) {
-			force_vel = force_vel.NormalizedSafe(Vector(0, 0, 0)) * limit;
+			force_vel = force_vel.Normalized() * limit;
 		}
 
 		phys->ApplyForceOffset(force_vel * CM_2_INCH - prop_vel, force_pos);
