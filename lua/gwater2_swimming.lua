@@ -54,5 +54,8 @@ end)
 
 -- cancel fall damage when in water
 hook.Add("GetFallDamage", "gwater2_swimming", function(ply, speed)
-	if ply.GWATER2_CONTACTS and ply.GWATER2_CONTACTS >= GWATER2_PARTICLES_TO_SWIM then return 0 end
+	if !ply.GWATER2_CONTACTS or ply.GWATER2_CONTACTS < GWATER2_PARTICLES_TO_SWIM then return end
+
+	ply:EmitSound("Physics.WaterSplash")
+	return 0
 end)
