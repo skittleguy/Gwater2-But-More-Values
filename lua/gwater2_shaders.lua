@@ -20,7 +20,7 @@ local water_volumetric = Material("gwater2/volumetric")
 local water_normals = Material("gwater2/normals")
 local water_bubble = Material("gwater2/bubble")	-- bubbles
 local water_mist = Material("gwater2/mist")
-
+local black = Material("gwater2/black")
 
 local debug_depth = CreateClientConVar("gwater2_debug_depth", "0", false)
 local debug_absorption = CreateClientConVar("gwater2_debug_absorption", "0", false)
@@ -69,17 +69,12 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	local water = gwater2.material
 	local radius = gwater2.solver:GetParameter("radius")
 
-	-- Build imeshes for multiple passes 
-	local forward = EyeAngles():Forward()
-	-- render.SetLightingOrigin(EyePos() + (EyeAngles():Forward() * 128))
-
 	-- HACK HACK HACK! Makes lighting work properly in sourceengine
 	render.PushRenderTarget(cache_screen0)
 	render.OverrideDepthEnable(true, false)
 	local tr = util.QuickTrace( EyePos(), LocalPlayer():EyeAngles():Forward() * 800, LocalPlayer())
 	local dist = math.min(230, (tr.HitPos - tr.StartPos):Length() / 1.5)
 	lightpos = LerpVector(0.8 * FrameTime(), lightpos, EyePos() + (LocalPlayer():EyeAngles():Forward() * dist))
-	-- print(dist);
 	-- This one sets the cubemap
 	render.Model({model="models/shadertest/envballs.mdl",pos=EyePos(),angle=LocalPlayer():GetRenderAngles()})
 	-- This one takes care of lights
@@ -100,8 +95,12 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 			-- Clear the main rendertarget, keeping depth
 			-- Render to main buffer (still has depth), and copy the contents to another rendertarget
 			-- Restore the main buffer
+
+		-- clear screen w/o intruding translucents depth buffer
+		render.SetMaterial(black)
+		render.DrawScreenQuad()
+
 		render.SetMaterial(water_volumetric)
-		render.Clear(0, 0, 0, 0)
 		gwater2.renderer:DrawWater()
 		render.CopyTexture(render.GetRenderTarget(), cache_absorption)
 		render.DrawTextureToScreen(cache_screen0)

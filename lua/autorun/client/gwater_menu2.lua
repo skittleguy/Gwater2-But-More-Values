@@ -11,7 +11,7 @@ if SERVER or !gwater2 then return end
 	-- HALF OF THIS CODE WAS WRITTEN AT 3 AM
 -- THANK YOU FOR COMING TO MY TED TALK
 
-local version = "0.4b"
+local version = "0.5b"
 local options = {
 	solver = FlexSolver(1000),
 	tab = CreateClientConVar("gwater2_tab"..version, "1", true),
