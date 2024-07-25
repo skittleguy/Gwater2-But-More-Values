@@ -32,7 +32,7 @@ function ENT:SetupDataTables()
 
 	self.PARTICLE_EMITTER = ParticleEmitter(self:GetPos(), false)
 	hook.Add("gwater2_pretick", self, function()
-		gwater2.solver:AddForceField(self:GetPos(), self:GetRadius(), self:GetStrength(), self:GetMode(), self:GetLinear())
+		gwater2.solver:AddForceField(self:GetPos(), self:GetRadius(), -self:GetStrength(), self:GetMode(), self:GetLinear())
 	end)
 end
 
@@ -45,7 +45,7 @@ if SERVER then
 		ent:Activate()
 
 		ent:SetRadius(1000)
-		ent:SetStrength(-50)
+		ent:SetStrength(50)
 		ent:SetMode(0)
 		ent:SetLinear(1)
 
@@ -59,7 +59,7 @@ elseif CLIENT then
 		local part = self.PARTICLE_EMITTER:Add("particle/warp_ripple", self:GetPos())
 		part:SetVelocity(Vector())
 		part:SetGravity(Vector())
-		part:SetDieTime(0.1)
+		part:SetDieTime(FrameTime() * 10)
 		//part:SetColor(Color(255, 255, 255, 0))
 		part:SetStartSize(50)
 		part:SetEndSize(50)
@@ -69,10 +69,10 @@ elseif CLIENT then
 		local part = self.PARTICLE_EMITTER:Add("particle/warp1_warp", self:GetPos())
 		part:SetVelocity(Vector())
 		part:SetGravity(Vector())
-		part:SetDieTime(0.2)
+		part:SetDieTime(FrameTime() * 20)
 		part:SetColor(Color(255, 255, 255))
 		part:SetStartSize(25 + (math.sin(CurTime() * 2) * 3))
-		part:SetEndSize(0)
+		part:SetEndSize(22)
 		//part:SetStartAlpha(255)
 		part:SetLighting(false)
 		self:SetNextClientThink(CurTime() + 0.001)

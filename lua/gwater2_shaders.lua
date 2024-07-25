@@ -107,7 +107,7 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	else
 		-- no absorption calculations, so just use solid color
 		render.PushRenderTarget(cache_absorption)
-		render.Clear(10, 10, 10, 10)
+		render.Clear(15, 15, 15, 10)
 		render.PopRenderTarget()
 	end
 
