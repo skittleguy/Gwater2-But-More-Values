@@ -104,6 +104,11 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 		gwater2.renderer:DrawWater()
 		render.CopyTexture(render.GetRenderTarget(), cache_absorption)
 		render.DrawTextureToScreen(cache_screen0)
+	else
+		-- no absorption calculations, so just use solid color
+		render.PushRenderTarget(cache_absorption)
+		render.Clear(10, 10, 10, 10)
+		render.PopRenderTarget()
 	end
 
 	-- dont render bubbles underwater if opaque
@@ -128,7 +133,7 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	render.SetRenderTargetEx(1, nil)
 	
 	-- Blur normals
-	water_blur:SetFloat("$radius", radius * 1.5)
+	water_blur:SetFloat("$radius", radius)
 	water_blur:SetTexture("$depthtexture", cache_depth)
 	render.SetMaterial(water_blur)
 	for i = 1, blur_passes:GetInt() do

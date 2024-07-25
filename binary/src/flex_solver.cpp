@@ -68,6 +68,10 @@ void FlexSolver::add_particle(Vector4D pos, Vector vel) {
 	particles.push_back(p);
 }
 
+void FlexSolver::add_force_field(NvFlexExtForceField force_field) {
+	force_fields.push_back(force_field);
+}
+
 
 // Handles geometry and particle queue update
 bool FlexSolver::pretick(NvFlexMapFlags wait) {
@@ -172,6 +176,7 @@ void FlexSolver::tick(float dt) {
 	if (solver == nullptr) return;
 
 	// write to device (async)
+	NvFlexExtSetForceFields(force_field_callback, force_fields.data(), force_fields.size());
 	NvFlexSetParams(solver, params);
 	NvFlexSetShapes(solver,
 		get_buffer("geometry"),
@@ -197,6 +202,8 @@ void FlexSolver::tick(float dt) {
 		NvFlexGetVelocities(solver, get_buffer("particle_vel"), copy_description);
 		NvFlexGetContacts(solver, get_buffer("contact_planes"), get_buffer("contact_vel"), get_buffer("contact_indices"), get_buffer("contact_count"));
 	}
+
+	force_fields.clear();
 }
 
 void FlexSolver::add_mesh(FlexMesh mesh) {
@@ -349,7 +356,7 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	params->maxSpeed = 1e10;
 	params->maxAcceleration = 200.0f;
 	params->relaxationMode = eNvFlexRelaxationLocal;
-	params->relaxationFactor = 0.0f;
+	params->relaxationFactor = 0.25f;	// only works with eNvFlexRelaxationGlobal
 	params->solidPressure = 0.5f;
 	params->adhesion = 0.0f;
 	params->cohesion = 0.01f;
@@ -360,7 +367,7 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	params->diffuseThreshold = 100.f;
 	params->diffuseBuoyancy = 1.f;
 	params->diffuseDrag = 0.8f;
-	params->diffuseBallistic = 16;
+	params->diffuseBallistic = 0;
 	params->diffuseLifetime = 5.f;	// not actually in seconds
 
 	params->numPlanes = 0;
@@ -435,6 +442,8 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	add_buffer("diffuse_pos", sizeof(Vector4D), solver_description.maxDiffuseParticles);
 	add_buffer("diffuse_vel", sizeof(Vector4D), solver_description.maxDiffuseParticles);
 	add_buffer("diffuse_count", sizeof(int), 1);	// "this may be updated by the GPU which is why it is passed back in a buffer"
+
+	force_field_callback = NvFlexExtCreateForceFieldCallback(solver);
 };
 
 // Free memory
@@ -451,6 +460,8 @@ FlexSolver::~FlexSolver() {
 	delete param_map["reaction_forces"];// ^
 	delete params;
 	delete copy_description;
+
+	NvFlexExtDestroyForceFieldCallback(force_field_callback);
 
 	// Free buffers / hosts
 	for (std::pair<std::string, NvFlexBuffer*> buffer : buffers) 

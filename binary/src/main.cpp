@@ -503,6 +503,30 @@ LUA_FUNCTION(FLEXSOLVER_AddCube) {
 	return 0;
 }
 
+LUA_FUNCTION(FLEXSOLVER_AddForceField) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	LUA->CheckType(2, Type::Vector);
+	LUA->CheckNumber(3);
+	LUA->CheckNumber(4);
+	LUA->CheckNumber(5);
+	LUA->CheckType(6, Type::Bool);
+
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+	Vector pos = LUA->GetVector(2);
+	NvFlexExtForceField force_field;
+	force_field.mPosition[0] = pos.x;
+	force_field.mPosition[1] = pos.y;
+	force_field.mPosition[2] = pos.z;
+	force_field.mRadius = LUA->GetNumber(3);
+	force_field.mStrength = LUA->GetNumber(4);
+	force_field.mMode = (NvFlexExtForceMode)LUA->GetNumber(5);
+	force_field.mLinearFalloff = LUA->GetBool(6);
+
+	flex->add_force_field(force_field);
+
+	return 0;
+}
+
 // Initializes a box (6 planes) with a mins and maxs on a FlexSolver
 // Inputting nil disables the bounds.
 LUA_FUNCTION(FLEXSOLVER_InitBounds) {
@@ -756,6 +780,7 @@ GMOD_MODULE_OPEN() {
 	ADD_FUNCTION(LUA, FLEXSOLVER_Tick, "Tick");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddParticle, "AddParticle");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddCube, "AddCube");
+	ADD_FUNCTION(LUA, FLEXSOLVER_AddForceField, "AddForceField");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetMaxParticles, "GetMaxParticles");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetMaxDiffuseParticles, "GetMaxDiffuseParticles");
 	ADD_FUNCTION(LUA, FLEXSOLVER_RenderParticles, "RenderParticles");

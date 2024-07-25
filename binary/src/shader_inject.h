@@ -15,7 +15,7 @@
 // these externals MUST be defined (NOT NULL) BEFORE inserting shaders into the materialsystem or you WILL crash!
 extern IMaterialSystemHardwareConfig* g_pHardwareConfig = NULL;
 extern const MaterialSystem_Config_t* g_pConfig = NULL;
-IShaderSystem* g_pSLShaderSystem; // I literally no idea where this is defined in the source sdk. Fails to compile without it
+IShaderSystem* g_pSLShaderSystem; // I literally have no idea where this is defined in the source sdk. Fails to compile without it
 CShaderSystem* s_ShaderSystem;
 
 CShaderSystem::ShaderDLLInfo_t* shaderlibdll = NULL;	// our shader "directory"

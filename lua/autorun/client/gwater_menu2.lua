@@ -87,7 +87,7 @@ options.solver:SetParameter("diffuse_threshold", math.huge)	-- no diffuse partic
 
 -- designs for tabs and frames
 local function draw_tabs(self, w, h)
-	if h ~= 20 then
+	if h != 20 then
 		surface.SetDrawColor(0, 80, 255, 230)
 		surface.DrawRect(2,0,w - 4,h - 8)
 	else
@@ -388,7 +388,7 @@ local just_closed = false
 concommand.Add("gwater2_menu", function()
 	if IsValid(mainFrame) then return end
 
-	local average_fps = 1 / 60
+	--local average_fps = 1 / 60
 	local particle_material = CreateMaterial("gwater2_menu_material", "UnlitGeneric", {
 		["$basetexture"] = "vgui/circle",
 		["$vertexcolor"] = 1,
@@ -460,9 +460,9 @@ concommand.Add("gwater2_menu", function()
 		-- 2d simulation
 		options.solver:InitBounds(Vector(x, 0, y + 25), Vector(x + 192, options.solver:GetParameter("radius"), y + 390))
 		options.solver:AddCube(Vector(x + 60 + math.random(), 0, y + 50), Vector(0, 0, 50), Vector(4, 1, 1), options.solver:GetParameter("radius") * 0.65, color_white)
-		options.solver:Tick(average_fps * 2)
+		options.solver:Tick(1 / 60)
 		
-		average_fps = average_fps + (FrameTime() - average_fps) * 0.01
+		--average_fps = average_fps + (FrameTime() - average_fps) * 0.01
 
 		-- main outline
 		surface.SetDrawColor(255, 255, 255)
@@ -533,7 +533,7 @@ concommand.Add("gwater2_menu", function()
 		create_label(scrollPanel, "Advanced Physics Parameters", "More technical settings.", 275, 182)
 		labels[8], sliders["Collision Distance"] = create_slider(scrollPanel, "Collision Distance", 0.1, 1, 2, 327, 315, 55)
 		labels[9], sliders["Fluid Rest Distance"] = create_slider(scrollPanel, "Fluid Rest Distance", 0.55, 0.85, 2, 357, 315, 55)
-		labels[10], sliders["Dynamic Friction"] = create_slider(scrollPanel, "Dynamic Friction", 0, 1, 2, 385, 317, 55)
+		labels[10], sliders["Dynamic Friction"] = create_slider(scrollPanel, "Dynamic Friction", 0, 1, 2, 387, 315, 55)
 		labels[11], sliders["Vorticity Confinement"] = create_slider(scrollPanel, "Vorticity Confinement", 0, 200, 0, 417, 300, 75)
 
 		create_label(scrollPanel, "Reaction Force Parameters", "'Reaction Forces' (in performance tab) must be set to 2 for these to work!", 462, 200)

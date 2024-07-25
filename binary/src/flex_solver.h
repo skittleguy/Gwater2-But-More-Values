@@ -1,5 +1,6 @@
 #pragma once
 #include <NvFlex.h>
+#include <NvFlexExt.h>
 #include <map>
 #include <vector>
 #include <string>
@@ -16,6 +17,7 @@ private:
 	NvFlexLibrary* library = nullptr;
 	NvFlexSolver* solver = nullptr;
 	NvFlexParams* params = nullptr;
+	NvFlexExtForceFieldCallback* force_field_callback = nullptr;	// unsure why this is required. crashes without it
 	NvFlexCopyDesc* copy_description = new NvFlexCopyDesc();
 	NvFlexSolverDesc solver_description = NvFlexSolverDesc();	// stores stuff such as max particles
 	std::map<std::string, NvFlexBuffer*> buffers;
@@ -23,7 +25,8 @@ private:
 	std::map<std::string, void*> hosts;
 	std::vector<FlexMesh> meshes;		// physics meshes.. not visual!
 	std::vector<Particle> particles;	// Doesnt actually hold particles. Just a queue
-
+	std::vector<NvFlexExtForceField> force_fields;
+	
 	void add_buffer(std::string name, int type, int count);
 	//NvFlexBuffer* get_buffer(std::string name);
 
@@ -41,6 +44,7 @@ public:
 	void* get_host(std::string name);	// Returns a host (pointer of float4s) where FleX buffer data is transferred to. 
 
 	void add_particle(Vector4D pos, Vector vel);
+	void add_force_field(NvFlexExtForceField force_field);
 	
 	bool pretick(NvFlexMapFlags wait);	// Updates mesh positions/angles & particle queues
 	void tick(float dt);

@@ -21,7 +21,6 @@ BEGIN_SHADER_PARAMS
 END_SHADER_PARAMS
 
 SHADER_INIT_PARAMS() {
-	Assert(info.m_nFlashlightTexture >= 0);
 	if (g_pHardwareConfig->SupportsBorderColor()) {
 		params[FLASHLIGHTTEXTURE]->SetStringValue("effects/flashlight_border");
 	} else {
