@@ -190,10 +190,18 @@ end)
 hook.Add("InitPostEntity", "gwater2_addprop", gwater2.reset_solver)
 hook.Add("OnEntityCreated", "gwater2_addprop", function(ent) timer.Simple(0, function() add_prop(ent) end) end)	// timer.0 so data values are setup correctly
 
-hook.Add("gwater2_pretick", "gravgun", function()
+hook.Add("gwater2_pretick", "gwater2_gravgun_grab", function()
 	local lp = LocalPlayer()
 	if !lp:KeyDown(IN_ATTACK2) then return end
 	if IsValid(LocalPlayer():GetActiveWeapon()) and LocalPlayer():GetActiveWeapon():GetClass() == "weapon_physcannon" then
 		gwater2.solver:AddForceField(LocalPlayer():EyePos() + LocalPlayer():GetAimVector() * 170, 150, -200, 0, true)
+	end
+end)
+
+hook.Add("Think", "gwater2_gravgun_punt", function()	-- + LocalPlayer():GetAimVector() * 85
+	local lp = LocalPlayer()
+	if !lp:KeyPressed(IN_ATTACK) then return end
+	if IsValid(LocalPlayer():GetActiveWeapon()) and LocalPlayer():GetActiveWeapon():GetClass() == "weapon_physcannon" then
+		gwater2.solver:AddForceField(LocalPlayer():EyePos(), 300, 100, 1, false)
 	end
 end)

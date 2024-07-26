@@ -506,9 +506,9 @@ LUA_FUNCTION(FLEXSOLVER_AddCube) {
 LUA_FUNCTION(FLEXSOLVER_AddForceField) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckType(2, Type::Vector);
-	LUA->CheckNumber(3);
-	LUA->CheckNumber(4);
-	LUA->CheckNumber(5);
+	LUA->CheckNumber(3);	// radius
+	LUA->CheckNumber(4);	// strength
+	LUA->CheckNumber(5);	// mode
 	LUA->CheckType(6, Type::Bool);
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);

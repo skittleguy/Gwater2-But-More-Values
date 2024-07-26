@@ -353,8 +353,8 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	params->shockPropagation = 0.0f;
 	params->restitution = 0.0f;
 
-	params->maxSpeed = 1e10;
-	params->maxAcceleration = 200.0f;
+	params->maxSpeed = 1e5;
+	params->maxAcceleration = 1e5;
 	params->relaxationMode = eNvFlexRelaxationLocal;
 	params->relaxationFactor = 0.25f;	// only works with eNvFlexRelaxationGlobal
 	params->solidPressure = 0.5f;
@@ -367,7 +367,7 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	params->diffuseThreshold = 100.f;
 	params->diffuseBuoyancy = 1.f;
 	params->diffuseDrag = 0.8f;
-	params->diffuseBallistic = 0;
+	params->diffuseBallistic = 2;
 	params->diffuseLifetime = 5.f;	// not actually in seconds
 
 	params->numPlanes = 0;
