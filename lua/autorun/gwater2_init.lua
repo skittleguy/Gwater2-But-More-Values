@@ -194,6 +194,6 @@ hook.Add("gwater2_pretick", "gravgun", function()
 	local lp = LocalPlayer()
 	if !lp:KeyDown(IN_ATTACK2) then return end
 	if IsValid(LocalPlayer():GetActiveWeapon()) and LocalPlayer():GetActiveWeapon():GetClass() == "weapon_physcannon" then
-		gwater2.solver:AddForceField(LocalPlayer():EyePos() + LocalPlayer():GetAimVector() * 170, 150, -60, 0, true)
+		gwater2.solver:AddForceField(LocalPlayer():EyePos() + LocalPlayer():GetAimVector() * 170, 150, -200, 0, true)
 	end
 end)
