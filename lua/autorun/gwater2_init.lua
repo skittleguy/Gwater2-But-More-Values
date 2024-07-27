@@ -202,6 +202,6 @@ hook.Add("Think", "gwater2_gravgun_punt", function()	-- + LocalPlayer():GetAimVe
 	local lp = LocalPlayer()
 	if !lp:KeyPressed(IN_ATTACK) then return end
 	if IsValid(LocalPlayer():GetActiveWeapon()) and LocalPlayer():GetActiveWeapon():GetClass() == "weapon_physcannon" then
-		gwater2.solver:AddForceField(LocalPlayer():EyePos(), 300, 100, 1, false)
+		gwater2.solver:AddForceField(LocalPlayer():EyePos(), 320, 200, 1, false)
 	end
 end)
