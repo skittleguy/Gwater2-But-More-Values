@@ -84,6 +84,7 @@ options.solver:SetParameter("gravity", 15.24)	-- flip gravity because y axis pos
 options.solver:SetParameter("static_friction", 0)	-- stop adhesion sticking to front and back walls
 options.solver:SetParameter("dynamic_friction", 0)	-- ^
 options.solver:SetParameter("diffuse_threshold", math.huge)	-- no diffuse particles allowed in preview
+options.solver:SetParameter("max_acceleration", 200)	-- stops explosions, makes play more fun
 
 -- designs for tabs and frames
 local function draw_tabs(self, w, h)
@@ -458,8 +459,11 @@ concommand.Add("gwater2_menu", function()
 		end)
 
 		-- 2d simulation
+		local mat = Matrix()
+		mat:Translate(Vector(x + 60 + math.random(), 0, y + 50))
+		mat:Scale(Vector(1, 1, 1) * options.solver:GetParameter("fluid_rest_distance"))
 		options.solver:InitBounds(Vector(x, 0, y + 25), Vector(x + 192, options.solver:GetParameter("radius"), y + 390))
-		options.solver:AddCube(Vector(x + 60 + math.random(), 0, y + 50), Vector(0, 0, 50), Vector(4, 1, 1), options.solver:GetParameter("radius") * 0.65, color_white)
+		options.solver:AddCube(mat, Vector(4, 1, 1), {vel = Vector(0, 0, 50)})
 		options.solver:Tick(1 / 60)
 		
 		--average_fps = average_fps + (FrameTime() - average_fps) * 0.01
@@ -571,7 +575,7 @@ concommand.Add("gwater2_menu", function()
 		presets:SetSize(135, 20)
 		presets:SetText("Presets (click to open)")
 		presets:AddChoice("Acid", "Color:240 255 0 150\nCohesion:\nAdhesion:0.1\nViscosity:0\nSurface Tension:\nFluid Rest Distance:")
-		presets:AddChoice("Blood", "Color:240 0 0 250\nCohesion:0.45\nAdhesion:0.15\nViscosity:1\nSurface Tension:0\nFluid Rest Distance:0.55")	-- Parameters by GHM
+		presets:AddChoice("Blood", "Color:210 30 30 150\nCohesion:0.45\nAdhesion:0.15\nViscosity:1\nSurface Tension:0\nFluid Rest Distance:0.55")	-- Parameters by GHM
 		presets:AddChoice("Glue", "Color:230 230 230 255\nCohesion:0.03\nAdhesion:0.1\nViscosity:10\nSurface Tension:\nFluid Rest Distance:")	-- yeah sure.. "glue"...
 		presets:AddChoice("Lava", "Color:255 210 0 200\nCohesion:0.1\nAdhesion:0.01\nViscosity:10\nSurface Tension:\nFluid Rest Distance:")
 		presets:AddChoice("Oil", "Color:0 0 0 255\nCohesion:0\nAdhesion:0\nViscosity:0\nSurface Tension:0\nFluid Rest Distance:")

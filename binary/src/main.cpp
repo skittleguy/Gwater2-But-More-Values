@@ -44,19 +44,143 @@ LUA_FUNCTION(FLEXSOLVER_GarbageCollect) {
 	return 0;
 }
 
+// Table on the top of the stack is parsed
+// ParticleData = {velocity = Vector(), mass = 1}
+Particle parse_particle(ILuaBase* LUA) {
+	Vector vel;
+	float inv_mass = 1;
+
+	if (LUA->GetType(-1) == Type::Table) {
+		// Get velocity (default = Vector())
+		LUA->GetField(-1, "vel");
+		vel = LUA->GetVector(-1);
+		LUA->Pop();
+
+		// Get mass (default = 1)
+		LUA->GetField(-1, "mass");
+		if (LUA->GetType(-1) == Type::Number) {
+			inv_mass = 1.0 / LUA->GetNumber(-1);
+		}
+		LUA->Pop();
+	}
+
+	Particle particle;
+	particle.pos.w = inv_mass;
+	particle.vel = vel;
+
+	return particle;
+}
+
 LUA_FUNCTION(FLEXSOLVER_AddParticle) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	LUA->CheckType(2, Type::Vector);	// position
-	LUA->CheckType(3, Type::Vector);	// velocity
-	LUA->CheckNumber(4);				// mass
+	LUA->CheckType(2, Type::Vector);	// transform (position)
+	//LUA->CheckType(3, Type::Table);	// ParticleData {velocity = Vector(), mass = 1}
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 	Vector pos = LUA->GetVector(2);
-	Vector vel = LUA->GetVector(3);
-	float inv_mass = 1.f / (float)LUA->GetNumber(4);	// FleX uses inverse mass for their calculations
-	
-	flex->add_particle(Vector4D(pos.x, pos.y, pos.z, inv_mass), vel);
-	flex->map_particles();
+
+	LUA->Push(3);	// Push table to top of stack
+	Particle particle = parse_particle(LUA);
+	particle.pos.x = pos.x;
+	particle.pos.y = pos.y;
+	particle.pos.z = pos.z;
+
+	flex->add_particle(particle);
+
+	return 0;
+}
+
+LUA_FUNCTION(FLEXSOLVER_AddCube) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	LUA->CheckType(2, Type::Matrix);	// transform
+	LUA->CheckType(3, Type::Vector);	// size (x,y,z)
+	//LUA->CheckType(4, Type::Table);	// ParticleData
+
+	//gmod Vector and fleX float4
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+	VMatrix transform = *LUA->GetUserType<VMatrix>(2, Type::Matrix);
+	Vector size = LUA->GetVector(3);
+
+	LUA->Push(4);
+	Particle data = parse_particle(LUA);
+
+	for (float z = 0; z < size.z; z++) {
+		for (float y = 0; y < size.y; y++) {
+			for (float x = 0; x < size.x; x++) {
+				Vector pos = transform * (Vector(x + 0.5, y + 0.5, z + 0.5) - size / 2.0);
+
+				Particle particle;
+				particle.pos = Vector4D(pos.x, pos.y, pos.z, data.pos.w);
+				particle.vel = data.vel;
+				flex->add_particle(particle);
+			}
+		}
+	}
+
+	return 0;
+}
+
+LUA_FUNCTION(FLEXSOLVER_AddSphere) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	LUA->CheckType(2, Type::Matrix);	// transform
+	LUA->CheckType(3, Type::Number);	// size (radius)
+	//LUA->CheckType(4, Type::Table);	// ParticleData
+
+	//gmod Vector and fleX float4
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+	VMatrix transform = *LUA->GetUserType<VMatrix>(2, Type::Matrix);
+	int size = LUA->GetNumber(3);
+
+	LUA->Push(4);
+	Particle data = parse_particle(LUA);
+
+	for (int z = -size + 1; z < size; z++) {
+		for (int y = -size + 1; y < size; y++) {
+			for (int x = -size + 1; x < size; x++) {
+				if (x * x + y * y + z * z >= size * size) continue;
+
+				Vector pos = transform * Vector(x, y, z);
+
+				Particle particle;
+				particle.pos = Vector4D(pos.x, pos.y, pos.z, data.pos.w);
+				particle.vel = data.vel;
+				flex->add_particle(particle);
+			}
+		}
+	}
+
+	return 0;
+}
+
+
+LUA_FUNCTION(FLEXSOLVER_AddCylinder) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	LUA->CheckType(2, Type::Matrix);	// transform
+	LUA->CheckType(3, Type::Vector);	// size (x=radius,z=height)
+	//LUA->CheckType(4, Type::Table);	// ParticleData
+
+	//gmod Vector and fleX float4
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+	VMatrix transform = *LUA->GetUserType<VMatrix>(2, Type::Matrix);
+	Vector size = LUA->GetVector(3);
+
+	LUA->Push(4);
+	Particle data = parse_particle(LUA);
+
+	for (int z = -size.z + 1; z < size.z; z++) {
+		for (int y = -size.y + 1; y < size.y; y++) {
+			for (int x = -size.x + 1; x < size.x; x++) {
+				if (x * x + y * y >= size.x * size.y) continue;
+
+				Vector pos = transform * Vector(x, y, z);
+
+				Particle particle;
+				particle.pos = Vector4D(pos.x, pos.y, pos.z, data.pos.w);
+				particle.vel = data.vel;
+				flex->add_particle(particle);
+			}
+		}
+	}
 
 	return 0;
 }
@@ -66,18 +190,9 @@ LUA_FUNCTION(FLEXSOLVER_Tick) {
 	LUA->CheckNumber(2);	// Delta Time
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
-	
-	// Avoid ticking if the deltatime ends up being zero, as it invalidates the simulation
-	float dt = (float)LUA->GetNumber(2) * CM_2_INCH;
-	if (flex->get_parameter("timescale") == 0 || dt == 0 || flex->get_active_particles() == 0) {
-		LUA->PushBool(true);
-		return 1;
-	}
+	flex->tick(LUA->GetNumber(2) * CM_2_INCH, (NvFlexMapFlags)LUA->GetNumber(3));
 
-	bool succ = flex->pretick((NvFlexMapFlags)LUA->GetNumber(3));
-	if (succ) flex->tick(dt);
-
-	LUA->PushBool(succ);
+	LUA->PushBool(true);
 	return 1;
 }
 
@@ -313,7 +428,7 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 	if (UTIL_EntityByIndex == nullptr) return 0;	// not hosting server
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
-	if (flex->get_parameter("coupling") == 0) return 0;	// Coupling planes arent being generated.. bail
+	if (flex->get_parameter("reaction_forces") < 2) return 0;	// Coupling planes arent being generated.. bail
 
 	Vector4D* particle_pos = (Vector4D*)flex->get_host("particle_pos");
 	Vector* particle_vel = (Vector*)flex->get_host("particle_vel");
@@ -468,39 +583,6 @@ LUA_FUNCTION(FLEXSOLVER_GetParticlesInRadius) {
 
 	LUA->PushNumber(num_particles);
 	return 1;
-}
-
-// Original function written by andreweathan
-LUA_FUNCTION(FLEXSOLVER_AddCube) {
-	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	LUA->CheckType(2, Type::Vector); // pos
-	LUA->CheckType(3, Type::Vector); // vel
-	LUA->CheckType(4, Type::Vector); // cube size
-	LUA->CheckType(5, Type::Number); // size apart (usually radius)
-
-	//gmod Vector and fleX float4
-	FlexSolver* flex = GET_FLEXSOLVER(1);
-	Vector gmodPos = LUA->GetVector(2);		//pos
-	Vector gmodVel = LUA->GetVector(3);		//vel
-	Vector gmodSize = LUA->GetVector(4);	//size
-	float size = LUA->GetNumber(5);			//size apart
-
-	gmodSize = gmodSize / 2.f;
-	gmodPos = gmodPos + Vector(size, size, size) / 2.0;
-
-	for (float z = -gmodSize.z; z < gmodSize.z; z++) {
-		for (float y = -gmodSize.y; y < gmodSize.y; y++) {
-			for (float x = -gmodSize.x; x < gmodSize.x; x++) {
-				Vector newPos = Vector(x, y, z) * size + gmodPos;
-
-				flex->add_particle(Vector4D(newPos.x, newPos.y, newPos.z, 1), gmodVel);
-			}
-		}
-	}
-
-	flex->map_particles();
-
-	return 0;
 }
 
 LUA_FUNCTION(FLEXSOLVER_AddForceField) {
@@ -780,6 +862,8 @@ GMOD_MODULE_OPEN() {
 	ADD_FUNCTION(LUA, FLEXSOLVER_Tick, "Tick");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddParticle, "AddParticle");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddCube, "AddCube");
+	ADD_FUNCTION(LUA, FLEXSOLVER_AddSphere, "AddSphere");
+	ADD_FUNCTION(LUA, FLEXSOLVER_AddCylinder, "AddCylinder");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddForceField, "AddForceField");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetMaxParticles, "GetMaxParticles");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetMaxDiffuseParticles, "GetMaxDiffuseParticles");

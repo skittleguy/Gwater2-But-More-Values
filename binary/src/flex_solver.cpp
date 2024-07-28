@@ -24,14 +24,16 @@ NvFlexBuffer* FlexSolver::get_buffer(std::string name) {
 //copy_description->elementCount = Min(copy_description->elementCount, n);
 void FlexSolver::set_active_particles(int n) {
 	copy_description->elementCount = n;
+	particle_queue.clear();	// dumb
 }
 
 void FlexSolver::set_active_diffuse(int n) {
 	NvFlexSetDiffuseParticles(solver, NULL, NULL, n);
+	((int*)hosts["diffuse_count"])[0] = n;
 }
 
 int FlexSolver::get_active_particles() {
-	return copy_description->elementCount;
+	return copy_description->elementCount + particle_queue.size();
 }
 
 int FlexSolver::get_active_diffuse() {
@@ -58,152 +60,146 @@ std::vector<FlexMesh>* FlexSolver::get_meshes() {
 	return &meshes;
 }
 
-void FlexSolver::add_particle(Vector4D pos, Vector vel) {
-	if (solver == nullptr) return;
-	if (get_active_particles() + particles.size() >= get_max_particles()) return;
+// Resets particle to base parameters
+void FlexSolver::set_particle(int index, Particle particle) {
+	((Vector4D*)hosts["particle_pos"])[index] = particle.pos;
+	((Vector*)hosts["particle_vel"])[index] = particle.vel;
+	((int*)hosts["particle_phase"])[index] = NvFlexMakePhase(0, eNvFlexPhaseSelfCollide | eNvFlexPhaseFluid);
+	((int*)hosts["particle_active"])[index] = index;
+	((Vector4D*)hosts["particle_smooth"])[index] = particle.pos;
+	((Vector4D*)hosts["particle_ani0"])[index] = Vector4D(0, 0, 0, 0);
+	((Vector4D*)hosts["particle_ani1"])[index] = Vector4D(0, 0, 0, 0);
+	((Vector4D*)hosts["particle_ani2"])[index] = Vector4D(0, 0, 0, 0);
+}
 
-	Particle p;
-	p.pos = pos;
-	p.vel = vel;
-	particles.push_back(p);
+void FlexSolver::add_particle(Particle particle) {
+	if (solver == nullptr) return;
+	if (get_active_particles() >= get_max_particles()) return;
+	
+	set_particle(get_active_particles(), particle);
+	particle_queue.push_back(particle);
 }
 
 void FlexSolver::add_force_field(NvFlexExtForceField force_field) {
-	force_fields.push_back(force_field);
+	force_field_queue.push_back(force_field);
 }
 
-
-// Handles geometry and particle queue update
-bool FlexSolver::pretick(NvFlexMapFlags wait) {
+// ticks the solver
+bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 	if (solver == nullptr) return false;
 
-	NvFlexCollisionGeometry* geo = (NvFlexCollisionGeometry*)NvFlexMap(get_buffer("geometry"), wait);
-	if (!geo) return false;
+	// Update collision geometry
+	NvFlexCollisionGeometry* geometry = (NvFlexCollisionGeometry*)get_host("geometry");
+	Vector4D* geometry_pos = (Vector4D*)get_host("geometry_pos");
+	Vector4D* geometry_prevpos = (Vector4D*)get_host("geometry_prevpos");
+	Vector4D* geometry_ang = (Vector4D*)get_host("geometry_quat");
+	Vector4D* geometry_prevang = (Vector4D*)get_host("geometry_prevquat");
+	int* geometry_flags = (int*)get_host("geometry_flags");
 
-	Vector4D* pos = (Vector4D*)NvFlexMap(get_buffer("geometry_pos"), eNvFlexMapWait);
-	Vector4D* ppos = (Vector4D*)NvFlexMap(get_buffer("geometry_prevpos"), eNvFlexMapWait);
-	Vector4D* ang = (Vector4D*)NvFlexMap(get_buffer("geometry_quat"), eNvFlexMapWait);
-	Vector4D* pang = (Vector4D*)NvFlexMap(get_buffer("geometry_prevquat"), eNvFlexMapWait);
-	int* flag = (int*)NvFlexMap(get_buffer("geometry_flags"), eNvFlexMapWait);
-
-	// Update collider positions
 	for (int i = 0; i < meshes.size(); i++) {
 		FlexMesh mesh = meshes[i];
 
-		flag[i] = mesh.get_flags();
-		geo[i].triMesh.mesh = mesh.get_id();
-		geo[i].triMesh.scale[0] = 1;
-		geo[i].triMesh.scale[1] = 1;
-		geo[i].triMesh.scale[2] = 1;
+		geometry_flags[i] = mesh.get_flags();
+		geometry[i].triMesh.mesh = mesh.get_id();
+		geometry[i].triMesh.scale[0] = 1;
+		geometry[i].triMesh.scale[1] = 1;
+		geometry[i].triMesh.scale[2] = 1;
 
-		geo[i].convexMesh.mesh = mesh.get_id();
-		geo[i].convexMesh.scale[0] = 1;
-		geo[i].convexMesh.scale[1] = 1;
-		geo[i].convexMesh.scale[2] = 1;
+		geometry[i].convexMesh.mesh = mesh.get_id();
+		geometry[i].convexMesh.scale[0] = 1;
+		geometry[i].convexMesh.scale[1] = 1;
+		geometry[i].convexMesh.scale[2] = 1;
 
-		ppos[i] = mesh.get_ppos();
-		pos[i] = mesh.get_pos();
+		geometry_prevpos[i] = mesh.get_ppos();
+		geometry_pos[i] = mesh.get_pos();
 
-		pang[i] = mesh.get_pang();
-		ang[i] = mesh.get_ang();
+		geometry_prevang[i] = mesh.get_pang();
+		geometry_ang[i] = mesh.get_ang();
 
 		meshes[i].update();
 	}
 
-	NvFlexUnmap(get_buffer("geometry"));
-	NvFlexUnmap(get_buffer("geometry_pos"));
-	NvFlexUnmap(get_buffer("geometry_prevpos"));
-	NvFlexUnmap(get_buffer("geometry_quat"));
-	NvFlexUnmap(get_buffer("geometry_prevquat"));
-	NvFlexUnmap(get_buffer("geometry_flags"));
+	// Avoid ticking if the deltatime ends up being zero, as it invalidates the simulation
+	dt *= get_parameter("timescale");
+	if (dt > 0 && get_active_particles() > 0) {
+
+		// Map positions to CPU memory
+		Vector4D* particle_pos = (Vector4D*)NvFlexMap(get_buffer("particle_pos"), wait);
+		if (particle_pos) {
+			// Add queued particles
+			Vector* particle_vel = (Vector*)hosts["particle_vel"];
+			int* particle_phase = (int*)hosts["particle_phase"];
+			int* particle_active = (int*)hosts["particle_active"];
+			Vector4D* particle_smooth = (Vector4D*)hosts["particle_smooth"];
+			Vector4D* particle_ani0 = (Vector4D*)hosts["particle_ani0"];
+			Vector4D* particle_ani1 = (Vector4D*)hosts["particle_ani1"];
+			Vector4D* particle_ani2 = (Vector4D*)hosts["particle_ani2"];
+
+			for (int i = 0; i < particle_queue.size(); i++) {
+				int particle_index = copy_description->elementCount + i;
+				set_particle(particle_index, particle_queue[i]);
+			}
+
+			// Only copy what we just added
+			NvFlexCopyDesc desc;
+			desc.dstOffset = copy_description->elementCount;
+			desc.elementCount = particle_queue.size();
+			desc.srcOffset = desc.dstOffset;
+
+			// Update particle information
+			NvFlexSetParticles(solver, get_buffer("particle_pos"), &desc);
+			NvFlexSetVelocities(solver, get_buffer("particle_vel"), &desc);
+			NvFlexSetPhases(solver, get_buffer("particle_phase"), &desc);
+			NvFlexSetActive(solver, get_buffer("particle_active"), &desc);
+			NvFlexSetActiveCount(solver, get_active_particles());
+			
+			copy_description->elementCount += particle_queue.size();
+			particle_queue.clear();
+
+			NvFlexUnmap(get_buffer("particle_pos"));
+		} else {
+			return false;
+		}
+
+		// write to device (async)
+		NvFlexSetShapes(
+			solver,
+			get_buffer("geometry"),
+			get_buffer("geometry_pos"),
+			get_buffer("geometry_quat"),
+			get_buffer("geometry_prevpos"),
+			get_buffer("geometry_prevquat"),
+			get_buffer("geometry_flags"),
+			meshes.size()
+		);
+		NvFlexSetParams(solver, params);
+		NvFlexExtSetForceFields(force_field_callback, force_field_queue.data(), force_field_queue.size());
+
+		// tick
+		NvFlexUpdateSolver(solver, dt, (int)get_parameter("substeps"), false);
+
+		// read back (async)
+		NvFlexGetParticles(solver, get_buffer("particle_pos"), copy_description);
+		NvFlexGetDiffuseParticles(solver, get_buffer("diffuse_pos"), get_buffer("diffuse_vel"), get_buffer("diffuse_count"));
+
+		if (get_parameter("anisotropy_scale") != 0) {
+			NvFlexGetAnisotropy(solver, get_buffer("particle_ani0"), get_buffer("particle_ani1"), get_buffer("particle_ani2"), copy_description);
+		}
+
+		if (get_parameter("smoothing") != 0) {
+			NvFlexGetSmoothParticles(solver, get_buffer("particle_smooth"), copy_description);
+		}
+
+		if (get_parameter("reaction_forces") > 1) {
+			NvFlexGetVelocities(solver, get_buffer("particle_vel"), copy_description);
+			NvFlexGetContacts(solver, get_buffer("contact_planes"), get_buffer("contact_vel"), get_buffer("contact_indices"), get_buffer("contact_count"));
+		}
+
+	}
+
+	force_field_queue.clear();
 
 	return true;
-}
-
-void FlexSolver::map_particles() {
-	if (particles.empty()) return;
-
-	// Only copy what we add
-	NvFlexCopyDesc desc;
-	desc.dstOffset = copy_description->elementCount;
-	desc.elementCount = particles.size();
-	desc.srcOffset = desc.dstOffset;
-
-	// map buffers for reading / writing
-	Vector4D* positions = (Vector4D*)NvFlexMap(get_buffer("particle_pos"), eNvFlexMapWait);
-	Vector* velocities = (Vector*)NvFlexMap(get_buffer("particle_vel"), eNvFlexMapWait);
-	int* phases = (int*)NvFlexMap(get_buffer("particle_phase"), eNvFlexMapWait);
-	int* active = (int*)NvFlexMap(get_buffer("particle_active"), eNvFlexMapWait);
-	
-	//Vector4D* positions = (Vector4D*)get_host("particle_pos");
-	//Vector* velocities = (Vector*)get_host("particle_vel");
-	//int* phases = (int*)get_host("particle_phase");
-	//int* active = (int*)get_host("particle_active");
-
-	// Add particle
-	for (Particle particle : particles) {
-		int n = copy_description->elementCount++;		// n = particle_count; n++
-		positions[n] = particle.pos;
-		velocities[n] = particle.vel;
-		phases[n] = NvFlexMakePhase(0, eNvFlexPhaseSelfCollide | eNvFlexPhaseFluid);
-		active[n] = n;
-
-		// fixes visual flashing
-		((Vector4D*)hosts["particle_smooth"])[n] = particle.pos;
-		((Vector4D*)hosts["particle_ani0"])[n] = Vector4D(0, 0, 0, 0);
-		((Vector4D*)hosts["particle_ani1"])[n] = Vector4D(0, 0, 0, 0);
-		((Vector4D*)hosts["particle_ani2"])[n] = Vector4D(0, 0, 0, 0);
-	}
-
-	// unmap buffers
-	NvFlexUnmap(get_buffer("particle_pos"));
-	NvFlexUnmap(get_buffer("particle_vel"));
-	NvFlexUnmap(get_buffer("particle_phase"));
-	NvFlexUnmap(get_buffer("particle_active"));
-
-	// Update particle information
-	NvFlexSetParticles(solver, get_buffer("particle_pos"), &desc);
-	NvFlexSetVelocities(solver, get_buffer("particle_vel"), &desc);
-	NvFlexSetPhases(solver, get_buffer("particle_phase"), &desc);
-	NvFlexSetActive(solver, get_buffer("particle_active"), &desc);
-	NvFlexSetActiveCount(solver, copy_description->elementCount);
-
-	particles.clear();
-}
-
-// ticks the solver
-void FlexSolver::tick(float dt) {
-	if (solver == nullptr) return;
-
-	// write to device (async)
-	NvFlexExtSetForceFields(force_field_callback, force_fields.data(), force_fields.size());
-	NvFlexSetParams(solver, params);
-	NvFlexSetShapes(solver,
-		get_buffer("geometry"),
-		get_buffer("geometry_pos"),
-		get_buffer("geometry_quat"),
-		get_buffer("geometry_prevpos"),
-		get_buffer("geometry_prevquat"),
-		get_buffer("geometry_flags"),
-		meshes.size()
-	);
-
-	// tick
-	NvFlexUpdateSolver(solver, dt * get_parameter("timescale"), (int)get_parameter("substeps"), false);
-
-	// read back (async)
-	NvFlexGetParticles(solver, get_buffer("particle_pos"), copy_description);
-	//NvFlexGetPhases(solver, get_buffer("particle_phase"), copy_description);
-	//NvFlexGetActive(solver, get_buffer("particle_active"), copy_description);
-	NvFlexGetDiffuseParticles(solver, get_buffer("diffuse_pos"), get_buffer("diffuse_vel"), get_buffer("diffuse_count"));
-	if (get_parameter("anisotropy_scale") != 0) NvFlexGetAnisotropy(solver, get_buffer("particle_ani0"), get_buffer("particle_ani1"), get_buffer("particle_ani2"), copy_description);
-	if (get_parameter("smoothing") != 0) NvFlexGetSmoothParticles(solver, get_buffer("particle_smooth"), copy_description);
-	if (get_parameter("reaction_forces") > 1) {
-		NvFlexGetVelocities(solver, get_buffer("particle_vel"), copy_description);
-		NvFlexGetContacts(solver, get_buffer("contact_planes"), get_buffer("contact_vel"), get_buffer("contact_indices"), get_buffer("contact_count"));
-	}
-
-	force_fields.clear();
 }
 
 void FlexSolver::add_mesh(FlexMesh mesh) {

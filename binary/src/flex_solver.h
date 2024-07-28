@@ -24,8 +24,8 @@ private:
 	std::map<std::string, float*> param_map; // TODO: figure out if this is the best way to do this... Would a set/get switch statement be better..?
 	std::map<std::string, void*> hosts;
 	std::vector<FlexMesh> meshes;		// physics meshes.. not visual!
-	std::vector<Particle> particles;	// Doesnt actually hold particles. Just a queue
-	std::vector<NvFlexExtForceField> force_fields;
+	std::vector<Particle> particle_queue;	// Doesnt actually hold particles. Just a queue
+	std::vector<NvFlexExtForceField> force_field_queue;
 	
 	void add_buffer(std::string name, int type, int count);
 	//NvFlexBuffer* get_buffer(std::string name);
@@ -43,11 +43,11 @@ public:
 	inline NvFlexBuffer* get_buffer(std::string name);
 	void* get_host(std::string name);	// Returns a host (pointer of float4s) where FleX buffer data is transferred to. 
 
-	void add_particle(Vector4D pos, Vector vel);
+	void add_particle(Particle particle);
+	void set_particle(int index, Particle particle);
 	void add_force_field(NvFlexExtForceField force_field);
 	
-	bool pretick(NvFlexMapFlags wait);	// Updates mesh positions/angles & particle queues
-	void tick(float dt);
+	bool tick(float dt, NvFlexMapFlags wait);
 
 	void add_mesh(FlexMesh mesh);
 	void remove_mesh(int id);
@@ -57,9 +57,6 @@ public:
 	float get_parameter(std::string param);	// returns NaN on invalid parameter
 	void enable_bounds(Vector mins, Vector maxs);
 	void disable_bounds();
-
-
-	void map_particles();
 
 	FlexSolver(NvFlexLibrary* library, int particles);
 	~FlexSolver();
