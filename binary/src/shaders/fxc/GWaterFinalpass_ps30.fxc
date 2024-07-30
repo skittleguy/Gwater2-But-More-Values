@@ -90,7 +90,7 @@ float4 main(const PS_INPUT i) : COLOR {
 	float3 smoothed_normal = tex2D(NORMALS, i.P * SCR_S).xyz;
 	
 	// Weight the normals forward, as the only visible part is facing the player
-	smoothed_normal = normalize(smoothed_normal + i.view_dir * REFLECTANCE * clamp(-dot(i.view_dir, smoothed_normal), REFLECTANCE, 1));
+	smoothed_normal = normalize(smoothed_normal + i.view_dir * REFLECTANCE * clamp(-dot(i.view_dir, smoothed_normal), 0.5, 1));
 
 	float2 projPos = i.P * SCR_S;
 
@@ -144,14 +144,13 @@ float4 main(const PS_INPUT i) : COLOR {
 	return final_output(diffuse + specularLighting);
 #else // Translucent
 	float fresnel = fresnel_approx(1.0, IOR, i.view_dir, smoothed_normal, 0.0);
-	float3 reflected = reflect(i.view_dir, smoothed_normal);
-	float3 specular = (ENV_MAP_SCALE * texCUBE(CUBEMAP, reflected)).xyz * fresnel + specularLighting;
+	float3 specular = texCUBE(CUBEMAP, reflect(i.view_dir, smoothed_normal)).xyz * ENV_MAP_SCALE * fresnel + specularLighting;
 
 	// Calculate refraction vector in 3d space and project it to screen
 	float3 uv_offset = smoothed_normal * -RADIUS;
 	float4 uv = mul(float4(i.pos + uv_offset, 1), i.proj); uv.xy /= uv.w; 
 	
-	float2 refract_pos = float2(uv.x / 2.0 + 0.5, 0.5 - uv.y / 2.0);
+	float2 refract_pos = float2(uv.x / 2.0 + 0.5, 0.5 - uv.y / 2.0);	//-1,1 -> 0,1
 	float3 refracted = tex2D(FRAMEBUFFER, refract_pos).xyz * (1.0 - fresnel);
 
 	refracted = refracted / LINEAR_LIGHT_SCALE;
