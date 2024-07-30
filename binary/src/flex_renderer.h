@@ -1,4 +1,5 @@
 #pragma once
+
 #include <materialsystem/imesh.h>
 #include <istudiorender.h>
 #include "meshutils.h"		// Fixes linker errors
@@ -11,6 +12,7 @@
 #define MAX_PRIMATIVES 21845
 #define MAX_THREADS 16
 #define SQRT3 1.73205081
+#define VERTEX_GWATER2 VERTEX_POSITION | VERTEX_TEXCOORD0_2D | VERTEX_NORMAL | VERTEX_TEXCOORD_SIZE(1, 4) | VERTEX_TEXCOORD_SIZE(2, 4) | VERTEX_TEXCOORD_SIZE(3, 4)
 
 struct FlexRendererThreadData {
 	//IMesh*& water;

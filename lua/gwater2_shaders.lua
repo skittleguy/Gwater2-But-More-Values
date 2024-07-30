@@ -125,13 +125,13 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	-- grab normals
 	water_normals:SetFloat("$radius", radius * 0.5)
 	render.SetMaterial(water_normals)
-	render.PushRenderTarget(cache_normals)
+	--render.PushRenderTarget(cache_normals)
 	render.SetRenderTargetEx(1, cache_depth)
 	render.ClearDepth()
 	gwater2.renderer:DrawWater()
-	render.PopRenderTarget()
+	--render.PopRenderTarget()
 	render.SetRenderTargetEx(1, nil)
-	
+	/*
 	-- Blur normals
 	water_blur:SetFloat("$radius", radius)
 	water_blur:SetTexture("$depthtexture", cache_depth)
@@ -165,7 +165,7 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	render.OverrideAlphaWriteEnable(false, false)
 
 	render.SetMaterial(water_mist)
-	gwater2.renderer:DrawDiffuse()
+	gwater2.renderer:DrawDiffuse()*/
 
 	-- Debug Draw
 	local dbg = 0

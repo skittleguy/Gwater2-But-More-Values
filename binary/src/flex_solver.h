@@ -41,7 +41,7 @@ public:
 	std::vector<FlexMesh>* get_meshes();
 
 	inline NvFlexBuffer* get_buffer(std::string name);
-	void* get_host(std::string name);	// Returns a host (pointer of float4s) where FleX buffer data is transferred to. 
+	inline void* get_host(std::string name);	// Returns a host (pointer of float4s) where FleX buffer data is transferred to. 
 
 	void add_particle(Particle particle);
 	void set_particle(int index, Particle particle);

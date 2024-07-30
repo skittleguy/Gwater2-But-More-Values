@@ -460,8 +460,8 @@ concommand.Add("gwater2_menu", function()
 
 		-- 2d simulation
 		local mat = Matrix()
-		mat:Translate(Vector(x + 60 + math.random(), 0, y + 50))
-		mat:Scale(Vector(1, 1, 1) * options.solver:GetParameter("fluid_rest_distance"))
+		mat:SetScale(Vector(1, 1, 1) * options.solver:GetParameter("fluid_rest_distance"))
+		mat:SetTranslation(Vector(x + 60 + math.random(), 0, y + 50))
 		options.solver:InitBounds(Vector(x, 0, y + 25), Vector(x + 192, options.solver:GetParameter("radius"), y + 390))
 		options.solver:AddCube(mat, Vector(4, 1, 1), {vel = Vector(0, 0, 50)})
 		options.solver:Tick(1 / 60)
@@ -536,7 +536,7 @@ concommand.Add("gwater2_menu", function()
 
 		create_label(scrollPanel, "Advanced Physics Parameters", "More technical settings.", 275, 182)
 		labels[8], sliders["Collision Distance"] = create_slider(scrollPanel, "Collision Distance", 0.1, 1, 2, 327, 315, 55)
-		labels[9], sliders["Fluid Rest Distance"] = create_slider(scrollPanel, "Fluid Rest Distance", 0.55, 0.85, 2, 357, 315, 55)
+		labels[9], sliders["Fluid Rest Distance"] = create_slider(scrollPanel, "Fluid Rest Distance", 0.55, 0.75, 2, 357, 315, 55)
 		labels[10], sliders["Dynamic Friction"] = create_slider(scrollPanel, "Dynamic Friction", 0, 1, 2, 387, 315, 55)
 		labels[11], sliders["Vorticity Confinement"] = create_slider(scrollPanel, "Vorticity Confinement", 0, 200, 0, 417, 300, 75)
 

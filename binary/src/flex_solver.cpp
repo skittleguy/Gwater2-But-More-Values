@@ -52,7 +52,7 @@ int FlexSolver::get_max_contacts() {
 	return solver_description.maxContactsPerParticle;
 }
 
-void* FlexSolver::get_host(std::string name) {
+inline void* FlexSolver::get_host(std::string name) {
 	return hosts[name];
 }
 
@@ -62,14 +62,14 @@ std::vector<FlexMesh>* FlexSolver::get_meshes() {
 
 // Resets particle to base parameters
 void FlexSolver::set_particle(int index, Particle particle) {
-	((Vector4D*)hosts["particle_pos"])[index] = particle.pos;
-	((Vector*)hosts["particle_vel"])[index] = particle.vel;
-	((int*)hosts["particle_phase"])[index] = NvFlexMakePhase(0, eNvFlexPhaseSelfCollide | eNvFlexPhaseFluid);
-	((int*)hosts["particle_active"])[index] = index;
-	((Vector4D*)hosts["particle_smooth"])[index] = particle.pos;
-	((Vector4D*)hosts["particle_ani0"])[index] = Vector4D(0, 0, 0, 0);
-	((Vector4D*)hosts["particle_ani1"])[index] = Vector4D(0, 0, 0, 0);
-	((Vector4D*)hosts["particle_ani2"])[index] = Vector4D(0, 0, 0, 0);
+	((Vector4D*)get_host("particle_pos"))[index] = particle.pos;
+	((Vector*)get_host("particle_vel"))[index] = particle.vel;
+	((int*)get_host("particle_phase"))[index] = NvFlexMakePhase(0, eNvFlexPhaseSelfCollide | eNvFlexPhaseFluid);
+	((int*)get_host("particle_active"))[index] = index;
+	((Vector4D*)get_host("particle_smooth"))[index] = particle.pos;
+	((Vector4D*)get_host("particle_ani0"))[index] = Vector4D(0, 0, 0, 0);
+	((Vector4D*)get_host("particle_ani1"))[index] = Vector4D(0, 0, 0, 0);
+	((Vector4D*)get_host("particle_ani2"))[index] = Vector4D(0, 0, 0, 0);
 }
 
 void FlexSolver::add_particle(Particle particle) {
@@ -127,19 +127,13 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 		Vector4D* particle_pos = (Vector4D*)NvFlexMap(get_buffer("particle_pos"), wait);
 		if (particle_pos) {
 			// Add queued particles
-			Vector* particle_vel = (Vector*)hosts["particle_vel"];
-			int* particle_phase = (int*)hosts["particle_phase"];
-			int* particle_active = (int*)hosts["particle_active"];
-			Vector4D* particle_smooth = (Vector4D*)hosts["particle_smooth"];
-			Vector4D* particle_ani0 = (Vector4D*)hosts["particle_ani0"];
-			Vector4D* particle_ani1 = (Vector4D*)hosts["particle_ani1"];
-			Vector4D* particle_ani2 = (Vector4D*)hosts["particle_ani2"];
-
 			for (int i = 0; i < particle_queue.size(); i++) {
 				int particle_index = copy_description->elementCount + i;
 				set_particle(particle_index, particle_queue[i]);
 			}
 
+			NvFlexUnmap(get_buffer("particle_pos"));
+			
 			// Only copy what we just added
 			NvFlexCopyDesc desc;
 			desc.dstOffset = copy_description->elementCount;
@@ -152,11 +146,9 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 			NvFlexSetPhases(solver, get_buffer("particle_phase"), &desc);
 			NvFlexSetActive(solver, get_buffer("particle_active"), &desc);
 			NvFlexSetActiveCount(solver, get_active_particles());
-			
+
 			copy_description->elementCount += particle_queue.size();
 			particle_queue.clear();
-
-			NvFlexUnmap(get_buffer("particle_pos"));
 		} else {
 			return false;
 		}
