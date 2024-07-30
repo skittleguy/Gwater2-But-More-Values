@@ -25,11 +25,8 @@ SHADER_FALLBACK{
 
 SHADER_DRAW {
 	SHADOW_STATE {
-
-		// Note: Removing VERTEX_COLOR makes the shader work on all objects (Like props)
-		unsigned int flags = VERTEX_GWATER2;
-
-		pShaderShadow->VertexShaderVertexFormat(flags, 1, 0, 0);
+		pShaderShadow->VertexShaderVertexFormat(VERTEX_GWATER2, 1, 0, 0);
+		//pShaderShadow->EnableAlphaWrites(true);
 
 		DECLARE_STATIC_VERTEX_SHADER(GWaterNormals_vs30);
 		SET_STATIC_VERTEX_SHADER(GWaterNormals_vs30);
@@ -53,7 +50,6 @@ SHADER_DRAW {
 		DECLARE_DYNAMIC_PIXEL_SHADER(GWaterNormals_ps30);
 		SET_DYNAMIC_PIXEL_SHADER_COMBO(DEPTH, depthfix);
 		SET_DYNAMIC_PIXEL_SHADER(GWaterNormals_ps30);
-
 		
 	}
 	

@@ -6,6 +6,7 @@ extern IVEngineClient* engine = NULL;
 //extern IMaterialSystem* materials = NULL;	// stops main branch compile from bitching
 
 #define min(a, b) a < b ? a : b
+#define max(a, b) a > b ? a : b
 
 float u[3] = { 0.5 - SQRT3 / 2, 0.5, 0.5 + SQRT3 / 2 };
 float v[3] = { 1, -0.5, 1 };
@@ -97,22 +98,18 @@ IMesh* _build_diffuse(int id, FlexRendererThreadData data) {
 
 		// calculate triangle rotation
 		//Vector forward = (eye_pos - particle_pos).Normalized();
-		Vector forward = (particle_pos - data.eye_pos).Normalized();
-		Vector right = forward.Cross(Vector(0, 0, 1)).Normalized();
-		Vector up = right.Cross(forward);
-		Vector local_pos[3] = { (-up - right * SQRT3), up * 2.0, (-up + right * SQRT3) };
 
 		Vector4D ani0 = data.particle_ani0[particle_index];
 		float scalar = data.radius * data.particle_positions[particle_index].w;
 
 		for (int i = 0; i < 3; i++) {
-			Vector pos_ani = local_pos[i];	// Warp based on velocity
-			pos_ani = pos_ani + (data.particle_ani0[particle_index].AsVector3D() * pos_ani.Dot(data.particle_ani0[particle_index].AsVector3D()) * 0.0016).Min(Vector(3, 3, 3)).Max(Vector(-3, -3, -3));
+			//Vector pos_ani = local_pos[i];	// Warp based on velocity
+			//pos_ani = pos_ani + (data.particle_ani0[particle_index].AsVector3D() * pos_ani.Dot(data.particle_ani0[particle_index].AsVector3D()) * 0.0016).Min(Vector(3, 3, 3)).Max(Vector(-3, -3, -3));
 
-			Vector world_pos = particle_pos + pos_ani * scalar;
+			//Vector world_pos = particle_pos + pos_ani * scalar;
 			mesh_builder.TexCoord2f(0, u[i], v[i]);
-			mesh_builder.Position3f(world_pos.x, world_pos.y, world_pos.z);
-			mesh_builder.Normal3f(-forward.x, -forward.y, -forward.z);
+			//mesh_builder.Position3f(world_pos.x, world_pos.y, world_pos.z);
+			//mesh_builder.Normal3f(-forward.x, -forward.y, -forward.z);
 			mesh_builder.AdvanceVertex();
 		}
 	}
@@ -125,8 +122,9 @@ IMesh* _build_diffuse(int id, FlexRendererThreadData data) {
 
 // Launches 1 thread for each mesh. particles are split into meshes with MAX_PRIMATIVES number of primatives
 void FlexRenderer::build_meshes(FlexSolver* flex, float diffuse_radius) {
+	update_meshes();
 	// Clear previous imeshes since they are being rebuilt
-	destroy_meshes();
+	//destroy_meshes();
 
 	int max_particles = flex->get_active_particles();
 	if (max_particles == 0) return;
@@ -139,28 +137,24 @@ void FlexRenderer::build_meshes(FlexSolver* flex, float diffuse_radius) {
 	render_context->GetMatrix(MATERIAL_PROJECTION, &projection_matrix);
 	MatrixMultiply(projection_matrix, view_matrix, view_projection_matrix);
 
-	// Get eye position for sprite calculations
-	Vector eye_pos; render_context->GetWorldSpaceCameraPosition(&eye_pos);
-
 	Vector4D* particle_positions = flex->get_parameter("smoothing") != 0 ? (Vector4D*)flex->get_host("particle_smooth") : (Vector4D*)flex->get_host("particle_pos");
-	Vector4D* particle_ani0 = (Vector4D*)flex->get_host("particle_ani0");
-	Vector4D* particle_ani1 = (Vector4D*)flex->get_host("particle_ani1");
-	Vector4D* particle_ani2 = (Vector4D*)flex->get_host("particle_ani2");
-	bool particle_ani = flex->get_parameter("anisotropy_scale") != 0;	// Should we do anisotropy calculations?
 	float radius = flex->get_parameter("radius");
 
 	// thread data
 	FlexRendererThreadData data;
-	data.eye_pos = eye_pos;
 	data.view_projection_matrix = view_projection_matrix;
 	data.particle_positions = particle_positions;
 	data.max_particles = max_particles;
 	data.radius = radius;
 	data.render_buffer = water_buffer;
 	if (flex->get_parameter("anisotropy_scale") != 0) {		// Should we do anisotropy calculations?
-		data.particle_ani0 = particle_ani0;
-		data.particle_ani1 = particle_ani1;
-		data.particle_ani2 = particle_ani2;
+		data.particle_ani0 = (Vector4D*)flex->get_host("particle_ani0");
+		data.particle_ani1 = (Vector4D*)flex->get_host("particle_ani1");
+		data.particle_ani2 = (Vector4D*)flex->get_host("particle_ani2");;
+	} else {
+		data.particle_ani0 = nullptr;
+		data.particle_ani1 = nullptr;
+		data.particle_ani2 = nullptr;
 	}
 
 	int max_meshes = min(ceil(max_particles / (float)MAX_PRIMATIVES), allocated);
@@ -169,6 +163,14 @@ void FlexRenderer::build_meshes(FlexSolver* flex, float diffuse_radius) {
 		queue[mesh_index] = threads->enqueue(_build_water_anisotropy, mesh_index, data);
 	}
 
+	// Remove meshes which wont be built
+	for (int mesh = max_meshes; mesh < allocated; mesh++) {
+		if (meshes[mesh] == nullptr) continue;
+
+		render_context->DestroyStaticMesh(meshes[mesh]);
+		meshes[mesh] = nullptr;
+	}
+	/*
 	// Diffuse particles
 	max_particles = flex->get_active_diffuse();
 	if (max_particles == 0) return;
@@ -191,7 +193,7 @@ void FlexRenderer::build_meshes(FlexSolver* flex, float diffuse_radius) {
 
 		// Launch thread
 		queue[mesh_index + allocated] = threads->enqueue(_build_diffuse, mesh_index, data);
-	}
+	}*/
 };
 
 void FlexRenderer::update_meshes() {
@@ -205,7 +207,7 @@ void FlexRenderer::update_meshes() {
 }
 
 void FlexRenderer::draw_water() {
-	update_meshes();	// Update status of water meshes (join threads)
+	//update_meshes();	// Update status of water meshes (join threads)
 
 	IMatRenderContext* render_context = materials->GetRenderContext();
 	for (int mesh = 0; mesh < allocated; mesh++) {
@@ -216,6 +218,7 @@ void FlexRenderer::draw_water() {
 };
 
 void FlexRenderer::draw_diffuse() {
+	/*
 	update_meshes();
 
 	IMatRenderContext* render_context = materials->GetRenderContext();
@@ -223,7 +226,7 @@ void FlexRenderer::draw_diffuse() {
 		if (meshes[mesh] == nullptr) continue;
 
 		meshes[mesh]->Draw();
-	}
+	}*/
 };
 
 void FlexRenderer::destroy_meshes() {

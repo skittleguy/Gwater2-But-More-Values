@@ -172,8 +172,10 @@ local function gwater_tick2()
 
 	gwater2.solver:IterateMeshes(gwater2.update_meshes)
 	hook.Run("gwater2_pretick")
-	if gwater2.solver:Tick(FrameTime(), 0) then
-		gwater2.renderer:BuildMeshes(gwater2.solver, 0.15)
+	
+	gwater2.renderer:BuildMeshes(gwater2.solver, 0.15)
+	if gwater2.solver:Tick(limit_fps, 0) then
+		
 	end
 end
 
@@ -186,7 +188,7 @@ hook.Add("Think", "gwater_tick", function()
 	gwater2.solver:IterateMeshes(gwater2.update_meshes)
 end)
 
-timer.Create("gwater2_tick", 0, 0, function()
+timer.Create("gwater2_tick", limit_fps, 0, function()
 	if !gwater2.new_ticker then return end
 	gwater_tick2()
 end)

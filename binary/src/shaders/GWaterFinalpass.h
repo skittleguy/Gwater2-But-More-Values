@@ -51,8 +51,7 @@ SHADER_DRAW {
 	bool bHasFlashlight = UsingFlashlight(params);
 	SHADOW_STATE {
 		// Note: Removing VERTEX_COLOR makes the shader work on all objects (Like props)
-		unsigned int flags = VERTEX_POSITION | VERTEX_NORMAL | VERTEX_TEXCOORD0_2D;
-		pShaderShadow->VertexShaderVertexFormat(flags, 1, 0, 0);
+		pShaderShadow->VertexShaderVertexFormat(VERTEX_GWATER2, 1, 0, 0);
 		pShaderShadow->EnableTexture(SHADER_SAMPLER0, true);	// Smoothed normals texture
 		pShaderShadow->EnableTexture(SHADER_SAMPLER1, true);	// Screen texture
 		pShaderShadow->EnableTexture(SHADER_SAMPLER2, true);	// Cubemap
@@ -132,6 +131,7 @@ SHADER_DRAW {
 
 		pShaderAPI->SetPixelShaderConstant(0, scr_s);
 		pShaderAPI->SetPixelShaderConstant(1, &radius);
+		pShaderAPI->SetVertexShaderConstant(5, &radius);
 		pShaderAPI->SetPixelShaderConstant(2, &ior);
 		pShaderAPI->SetPixelShaderConstant(3, &reflectance);
 		pShaderAPI->SetPixelShaderConstant(12, color2_normalized); // used to be 4, but that was overlapping with ambient cube.
