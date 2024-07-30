@@ -8,6 +8,7 @@ BEGIN_VS_SHADER(GWaterVolumetric, "gwater2 helper")
 // Shader parameters
 BEGIN_SHADER_PARAMS
 	SHADER_PARAM(ALPHA, SHADER_PARAM_TYPE_FLOAT, "0.025", "Amount of transparency")
+	SHADER_PARAM(BASETEXTURE, SHADER_PARAM_TYPE_TEXTURE, "lights/white", "Base texture")
 END_SHADER_PARAMS
 
 SHADER_INIT_PARAMS() {
@@ -15,7 +16,7 @@ SHADER_INIT_PARAMS() {
 }
 
 SHADER_INIT{
-
+	LoadTexture(BASETEXTURE);
 }
 
 SHADER_FALLBACK{
@@ -46,6 +47,7 @@ SHADER_DRAW {
 		
 		// Transparent things (alpha = 0 or alpha = 1)
 		pShaderShadow->EnableAlphaTest(IS_FLAG_SET(MATERIAL_VAR_ALPHATEST));
+		pShaderShadow->EnableTexture(SHADER_SAMPLER0, true);
 
 		DECLARE_STATIC_VERTEX_SHADER(GWaterVolumetric_vs30);
 		SET_STATIC_VERTEX_SHADER(GWaterVolumetric_vs30);
@@ -59,6 +61,7 @@ SHADER_DRAW {
 		const float alpha = params[ALPHA]->GetFloatValue();
 
 		pShaderAPI->SetPixelShaderConstant(0, &alpha);
+		BindTexture(SHADER_SAMPLER0, BASETEXTURE);
 
 		DECLARE_DYNAMIC_VERTEX_SHADER(GWaterVolumetric_vs30);
 		SET_DYNAMIC_VERTEX_SHADER(GWaterVolumetric_vs30);

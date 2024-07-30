@@ -159,7 +159,7 @@ SHADER_DRAW {
 		
 		// pShaderAPI->SetPixelShaderStateAmbientLightCube( PSREG_AMBIENT_CUBE, false );	// Force to black if not bAmbientLight
 		
-		pShaderAPI->CommitPixelShaderLighting( PSREG_LIGHT_INFO_ARRAY );
+		pShaderAPI->CommitPixelShaderLighting(PSREG_LIGHT_INFO_ARRAY);
 
 		DECLARE_DYNAMIC_VERTEX_SHADER(GWaterFinalpass_vs30);
 		SET_DYNAMIC_VERTEX_SHADER_COMBO(NUM_LIGHTS, lightState.m_nNumLights);
