@@ -156,9 +156,7 @@ local function gwater_tick()
 		average_frametime = average_frametime + (limit_fps - average_frametime) * 0.03
 		last_systime = systime	// smooth out fps
 
-		cam.Start3D()
 		gwater2.renderer:BuildMeshes(gwater2.solver, 0.15)
-		cam.End3D()
 	end
 end
 
@@ -175,9 +173,7 @@ local function gwater_tick2()
 	gwater2.solver:IterateMeshes(gwater2.update_meshes)
 	hook.Run("gwater2_pretick")
 	if gwater2.solver:Tick(FrameTime(), 0) then
-		cam.Start3D()
 		gwater2.renderer:BuildMeshes(gwater2.solver, 0.15)
-		cam.End3D()
 	end
 end
 
