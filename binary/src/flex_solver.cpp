@@ -187,11 +187,14 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 			NvFlexGetContacts(solver, get_buffer("contact_planes"), get_buffer("contact_vel"), get_buffer("contact_indices"), get_buffer("contact_count"));
 		}
 
+		force_field_queue.clear();
+
+		return true;
+	} else {
+		force_field_queue.clear();
+
+		return false;
 	}
-
-	force_field_queue.clear();
-
-	return true;
 }
 
 void FlexSolver::add_mesh(FlexMesh mesh) {

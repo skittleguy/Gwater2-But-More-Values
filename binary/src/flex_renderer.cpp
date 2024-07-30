@@ -23,10 +23,10 @@ IMesh* _build_water_anisotropy(int id, FlexRendererThreadData data) {
 		// Frustrum culling
 		Vector4D dst;
 		Vector4DMultiply(data.view_projection_matrix, Vector4D(particle_pos.x, particle_pos.y, particle_pos.z, 1), dst);
-		if (dst.z < 0 || -dst.x - dst.w > data.radius || dst.x - dst.w > data.radius || -dst.y - dst.w > data.radius || dst.y - dst.w > data.radius) continue;
+		//if (dst.z < 0 || -dst.x - dst.w > data.radius || dst.x - dst.w > data.radius || -dst.y - dst.w > data.radius || dst.y - dst.w > data.radius) continue;
 
 		// PVS Culling
-		if (!engine->IsBoxVisible(particle_pos, particle_pos)) continue;
+		//if (!engine->IsBoxVisible(particle_pos, particle_pos)) continue;
 		
 		// Particle is good, render it
 		data.render_buffer[start + particles_to_render] = particle_index;

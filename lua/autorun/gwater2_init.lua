@@ -155,6 +155,10 @@ local function gwater_tick()
 		hook.Run("gwater2_pretick")	-- not actually pretick
 		average_frametime = average_frametime + (limit_fps - average_frametime) * 0.03
 		last_systime = systime	// smooth out fps
+
+		cam.Start3D()
+		gwater2.renderer:BuildMeshes(gwater2.solver, 0.15)
+		cam.End3D()
 	end
 end
 
@@ -170,7 +174,11 @@ local function gwater_tick2()
 
 	gwater2.solver:IterateMeshes(gwater2.update_meshes)
 	hook.Run("gwater2_pretick")
-	gwater2.solver:Tick(FrameTime(), 0)
+	if gwater2.solver:Tick(FrameTime(), 0) then
+		cam.Start3D()
+		gwater2.renderer:BuildMeshes(gwater2.solver, 0.15)
+		cam.End3D()
+	end
 end
 
 // run whenever possible, as often as possible. we dont know when flex will finish calculations

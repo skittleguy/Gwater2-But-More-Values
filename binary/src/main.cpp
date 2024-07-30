@@ -190,9 +190,8 @@ LUA_FUNCTION(FLEXSOLVER_Tick) {
 	LUA->CheckNumber(2);	// Delta Time
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
-	flex->tick(LUA->GetNumber(2) * CM_2_INCH, (NvFlexMapFlags)LUA->GetNumber(3));
+	LUA->PushBool(flex->tick(LUA->GetNumber(2) * CM_2_INCH, (NvFlexMapFlags)LUA->GetNumber(3)));
 
-	LUA->PushBool(true);
 	return 1;
 }
 
