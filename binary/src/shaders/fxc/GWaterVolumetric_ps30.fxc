@@ -1,13 +1,11 @@
-float ALPHA		: register(c0);
+float ALPHA				: register(c0);
+sampler BASETEXTURE 	: register(s0);
 
 struct PS_INPUT {
+	float4 P 		: VPOS;
 	float2 coord	: TEXCOORD0;
 };
 
 float4 main(PS_INPUT i) : COLOR {
-	float2 offset = (i.coord - 0.5) * 2.0;
-	float radius2 = dot(offset, offset);
-
-	float bulge = radius2 < 1 ? (1 - radius2) * ALPHA : 0;
-	return float4(bulge, bulge, bulge, ALPHA);
+	return tex2D(BASETEXTURE, i.coord) * ALPHA;
 };
