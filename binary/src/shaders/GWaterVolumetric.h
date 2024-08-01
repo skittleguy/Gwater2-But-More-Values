@@ -27,8 +27,7 @@ SHADER_DRAW {
 	
 
 	SHADOW_STATE {
-		unsigned int flags = VERTEX_POSITION | VERTEX_NORMAL | VERTEX_TEXCOORD0_2D;
-		pShaderShadow->VertexShaderVertexFormat(flags, 1, 0, 0);
+		pShaderShadow->VertexShaderVertexFormat(VERTEX_GWATER2, 1, 0, 0);
 		
 		// Transparent things (alpha 0 <= x <= 1)
 		if (IS_FLAG_SET(MATERIAL_VAR_TRANSLUCENT)) {
@@ -38,8 +37,7 @@ SHADER_DRAW {
 			// Additive vs multiplicitive
 			if (IS_FLAG_SET(MATERIAL_VAR_ADDITIVE)) {
 				pShaderShadow->BlendFunc(SHADER_BLEND_SRC_ALPHA, SHADER_BLEND_ONE);
-			}
-			else {
+			} else {
 				pShaderShadow->BlendFunc(SHADER_BLEND_SRC_ALPHA, SHADER_BLEND_ONE_MINUS_SRC_ALPHA);
 				//pShaderShadow->BlendFunc(SHADER_BLEND_ONE, SHADER_BLEND_ONE);
 			}

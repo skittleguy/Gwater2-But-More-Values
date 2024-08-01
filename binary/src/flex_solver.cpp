@@ -331,7 +331,7 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	params->solidRestDistance = 6.5f;
 
 	params->anisotropyScale = 1.f;
-	params->anisotropyMin = 0.1f;
+	params->anisotropyMin = 0.2f;
 	params->anisotropyMax = 2.f;
 	params->smoothing = 1.0f;
 
