@@ -151,13 +151,7 @@ local function gwater_tick()
 	LocalPlayer().GWATER2_CONTACTS = 0
 
 	local systime = os.clock()
-	if gwater2.solver:Tick(limit_fps, 1) then
-		hook.Run("gwater2_pretick")	-- not actually pretick
-		average_frametime = average_frametime + (limit_fps - average_frametime) * 0.03
-		last_systime = systime	// smooth out fps
-
-		--gwater2.renderer:BuildMeshes(gwater2.solver, 0.15)
-	end
+	hook.Run("gwater2_posttick", gwater2.solver:Tick(limit_fps, 1))
 end
 
 local function gwater_tick2()
@@ -171,12 +165,8 @@ local function gwater_tick2()
 	LocalPlayer().GWATER2_CONTACTS = particles_in_radius
 
 	gwater2.solver:IterateMeshes(gwater2.update_meshes)
-	hook.Run("gwater2_pretick")
-
 	--gwater2.renderer:BuildMeshes(gwater2.solver, 0.15)
-	if gwater2.solver:Tick(limit_fps, 0) then
-		
-	end
+	hook.Run("gwater2_posttick", gwater2.solver:Tick(limit_fps, 0))
 end
 
 // run whenever possible, as often as possible. we dont know when flex will finish calculations
@@ -196,7 +186,7 @@ end)
 hook.Add("InitPostEntity", "gwater2_addprop", gwater2.reset_solver)
 hook.Add("OnEntityCreated", "gwater2_addprop", function(ent) timer.Simple(0, function() add_prop(ent) end) end)	// timer.0 so data values are setup correctly
 
-hook.Add("gwater2_pretick", "gwater2_gravgun_grab", function()
+hook.Add("gwater2_posttick", "gwater2_gravgun_grab", function()
 	local lp = LocalPlayer()
 	if !lp:KeyDown(IN_ATTACK2) then return end
 	if IsValid(LocalPlayer():GetActiveWeapon()) and LocalPlayer():GetActiveWeapon():GetClass() == "weapon_physcannon" then

@@ -8,6 +8,7 @@ BEGIN_VS_SHADER(GWaterVolumetric, "gwater2 helper")
 // Shader parameters
 BEGIN_SHADER_PARAMS
 	SHADER_PARAM(ALPHA, SHADER_PARAM_TYPE_FLOAT, "0.025", "Amount of transparency")
+	SHADER_PARAM(RADIUS, SHADER_PARAM_TYPE_FLOAT, "1", "Radius")
 	SHADER_PARAM(BASETEXTURE, SHADER_PARAM_TYPE_TEXTURE, "lights/white", "Base texture")
 END_SHADER_PARAMS
 
@@ -59,8 +60,10 @@ SHADER_DRAW {
 	DYNAMIC_STATE {
 		// constants
 		const float alpha = params[ALPHA]->GetFloatValue();
+		const float radius = params[RADIUS]->GetFloatValue();
 
 		pShaderAPI->SetPixelShaderConstant(0, &alpha);
+		pShaderAPI->SetVertexShaderConstant(5, &radius);
 		BindTexture(SHADER_SAMPLER0, BASETEXTURE);
 
 		DECLARE_DYNAMIC_VERTEX_SHADER(GWaterVolumetric_vs30);

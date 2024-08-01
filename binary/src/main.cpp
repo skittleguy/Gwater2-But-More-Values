@@ -137,7 +137,7 @@ LUA_FUNCTION(FLEXSOLVER_AddSphere) {
 	for (int z = -size + 1; z < size; z++) {
 		for (int y = -size + 1; y < size; y++) {
 			for (int x = -size + 1; x < size; x++) {
-				if (x * x + y * y + z * z >= size * size) continue;
+				if ((float)x * (float)x + (float)y * (float)y + (float)z * (float)z >= size * size) continue;
 
 				Vector pos = transform * Vector(x, y, z);
 
@@ -170,7 +170,7 @@ LUA_FUNCTION(FLEXSOLVER_AddCylinder) {
 	for (int z = -size.z + 1; z < size.z; z++) {
 		for (int y = -size.y + 1; y < size.y; y++) {
 			for (int x = -size.x + 1; x < size.x; x++) {
-				if (x * x + y * y >= size.x * size.y) continue;
+				if ((float)x * (float)x + (float)y * (float)y >= size.x * size.y) continue;
 
 				Vector pos = transform * Vector(x, y, z);
 

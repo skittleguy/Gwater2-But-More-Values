@@ -16,12 +16,12 @@
 
 struct FlexRendererThreadData {
 	//IMesh*& water;
-	VMatrix view_projection_matrix;
+	//VMatrix view_projection_matrix;
 	Vector4D* particle_positions;
 	Vector4D* particle_ani0;
 	Vector4D* particle_ani1;
 	Vector4D* particle_ani2;
-	int* render_buffer;
+	//int* render_buffer;
 	int max_particles;
 	float radius;
 };
@@ -31,8 +31,8 @@ private:
 	int allocated = 0;
 	ThreadPool* threads = nullptr;
 	IMesh** meshes = nullptr;	// water meshes 
-	int* water_buffer = nullptr;	// which particles should be rendered?
-	int* diffuse_buffer = nullptr;	// ^
+	//int* water_buffer = nullptr;	// which particles should be rendered?
+	//int* diffuse_buffer = nullptr;	// ^
 	std::future<IMesh*>* queue;
 	
 	void destroy_meshes();

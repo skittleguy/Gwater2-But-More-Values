@@ -41,6 +41,11 @@ hook.Add("RenderScene", "gwater2_render", function(eye_pos, eye_angles, fov)
 	cam.End3D()
 end)]]
 
+hook.Add("gwater2_posttick", "gwater2_render", function(succ)
+	if !succ then return end
+	gwater2.renderer:BuildMeshes(gwater2.solver, 0.0015)
+end)
+
 -- gwater2 shader pipeline
 hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky3d)	--PreDrawViewModels
 	if gwater2.solver:GetActiveParticles() < 1 then return end
@@ -82,7 +87,7 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	render.OverrideDepthEnable(false, false)
 	render.PopRenderTarget()
 	
-	gwater2.renderer:BuildMeshes(gwater2.solver, 0.15)
+	--gwater2.renderer:BuildMeshes(gwater2.solver, 0.15)
 	--render.SetMaterial(Material("models/props_combine/combine_interface_disp"))
 
 	render.UpdateScreenEffectTexture()	-- _rt_framebuffer is used in refraction shader
@@ -117,7 +122,7 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 		-- Make sure the water screen texture has bubbles but the normal framebuffer does not
 		render.SetMaterial(water_bubble)
 		render.UpdateScreenEffectTexture(1)
-		gwater2.renderer:DrawDiffuse()
+		--gwater2.renderer:DrawDiffuse()
 		render.CopyTexture(render.GetRenderTarget(), cache_screen0)
 		render.DrawTextureToScreen(cache_screen1)
 	end
@@ -159,13 +164,13 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	water:SetTexture("$normaltexture", cache_normals)
 	water:SetTexture("$depthtexture", cache_absorption)
 	render.SetMaterial(water)
-	gwater2.renderer:DrawWater()
+	--gwater2.renderer:DrawWater()
 	render.RenderFlashlights( function() gwater2.renderer:DrawWater() end )
 
 	render.OverrideAlphaWriteEnable(false, false)
 
 	render.SetMaterial(water_mist)
-	--gwater2.renderer:DrawDiffuse()
+	gwater2.renderer:DrawDiffuse()
 
 	-- Debug Draw
 	local dbg = 0

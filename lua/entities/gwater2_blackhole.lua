@@ -31,7 +31,8 @@ function ENT:SetupDataTables()
 	if SERVER then return end
 
 	self.PARTICLE_EMITTER = ParticleEmitter(self:GetPos(), false)
-	hook.Add("gwater2_pretick", self, function()
+	hook.Add("gwater2_posttick", self, function(succ)
+		if !succ then return end
 		gwater2.solver:AddForceField(self:GetPos(), self:GetRadius(), -self:GetStrength(), self:GetMode(), self:GetLinear())
 	end)
 end
