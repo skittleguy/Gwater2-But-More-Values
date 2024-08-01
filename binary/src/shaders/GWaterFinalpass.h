@@ -131,7 +131,6 @@ SHADER_DRAW {
 
 		pShaderAPI->SetPixelShaderConstant(0, scr_s);
 		pShaderAPI->SetPixelShaderConstant(1, &radius);
-		pShaderAPI->SetVertexShaderConstant(5, &radius);
 		pShaderAPI->SetPixelShaderConstant(2, &ior);
 		pShaderAPI->SetPixelShaderConstant(3, &reflectance);
 		pShaderAPI->SetPixelShaderConstant(12, color2_normalized); // used to be 4, but that was overlapping with ambient cube.

@@ -47,11 +47,20 @@ IMesh* _build_water_anisotropy(int id, FlexRendererThreadData data) {
 		Vector4D ani1 = data.particle_ani1 ? data.particle_ani1[i] : Vector4D(0, 0, 0, 0);
 		Vector4D ani2 = data.particle_ani2 ? data.particle_ani2[i] : Vector4D(0, 0, 0, 0);
 
+		// bias the shit out of the anisotropy calculations
+		// makes it look "better" as we're doing vertex transforms instead of ellipsoid raytracing. not accurate at all
+		float scale_mult = (5.f / data.radius);
+
+		// manual transform
+		ani0.x *= scale_mult * ani0.w; ani0.y *= scale_mult * ani0.w; ani0.z *= scale_mult * ani0.w;
+		ani1.x *= scale_mult * ani1.w; ani1.y *= scale_mult * ani1.w; ani1.z *= scale_mult * ani1.w;
+		ani2.x *= scale_mult * ani2.w; ani2.y *= scale_mult * ani2.w; ani2.z *= scale_mult * ani2.w;
+
 		for (int i = 0; i < 3; i++) {
-			mesh_builder.TexCoord2f(0, u[i], v[i]);
-			mesh_builder.TexCoord4f(1, ani0.x, ani0.y, ani0.z, ani0.w);	// shove anisotropy in 
-			mesh_builder.TexCoord4f(2, ani1.x, ani1.y, ani1.z, ani1.w);
-			mesh_builder.TexCoord4f(3, ani2.x, ani2.y, ani2.z, ani2.w);
+			mesh_builder.TexCoord3f(0, u[i], v[i], data.radius * 0.2);
+			mesh_builder.TexCoord3f(1, ani0.x, ani0.y, ani0.z);	// shove anisotropy in 
+			mesh_builder.TexCoord3f(2, ani1.x, ani1.y, ani1.z);
+			mesh_builder.TexCoord3f(3, ani2.x, ani2.y, ani2.z);
 			mesh_builder.Position3f(particle_pos.x, particle_pos.y, particle_pos.z);
 			//mesh_builder.Normal3f(-forward.x, -forward.y, -forward.z);
 			mesh_builder.AdvanceVertex();
@@ -72,12 +81,16 @@ IMesh* _build_diffuse(int id, FlexRendererThreadData data) {
 	mesh_builder.Begin(mesh, MATERIAL_TRIANGLES, end - start);
 	for (int i = start; i < end; ++i) {
 		Vector4D particle_pos = data.particle_positions[i];
-		Vector4D ani0 = data.particle_ani0[i];
+		Vector ani0 = data.particle_ani0[i].AsVector3D() * 0.03;
+		//float ani_length = ani0.AsVector3D().Length();
 		float scalar = data.radius * particle_pos.w;
+		if (ani0.Dot(ani0) > 3 * 3) ani0 = ani0.Normalized() * 3;	// 3 = max stretch (hardcoded)
 
 		for (int i = 0; i < 3; i++) {
-			mesh_builder.TexCoord2f(0, u[i], v[i]);
-			mesh_builder.TexCoord4f(1, ani0.x, ani0.y, ani0.z, scalar);
+			mesh_builder.TexCoord3f(0, u[i], v[i], data.radius);
+			mesh_builder.TexCoord3f(1, ani0.x, ani0.y, ani0.z);
+			mesh_builder.TexCoord3f(2, 0, 0, 0);	// keep these 0
+			mesh_builder.TexCoord3f(3, 0, 0, 0);
 			mesh_builder.Position3f(particle_pos.x, particle_pos.y, particle_pos.z);
 			mesh_builder.AdvanceVertex();
 		}
@@ -143,7 +156,7 @@ void FlexRenderer::build_meshes(FlexSolver* flex, float diffuse_radius) {
 	
 	// update thread data
 	FlexRendererThreadData diffuse_data;
-	diffuse_data.particle_positions = (Vector4D*)flex->get_host("diffuse_pos");;
+	diffuse_data.particle_positions = (Vector4D*)flex->get_host("diffuse_pos");
 	diffuse_data.max_particles = max_particles;
 	diffuse_data.radius = flex->get_parameter("radius") / flex->get_parameter("diffuse_lifetime") * diffuse_radius;
 	diffuse_data.particle_ani0 = (Vector4D*)flex->get_host("diffuse_vel");

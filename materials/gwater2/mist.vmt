@@ -1,7 +1,6 @@
 GWaterVolumetric {
-	$basetexture gwater2/sphere
+	$basetexture gwater2/splash
 	$additive 1
 	$translucent 1
-	$alpha 0.5
-	$radius 10
+	$alpha 0.3
 }

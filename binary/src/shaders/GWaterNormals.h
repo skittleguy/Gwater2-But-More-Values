@@ -42,7 +42,6 @@ SHADER_DRAW {
 		const bool depthfix = params[DEPTHFIX]->GetIntValue();
 
 		pShaderAPI->SetPixelShaderConstant(0, &radius);
-		pShaderAPI->SetVertexShaderConstant(5, &radius);	// first 4 constants are in use
 
 		DECLARE_DYNAMIC_VERTEX_SHADER(GWaterNormals_vs30);
 		SET_DYNAMIC_VERTEX_SHADER(GWaterNormals_vs30);
