@@ -201,6 +201,7 @@ void FlexRenderer::build_meshes(FlexSolver* flex, float diffuse_radius) {
 	diffuse_data.max_particles = max_particles;
 	diffuse_data.radius = flex->get_parameter("radius") / flex->get_parameter("diffuse_lifetime") * diffuse_radius;
 	diffuse_data.particle_ani0 = (Vector4D*)flex->get_host("diffuse_vel");
+	diffuse_data.view_projection_matrix = view_projection_matrix;
 
 	max_meshes = ceil(max_particles / (float)MAX_PRIMATIVES);
 	for (int mesh_index = 0; mesh_index < max_meshes; mesh_index++) {
