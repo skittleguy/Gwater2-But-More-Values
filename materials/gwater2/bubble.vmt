@@ -2,5 +2,5 @@ GWaterVolumetric {
 	$basetexture gwater2/bubble
 	$translucent 1
 	$additive 1
-	$alpha 0.3
+	$alpha 0.4
 }

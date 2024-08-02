@@ -84,10 +84,10 @@ IMesh* _build_diffuse(int id, FlexRendererThreadData data) {
 		Vector ani0 = data.particle_ani0[i].AsVector3D() * 0.03;
 		//float ani_length = ani0.AsVector3D().Length();
 		float scalar = data.radius * particle_pos.w;
-		if (ani0.Dot(ani0) > 3 * 3) ani0 = ani0.Normalized() * 3;	// 3 = max stretch (hardcoded)
+		if (ani0.Dot(ani0) > 2 * 2) ani0 = ani0.Normalized() * 2;	// 3 = max stretch (hardcoded)
 
 		for (int i = 0; i < 3; i++) {
-			mesh_builder.TexCoord3f(0, u[i], v[i], data.radius);
+			mesh_builder.TexCoord3f(0, u[i], v[i], scalar);
 			mesh_builder.TexCoord3f(1, ani0.x, ani0.y, ani0.z);
 			mesh_builder.TexCoord3f(2, 0, 0, 0);	// keep these 0
 			mesh_builder.TexCoord3f(3, 0, 0, 0);

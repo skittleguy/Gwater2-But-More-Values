@@ -43,7 +43,7 @@ end)]]
 
 hook.Add("gwater2_posttick", "gwater2_render", function(succ)
 	if !succ then return end
-	gwater2.renderer:BuildMeshes(gwater2.solver, 1)
+	gwater2.renderer:BuildMeshes(gwater2.solver, 0.2)
 end)
 
 -- gwater2 shader pipeline
