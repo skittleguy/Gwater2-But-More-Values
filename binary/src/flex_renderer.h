@@ -5,22 +5,20 @@
 #include "meshutils.h"		// Fixes linker errors
 #include "flex_solver.h"
 #include <vector>
-#include <thread>
-#include <mutex>
 #include "ThreadPool.h"
 
 #define MAX_PRIMATIVES 21845
 #define MAX_THREADS 16
 #define SQRT3 1.73205081
-#define VERTEX_GWATER2 VERTEX_POSITION | VERTEX_NORMAL | VERTEX_TEXCOORD_SIZE(0, 3) | VERTEX_TEXCOORD_SIZE(1, 3) | VERTEX_TEXCOORD_SIZE(2, 3) | VERTEX_TEXCOORD_SIZE(3, 3)
+#define VERTEX_GWATER2 VERTEX_POSITION | VERTEX_NORMAL | VERTEX_TEXCOORD0_2D
 
 struct FlexRendererThreadData {
-	//IMesh*& water;
-	//VMatrix view_projection_matrix;
+	VMatrix view_projection_matrix;
 	Vector4D* particle_positions;
 	Vector4D* particle_ani0;
 	Vector4D* particle_ani1;
 	Vector4D* particle_ani2;
+	Vector eye_pos;
 	//int* render_buffer;
 	int max_particles;
 	float radius;
@@ -28,21 +26,25 @@ struct FlexRendererThreadData {
 
 class FlexRenderer {
 private:
-	int allocated = 0;
+	//int allocated = 0;
 	ThreadPool* threads = nullptr;
-	IMesh** meshes = nullptr;	// water meshes 
 	//int* water_buffer = nullptr;	// which particles should be rendered?
 	//int* diffuse_buffer = nullptr;	// ^
-	std::future<IMesh*>* queue;
+	std::vector<std::future<IMesh*>> water_queue;
+	std::vector<IMesh*> water_meshes;
+
+	std::vector<std::future<IMesh*>> diffuse_queue;
+	std::vector<IMesh*> diffuse_meshes;
 	
 	void destroy_meshes();
-	void update_meshes();
+	void update_water();
+	void update_diffuse();
 public:
 	void draw_water();
 	void draw_diffuse();
 
 	void build_meshes(FlexSolver* flex, float diffuse_radius);
 
-	FlexRenderer(int max_meshes);
+	FlexRenderer();
 	~FlexRenderer();
 };

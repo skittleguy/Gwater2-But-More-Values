@@ -41,11 +41,6 @@ hook.Add("RenderScene", "gwater2_render", function(eye_pos, eye_angles, fov)
 	cam.End3D()
 end)]]
 
-hook.Add("gwater2_posttick", "gwater2_render", function(succ)
-	if !succ then return end
-	gwater2.renderer:BuildMeshes(gwater2.solver, 0.2)
-end)
-
 -- gwater2 shader pipeline
 hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky3d)	--PreDrawViewModels
 	if gwater2.solver:GetActiveParticles() < 1 then return end
@@ -87,7 +82,7 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	render.OverrideDepthEnable(false, false)
 	render.PopRenderTarget()
 	
-	--gwater2.renderer:BuildMeshes(gwater2.solver, 0.15)
+	gwater2.renderer:BuildMeshes(gwater2.solver, 0.2)
 	--render.SetMaterial(Material("models/props_combine/combine_interface_disp"))
 
 	render.UpdateScreenEffectTexture()	-- _rt_framebuffer is used in refraction shader

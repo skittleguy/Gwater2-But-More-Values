@@ -2,15 +2,9 @@
 
 //  DYNAMIC: "NUM_LIGHTS"				"0..4"  
 
-float2 SCR_S		: register(c1);
-float RADIUS		: register(c5);
-
 struct VS_INPUT {
 	float4 vPos			: POSITION;		// Position
 	float4 vTexCoord	: TEXCOORD0;	// Texture coordinates
-	float4 ani0 		: TEXCOORD1;	// cursed anisotropy (we have to shove it in the vertex shader)
-	float4 ani1 		: TEXCOORD2;
-	float4 ani2 		: TEXCOORD3;
 };
 
 struct VS_OUTPUT {
@@ -30,49 +24,28 @@ VS_OUTPUT main(const VS_INPUT v) {
 	float3 world_pos;
 	SkinPosition(0, v.vPos, 0, 0, world_pos);
 
-	// extract normal / right and up
-	float3 world_normal = normalize(cEyePos - world_pos);
-	float3 right = normalize(cross(world_normal, float3(0, 0, 1)));
-	float3 up = cross(world_normal, right);
-
-	// to avoid extrusion calculations (above) being called on CPU, we do them here
-	float3 world_pos_offset = -right * (v.vTexCoord.x - 0.5) + up * (v.vTexCoord.y - 0.5);
-
-	// no fucking clue why this works
-	world_pos_offset *= (RADIUS * 0.2);
-	//float scale_mult = data.radius / 10.f;	
-	float inv_scale_mult = 10.f / RADIUS;	// microoptimization
-
-	// Anisotropy warping
-	float dot0 = dot(world_pos_offset, v.ani0.xyz) * v.ani0.w * inv_scale_mult;
-	float dot1 = dot(world_pos_offset, v.ani1.xyz) * v.ani1.w * inv_scale_mult;
-	float dot2 = dot(world_pos_offset, v.ani2.xyz) * v.ani2.w * inv_scale_mult;
-	world_pos_offset += (v.ani0.xyz * dot0 + v.ani1.xyz * dot1 + v.ani2.xyz * dot2);
-	
-	float3 extruded_world_pos = world_pos + world_pos_offset;
-
-	float4 vProjPos = mul(float4(extruded_world_pos, 1), cViewProj);
+	float4 vProjPos = mul(float4(world_pos, 1), cViewProj);
 	//vProjPos.z = dot(float4(extruded_world_pos, 1), cViewProjZ);	// wtf does this even do?
 
 	o.projPosSetup = vProjPos;
 	o.coord = v.vTexCoord;
-	o.view_dir = normalize(extruded_world_pos - cEyePos);
+	o.view_dir = normalize(world_pos - cEyePos);
 	o.proj = cViewProj;	
-	o.pos = extruded_world_pos; 
+	o.pos = world_pos; 
 	
 	// Scalar attenuations for four lights
 	o.lightAtten.xyz = float4(0,0,0,0);
 	#if ( NUM_LIGHTS > 0 )
-		o.lightAtten.x = GetVertexAttenForLight( extruded_world_pos, 0, false );
+		o.lightAtten.x = GetVertexAttenForLight( world_pos, 0, false );
 	#endif
 	#if ( NUM_LIGHTS > 1 )
-		o.lightAtten.y = GetVertexAttenForLight( extruded_world_pos, 1, false );
+		o.lightAtten.y = GetVertexAttenForLight( world_pos, 1, false );
 	#endif
 	#if ( NUM_LIGHTS > 2 )
-		o.lightAtten.z = GetVertexAttenForLight( extruded_world_pos, 2, false );
+		o.lightAtten.z = GetVertexAttenForLight( world_pos, 2, false );
 	#endif
 	#if ( NUM_LIGHTS > 3 )
-		o.lightAtten.w = GetVertexAttenForLight( extruded_world_pos, 3, false );
+		o.lightAtten.w = GetVertexAttenForLight( world_pos, 3, false );
 	#endif
 
 	return o;
