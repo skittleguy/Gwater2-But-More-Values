@@ -4,6 +4,6 @@ GWaterFinalpass {
 	$ior 1.333
 	$reflectance 0.8
 	$screentexture "_rt_fullframefb"
-	$color2 "[209 237 255 20]"
+	$color2 "[209 237 255 25]"
 	$flashlight 1
 }
