@@ -751,7 +751,6 @@ LUA_FUNCTION(NewFlexSolver) {
 }
 
 LUA_FUNCTION(NewFlexRenderer) {
-	LUA->CheckNumber(1);
 	FlexRenderer* flex_renderer = new FlexRenderer();
 	LUA->PushUserType(flex_renderer, FLEXRENDERER_METATABLE);
 	LUA->PushMetaTable(FLEXRENDERER_METATABLE);

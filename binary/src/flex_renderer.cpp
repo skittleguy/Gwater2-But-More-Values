@@ -27,7 +27,7 @@ IMesh* _build_water_anisotropy(int id, FlexRendererThreadData data) {
 		if (dst.z < 0 || -dst.x - dst.w > data.radius || dst.x - dst.w > data.radius || -dst.y - dst.w > data.radius || dst.y - dst.w > data.radius) continue;
 
 		// PVS Culling
-		if (engine->CullBox(particle_pos, particle_pos)) continue;
+		if (!engine->IsBoxInViewCluster(particle_pos, particle_pos)) continue;
 		
 		// Particle is good, render it
 		particle_indices[particles_to_render] = particle_index;
@@ -99,7 +99,7 @@ IMesh* _build_diffuse(int id, FlexRendererThreadData data) {
 		if (dst.z < 0 || -dst.x - dst.w > data.radius || dst.x - dst.w > data.radius || -dst.y - dst.w > data.radius || dst.y - dst.w > data.radius) continue;
 
 		// PVS Culling
-		if (engine->CullBox(particle_pos, particle_pos)) continue;
+		if (!engine->IsBoxInViewCluster(particle_pos, particle_pos)) continue;
 
 		// Particle is good, render it
 		particle_indices[particles_to_render] = particle_index;
