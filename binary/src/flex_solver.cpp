@@ -126,29 +126,34 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 		// Map positions to CPU memory
 		Vector4D* particle_pos = (Vector4D*)NvFlexMap(get_buffer("particle_pos"), wait);
 		if (particle_pos) {
-			// Add queued particles
-			for (int i = 0; i < particle_queue.size(); i++) {
-				int particle_index = copy_description->elementCount + i;
-				set_particle(particle_index, particle_queue[i]);
+			if (particle_queue.empty()) {
+				NvFlexUnmap(get_buffer("particle_pos"));
+			} else {
+				// Add queued particles
+				for (int i = 0; i < particle_queue.size(); i++) {
+					int particle_index = copy_description->elementCount + i;
+					particle_pos[particle_index] = particle_queue[i].pos;
+					//set_particle(particle_index, particle_queue[i]);
+				}
+
+				NvFlexUnmap(get_buffer("particle_pos"));
+
+				// Only copy what we just added
+				NvFlexCopyDesc desc;
+				desc.dstOffset = copy_description->elementCount;
+				desc.elementCount = particle_queue.size();
+				desc.srcOffset = desc.dstOffset;
+
+				// Update particle information
+				NvFlexSetParticles(solver, get_buffer("particle_pos"), &desc);
+				NvFlexSetVelocities(solver, get_buffer("particle_vel"), &desc);
+				NvFlexSetPhases(solver, get_buffer("particle_phase"), &desc);
+				NvFlexSetActive(solver, get_buffer("particle_active"), &desc);
+				NvFlexSetActiveCount(solver, get_active_particles());
+
+				copy_description->elementCount += particle_queue.size();
+				particle_queue.clear();
 			}
-
-			NvFlexUnmap(get_buffer("particle_pos"));
-			
-			// Only copy what we just added
-			NvFlexCopyDesc desc;
-			desc.dstOffset = copy_description->elementCount;
-			desc.elementCount = particle_queue.size();
-			desc.srcOffset = desc.dstOffset;
-
-			// Update particle information
-			NvFlexSetParticles(solver, get_buffer("particle_pos"), &desc);
-			NvFlexSetVelocities(solver, get_buffer("particle_vel"), &desc);
-			NvFlexSetPhases(solver, get_buffer("particle_phase"), &desc);
-			NvFlexSetActive(solver, get_buffer("particle_active"), &desc);
-			NvFlexSetActiveCount(solver, get_active_particles());
-
-			copy_description->elementCount += particle_queue.size();
-			particle_queue.clear();
 		} else {
 			return false;
 		}
