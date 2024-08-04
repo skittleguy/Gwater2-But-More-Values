@@ -7,8 +7,8 @@ extern IVEngineClient* engine = NULL;
 
 #define min(a, b) a < b ? a : b
 
-float u[3] = { 0.5 - SQRT3 / 2, 0.5, 0.5 + SQRT3 / 2 };
-float v[3] = { 1, -0.5, 1 };
+float water_u[3] = { 0.5 - SQRT3 / 2, 0.5, 0.5 + SQRT3 / 2 };
+float water_v[3] = { 1, -0.5, 1 };
 
 // lord have mercy brothers
 
@@ -21,6 +21,8 @@ IMesh* _build_water_anisotropy(int id, FlexRendererThreadData data) {
 	int particle_indices[MAX_PRIMATIVES];
 	int particles_to_render = 0;	// Frustrum culling disabled for now, as mesh generation wont have a cam context
 	for (int particle_index = start; particle_index < end; ++particle_index) {
+		if (data.particle_phases[particle_index] != FlexPhase::WATER) continue;	// not water, bail
+
 		Vector particle_pos = data.particle_positions[particle_index].AsVector3D();
 
 		// Frustrum culling
@@ -43,8 +45,8 @@ IMesh* _build_water_anisotropy(int id, FlexRendererThreadData data) {
 	IMesh* mesh = materials->GetRenderContext()->CreateStaticMesh(VERTEX_GWATER2, "");
 	CMeshBuilder mesh_builder;
 	mesh_builder.Begin(mesh, MATERIAL_TRIANGLES, particles_to_render);
-	for (int i = start; i < start + particles_to_render; ++i) {
-		int particle_index = particle_indices[i - start];
+	for (int mesh_index = start; mesh_index < start + particles_to_render; ++mesh_index) {
+		int particle_index = particle_indices[mesh_index - start];
 		Vector particle_pos = data.particle_positions[particle_index].AsVector3D();
 		Vector4D ani0 = data.particle_ani0 ? data.particle_ani0[particle_index] : Vector4D(0, 0, 0, 0);
 		Vector4D ani1 = data.particle_ani1 ? data.particle_ani1[particle_index] : Vector4D(0, 0, 0, 0);
@@ -64,8 +66,8 @@ IMesh* _build_water_anisotropy(int id, FlexRendererThreadData data) {
 		Vector right = (forward.Cross(Vector(0, 0, 1))).Normalized();
 		Vector up = forward.Cross(right);
 
-		for (int i = 0; i < 3; i++) {	// warning: redefinition of 'i'
-			Vector local_pos = (right * (u[i] - 0.5) + up * (v[i] - 0.5)) * data.radius * 0.2;
+		for (int i = 0; i < 3; i++) {	
+			Vector local_pos = (right * (water_u[i] - 0.5) + up * (water_v[i] - 0.5)) * data.radius * 0.2;
 
 			// Anisotropy warping
 			float dot0 = local_pos.Dot(ani0.AsVector3D());
@@ -73,7 +75,7 @@ IMesh* _build_water_anisotropy(int id, FlexRendererThreadData data) {
 			float dot2 = local_pos.Dot(ani2.AsVector3D());
 			local_pos += (ani0.AsVector3D() * dot0 + ani1.AsVector3D() * dot1 + ani2.AsVector3D() * dot2);
 
-			mesh_builder.TexCoord2f(0, u[i], v[i]);
+			mesh_builder.TexCoord2f(0, water_u[i], water_v[i]);
 			mesh_builder.Position3f(particle_pos.x + local_pos.x, particle_pos.y + local_pos.y, particle_pos.z + local_pos.z);
 			mesh_builder.Normal3f(-forward.x, -forward.y, -forward.z);
 			mesh_builder.AdvanceVertex();
@@ -98,7 +100,7 @@ IMesh* _build_diffuse(int id, FlexRendererThreadData data) {
 		// Frustrum culling
 		Vector4D dst;
 		Vector4DMultiply(data.view_projection_matrix, Vector4D(particle_pos.x, particle_pos.y, particle_pos.z, 1), dst);
-		if (dst.z < 0 || -dst.x - dst.w > data.radius || dst.x - dst.w > data.radius || -dst.y - dst.w > data.radius || dst.y - dst.w > data.radius) continue;
+		if (dst.z < 0 || -dst.x - dst.w > 0 || dst.x - dst.w > 0 || -dst.y - dst.w > 0 || dst.y - dst.w > 0) continue;
 
 		// PVS Culling
 		if (!engine->IsBoxVisible(particle_pos, particle_pos)) continue;
@@ -115,8 +117,8 @@ IMesh* _build_diffuse(int id, FlexRendererThreadData data) {
 	IMesh* mesh = materials->GetRenderContext()->CreateStaticMesh(VERTEX_GWATER2, "");
 	CMeshBuilder mesh_builder;
 	mesh_builder.Begin(mesh, MATERIAL_TRIANGLES, particles_to_render);
-	for (int i = start; i < start + particles_to_render; ++i) {
-		int particle_index = particle_indices[i - start];
+	for (int mesh_index = start; mesh_index < start + particles_to_render; ++mesh_index) {
+		int particle_index = particle_indices[mesh_index - start];
 		Vector4D particle_pos = data.particle_positions[particle_index];
 
 		// warp diffuse based on velocity
@@ -129,15 +131,50 @@ IMesh* _build_diffuse(int id, FlexRendererThreadData data) {
 		Vector right = (forward.Cross(Vector(0, 0, 1))).Normalized();
 		Vector up = forward.Cross(right);
 
-		for (int i = 0; i < 3; i++) {	// warning: redefinition of 'i'
-			Vector local_pos = (right * (u[i] - 0.5) + up * (v[i] - 0.5)) * scalar;
+		for (int i = 0; i < 3; i++) {	
+			Vector local_pos = (right * (water_u[i] - 0.5) + up * (water_v[i] - 0.5)) * scalar;
 
 			// Anisotropy warping
 			local_pos += ani0 * local_pos.Dot(ani0);
 
-			mesh_builder.TexCoord2f(0, u[i], v[i]);
+			mesh_builder.TexCoord2f(0, water_u[i], water_v[i]);
 			mesh_builder.Position3f(particle_pos.x + local_pos.x, particle_pos.y + local_pos.y, particle_pos.z + local_pos.z);
 			//mesh_builder.Normal3f(-forward.x, -forward.y, -forward.z);
+			mesh_builder.AdvanceVertex();
+		}
+	}
+	mesh_builder.End();
+
+	return mesh;
+}
+
+// Builds meshes of cloth, indices shoved in phase buffer, normals shoved in ani0
+float cloth_u[6] = {1, 0, 1, 1, 0, 0};
+float cloth_v[6] = {0, 0, 1, 1, 0, 1};
+IMesh* _build_cloth(int id, FlexRendererThreadData data) {
+	int start = id * MAX_PRIMATIVES;
+	int end = min((id + 1) * MAX_PRIMATIVES, data.max_particles);
+
+	// start building our mesh
+	IMesh* mesh = materials->GetRenderContext()->CreateStaticMesh(MATERIAL_VERTEX_FORMAT_MODEL_SKINNED, "");
+	CMeshBuilder mesh_builder;
+	mesh_builder.Begin(mesh, MATERIAL_TRIANGLES, end - start);
+	for (int mesh_index = start; mesh_index < end; ++mesh_index) {
+		for (int i = 0; i < 3; i++) {
+			int particle_index = data.particle_phases[mesh_index * 3 + i];
+			Vector particle_pos = data.particle_positions[particle_index].AsVector3D();
+			Vector particle_normal = -data.particle_ani0[particle_index].AsVector3D().Normalized();	// flex generates different triangle winding data, so normals must be inverted
+			float userdata[4] = {0, 0, 0, 0};
+
+			if (mesh_index % 2 == 0) {// fuck me
+				mesh_builder.TexCoord2f(0, cloth_u[i], cloth_v[i]);
+			} else {
+				mesh_builder.TexCoord2f(0, cloth_u[i + 3], cloth_v[i + 3]);
+			}
+			mesh_builder.Position3f(particle_pos.x, particle_pos.y, particle_pos.z);
+			mesh_builder.Normal3f(particle_normal.x, particle_normal.y, particle_normal.z);
+			mesh_builder.UserData(userdata);
+			mesh_builder.Color4f(1, 1, 1, 1);
 			mesh_builder.AdvanceVertex();
 		}
 	}
@@ -157,12 +194,13 @@ void FlexRenderer::build_meshes(FlexSolver* flex, float diffuse_radius) {
 	// Clear previous imeshes since they are being rebuilt
 	destroy_meshes();
 	update_water();
+	update_cloth();
 	update_diffuse();*/
 
 	destroy_meshes();
 
-	int max_particles = flex->get_active_particles();
-	if (max_particles == 0) return;
+	int active_particles = flex->get_active_particles();
+	if (active_particles == 0) return;
 
 	IMatRenderContext* render_context = materials->GetRenderContext();
 
@@ -176,12 +214,11 @@ void FlexRenderer::build_meshes(FlexSolver* flex, float diffuse_radius) {
 	MatrixMultiply(projection_matrix, view_matrix, view_projection_matrix);
 
 	///// Water particles /////
-
-	// thread data
 	FlexRendererThreadData water_data;
 	water_data.view_projection_matrix = view_projection_matrix;
 	water_data.particle_positions = flex->get_parameter("smoothing") != 0 ? (Vector4D*)flex->get_host("particle_smooth") : (Vector4D*)flex->get_host("particle_pos");
-	water_data.max_particles = max_particles;
+	water_data.particle_phases = (int*)flex->get_host("particle_phase");
+	water_data.max_particles = active_particles;
 	water_data.radius = flex->get_parameter("radius");
 	water_data.eye_pos = eye_pos;
 	if (flex->get_parameter("anisotropy_scale") != 0) {		// Should we do anisotropy calculations?
@@ -194,29 +231,41 @@ void FlexRenderer::build_meshes(FlexSolver* flex, float diffuse_radius) {
 		water_data.particle_ani2 = nullptr;
 	}
 
-	int max_meshes = ceil(max_particles / (float)MAX_PRIMATIVES);
-	for (int mesh_index = 0; mesh_index < max_meshes; mesh_index++) {
+	for (int mesh_index = 0; mesh_index < ceil(active_particles / (float)MAX_PRIMATIVES); mesh_index++) {
 		// Launch thread
 		water_queue.push_back(threads->enqueue(_build_water_anisotropy, mesh_index, water_data));
 	}
 	
 	///// Diffuse particles /////
+	int active_diffuse = flex->get_active_diffuse();
+	if (active_diffuse > 0) {
+		// update thread data
+		FlexRendererThreadData diffuse_data;
+		diffuse_data.eye_pos = eye_pos;
+		diffuse_data.view_projection_matrix = view_projection_matrix;
+		diffuse_data.particle_positions = (Vector4D*)flex->get_host("diffuse_pos");
+		diffuse_data.max_particles = active_diffuse;
+		diffuse_data.radius = flex->get_parameter("radius") / flex->get_parameter("diffuse_lifetime") * diffuse_radius;
+		diffuse_data.particle_ani0 = (Vector4D*)flex->get_host("diffuse_vel");
 
-	max_particles = flex->get_active_diffuse();
-	if (max_particles == 0) return;
-	
-	// update thread data
-	FlexRendererThreadData diffuse_data;
-	diffuse_data.eye_pos = eye_pos;
-	diffuse_data.view_projection_matrix = view_projection_matrix;
-	diffuse_data.particle_positions = (Vector4D*)flex->get_host("diffuse_pos");
-	diffuse_data.max_particles = max_particles;
-	diffuse_data.radius = flex->get_parameter("radius") / flex->get_parameter("diffuse_lifetime") * diffuse_radius;
-	diffuse_data.particle_ani0 = (Vector4D*)flex->get_host("diffuse_vel");
-	
-	max_meshes = ceil(max_particles / (float)MAX_PRIMATIVES);
-	for (int mesh_index = 0; mesh_index < max_meshes; mesh_index++) {
-		diffuse_queue.push_back(threads->enqueue(_build_diffuse, mesh_index, diffuse_data));
+		for (int mesh_index = 0; mesh_index < ceil(active_diffuse / (float)MAX_PRIMATIVES); mesh_index++) {
+			diffuse_queue.push_back(threads->enqueue(_build_diffuse, mesh_index, diffuse_data));
+		}
+	}
+
+	///// Cloth /////
+	int active_triangles = flex->get_active_triangles();
+	if (active_triangles > 0) {
+		// update thread data
+		FlexRendererThreadData cloth_data;
+		cloth_data.particle_positions = (Vector4D*)flex->get_host("particle_pos");
+		cloth_data.max_particles = active_triangles;
+		cloth_data.particle_ani0 = (Vector4D*)flex->get_host("triangle_normals");
+		cloth_data.particle_phases = (int*)flex->get_host("triangle_indices");
+
+		for (int mesh_index = 0; mesh_index < ceil(active_triangles / (float)MAX_PRIMATIVES); mesh_index++) {
+			triangle_queue.push_back(threads->enqueue(_build_cloth, mesh_index, cloth_data));
+		}
 	}
 };
 
@@ -238,6 +287,15 @@ void FlexRenderer::update_diffuse() {
 	diffuse_queue.clear();
 }
 
+// ^
+void FlexRenderer::update_cloth() {
+	for (std::future<IMesh*>& mesh : triangle_queue) {
+		IMesh* imesh = mesh.get();
+		if (imesh) triangle_meshes.push_back(imesh);
+	}
+	triangle_queue.clear();
+}
+
 // Renders water meshes
 void FlexRenderer::draw_water() {
 	update_water();
@@ -251,6 +309,12 @@ void FlexRenderer::draw_diffuse() {
 	for (IMesh* mesh : diffuse_meshes) mesh->Draw();
 };
 
+void FlexRenderer::draw_cloth() {
+	update_cloth();
+
+	for (IMesh* mesh : triangle_meshes) mesh->Draw();
+};
+
 void FlexRenderer::destroy_meshes() {
 	IMatRenderContext* render_context = materials->GetRenderContext();
 
@@ -259,25 +323,29 @@ void FlexRenderer::destroy_meshes() {
 
 	for (IMesh* mesh : diffuse_meshes) render_context->DestroyStaticMesh(mesh);
 	diffuse_meshes.clear();
+
+	for (IMesh* mesh : triangle_meshes) render_context->DestroyStaticMesh(mesh);
+	triangle_meshes.clear();
 }
 
 // Allocate buffers
 FlexRenderer::FlexRenderer() {
 	int num_threads = std::thread::hardware_concurrency();
-	if (num_threads <= 0) num_threads = 8;
-	//Msg("Initialized FlexRenderer with %i CPU threads\n", num_threads);
+	if (num_threads <= 0) num_threads = 8;	// can't detect, assume 8
 	threads = new ThreadPool(num_threads);	// estimate number of threads
+	//Msg("Initialized FlexRenderer with %i CPU threads\n", num_threads);
 };
 
 FlexRenderer::~FlexRenderer() {
 	//if (materials->GetRenderContext() == nullptr) return;	// wtf?
 
-	// Destroy existing meshes
+	// destroy existing meshes
 	destroy_meshes();
 	
-	// Redestroy meshes being built in threads
+	// destroy meshes being built in threads
 	update_water();
 	update_diffuse();
+	update_cloth();
 	destroy_meshes();
 
 	delete threads;

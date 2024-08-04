@@ -21,6 +21,7 @@ local water_normals = Material("gwater2/normals")
 local water_bubble = Material("gwater2/bubble")	-- bubbles
 local water_mist = Material("gwater2/mist")
 local black = Material("gwater2/black")
+local cloth = Material("gwater2/cloth")
 
 local debug_depth = CreateClientConVar("gwater2_debug_depth", "0", false)
 local debug_absorption = CreateClientConVar("gwater2_debug_absorption", "0", false)
@@ -84,6 +85,9 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	
 	gwater2.renderer:BuildMeshes(gwater2.solver, 0.2)
 	--render.SetMaterial(Material("models/props_combine/combine_interface_disp"))
+
+	render.SetMaterial(cloth)
+	gwater2.renderer:DrawCloth()
 
 	render.UpdateScreenEffectTexture()	-- _rt_framebuffer is used in refraction shader
 	

@@ -49,7 +49,7 @@ LUA_FUNCTION(FLEXSOLVER_GarbageCollect) {
 Particle parse_particle(ILuaBase* LUA) {
 	Vector vel = Vector(0, 0, 0);
 	float inv_mass = 1;
-	int phase = NvFlexMakePhase(0, eNvFlexPhaseSelfCollide | eNvFlexPhaseFluid);
+	int phase = FlexPhase::WATER;
 
 	if (LUA->GetType(-1) == Type::Table) {
 		// Get velocity (default = Vector())
@@ -744,6 +744,14 @@ LUA_FUNCTION(FLEXRENDERER_DrawDiffuse) {
 	return 0;
 }
 
+// Renders cloth
+LUA_FUNCTION(FLEXRENDERER_DrawCloth) {
+	LUA->CheckType(1, FLEXRENDERER_METATABLE);
+	GET_FLEXRENDERER(1)->draw_cloth();
+
+	return 0;
+}
+
 /************************************* Global LUA Interface **********************************************/
 
 #define ADD_FUNCTION(LUA, funcName, tblName) LUA->PushCFunction(funcName); LUA->SetField(-2, tblName)
@@ -920,6 +928,7 @@ GMOD_MODULE_OPEN() {
 	ADD_FUNCTION(LUA, FLEXRENDERER_BuildMeshes, "BuildMeshes");
 	ADD_FUNCTION(LUA, FLEXRENDERER_DrawWater, "DrawWater");
 	ADD_FUNCTION(LUA, FLEXRENDERER_DrawDiffuse, "DrawDiffuse");
+	ADD_FUNCTION(LUA, FLEXRENDERER_DrawCloth, "DrawCloth");
 	LUA->SetField(-2, "__index");
 
 	// _G.FlexSolver = NewFlexSolver

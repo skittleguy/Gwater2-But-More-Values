@@ -6,6 +6,11 @@
 #include <string>
 #include "flex_mesh.h"
 
+enum FlexPhase {
+	WATER = (0 & eNvFlexPhaseGroupMask) | ((eNvFlexPhaseSelfCollide | eNvFlexPhaseFluid) & eNvFlexPhaseFlagsMask) | (eNvFlexPhaseShapeChannelMask & eNvFlexPhaseShapeChannelMask),
+	CLOTH = (0 & eNvFlexPhaseGroupMask) | ((eNvFlexPhaseSelfCollide					   ) & eNvFlexPhaseFlagsMask) | (eNvFlexPhaseShapeChannelMask & eNvFlexPhaseShapeChannelMask),
+};
+
 struct Particle {
 	Vector4D pos = Vector4D(0, 0, 0, 1);
 	Vector vel = Vector(0, 0, 0);
@@ -38,6 +43,7 @@ public:
 	void reset();
 	int get_active_particles();
 	int get_active_diffuse();
+	int get_active_triangles();
 	int get_max_particles();
 	int get_max_diffuse_particles();
 	int get_max_contacts();

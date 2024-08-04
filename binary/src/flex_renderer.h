@@ -14,9 +14,10 @@
 struct FlexRendererThreadData {
 	VMatrix view_projection_matrix;
 	Vector4D* particle_positions;
-	Vector4D* particle_ani0;
+	Vector4D* particle_ani0;	// also used as triangle normals
 	Vector4D* particle_ani1;
 	Vector4D* particle_ani2;
+	int* particle_phases;	// also used as triangle indices
 	Vector eye_pos;
 	//int* render_buffer;
 	int max_particles;
@@ -34,13 +35,18 @@ private:
 
 	std::vector<std::future<IMesh*>> diffuse_queue;
 	std::vector<IMesh*> diffuse_meshes;
+
+	std::vector<std::future<IMesh*>> triangle_queue;
+	std::vector<IMesh*> triangle_meshes;
 	
 	void destroy_meshes();
 	void update_water();
 	void update_diffuse();
+	void update_cloth();
 public:
 	void draw_water();
 	void draw_diffuse();
+	void draw_cloth();
 
 	void build_meshes(FlexSolver* flex, float diffuse_radius);
 

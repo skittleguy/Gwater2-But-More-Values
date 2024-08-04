@@ -1,0 +1,5 @@
+VertexLitGeneric {
+	$basetexture models/props_c17/FurnitureFabric003a
+	//$basetexture models/props_combine/combine_interface_disp
+	$nocull 1
+}

@@ -905,7 +905,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 			- Rewrote the internal ticker. GWater2 may run at slightly worse framerates, but feel smoother then previous versions
 			- Added cloth
 			- Added force fields to API (black hole entity)
-			- Changed absorption and reflection calculations
+			- Changed absorption, reflection, and phong calculations to be more realistic
 		]])
 		label:SetColor(Color(255, 255, 255))
 		label:SetTextInset(5, 30)

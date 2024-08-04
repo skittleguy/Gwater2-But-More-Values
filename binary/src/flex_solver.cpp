@@ -35,11 +35,14 @@ void FlexSolver::reset() {
 	((int*)hosts["diffuse_count"])[0] = 0;
 
 	NvFlexSetSprings(solver, NULL, NULL, NULL, 0);
-	NvFlexSetDynamicTriangles(solver, NULL, NULL, 0);
 }
 
 int FlexSolver::get_active_particles() {
 	return copy_particles.elementCount + particle_queue.size();
+}
+
+int FlexSolver::get_active_triangles() {
+	return copy_triangles.elementCount;
 }
 
 int FlexSolver::get_active_diffuse() {
@@ -88,9 +91,10 @@ void FlexSolver::add_particle(Particle particle) {
 
 inline int _grid(int x, int y, int x_size) { return y * x_size + x; }
 void FlexSolver::add_cloth(Particle particle, Vector2D size) {
-	particle.phase = NvFlexMakePhase(0, eNvFlexPhaseSelfCollide);	// force to cloth
-
 	float radius = get_parameter("solid_rest_distance");
+	particle.phase = FlexPhase::CLOTH;	// force to cloth
+	particle.pos.x -= size.x * radius / 2.0;
+	particle.pos.y -= size.y * radius / 2.0;
 	NvFlexCopyDesc desc;
 	desc.srcOffset = copy_particles.elementCount;
 	desc.dstOffset = desc.srcOffset;
@@ -98,7 +102,6 @@ void FlexSolver::add_cloth(Particle particle, Vector2D size) {
 
 	// ridiculous amount of buffers to map
 	int* triangle_indices = (int*)NvFlexMap(get_buffer("triangle_indices"), eNvFlexMapWait);
-	Vector* triangle_normals = (Vector*)NvFlexMap(get_buffer("triangle_normals"), eNvFlexMapWait);
 	Vector4D* particle_pos = (Vector4D*)NvFlexMap(get_buffer("particle_pos"), eNvFlexMapWait);
 	Vector* particle_vel = (Vector*)NvFlexMap(get_buffer("particle_vel"), eNvFlexMapWait);
 	int* particle_phase = (int*)NvFlexMap(get_buffer("particle_phase"), eNvFlexMapWait);
@@ -115,22 +118,20 @@ void FlexSolver::add_cloth(Particle particle, Vector2D size) {
 			int index = copy_particles.elementCount++;
 			particle_pos[index] = particle.pos + Vector4D(x * radius, y * radius, 0, 0);
 			particle_vel[index] = particle.vel;
-			particle_phase[index] = particle.phase;
+			particle_phase[index] = particle.phase;	// force to cloth
 			particle_active[index] = index;
 			desc.elementCount++;
 			
 			// Add triangles
 			if (x > 0 && y > 0) {
-				triangle_indices[copy_triangles.elementCount * 3	] = desc.srcOffset + _grid(x - 1, y - 1, size.x);
-				triangle_indices[copy_triangles.elementCount * 3 + 1] = desc.srcOffset + _grid(x, y - 1, size.x);
+				triangle_indices[copy_triangles.elementCount * 3	] = desc.srcOffset + _grid(x, y - 1, size.x);
+				triangle_indices[copy_triangles.elementCount * 3 + 1] = desc.srcOffset + _grid(x - 1, y - 1, size.x);
 				triangle_indices[copy_triangles.elementCount * 3 + 2] = desc.srcOffset + _grid(x, y, size.x);
-				triangle_normals[copy_triangles.elementCount] = Vector(0, 0, 1);
 				copy_triangles.elementCount++;
 				
-				triangle_indices[copy_triangles.elementCount * 3	] = desc.srcOffset + _grid(x - 1, y - 1, size.x);
-				triangle_indices[copy_triangles.elementCount * 3 + 1] = desc.srcOffset + _grid(x, y, size.x);
+				triangle_indices[copy_triangles.elementCount * 3	] = desc.srcOffset + _grid(x, y, size.x);
+				triangle_indices[copy_triangles.elementCount * 3 + 1] = desc.srcOffset + _grid(x - 1, y - 1, size.x);
 				triangle_indices[copy_triangles.elementCount * 3 + 2] = desc.srcOffset + _grid(x - 1, y, size.x);
-				triangle_normals[copy_triangles.elementCount] = Vector(0, 0, 1);
 				copy_triangles.elementCount++;
 			}
 			
@@ -159,7 +160,6 @@ void FlexSolver::add_cloth(Particle particle, Vector2D size) {
 	}
 
 	NvFlexUnmap(get_buffer("triangle_indices"));
-	NvFlexUnmap(get_buffer("triangle_normals"));
 	NvFlexUnmap(get_buffer("particle_pos"));
 	NvFlexUnmap(get_buffer("particle_vel"));
 	NvFlexUnmap(get_buffer("particle_phase"));
@@ -174,7 +174,7 @@ void FlexSolver::add_cloth(Particle particle, Vector2D size) {
 	NvFlexSetPhases(solver, get_buffer("particle_phase"), &desc);
 	NvFlexSetActive(solver, get_buffer("particle_active"), &desc);
 	NvFlexSetActiveCount(solver, copy_particles.elementCount);
-	NvFlexSetDynamicTriangles(solver, get_buffer("triangle_indices"), get_buffer("triangle_normals"), copy_triangles.elementCount);
+	NvFlexSetDynamicTriangles(solver, get_buffer("triangle_indices"), NULL, copy_triangles.elementCount);
 	NvFlexSetSprings(solver, get_buffer("spring_indices"), get_buffer("spring_restlengths"), get_buffer("spring_stiffness"), copy_springs.elementCount);
 }
 
@@ -276,7 +276,7 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 		// read back (async)
 		NvFlexGetParticles(solver, get_buffer("particle_pos"), &copy_particles);
 		NvFlexGetDiffuseParticles(solver, get_buffer("diffuse_pos"), get_buffer("diffuse_vel"), get_buffer("diffuse_count"));
-		NvFlexGetDynamicTriangles(solver, NULL, get_buffer("triangle_normals"), copy_triangles.elementCount);
+		NvFlexGetNormals(solver, get_buffer("triangle_normals"), &copy_particles);
 
 		if (get_parameter("anisotropy_scale") != 0) {
 			NvFlexGetAnisotropy(solver, get_buffer("particle_ani0"), get_buffer("particle_ani1"), get_buffer("particle_ani2"), &copy_particles);
@@ -538,10 +538,10 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	add_buffer("diffuse_vel", sizeof(Vector4D), solver_description.maxDiffuseParticles);
 	add_buffer("diffuse_count", sizeof(int), 1);	// "this may be updated by the GPU which is why it is passed back in a buffer"
 
-	add_buffer("triangle_indices", sizeof(int), particles * 3 * 2);
-	add_buffer("triangle_normals", sizeof(Vector), particles * 2);
+	add_buffer("triangle_indices", sizeof(int), particles * 3 * 2);	// 3 indices per triangle, maximum of 2 triangles per particle
+	add_buffer("triangle_normals", sizeof(Vector4D), particles);
 	
-	add_buffer("spring_indices", sizeof(int), particles * 2 * 2);	// 2 springs per particle, 2 indices
+	add_buffer("spring_indices", sizeof(int), particles * 2 * 2);	// 2 spring indices, max of 2 springs per particle
 	add_buffer("spring_restlengths", sizeof(float), particles * 2);
 	add_buffer("spring_stiffness", sizeof(float), particles * 2);
 

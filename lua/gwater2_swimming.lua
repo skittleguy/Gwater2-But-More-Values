@@ -1,5 +1,5 @@
 
-local GWATER2_PARTICLES_TO_SWIM = 50
+local GWATER2_PARTICLES_TO_SWIM = 30
 
 -- swim code provided by kodya (with permission)
 local gravity_convar = GetConVar("sv_gravity")
