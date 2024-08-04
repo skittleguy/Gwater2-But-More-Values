@@ -10,6 +10,8 @@ extern IVEngineClient* engine = NULL;
 float u[3] = { 0.5 - SQRT3 / 2, 0.5, 0.5 + SQRT3 / 2 };
 float v[3] = { 1, -0.5, 1 };
 
+// lord have mercy brothers
+
 // Builds meshes of water particles with anisotropy
 IMesh* _build_water_anisotropy(int id, FlexRendererThreadData data) {
 	int start = id * MAX_PRIMATIVES;
@@ -144,11 +146,19 @@ IMesh* _build_diffuse(int id, FlexRendererThreadData data) {
 	return mesh;
 }
 
-// lord have mercy brothers
-
 // Launches 1 thread for each mesh. particles are split into meshes with MAX_PRIMATIVES number of primatives
 void FlexRenderer::build_meshes(FlexSolver* flex, float diffuse_radius) {
+	/*for (std::future<IMesh*>& mesh : water_queue) {
+		if (mesh.wait_for(std::chrono::nanoseconds(0)) != std::future_status::ready) return;
+	}
+	for (std::future<IMesh*>& mesh : diffuse_queue) {
+		if (mesh.wait_for(std::chrono::nanoseconds(0)) != std::future_status::ready) return;
+	}
 	// Clear previous imeshes since they are being rebuilt
+	destroy_meshes();
+	update_water();
+	update_diffuse();*/
+
 	destroy_meshes();
 
 	int max_particles = flex->get_active_particles();
@@ -253,7 +263,10 @@ void FlexRenderer::destroy_meshes() {
 
 // Allocate buffers
 FlexRenderer::FlexRenderer() {
-	threads = new ThreadPool(MAX_THREADS);
+	int num_threads = std::thread::hardware_concurrency();
+	if (num_threads <= 0) num_threads = 8;
+	//Msg("Initialized FlexRenderer with %i CPU threads\n", num_threads);
+	threads = new ThreadPool(num_threads);	// estimate number of threads
 };
 
 FlexRenderer::~FlexRenderer() {

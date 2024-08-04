@@ -901,19 +901,11 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 
 			Make sure to read the changelog to see what has been updated!
 
-			Changelog (v0.4b):
-			- Rewrote renderer so it runs on multiple cores (multithreaded, should run faster though it may depend on your hardware)
-			- Added reaction forces
-			- Added swimming
-			- Added temporary weapons tab in menu
-			- Added some padding to the frustrum culling calculations
-			- Added PVS particle culling
-			- Improved lighting calculations (flashlights, lamps, and lights now properly interact with water reflection)
-			- Improved diffuse particle visuals
-			- Improved anisotropy calculations / visuals at smaller and larger radii
-			- Tweaked settings in menu
-			- Fixed HDR breaking cubemap reflections
-			- (Properly) Fixed MSAA breaking water reflections
+			Changelog (v0.5b):
+			- Rewrote the internal ticker. GWater2 may run at slightly worse framerates, but feel smoother then previous versions
+			- Added cloth
+			- Added force fields to API (black hole entity)
+			- Changed absorption and reflection calculations
 		]])
 		label:SetColor(Color(255, 255, 255))
 		label:SetTextInset(5, 30)
