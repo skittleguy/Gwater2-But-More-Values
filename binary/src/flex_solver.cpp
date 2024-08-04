@@ -22,18 +22,24 @@ NvFlexBuffer* FlexSolver::get_buffer(std::string name) {
 //int diff = Max(n - copy_description->elementCount, 0);
 //particles.erase(particles.begin() + diff, particles.end());
 //copy_description->elementCount = Min(copy_description->elementCount, n);
-void FlexSolver::set_active_particles(int n) {
-	copy_description->elementCount = n;
-	particle_queue.clear();	// dumb
-}
+void FlexSolver::reset() {
+	// Clear particles
+	copy_particles.elementCount = 0;
+	copy_active.elementCount = 0;
+	copy_triangles.elementCount = 0;
+	copy_springs.elementCount = 0;
+	particle_queue.clear();
 
-void FlexSolver::set_active_diffuse(int n) {
-	NvFlexSetDiffuseParticles(solver, NULL, NULL, n);
-	((int*)hosts["diffuse_count"])[0] = n;
+	// Clear diffuse
+	NvFlexSetDiffuseParticles(solver, NULL, NULL, 0);
+	((int*)hosts["diffuse_count"])[0] = 0;
+
+	NvFlexSetSprings(solver, NULL, NULL, NULL, 0);
+	NvFlexSetDynamicTriangles(solver, NULL, NULL, 0);
 }
 
 int FlexSolver::get_active_particles() {
-	return copy_description->elementCount + particle_queue.size();
+	return copy_particles.elementCount + particle_queue.size();
 }
 
 int FlexSolver::get_active_diffuse() {
@@ -64,7 +70,7 @@ std::vector<FlexMesh>* FlexSolver::get_meshes() {
 void FlexSolver::set_particle(int index, Particle particle) {
 	((Vector4D*)get_host("particle_pos"))[index] = particle.pos;
 	((Vector*)get_host("particle_vel"))[index] = particle.vel;
-	((int*)get_host("particle_phase"))[index] = NvFlexMakePhase(0, eNvFlexPhaseSelfCollide | eNvFlexPhaseFluid);
+	((int*)get_host("particle_phase"))[index] = particle.phase;
 	((int*)get_host("particle_active"))[index] = index;
 	((Vector4D*)get_host("particle_smooth"))[index] = particle.pos;
 	((Vector4D*)get_host("particle_ani0"))[index] = Vector4D(0, 0, 0, 0);
@@ -78,6 +84,98 @@ void FlexSolver::add_particle(Particle particle) {
 	
 	set_particle(get_active_particles(), particle);
 	particle_queue.push_back(particle);
+}
+
+inline int _grid(int x, int y, int x_size) { return y * x_size + x; }
+void FlexSolver::add_cloth(Particle particle, Vector2D size) {
+	particle.phase = NvFlexMakePhase(0, eNvFlexPhaseSelfCollide);	// force to cloth
+
+	float radius = get_parameter("solid_rest_distance");
+	NvFlexCopyDesc desc;
+	desc.srcOffset = copy_particles.elementCount;
+	desc.dstOffset = desc.srcOffset;
+	desc.elementCount = 0;
+
+	// ridiculous amount of buffers to map
+	int* triangle_indices = (int*)NvFlexMap(get_buffer("triangle_indices"), eNvFlexMapWait);
+	Vector* triangle_normals = (Vector*)NvFlexMap(get_buffer("triangle_normals"), eNvFlexMapWait);
+	Vector4D* particle_pos = (Vector4D*)NvFlexMap(get_buffer("particle_pos"), eNvFlexMapWait);
+	Vector* particle_vel = (Vector*)NvFlexMap(get_buffer("particle_vel"), eNvFlexMapWait);
+	int* particle_phase = (int*)NvFlexMap(get_buffer("particle_phase"), eNvFlexMapWait);
+	int* particle_active = (int*)NvFlexMap(get_buffer("particle_active"), eNvFlexMapWait);
+	int* spring_indices = (int*)NvFlexMap(get_buffer("spring_indices"), eNvFlexMapWait);
+	float* spring_restlengths = (float*)NvFlexMap(get_buffer("spring_restlengths"), eNvFlexMapWait);
+	float* spring_stiffness = (float*)NvFlexMap(get_buffer("spring_stiffness"), eNvFlexMapWait);
+
+	for (int y = 0; y < size.y; y++) {
+		for (int x = 0; x < size.x; x++) {
+			if (get_active_particles() >= get_max_particles()) break;
+
+			// Add particle
+			int index = copy_particles.elementCount++;
+			particle_pos[index] = particle.pos + Vector4D(x * radius, y * radius, 0, 0);
+			particle_vel[index] = particle.vel;
+			particle_phase[index] = particle.phase;
+			particle_active[index] = index;
+			desc.elementCount++;
+			
+			// Add triangles
+			if (x > 0 && y > 0) {
+				triangle_indices[copy_triangles.elementCount * 3	] = desc.srcOffset + _grid(x - 1, y - 1, size.x);
+				triangle_indices[copy_triangles.elementCount * 3 + 1] = desc.srcOffset + _grid(x, y - 1, size.x);
+				triangle_indices[copy_triangles.elementCount * 3 + 2] = desc.srcOffset + _grid(x, y, size.x);
+				triangle_normals[copy_triangles.elementCount] = Vector(0, 0, 1);
+				copy_triangles.elementCount++;
+				
+				triangle_indices[copy_triangles.elementCount * 3	] = desc.srcOffset + _grid(x - 1, y - 1, size.x);
+				triangle_indices[copy_triangles.elementCount * 3 + 1] = desc.srcOffset + _grid(x, y, size.x);
+				triangle_indices[copy_triangles.elementCount * 3 + 2] = desc.srcOffset + _grid(x - 1, y, size.x);
+				triangle_normals[copy_triangles.elementCount] = Vector(0, 0, 1);
+				copy_triangles.elementCount++;
+			}
+			
+			// Create spring between particle x,y and x-1,y
+			if (x > 0) {
+				int spring_index0 = desc.srcOffset + _grid(x, y, size.x);
+				int spring_index1 = desc.srcOffset + _grid(x - 1, y, size.x);
+				spring_indices[copy_springs.elementCount * 2] = spring_index1;
+				spring_indices[copy_springs.elementCount * 2 + 1] = spring_index0;
+				spring_restlengths[copy_springs.elementCount] = particle_pos[spring_index0].AsVector3D().DistTo(particle_pos[spring_index1].AsVector3D());
+				spring_stiffness[copy_springs.elementCount] = 1;
+				copy_springs.elementCount++;
+			}
+
+			// Create spring between particle x,y and x,y-1
+			if (y > 0) {
+				int spring_index0 = desc.srcOffset + _grid(x, y, size.x);
+				int spring_index1 = desc.srcOffset + _grid(x, y - 1, size.x);
+				spring_indices[copy_springs.elementCount * 2] = spring_index0;
+				spring_indices[copy_springs.elementCount * 2 + 1] = spring_index1;
+				spring_restlengths[copy_springs.elementCount] = particle_pos[spring_index0].AsVector3D().DistTo(particle_pos[spring_index1].AsVector3D());
+				spring_stiffness[copy_springs.elementCount] = 1;
+				copy_springs.elementCount++;
+			}
+		}
+	}
+
+	NvFlexUnmap(get_buffer("triangle_indices"));
+	NvFlexUnmap(get_buffer("triangle_normals"));
+	NvFlexUnmap(get_buffer("particle_pos"));
+	NvFlexUnmap(get_buffer("particle_vel"));
+	NvFlexUnmap(get_buffer("particle_phase"));
+	NvFlexUnmap(get_buffer("particle_active"));
+	NvFlexUnmap(get_buffer("spring_indices"));
+	NvFlexUnmap(get_buffer("spring_restlengths"));
+	NvFlexUnmap(get_buffer("spring_stiffness"));
+
+	// Update particle information
+	NvFlexSetParticles(solver, get_buffer("particle_pos"), &desc);
+	NvFlexSetVelocities(solver, get_buffer("particle_vel"), &desc);
+	NvFlexSetPhases(solver, get_buffer("particle_phase"), &desc);
+	NvFlexSetActive(solver, get_buffer("particle_active"), &desc);
+	NvFlexSetActiveCount(solver, copy_particles.elementCount);
+	NvFlexSetDynamicTriangles(solver, get_buffer("triangle_indices"), get_buffer("triangle_normals"), copy_triangles.elementCount);
+	NvFlexSetSprings(solver, get_buffer("spring_indices"), get_buffer("spring_restlengths"), get_buffer("spring_stiffness"), copy_springs.elementCount);
 }
 
 void FlexSolver::add_force_field(NvFlexExtForceField force_field) {
@@ -131,7 +229,7 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 			} else {
 				// Add queued particles
 				for (int i = 0; i < particle_queue.size(); i++) {
-					int particle_index = copy_description->elementCount + i;
+					int particle_index = copy_particles.elementCount + i;
 					particle_pos[particle_index] = particle_queue[i].pos;
 					//set_particle(particle_index, particle_queue[i]);
 				}
@@ -140,7 +238,7 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 
 				// Only copy what we just added
 				NvFlexCopyDesc desc;
-				desc.dstOffset = copy_description->elementCount;
+				desc.dstOffset = copy_particles.elementCount;
 				desc.elementCount = particle_queue.size();
 				desc.srcOffset = desc.dstOffset;
 
@@ -151,7 +249,7 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 				NvFlexSetActive(solver, get_buffer("particle_active"), &desc);
 				NvFlexSetActiveCount(solver, get_active_particles());
 
-				copy_description->elementCount += particle_queue.size();
+				copy_particles.elementCount += particle_queue.size();
 				particle_queue.clear();
 			}
 		} else {
@@ -176,19 +274,20 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 		NvFlexUpdateSolver(solver, dt, (int)get_parameter("substeps"), false);
 
 		// read back (async)
-		NvFlexGetParticles(solver, get_buffer("particle_pos"), copy_description);
+		NvFlexGetParticles(solver, get_buffer("particle_pos"), &copy_particles);
 		NvFlexGetDiffuseParticles(solver, get_buffer("diffuse_pos"), get_buffer("diffuse_vel"), get_buffer("diffuse_count"));
+		NvFlexGetDynamicTriangles(solver, NULL, get_buffer("triangle_normals"), copy_triangles.elementCount);
 
 		if (get_parameter("anisotropy_scale") != 0) {
-			NvFlexGetAnisotropy(solver, get_buffer("particle_ani0"), get_buffer("particle_ani1"), get_buffer("particle_ani2"), copy_description);
+			NvFlexGetAnisotropy(solver, get_buffer("particle_ani0"), get_buffer("particle_ani1"), get_buffer("particle_ani2"), &copy_particles);
 		}
 
 		if (get_parameter("smoothing") != 0) {
-			NvFlexGetSmoothParticles(solver, get_buffer("particle_smooth"), copy_description);
+			NvFlexGetSmoothParticles(solver, get_buffer("particle_smooth"), &copy_particles);
 		}
 
 		if (get_parameter("reaction_forces") > 1) {
-			NvFlexGetVelocities(solver, get_buffer("particle_vel"), copy_description);
+			NvFlexGetVelocities(solver, get_buffer("particle_vel"), &copy_particles);
 			NvFlexGetContacts(solver, get_buffer("contact_planes"), get_buffer("contact_vel"), get_buffer("contact_indices"), get_buffer("contact_count"));
 		}
 
@@ -330,7 +429,7 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	params->particleFriction = 0.0f;
 	params->freeSurfaceDrag = 0.0f;
 	params->drag = 0.0f;
-	params->lift = 1.0f;
+	params->lift = 0.0f;
 	params->numIterations = 3;
 	params->fluidRestDistance = 6.5f;
 	params->solidRestDistance = 6.5f;
@@ -439,6 +538,13 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	add_buffer("diffuse_vel", sizeof(Vector4D), solver_description.maxDiffuseParticles);
 	add_buffer("diffuse_count", sizeof(int), 1);	// "this may be updated by the GPU which is why it is passed back in a buffer"
 
+	add_buffer("triangle_indices", sizeof(int), particles * 3 * 2);
+	add_buffer("triangle_normals", sizeof(Vector), particles * 2);
+	
+	add_buffer("spring_indices", sizeof(int), particles * 2 * 2);	// 2 springs per particle, 2 indices
+	add_buffer("spring_restlengths", sizeof(float), particles * 2);
+	add_buffer("spring_stiffness", sizeof(float), particles * 2);
+
 	force_field_callback = NvFlexExtCreateForceFieldCallback(solver);
 };
 
@@ -455,7 +561,6 @@ FlexSolver::~FlexSolver() {
 	delete param_map["timescale"];		// ^
 	delete param_map["reaction_forces"];// ^
 	delete params;
-	delete copy_description;
 
 	NvFlexExtDestroyForceFieldCallback(force_field_callback);
 

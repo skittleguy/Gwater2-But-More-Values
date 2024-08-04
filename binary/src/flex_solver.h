@@ -9,6 +9,7 @@
 struct Particle {
 	Vector4D pos = Vector4D(0, 0, 0, 1);
 	Vector vel = Vector(0, 0, 0);
+	int phase = 0;
 };
 
 // Struct that holds FleX solver data
@@ -18,7 +19,10 @@ private:
 	NvFlexSolver* solver = nullptr;
 	NvFlexParams* params = nullptr;
 	NvFlexExtForceFieldCallback* force_field_callback = nullptr;	// unsure why this is required. crashes without it
-	NvFlexCopyDesc* copy_description = new NvFlexCopyDesc();
+	NvFlexCopyDesc copy_active = NvFlexCopyDesc();
+	NvFlexCopyDesc copy_particles = NvFlexCopyDesc();
+	NvFlexCopyDesc copy_triangles = NvFlexCopyDesc();
+	NvFlexCopyDesc copy_springs = NvFlexCopyDesc();
 	NvFlexSolverDesc solver_description = NvFlexSolverDesc();	// stores stuff such as max particles
 	std::map<std::string, NvFlexBuffer*> buffers;
 	std::map<std::string, float*> param_map; // TODO: figure out if this is the best way to do this... Would a set/get switch statement be better..?
@@ -31,8 +35,7 @@ private:
 	//NvFlexBuffer* get_buffer(std::string name);
 
 public:
-	void set_active_particles(int n);
-	void set_active_diffuse(int n);
+	void reset();
 	int get_active_particles();
 	int get_active_diffuse();
 	int get_max_particles();
@@ -44,6 +47,7 @@ public:
 	inline void* get_host(std::string name);	// Returns a host (pointer of float4s) where FleX buffer data is transferred to. 
 
 	void add_particle(Particle particle);
+	void add_cloth(Particle particle, Vector2D size);
 	void set_particle(int index, Particle particle);
 	void add_force_field(NvFlexExtForceField force_field);
 	

@@ -47,13 +47,16 @@ LUA_FUNCTION(FLEXSOLVER_GarbageCollect) {
 // Table on the top of the stack is parsed
 // ParticleData = {velocity = Vector(), mass = 1}
 Particle parse_particle(ILuaBase* LUA) {
-	Vector vel;
+	Vector vel = Vector(0, 0, 0);
 	float inv_mass = 1;
+	int phase = NvFlexMakePhase(0, eNvFlexPhaseSelfCollide | eNvFlexPhaseFluid);
 
 	if (LUA->GetType(-1) == Type::Table) {
 		// Get velocity (default = Vector())
 		LUA->GetField(-1, "vel");
-		vel = LUA->GetVector(-1);
+		if (LUA->GetType(-1) == Type::Vector) {
+			vel = LUA->GetVector(-1);
+		}
 		LUA->Pop();
 
 		// Get mass (default = 1)
@@ -62,11 +65,20 @@ Particle parse_particle(ILuaBase* LUA) {
 			inv_mass = 1.0 / LUA->GetNumber(-1);
 		}
 		LUA->Pop();
+
+		// Gets phase (default = self colliding fluid)
+		LUA->GetField(-1, "phase");	// literally nobody is going to use this, but whatever
+		if (LUA->GetType(-1) == Type::Number) {
+			phase = NvFlexMakePhase(0, LUA->GetNumber(1));
+		}
+		LUA->Pop();
+		
 	}
 
 	Particle particle;
 	particle.pos.w = inv_mass;
 	particle.vel = vel;
+	particle.phase = phase;
 
 	return particle;
 }
@@ -109,10 +121,10 @@ LUA_FUNCTION(FLEXSOLVER_AddCube) {
 			for (float x = 0; x < size.x; x++) {
 				Vector pos = transform * (Vector(x + 0.5, y + 0.5, z + 0.5) - size / 2.0);
 
-				Particle particle;
-				particle.pos = Vector4D(pos.x, pos.y, pos.z, data.pos.w);
-				particle.vel = data.vel;
-				flex->add_particle(particle);
+				data.pos.x = pos.x;
+				data.pos.y = pos.y;
+				data.pos.z = pos.z;
+				flex->add_particle(data);
 			}
 		}
 	}
@@ -141,10 +153,10 @@ LUA_FUNCTION(FLEXSOLVER_AddSphere) {
 
 				Vector pos = transform * Vector(x, y, z);
 
-				Particle particle;
-				particle.pos = Vector4D(pos.x, pos.y, pos.z, data.pos.w);
-				particle.vel = data.vel;
-				flex->add_particle(particle);
+				data.pos.x = pos.x;
+				data.pos.y = pos.y;
+				data.pos.z = pos.z;
+				flex->add_particle(data);
 			}
 		}
 	}
@@ -174,13 +186,34 @@ LUA_FUNCTION(FLEXSOLVER_AddCylinder) {
 
 				Vector pos = transform * Vector(x, y, z);
 
-				Particle particle;
-				particle.pos = Vector4D(pos.x, pos.y, pos.z, data.pos.w);
-				particle.vel = data.vel;
-				flex->add_particle(particle);
+				data.pos.x = pos.x;
+				data.pos.y = pos.y;
+				data.pos.z = pos.z;
+				flex->add_particle(data);
 			}
 		}
 	}
+
+	return 0;
+}
+
+LUA_FUNCTION(FLEXSOLVER_AddCloth) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	LUA->CheckType(2, Type::Vector);	// pos
+	LUA->CheckType(3, Type::Vector);	// size
+	//LUA->CheckType(4, Type::Table);	// ParticleData
+	
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+	Vector pos = LUA->GetVector(2);
+	Vector size = LUA->GetVector(3);
+
+	LUA->Push(4);
+	Particle data = parse_particle(LUA);
+	data.pos.x = pos.x;
+	data.pos.y = pos.y;
+	data.pos.z = pos.z;
+
+	flex->add_cloth(data, Vector2D(size.x, size.y));
 
 	return 0;
 }
@@ -328,12 +361,7 @@ LUA_FUNCTION(FLEXSOLVER_Reset) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 
-	int* contact_count = (int*)NvFlexMap(flex->get_buffer("contact_count"), eNvFlexMapWait);
-	memset(contact_count, 0, sizeof(int) * flex->get_active_particles());
-	NvFlexUnmap(flex->get_buffer("contact_count"));
-
-	flex->set_active_particles(0);
-	flex->set_active_diffuse(0);
+	flex->reset();
 
 	return 0;
 }
@@ -862,6 +890,7 @@ GMOD_MODULE_OPEN() {
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddCube, "AddCube");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddSphere, "AddSphere");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddCylinder, "AddCylinder");
+	ADD_FUNCTION(LUA, FLEXSOLVER_AddCloth, "AddCloth");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddForceField, "AddForceField");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetMaxParticles, "GetMaxParticles");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetMaxDiffuseParticles, "GetMaxDiffuseParticles");
