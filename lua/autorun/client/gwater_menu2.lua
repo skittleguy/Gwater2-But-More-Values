@@ -180,7 +180,7 @@ local function set_gwater_parameter(option, val)
 			local r2 = val / math.min(gwater2.solver:GetParameter("radius"), 15)^4
 			gwater2.solver:SetParameter(option, r1)
 			options.solver:SetParameter(option, r2)
-		elseif option == "fluid_rest_distance" or option == "collision_distance" then -- hack hack hack! this parameter scales based on radius
+		elseif option == "fluid_rest_distance" or option == "collision_distance" or option == "solid_rest_distance" then -- hack hack hack! this parameter scales based on radius
 			local r1 = val * gwater2.solver:GetParameter("radius")
 			local r2 = val * math.min(gwater2.solver:GetParameter("radius"), 15)
 			gwater2.solver:SetParameter(option, r1)
@@ -199,12 +199,14 @@ local function set_gwater_parameter(option, val)
 	if option == "radius" then 					-- hack hack hack! radius needs to edit multiple parameters!
 		gwater2.solver:SetParameter("surface_tension", gwater2["surface_tension"] / val^4)	-- literally no idea why this is a power of 4
 		gwater2.solver:SetParameter("fluid_rest_distance", val * gwater2["fluid_rest_distance"])
+		gwater2.solver:SetParameter("solid_rest_distance", val * gwater2["solid_rest_distance"])
 		gwater2.solver:SetParameter("collision_distance", val * gwater2["collision_distance"])
 		gwater2.solver:SetParameter("cohesion", math.min(gwater2["cohesion"] / val * 10, 1))
 		
 		if val > 15 then val = 15 end	-- explody
 		options.solver:SetParameter("surface_tension", gwater2["surface_tension"] / val^4)
 		options.solver:SetParameter("fluid_rest_distance", val * gwater2["fluid_rest_distance"])
+		options.solver:SetParameter("solid_rest_distance", val * gwater2["solid_rest_distance"])
 		options.solver:SetParameter("collision_distance", val * gwater2["collision_distance"])
 		options.solver:SetParameter("cohesion", math.min(gwater2["cohesion"] / val * 10, 1))
 	end

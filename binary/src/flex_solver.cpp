@@ -22,18 +22,22 @@ NvFlexBuffer* FlexSolver::get_buffer(std::string name) {
 //int diff = Max(n - copy_description->elementCount, 0);
 //particles.erase(particles.begin() + diff, particles.end());
 //copy_description->elementCount = Min(copy_description->elementCount, n);
+
+// clears all particles
 void FlexSolver::reset() {
-	// Clear particles
+	reset_cloth();
 	copy_particles.elementCount = 0;
 	copy_active.elementCount = 0;
-	copy_triangles.elementCount = 0;
-	copy_springs.elementCount = 0;
 	particle_queue.clear();
 
-	// Clear diffuse
+	// clear diffuse
 	NvFlexSetDiffuseParticles(solver, NULL, NULL, 0);
 	((int*)hosts["diffuse_count"])[0] = 0;
+}
 
+void FlexSolver::reset_cloth() {
+	copy_triangles.elementCount = 0;
+	copy_springs.elementCount = 0;
 	NvFlexSetSprings(solver, NULL, NULL, NULL, 0);
 }
 
@@ -276,7 +280,10 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 		// read back (async)
 		NvFlexGetParticles(solver, get_buffer("particle_pos"), &copy_particles);
 		NvFlexGetDiffuseParticles(solver, get_buffer("diffuse_pos"), get_buffer("diffuse_vel"), get_buffer("diffuse_count"));
-		NvFlexGetNormals(solver, get_buffer("triangle_normals"), &copy_particles);
+
+		if (get_active_triangles() > 0) {
+			NvFlexGetNormals(solver, get_buffer("triangle_normals"), &copy_particles);
+		}
 
 		if (get_parameter("anisotropy_scale") != 0) {
 			NvFlexGetAnisotropy(solver, get_buffer("particle_ani0"), get_buffer("particle_ani1"), get_buffer("particle_ani2"), &copy_particles);

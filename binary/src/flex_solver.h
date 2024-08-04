@@ -41,6 +41,7 @@ private:
 
 public:
 	void reset();
+	void reset_cloth();
 	int get_active_particles();
 	int get_active_diffuse();
 	int get_active_triangles();

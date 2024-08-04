@@ -87,7 +87,9 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	--render.SetMaterial(Material("models/props_combine/combine_interface_disp"))
 
 	render.SetMaterial(cloth)
+	--render.SetMaterial(Material("debug/env_cubemap_model"))
 	gwater2.renderer:DrawCloth()
+	render.RenderFlashlights(function() gwater2.renderer:DrawCloth() end)
 
 	render.UpdateScreenEffectTexture()	-- _rt_framebuffer is used in refraction shader
 	
