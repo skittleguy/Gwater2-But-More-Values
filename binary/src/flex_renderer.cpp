@@ -163,7 +163,7 @@ IMesh* _build_cloth(int id, FlexRendererThreadData data) {
 		for (int i = 0; i < 3; i++) {
 			int particle_index = data.particle_phases[mesh_index * 3 + i];
 			Vector particle_pos = data.particle_positions[particle_index].AsVector3D();
-			Vector particle_normal = -data.particle_ani0[particle_index].AsVector3D().Normalized();	// flex generates different triangle winding data, so normals must be inverted
+			Vector particle_normal = -data.particle_ani0[particle_index].AsVector3D();	// flex generates different triangle winding data, so normals must be inverted
 			float userdata[4] = {0, 0, 0, 0};
 
 			if (mesh_index % 2 == 0) {// fuck me
