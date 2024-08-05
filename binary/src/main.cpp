@@ -366,6 +366,16 @@ LUA_FUNCTION(FLEXSOLVER_Reset) {
 	return 0;
 }
 
+// removes all cloth related particles
+LUA_FUNCTION(FLEXSOLVER_ResetCloth) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+
+	flex->reset_cloth();
+
+	return 0;
+}
+
 LUA_FUNCTION(FLEXSOLVER_GetActiveParticles) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	FlexSolver* flex = GET_FLEXSOLVER(1);
@@ -917,6 +927,7 @@ GMOD_MODULE_OPEN() {
 	ADD_FUNCTION(LUA, FLEXSOLVER_ApplyContacts, "ApplyContacts");
 	ADD_FUNCTION(LUA, FLEXSOLVER_InitBounds, "InitBounds");
 	ADD_FUNCTION(LUA, FLEXSOLVER_Reset, "Reset");
+	ADD_FUNCTION(LUA, FLEXSOLVER_ResetCloth, "ResetCloth");
 	LUA->SetField(-2, "__index");
 
 	FLEXRENDERER_METATABLE = LUA->CreateMetaTable("FlexRenderer");

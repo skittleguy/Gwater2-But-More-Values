@@ -20,7 +20,7 @@ function ENT:Initialize()
 			mat:SetAngles(self:LocalToWorldAngles(Angle(0, 0, 0)))
 			mat:SetTranslation(self:GetPos() + self:GetUp() * 10)
 		
-			gwater2.solver:AddCylinder(mat, Vector(6, 6, 1), {vel = self:GetUp() * 60})
+			gwater2.solver:AddCylinder(mat, Vector(6, 6, 1), {vel = self:GetUp() * 10})
 		end)
 	else
 		self:SetModel("models/mechanics/wheels/wheel_speed_72.mdl")

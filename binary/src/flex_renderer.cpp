@@ -149,8 +149,8 @@ IMesh* _build_diffuse(int id, FlexRendererThreadData data) {
 }
 
 // Builds meshes of cloth, indices shoved in phase buffer, normals shoved in ani0
-float cloth_u[6] = {1, 0, 1, 1, 0, 0};
-float cloth_v[6] = {0, 0, 1, 1, 0, 1};
+float cloth_u[6] = {0, 0, 1, 1, 0, 1};
+float cloth_v[6] = {1, 0, 1, 1, 0, 0};
 IMesh* _build_cloth(int id, FlexRendererThreadData data) {
 	int start = id * MAX_PRIMATIVES;
 	int end = min((id + 1) * MAX_PRIMATIVES, data.max_particles);

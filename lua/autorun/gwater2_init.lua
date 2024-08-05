@@ -1,10 +1,9 @@
 AddCSLuaFile()
 
 include("gwater2_swimming.lua")
+include("gwater2_net.lua")
 
-if SERVER then 
-	return 
-end
+if SERVER then return end
 
 require((BRANCH == "x86-64" or BRANCH == "chromium" ) and "gwater2" or "gwater2_main")	-- carrying
 include("gwater2_shaders.lua")
@@ -131,7 +130,7 @@ gwater2["solid_rest_distance"] = gwater2.solver:GetParameter("solid_rest_distanc
 gwater2["collision_distance"] = gwater2.solver:GetParameter("collision_distance") / gwater2.solver:GetParameter("radius")
 gwater2["cohesion"] = gwater2.solver:GetParameter("cohesion") * gwater2.solver:GetParameter("radius") * 0.1	-- cohesion scales by radius, for some reason..
 gwater2["blur_passes"] = 3
--- watergun specific
+-- watergun specific (remove in 0.6)
 gwater2["size"] = 4
 gwater2["density"] = 1
 gwater2["forward_velocity"] = 100

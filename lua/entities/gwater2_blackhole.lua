@@ -5,7 +5,7 @@ ENT.Base = "base_anim"
 
 ENT.Category     = "GWater2"
 ENT.PrintName    = "Blackhole"
-ENT.Author       = "Mee"
+ENT.Author       = "Meetric"
 ENT.Purpose      = ""
 ENT.Instructions = ""
 ENT.Spawnable    = true
@@ -61,22 +61,26 @@ elseif CLIENT then
 		part:SetVelocity(Vector())
 		part:SetGravity(Vector())
 		part:SetDieTime(FrameTime() * 10)
-		//part:SetColor(Color(255, 255, 255, 0))
 		part:SetStartSize(50)
 		part:SetEndSize(50)
-		//part:SetStartAlpha(255)
 		part:SetLighting(false)
+
 		-- particle/warp1_warp
-		local part = self.PARTICLE_EMITTER:Add("particle/warp1_warp", self:GetPos())
+		local part 
+		if self:GetStrength() >= 0 then
+			part = self.PARTICLE_EMITTER:Add("gwater2/blackhole", self:GetPos())
+			self:SetColor(Color(0, 0, 0, 255))
+		else 
+			part = self.PARTICLE_EMITTER:Add("gwater2/whitehole", self:GetPos())
+			self:SetColor(color_white)
+		end
 		part:SetVelocity(Vector())
 		part:SetGravity(Vector())
 		part:SetDieTime(FrameTime() * 20)
-		part:SetColor(Color(255, 255, 255))
 		part:SetStartSize(25 + (math.sin(CurTime() * 2) * 3))
 		part:SetEndSize(22)
-		//part:SetStartAlpha(255)
-		part:SetLighting(false)
 		self:SetNextClientThink(CurTime() + 0.001)
+		self:RemoveAllDecals()
 		return true
 	end
 

@@ -546,7 +546,7 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	add_buffer("diffuse_count", sizeof(int), 1);	// "this may be updated by the GPU which is why it is passed back in a buffer"
 
 	add_buffer("triangle_indices", sizeof(int), particles * 3 * 2);	// 3 indices per triangle, maximum of 2 triangles per particle
-	add_buffer("triangle_normals", sizeof(Vector4D), particles);
+	add_buffer("triangle_normals", sizeof(Vector4D), particles);	// per-particle normals
 	
 	add_buffer("spring_indices", sizeof(int), particles * 2 * 2);	// 2 spring indices, max of 2 springs per particle
 	add_buffer("spring_restlengths", sizeof(float), particles * 2);

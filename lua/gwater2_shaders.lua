@@ -31,7 +31,6 @@ local blur_passes = CreateClientConVar("gwater2_blur_passes", "3", true)
 local blur_scale = CreateClientConVar("gwater2_blur_scale", "1", true)
 local antialias = GetConVar("mat_antialias")
 
-local lightmodel = ClientsideModel("models/kleiner_animations.mdl", RENDERGROUP_OTHER)
 local lightpos = EyePos()
 -- rebuild meshes every frame (unused atm since PostDrawOpaque is being a bitch)
 --[[[
@@ -42,6 +41,16 @@ hook.Add("RenderScene", "gwater2_render", function(eye_pos, eye_angles, fov)
 	cam.End3D()
 end)]]
 
+-- makes lighting work properly in sourceengine
+local function unfuck_lighting(pos0, pos1)
+	render.PushRenderTarget(cache_screen0)	-- rt doesnt matter, just dont write it to the main one
+	render.OverrideDepthEnable(true, false)
+	render.Model({model="models/shadertest/envballs.mdl",pos=pos0, angle = EyeAngles()})	-- cubemap
+	render.Model({model="models/shadertest/vertexlit.mdl",pos=pos1, angle = EyeAngles()}) 	-- lighting
+	render.OverrideDepthEnable(false, false)
+	render.PopRenderTarget()
+end
+
 -- gwater2 shader pipeline
 hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky3d)	--PreDrawViewModels
 	if gwater2.solver:GetActiveParticles() < 1 then return end
@@ -50,19 +59,12 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 
 	--if EyePos():DistToSqr(LocalPlayer():EyePos()) > 1 then return end	-- bail if skybox is rendering (used in postdrawopaque)
 
-	-- diffuse particles
-	--[[
-	render.SetMaterial(Material("models/wireframe"))//Material("models/wireframe"))
-	gwater2.solver:RenderParticles(function(pos, size)
-		render.DrawSprite(pos, 5, 5, color_white)
-	end)]]
-
 	-- Clear render targets
 	render.ClearRenderTarget(cache_normals, Color(0, 0, 0, 0))
 	render.ClearRenderTarget(cache_depth, Color(0, 0, 0, 0))
 	render.ClearRenderTarget(cache_absorption, Color(0, 0, 0, 0))
 	render.ClearRenderTarget(cache_bloom, Color(0, 0, 0, 0))
-	render.OverrideAlphaWriteEnable(true, true)	-- Required for GWater shaders as they use the alpha component
+	render.OverrideAlphaWriteEnable(true, true)	-- TODO(?): do this internally in shader shadow/dynamic state
 
 	-- cached variables
 	local scrw = ScrW()
@@ -70,30 +72,25 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	local water = gwater2.material
 	local radius = gwater2.solver:GetParameter("radius")
 
-	-- HACK HACK HACK! Makes lighting work properly in sourceengine
-	render.PushRenderTarget(cache_screen0)
-	render.OverrideDepthEnable(true, false)
-	local tr = util.QuickTrace( EyePos(), LocalPlayer():EyeAngles():Forward() * 800, LocalPlayer())
-	local dist = math.min(230, (tr.HitPos - tr.StartPos):Length() / 1.5)
-	lightpos = LerpVector(0.8 * FrameTime(), lightpos, EyePos() + (LocalPlayer():EyeAngles():Forward() * dist))
-	-- This one sets the cubemap
-	render.Model({model="models/shadertest/envballs.mdl",pos=EyePos(),angle=LocalPlayer():GetRenderAngles()})
-	-- This one takes care of lights
-	render.Model({model="models/shadertest/vertexlit.mdl",pos=lightpos,angle=LocalPlayer():GetRenderAngles()}, lightmodel)
-	render.OverrideDepthEnable(false, false)
-	render.PopRenderTarget()
-	
 	gwater2.renderer:BuildMeshes(gwater2.solver, 0.2)
 	--render.SetMaterial(Material("models/props_combine/combine_interface_disp"))
 
-	render.SetMaterial(cloth)
+	-- cloth
+	unfuck_lighting(Vector(), Vector())	-- fix cloth lighting, mostly
+	render.SetMaterial(cloth)	
 	--render.SetMaterial(Material("debug/env_cubemap_model"))
 	gwater2.renderer:DrawCloth()
 	render.RenderFlashlights(function() gwater2.renderer:DrawCloth() end)
 
+	-- setup water lighting
+	local tr = util.QuickTrace( EyePos(), LocalPlayer():EyeAngles():Forward() * 800, LocalPlayer())
+	local dist = math.min(230, (tr.HitPos - tr.StartPos):Length() / 1.5)	
+	lightpos = LerpVector(0.8 * FrameTime(), lightpos, EyePos() + (LocalPlayer():EyeAngles():Forward() * dist))	-- fucking hell
+	unfuck_lighting(EyePos(), lightpos)	
+
 	render.UpdateScreenEffectTexture()	-- _rt_framebuffer is used in refraction shader
 	
-	-- Depth absorption (disabled when opaque liquids are enabled)
+	-- depth absorption (disabled when opaque liquids are enabled)
 	local _, _, _, a = water:GetVector4D("$color2")
 	if water_volumetric:GetFloat("$alpha") != 0 and a > 0 and a < 255 then
 		-- ANTIALIAS FIX! (courtesy of Xenthio)
