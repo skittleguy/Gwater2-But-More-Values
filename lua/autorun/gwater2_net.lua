@@ -25,7 +25,7 @@ else	-- CLIENT
 		local size_y = net.ReadUInt(16)
 		local extra = net.ReadTable()	-- the one time this function is actually useful
 		gwater2.solver:AddCloth(pos, Vector(size_x, size_y), extra)
+		gwater2.cloth_pos = pos
 	end)
-
 
 end

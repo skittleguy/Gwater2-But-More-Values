@@ -156,7 +156,7 @@ IMesh* _build_cloth(int id, FlexRendererThreadData data) {
 	int end = min((id + 1) * MAX_PRIMATIVES, data.max_particles);
 
 	// start building our mesh
-	IMesh* mesh = materials->GetRenderContext()->CreateStaticMesh(MATERIAL_VERTEX_FORMAT_MODEL_SKINNED, "");
+	IMesh* mesh = materials->GetRenderContext()->CreateStaticMesh(MATERIAL_VERTEX_FORMAT_MODEL, "");
 	CMeshBuilder mesh_builder;
 	mesh_builder.Begin(mesh, MATERIAL_TRIANGLES, end - start);
 	for (int mesh_index = start; mesh_index < end; ++mesh_index) {
@@ -185,24 +185,16 @@ IMesh* _build_cloth(int id, FlexRendererThreadData data) {
 
 // Launches 1 thread for each mesh. particles are split into meshes with MAX_PRIMATIVES number of primatives
 void FlexRenderer::build_meshes(FlexSolver* flex, float diffuse_radius) {
-	/*for (std::future<IMesh*>& mesh : water_queue) {
-		if (mesh.wait_for(std::chrono::nanoseconds(0)) != std::future_status::ready) return;
-	}
-	for (std::future<IMesh*>& mesh : diffuse_queue) {
-		if (mesh.wait_for(std::chrono::nanoseconds(0)) != std::future_status::ready) return;
-	}
 	// Clear previous imeshes since they are being rebuilt
 	destroy_meshes();
-	update_water();
-	update_cloth();
-	update_diffuse();*/
-
-	destroy_meshes();
+	//update_water();
+	//update_cloth();
+	//update_diffuse();
 
 	int active_particles = flex->get_active_particles();
 	if (active_particles == 0) return;
 
-	IMatRenderContext* render_context = materials->GetRenderContext();
+	CMatRenderContextPtr render_context(materials);
 
 	// Get eye position for sprite calculations
 	Vector eye_pos; render_context->GetWorldSpaceCameraPosition(&eye_pos);
@@ -273,7 +265,7 @@ void FlexRenderer::build_meshes(FlexSolver* flex, float diffuse_radius) {
 void FlexRenderer::update_water() {
 	for (std::future<IMesh*>& mesh : water_queue) {
 		IMesh* imesh = mesh.get();
-		if (imesh) water_meshes.push_back(imesh);
+		if (imesh != nullptr) water_meshes.push_back(imesh);
 	}
 	water_queue.clear();
 }
@@ -282,7 +274,7 @@ void FlexRenderer::update_water() {
 void FlexRenderer::update_diffuse() {
 	for (std::future<IMesh*>& mesh : diffuse_queue) {
 		IMesh* imesh = mesh.get();
-		if (imesh) diffuse_meshes.push_back(imesh);
+		if (imesh != nullptr) diffuse_meshes.push_back(imesh);
 	}
 	diffuse_queue.clear();
 }
@@ -291,7 +283,7 @@ void FlexRenderer::update_diffuse() {
 void FlexRenderer::update_cloth() {
 	for (std::future<IMesh*>& mesh : triangle_queue) {
 		IMesh* imesh = mesh.get();
-		if (imesh) triangle_meshes.push_back(imesh);
+		if (imesh != nullptr) triangle_meshes.push_back(imesh);
 	}
 	triangle_queue.clear();
 }
@@ -316,8 +308,7 @@ void FlexRenderer::draw_cloth() {
 };
 
 void FlexRenderer::destroy_meshes() {
-	IMatRenderContext* render_context = materials->GetRenderContext();
-
+	CMatRenderContextPtr render_context(materials);
 	for (IMesh* mesh : water_meshes) render_context->DestroyStaticMesh(mesh);
 	water_meshes.clear();
 
@@ -339,10 +330,7 @@ FlexRenderer::FlexRenderer() {
 FlexRenderer::~FlexRenderer() {
 	//if (materials->GetRenderContext() == nullptr) return;	// wtf?
 
-	// destroy existing meshes
-	destroy_meshes();
-	
-	// destroy meshes being built in threads
+	// threads are joined before removing all meshes to assure all meshes are destroyed, even ones being built in threads
 	update_water();
 	update_diffuse();
 	update_cloth();

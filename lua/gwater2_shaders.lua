@@ -76,7 +76,7 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	--render.SetMaterial(Material("models/props_combine/combine_interface_disp"))
 
 	-- cloth
-	unfuck_lighting(Vector(), Vector())	-- fix cloth lighting, mostly
+	unfuck_lighting(gwater2.cloth_pos, gwater2.cloth_pos)	-- fix cloth lighting, mostly
 	render.SetMaterial(cloth)	
 	--render.SetMaterial(Material("debug/env_cubemap_model"))
 	gwater2.renderer:DrawCloth()

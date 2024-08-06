@@ -75,8 +75,9 @@ end
 
 gwater2 = {
 	solver = FlexSolver(100000),
-	renderer = FlexRenderer(46),
+	renderer = FlexRenderer(),
 	new_ticker = true,
+	cloth_pos = Vector(),
 	material = Material("gwater2/finalpass"),--Material("vgui/circle"),--Material("sprites/sent_ball"),
 	update_meshes = function(index, id, rep)
 		if id == 0 then return end	-- skip, entity is world

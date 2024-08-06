@@ -12,9 +12,11 @@ ENT.Spawnable 		= true
 
 -- send cloth data to the client
 function ENT:SpawnFunction(ply, tr, class, type)
-	gwater2.AddCloth(tr.HitPos + Vector(0, 0, 50), Vector(200, 200))	-- network
+	local pos = tr.HitPos + Vector(0, 0, 50)
+	gwater2.AddCloth(pos, Vector(200, 200))	-- network
 
 	local ent = ents.Create(class)
+	ent:SetPos(pos)
 	ent:Spawn()
 
 	return ent
