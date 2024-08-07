@@ -225,7 +225,6 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 	// Avoid ticking if the deltatime ends up being zero, as it invalidates the simulation
 	dt *= get_parameter("timescale");
 	if (dt > 0 && get_active_particles() > 0) {
-
 		// Map positions to CPU memory
 		if (!particle_queue.empty()) {
 			// Add queued particles
