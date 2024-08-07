@@ -36,8 +36,7 @@ SWEP.WorldModel			= "models/weapons/w_pistol.mdl"
 SWEP.UseHands           = true
 
 function SWEP:Initialize()
-	self:SetMaterial("hunter/myplastic")
-	self:SetModelScale(0.5)
+
 end 
 
 local function fuckgarry(w, s)

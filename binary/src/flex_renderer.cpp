@@ -187,9 +187,9 @@ IMesh* _build_cloth(int id, FlexRendererThreadData data) {
 void FlexRenderer::build_meshes(FlexSolver* flex, float diffuse_radius) {
 	// Clear previous imeshes since they are being rebuilt
 	destroy_meshes();
-	update_water();
-	update_cloth();
-	update_diffuse();
+	//update_water();
+	//update_cloth();
+	//update_diffuse();
 
 	int active_particles = flex->get_active_particles();
 	if (active_particles == 0) return;
@@ -208,15 +208,15 @@ void FlexRenderer::build_meshes(FlexSolver* flex, float diffuse_radius) {
 	///// Water particles /////
 	FlexRendererThreadData water_data;
 	water_data.view_projection_matrix = view_projection_matrix;
-	water_data.particle_positions = flex->get_parameter("smoothing") != 0 ? (Vector4D*)flex->get_host("particle_smooth") : (Vector4D*)flex->get_host("particle_pos");
-	water_data.particle_phases = (int*)flex->get_host("particle_phase");
+	water_data.particle_positions = flex->get_parameter("smoothing") != 0 ? flex->hosts.particle_smooth : (Vector4D*)flex->hosts.particle_pos;
+	water_data.particle_phases = flex->hosts.particle_phase;
 	water_data.max_particles = active_particles;
 	water_data.radius = flex->get_parameter("radius");
 	water_data.eye_pos = eye_pos;
 	if (flex->get_parameter("anisotropy_scale") != 0) {		// Should we do anisotropy calculations?
-		water_data.particle_ani0 = (Vector4D*)flex->get_host("particle_ani0");
-		water_data.particle_ani1 = (Vector4D*)flex->get_host("particle_ani1");
-		water_data.particle_ani2 = (Vector4D*)flex->get_host("particle_ani2");
+		water_data.particle_ani0 = flex->hosts.particle_ani0;
+		water_data.particle_ani1 = flex->hosts.particle_ani1;
+		water_data.particle_ani2 = flex->hosts.particle_ani2;
 	} else {
 		water_data.particle_ani0 = nullptr;
 		water_data.particle_ani1 = nullptr;
@@ -235,10 +235,10 @@ void FlexRenderer::build_meshes(FlexSolver* flex, float diffuse_radius) {
 		FlexRendererThreadData diffuse_data;
 		diffuse_data.eye_pos = eye_pos;
 		diffuse_data.view_projection_matrix = view_projection_matrix;
-		diffuse_data.particle_positions = (Vector4D*)flex->get_host("diffuse_pos");
+		diffuse_data.particle_positions = flex->hosts.diffuse_pos;
 		diffuse_data.max_particles = active_diffuse;
 		diffuse_data.radius = flex->get_parameter("radius") / flex->get_parameter("diffuse_lifetime") * diffuse_radius;
-		diffuse_data.particle_ani0 = (Vector4D*)flex->get_host("diffuse_vel");
+		diffuse_data.particle_ani0 = flex->hosts.diffuse_vel;
 
 		for (int mesh_index = 0; mesh_index < ceil(active_diffuse / (float)MAX_PRIMATIVES); mesh_index++) {
 			diffuse_queue.push_back(threads->enqueue(_build_diffuse, mesh_index, diffuse_data));
@@ -250,10 +250,10 @@ void FlexRenderer::build_meshes(FlexSolver* flex, float diffuse_radius) {
 	if (active_triangles > 0) {
 		// update thread data
 		FlexRendererThreadData cloth_data;
-		cloth_data.particle_positions = (Vector4D*)flex->get_host("particle_pos");
+		cloth_data.particle_positions = flex->hosts.particle_pos;
 		cloth_data.max_particles = active_triangles;
-		cloth_data.particle_ani0 = (Vector4D*)flex->get_host("triangle_normals");
-		cloth_data.particle_phases = (int*)flex->get_host("triangle_indices");
+		cloth_data.particle_ani0 = flex->hosts.triangle_normals;
+		cloth_data.particle_phases = flex->hosts.triangle_indices;
 
 		for (int mesh_index = 0; mesh_index < ceil(active_triangles / (float)MAX_PRIMATIVES); mesh_index++) {
 			triangle_queue.push_back(threads->enqueue(_build_cloth, mesh_index, cloth_data));
@@ -290,19 +290,19 @@ void FlexRenderer::update_cloth() {
 
 // Renders water meshes
 void FlexRenderer::draw_water() {
-	//update_water();
+	update_water();
 
 	for (IMesh* mesh : water_meshes) mesh->Draw();
 };
 
 void FlexRenderer::draw_diffuse() {
-	//update_diffuse();
+	update_diffuse();
 
 	for (IMesh* mesh : diffuse_meshes) mesh->Draw();
 };
 
 void FlexRenderer::draw_cloth() {
-	//update_cloth();
+	update_cloth();
 
 	for (IMesh* mesh : triangle_meshes) mesh->Draw();
 };

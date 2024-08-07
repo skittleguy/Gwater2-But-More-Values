@@ -19,7 +19,7 @@ local options = {
 	absorption = CreateClientConVar("gwater2_absorption", "1", true),
 	depth_fix = CreateClientConVar("gwater2_depth_fix", "0", true),
 	menu_key = CreateClientConVar("gwater2_menukey", KEY_G, true),
-	color = Color(209, 237, 255, 25),
+	color = Color(255, 255, 255, 255),
 	parameter_tab_header = "Parameter Tab",
 	parameter_tab_text = "This tab is where you can change how the water interacts with itself and the environment.\n\nHover over a parameter to reveal its functionality.",
 	adv_parameter_tab_header = "Adv. Parameter Tab",
@@ -74,10 +74,15 @@ local options = {
 	["Force Dampening"] = {text = "Dampening force applied to props.\n\nHelps a little bit if props tend to bounce on the water surface."},
 }
 
+local finalpass = Material("gwater2/finalpass")
+local volumetric = Material("gwater2/volumetric")
+local normals = Material("gwater2/normals")
+
 -- garry, sincerely... fuck you
 timer.Simple(0, function() 
-	Material("gwater2/volumetric"):SetFloat("$alpha", options.absorption:GetBool() and 0.125 or 0)
-	Material("gwater2/normals"):SetInt("$depthfix", options.depth_fix:GetBool() and 1 or 0)
+	volumetric:SetFloat("$alpha", options.absorption:GetBool() and 0.125 or 0)
+	normals:SetInt("$depthfix", options.depth_fix:GetBool() and 1 or 0)
+	options.color = Color(finalpass:GetVector4D("$color2"))
 end)
 
 options.solver:SetParameter("gravity", 15.24)	-- flip gravity because y axis positive is down
@@ -303,7 +308,6 @@ local function create_picker(self, text, dock)
 		print("Undefined parameter '" .. text .. "'!") 
 	end
 
-	local finalpass = Material("gwater2/finalpass")
 	local mixer = vgui.Create("DColorMixer", self)
 	mixer:SetPos(65, dock + 5)
 	mixer:SetSize(276, 110)
@@ -820,10 +824,9 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 		box:SetPos(132, 200)
 		box:SetSize(20, 20)
 		box:SetChecked(options.absorption:GetBool())
-		local water_volumetric = Material("gwater2/volumetric")
 		function box:OnChange(val)
 			options.absorption:SetBool(val)
-			water_volumetric:SetFloat("$alpha", val and 0.125 or 0)
+			volumetric:SetFloat("$alpha", val and 0.125 or 0)
 		end
 
 		-- Depth fix checkbox & label
@@ -839,10 +842,9 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 		box:SetPos(132, 230)
 		box:SetSize(20, 20)
 		box:SetChecked(options.depth_fix:GetBool())
-		local water_normals = Material("gwater2/normals")
 		function box:OnChange(val)
 			options.depth_fix:SetBool(val)
-			water_normals:SetInt("$depthfix", val and 1 or 0)
+			normals:SetInt("$depthfix", val and 1 or 0)
 		end
 
 		-- Solver checkbox

@@ -399,7 +399,7 @@ LUA_FUNCTION(FLEXSOLVER_RenderParticles) {
 	LUA->CheckType(2, Type::Function);
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
-	Vector4D* host = (Vector4D*)flex->get_host("particle_smooth");
+	Vector4D* host = flex->hosts.particle_smooth;
 	for (int i = 0; i < flex->get_active_particles(); i++) {
 		// render function
 		LUA->Push(2);
@@ -467,8 +467,8 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 	if (flex->get_parameter("reaction_forces") < 2) return 0;	// Coupling planes arent being generated.. bail
 
-	Vector4D* particle_pos = (Vector4D*)flex->get_host("particle_pos");
-	Vector* particle_vel = (Vector*)flex->get_host("particle_vel");
+	Vector4D* particle_pos = flex->hosts.particle_pos;
+	Vector* particle_vel = flex->hosts.particle_vel;
 	/*
 	Vector4D* contact_vel = (Vector4D*)flex->get_host("contact_vel");
 	Vector4D* contact_planes = (Vector4D*)flex->get_host("contact_planes");
@@ -480,11 +480,11 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 	//Vector* particle_vel = (Vector*)NvFlexMap(flex->get_buffer("particle_vel"), eNvFlexMapWait);
 
 	// mapping planes stops random spazzing, but eats perf
-	Vector4D* contact_vel = (Vector4D*)NvFlexMap(flex->get_buffer("contact_vel"), eNvFlexMapWait);
-	Vector4D* contact_planes = (Vector4D*)NvFlexMap(flex->get_buffer("contact_planes"), eNvFlexMapWait);
+	Vector4D* contact_vel = (Vector4D*)NvFlexMap(flex->buffers.contact_vel, eNvFlexMapWait);
+	Vector4D* contact_planes = (Vector4D*)NvFlexMap(flex->buffers.contact_planes, eNvFlexMapWait);
 
-	int* contact_count = (int*)NvFlexMap(flex->get_buffer("contact_count"), eNvFlexMapWait);
-	int* contact_indices = (int*)NvFlexMap(flex->get_buffer("contact_indices"), eNvFlexMapWait);
+	int* contact_count = (int*)NvFlexMap(flex->buffers.contact_count, eNvFlexMapWait);
+	int* contact_indices = (int*)NvFlexMap(flex->buffers.contact_indices, eNvFlexMapWait);
 
 	int max_contacts = flex->get_max_contacts();
 	float radius = flex->get_parameter("radius");
@@ -540,10 +540,10 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 
 	//NvFlexUnmap(flex->get_buffer("particle_pos"));
 	//NvFlexUnmap(flex->get_buffer("particle_vel"));
-	NvFlexUnmap(flex->get_buffer("contact_vel"));
-	NvFlexUnmap(flex->get_buffer("contact_planes"));
-	NvFlexUnmap(flex->get_buffer("contact_count"));
-	NvFlexUnmap(flex->get_buffer("contact_indices"));
+	NvFlexUnmap(flex->buffers.contact_vel);
+	NvFlexUnmap(flex->buffers.contact_planes);
+	NvFlexUnmap(flex->buffers.contact_count);
+	NvFlexUnmap(flex->buffers.contact_indices);
 
 	// Now that we have all our contact data, iterate and apply forces
 	for (std::pair<int, FlexMesh> force : forces) {
@@ -609,7 +609,7 @@ LUA_FUNCTION(FLEXSOLVER_GetParticlesInRadius) {
 
 	int num_particles = 0;
 	if (flex->get_parameter("reaction_forces") > 0) {
-		Vector4D* particle_pos = (Vector4D*)flex->get_host("particle_pos");
+		Vector4D* particle_pos = flex->hosts.particle_pos;
 		for (int i = 0; i < flex->get_active_particles(); i++) {
 			if (particle_pos[i].AsVector3D().DistToSqr(pos) > radius) continue;
 

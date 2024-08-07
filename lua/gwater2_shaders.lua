@@ -50,7 +50,8 @@ local function unfuck_lighting(pos0, pos1)
 	render.OverrideDepthEnable(false, false)
 	render.PopRenderTarget()
 end
-
+local wtf = FlexSolver(1)
+wtf:AddParticle(Vector())
 -- gwater2 shader pipeline
 hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky3d)	--PreDrawViewModels
 	if gwater2.solver:GetActiveParticles() < 1 then return end
@@ -71,7 +72,7 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	local scrh = ScrH()
 	local water = gwater2.material
 	local radius = gwater2.solver:GetParameter("radius")
-
+	--wtf:Tick(1/60, 0)
 	gwater2.renderer:BuildMeshes(gwater2.solver, 0.2)
 	--render.SetMaterial(Material("models/props_combine/combine_interface_disp"))
 

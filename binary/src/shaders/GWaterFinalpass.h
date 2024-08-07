@@ -13,7 +13,7 @@ BEGIN_SHADER_PARAMS
 	SHADER_PARAM(SCREENTEXTURE, SHADER_PARAM_TYPE_TEXTURE, "lights/white", "Texture of screen")
 	SHADER_PARAM(DEPTHTEXTURE, SHADER_PARAM_TYPE_TEXTURE, "lights/white", "Depth texture")
 	SHADER_PARAM(IOR, SHADER_PARAM_TYPE_FLOAT, "1.333", "Ior of water")
-	SHADER_PARAM(COLOR2, SHADER_PARAM_TYPE_VEC4, "1.0 1.0 1.0 1.0", "Color of water. Alpha channel represents absorption amount")
+	SHADER_PARAM(COLOR2, SHADER_PARAM_TYPE_COLOR, "[1.0 1.0 1.0 1.0]", "Color of water. Alpha channel represents absorption amount")
 	//SHADER_PARAM(ABSORPTIONMULTIPLIER, SHADER_PARAM_TYPE_FLOAT, "1", "Absorbsion multiplier")
 	SHADER_PARAM(REFLECTANCE, SHADER_PARAM_TYPE_FLOAT, "0.5", "Reflectance of water")
 	SHADER_PARAM(ENVMAP, SHADER_PARAM_TYPE_TEXTURE, "env_cubemap", "envmap")
@@ -99,15 +99,6 @@ SHADER_DRAW {
 	}
 
 	DYNAMIC_STATE {
-		// constants
-		int scr_x, scr_y = 1; pShaderAPI->GetBackBufferDimensions(scr_x, scr_y);
-		const float scr_s[2] = {1.0 / scr_x, 1.0 / scr_y};
-		float radius = params[RADIUS]->GetFloatValue();
-		float ior = params[IOR]->GetFloatValue();
-		float reflectance = params[REFLECTANCE]->GetFloatValue();
-		const float* color2 = params[COLOR2]->GetVecValue();
-		const float color2_normalized[4] = { color2[0] / 255.0, color2[1] / 255.0, color2[2] / 255.0, color2[3] / 255.0 };
-		 
 		LightState_t lightState = { 0, false, false };
 		bool bFlashlightShadows = false;
 		if (bHasFlashlight) {
@@ -128,6 +119,15 @@ SHADER_DRAW {
 		} else {
 			pShaderAPI->GetDX9LightState(&lightState);
 		}
+
+		// constants
+		int scr_x, scr_y = 1; pShaderAPI->GetBackBufferDimensions(scr_x, scr_y);
+		const float scr_s[2] = { 1.0 / scr_x, 1.0 / scr_y };
+		float radius = params[RADIUS]->GetFloatValue();
+		float ior = params[IOR]->GetFloatValue();
+		float reflectance = params[REFLECTANCE]->GetFloatValue();
+		const float* color2 = params[COLOR2]->GetVecValue();
+		const float color2_normalized[4] = { color2[0] / 255.0, color2[1] / 255.0, color2[2] / 255.0, color2[3] / 255.0 };
 
 		pShaderAPI->SetPixelShaderConstant(0, scr_s);
 		pShaderAPI->SetPixelShaderConstant(1, &radius);

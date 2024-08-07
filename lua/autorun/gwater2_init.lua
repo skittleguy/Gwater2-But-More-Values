@@ -187,7 +187,8 @@ end)
 hook.Add("InitPostEntity", "gwater2_addprop", gwater2.reset_solver)
 hook.Add("OnEntityCreated", "gwater2_addprop", function(ent) timer.Simple(0, function() add_prop(ent) end) end)	// timer.0 so data values are setup correctly
 
-hook.Add("gwater2_posttick", "gwater2_gravgun_grab", function()
+hook.Add("gwater2_posttick", "gwater2_gravgun_grab", function(succ)
+	if !succ then return end
 	local lp = LocalPlayer()
 	if !lp:KeyDown(IN_ATTACK2) then return end
 	if IsValid(LocalPlayer():GetActiveWeapon()) and LocalPlayer():GetActiveWeapon():GetClass() == "weapon_physcannon" then
