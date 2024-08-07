@@ -6,6 +6,8 @@
 #include <string>
 #include "flex_mesh.h"
 
+#define MAX_COLLIDERS 8192	// source can't go over this number of props so.. might as well just have it as the limit
+
 enum FlexPhase {
 	WATER = (0 & eNvFlexPhaseGroupMask) | ((eNvFlexPhaseSelfCollide | eNvFlexPhaseFluid) & eNvFlexPhaseFlagsMask) | (eNvFlexPhaseShapeChannelMask & eNvFlexPhaseShapeChannelMask),
 	CLOTH = (0 & eNvFlexPhaseGroupMask) | ((eNvFlexPhaseSelfCollide					   ) & eNvFlexPhaseFlagsMask) | (eNvFlexPhaseShapeChannelMask & eNvFlexPhaseShapeChannelMask),
@@ -100,8 +102,8 @@ class FlexSolver {
 private:
 	NvFlexLibrary* library = nullptr;
 	NvFlexSolver* solver = nullptr;
-	NvFlexParams* params = nullptr;
 	NvFlexExtForceFieldCallback* force_field_callback = nullptr;	// unsure why this is required. crashes without it
+	NvFlexParams parameters = NvFlexParams();
 	NvFlexCopyDesc copy_active = NvFlexCopyDesc();
 	NvFlexCopyDesc copy_particles = NvFlexCopyDesc();
 	NvFlexCopyDesc copy_triangles = NvFlexCopyDesc();

@@ -1,8 +1,6 @@
 #pragma once
 #include "flex_solver.h"
 
-#define MAX_COLLIDERS 8192	// source can't go over this number of props so.. might as well just have it as the limit
-
 template <typename T> NvFlexBuffer* FlexBuffers::init(NvFlexLibrary* library, T** host, int count) {
 	NvFlexBuffer* buffer = NvFlexAllocBuffer(library, count, sizeof(T), eNvFlexBufferHost);
 
@@ -35,6 +33,14 @@ void FlexSolver::reset() {
 	// clear diffuse
 	NvFlexSetDiffuseParticles(solver, NULL, NULL, 0);
 	hosts.diffuse_count[0] = 0;
+
+	// These buffers are getted AND setted, so we need to make sure they are mapped before adding more particles
+	NvFlexMap(buffers.particle_pos, eNvFlexMapWait);
+	NvFlexUnmap(buffers.particle_pos);
+	if (get_parameter("reaction_forces") > 2) {
+		NvFlexMap(buffers.particle_vel, eNvFlexMapWait);
+		NvFlexUnmap(buffers.particle_vel);
+	}
 }
 
 void FlexSolver::reset_cloth() {
@@ -93,7 +99,7 @@ void FlexSolver::add_particle(Particle particle) {
 
 inline int _grid(int x, int y, int x_size) { return y * x_size + x; }
 void FlexSolver::add_cloth(Particle particle, Vector2D size) {
-	float radius = get_parameter("solid_rest_distance");
+	float radius = parameters.solidRestDistance;
 	particle.phase = FlexPhase::CLOTH;	// force to cloth
 	particle.pos.x -= size.x * radius / 2.0;
 	particle.pos.y -= size.y * radius / 2.0;
@@ -189,20 +195,22 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 	if (solver == nullptr) return false;
 
 	// Update collision geometry
-	//NvFlexCollisionGeometry* geometry = (NvFlexCollisionGeometry*)get_host("geometry");
+	NvFlexCollisionGeometry* geometry = (NvFlexCollisionGeometry*)NvFlexMap(buffers.geometry, wait);
+	if (!geometry) return false;
+
 	for (int i = 0; i < meshes.size(); i++) {
 		FlexMesh mesh = meshes[i];
 
 		hosts.geometry_flags[i] = mesh.get_flags();
-		hosts.geometry[i].triMesh.mesh = mesh.get_id();
-		hosts.geometry[i].triMesh.scale[0] = 1;
-		hosts.geometry[i].triMesh.scale[1] = 1;
-		hosts.geometry[i].triMesh.scale[2] = 1;
+		geometry[i].triMesh.mesh = mesh.get_id();
+		geometry[i].triMesh.scale[0] = 1;
+		geometry[i].triMesh.scale[1] = 1;
+		geometry[i].triMesh.scale[2] = 1;
 
-		hosts.geometry[i].convexMesh.mesh = mesh.get_id();
-		hosts.geometry[i].convexMesh.scale[0] = 1;
-		hosts.geometry[i].convexMesh.scale[1] = 1;
-		hosts.geometry[i].convexMesh.scale[2] = 1;
+		geometry[i].convexMesh.mesh = mesh.get_id();
+		geometry[i].convexMesh.scale[0] = 1;
+		geometry[i].convexMesh.scale[1] = 1;
+		geometry[i].convexMesh.scale[2] = 1;
 
 		hosts.geometry_prevpos[i] = mesh.get_ppos();
 		hosts.geometry_pos[i] = mesh.get_pos();
@@ -212,44 +220,36 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 
 		meshes[i].update();
 	}
+	NvFlexUnmap(buffers.geometry);
 
 	// Avoid ticking if the deltatime ends up being zero, as it invalidates the simulation
 	dt *= get_parameter("timescale");
 	if (dt > 0 && get_active_particles() > 0) {
 
 		// Map positions to CPU memory
-		Vector4D* particle_pos = (Vector4D*)NvFlexMap(buffers.particle_smooth, wait);
-		if (particle_pos) {
-			if (particle_queue.empty()) {
-				NvFlexUnmap(buffers.particle_smooth);
-			} else {
-				// Add queued particles
-				for (int i = 0; i < particle_queue.size(); i++) {
-					int particle_index = copy_particles.elementCount + i;
-					//particle_pos[particle_index] = particle_queue[i].pos;
-					set_particle(particle_index, particle_queue[i]);
-				}
-
-				NvFlexUnmap(buffers.particle_smooth);
-
-				// Only copy what we just added
-				NvFlexCopyDesc desc;
-				desc.dstOffset = copy_particles.elementCount;
-				desc.elementCount = particle_queue.size();
-				desc.srcOffset = desc.dstOffset;
-
-				// Update particle information
-				NvFlexSetParticles(solver, buffers.particle_pos, &desc);
-				NvFlexSetVelocities(solver, buffers.particle_vel, &desc);
-				NvFlexSetPhases(solver, buffers.particle_phase, &desc);
-				NvFlexSetActive(solver, buffers.particle_active, &desc);
-				NvFlexSetActiveCount(solver, get_active_particles());
-
-				copy_particles.elementCount += particle_queue.size();
-				particle_queue.clear();
+		if (!particle_queue.empty()) {
+			// Add queued particles
+			for (int i = 0; i < particle_queue.size(); i++) {
+				int particle_index = copy_particles.elementCount + i;
+				//particle_pos[particle_index] = particle_queue[i].pos;
+				set_particle(particle_index, particle_queue[i]);
 			}
-		} else {
-			return false;
+
+			// Only copy what we just added
+			NvFlexCopyDesc desc;
+			desc.dstOffset = copy_particles.elementCount;
+			desc.elementCount = particle_queue.size();
+			desc.srcOffset = desc.dstOffset;
+
+			copy_particles.elementCount += particle_queue.size();
+			particle_queue.clear();
+				
+			// Update particle information
+			NvFlexSetParticles(solver, buffers.particle_pos, &desc);
+			NvFlexSetVelocities(solver, buffers.particle_vel, &desc);
+			NvFlexSetPhases(solver, buffers.particle_phase, &desc);
+			NvFlexSetActive(solver, buffers.particle_active, &desc);
+			NvFlexSetActiveCount(solver, copy_particles.elementCount);
 		}
 
 		// write to device (async)
@@ -263,7 +263,7 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 			buffers.geometry_flags,
 			meshes.size()
 		);
-		NvFlexSetParams(solver, params);
+		NvFlexSetParams(solver, &parameters);
 		NvFlexExtSetForceFields(force_field_callback, force_field_queue.data(), force_field_queue.size());
 
 		// tick
@@ -277,11 +277,11 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 			NvFlexGetNormals(solver, buffers.triangle_normals, &copy_particles);
 		}
 
-		if (get_parameter("anisotropy_scale") != 0) {
+		if (parameters.anisotropyScale != 0) {
 			NvFlexGetAnisotropy(solver, buffers.particle_ani0, buffers.particle_ani1, buffers.particle_ani2, &copy_particles);
 		}
 
-		if (get_parameter("smoothing") != 0) {
+		if (parameters.smoothing != 0) {
 			NvFlexGetSmoothParticles(solver, buffers.particle_smooth, &copy_particles);
 		}
 
@@ -335,7 +335,7 @@ bool FlexSolver::set_parameter(std::string param, float number) {
 	}
 	catch (std::exception e) {
 		if (param == "iterations") {	// defined as an int instead of a float, so it needs to be seperate
-			params->numIterations = (int)number;
+			parameters.numIterations = (int)number;
 			return true;
 		}
 		return false;
@@ -349,7 +349,7 @@ float FlexSolver::get_parameter(std::string param) {
 	}
 	catch (std::exception e) {
 		if (param == "iterations") {	// ^
-			return (float)params->numIterations;
+			return (float)parameters.numIterations;
 		}
 		return NAN;
 	}
@@ -359,46 +359,46 @@ float FlexSolver::get_parameter(std::string param) {
 void FlexSolver::enable_bounds(Vector mins, Vector maxs) {
 
 	// Right
-	params->planes[0][0] = 1.f;
-	params->planes[0][1] = 0.f;
-	params->planes[0][2] = 0.f;
-	params->planes[0][3] = -mins.x;
+	parameters.planes[0][0] = 1.f;
+	parameters.planes[0][1] = 0.f;
+	parameters.planes[0][2] = 0.f;
+	parameters.planes[0][3] = -mins.x;
 
 	// Left
-	params->planes[1][0] = -1.f;
-	params->planes[1][1] = 0.f;
-	params->planes[1][2] = 0.f;
-	params->planes[1][3] = maxs.x;
+	parameters.planes[1][0] = -1.f;
+	parameters.planes[1][1] = 0.f;
+	parameters.planes[1][2] = 0.f;
+	parameters.planes[1][3] = maxs.x;
 
 	// Forward
-	params->planes[2][0] = 0.f;
-	params->planes[2][1] = 1.f;
-	params->planes[2][2] = 0.f;
-	params->planes[2][3] = -mins.y;
+	parameters.planes[2][0] = 0.f;
+	parameters.planes[2][1] = 1.f;
+	parameters.planes[2][2] = 0.f;
+	parameters.planes[2][3] = -mins.y;
 
 	// Backward
-	params->planes[3][0] = 0.f;
-	params->planes[3][1] = -1.f;
-	params->planes[3][2] = 0.f;
-	params->planes[3][3] = maxs.y;
+	parameters.planes[3][0] = 0.f;
+	parameters.planes[3][1] = -1.f;
+	parameters.planes[3][2] = 0.f;
+	parameters.planes[3][3] = maxs.y;
 
 	// Bottom
-	params->planes[4][0] = 0.f;
-	params->planes[4][1] = 0.f;
-	params->planes[4][2] = 1.f;
-	params->planes[4][3] = -mins.z;
+	parameters.planes[4][0] = 0.f;
+	parameters.planes[4][1] = 0.f;
+	parameters.planes[4][2] = 1.f;
+	parameters.planes[4][3] = -mins.z;
 
 	// Top
-	params->planes[5][0] = 0.f;
-	params->planes[5][1] = 0.f;
-	params->planes[5][2] = -1.f;
-	params->planes[5][3] = maxs.z;
+	parameters.planes[5][0] = 0.f;
+	parameters.planes[5][1] = 0.f;
+	parameters.planes[5][2] = -1.f;
+	parameters.planes[5][3] = maxs.z;
 
-	params->numPlanes = 6;
+	parameters.numPlanes = 6;
 }
 
 void FlexSolver::disable_bounds() {
-	params->numPlanes = 0;
+	parameters.numPlanes = 0;
 }
 
 // Initializes a solver in a FleX library
@@ -412,99 +412,98 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	this->library = library;
 	solver = NvFlexCreateSolver(library, &solver_description);
 
-	params = new NvFlexParams();
-	params->gravity[0] = 0.0f;
-	params->gravity[1] = 0.0f;
-	params->gravity[2] = -15.24f;	// Source gravity (600 inch^2) in m/s^2
+	parameters.gravity[0] = 0.0f;
+	parameters.gravity[1] = 0.0f;
+	parameters.gravity[2] = -15.24f;	// Source gravity (600 inch^2) in m/s^2
 
-	params->wind[0] = 0.0f;
-	params->wind[1] = 0.0f;
-	params->wind[2] = 0.0f;
+	parameters.wind[0] = 0.0f;
+	parameters.wind[1] = 0.0f;
+	parameters.wind[2] = 0.0f;
 
-	params->radius = 10.f;
-	params->viscosity = 0.0f;
-	params->dynamicFriction = 0.5f;
-	params->staticFriction = 0.5f;
-	params->particleFriction = 0.0f;
-	params->freeSurfaceDrag = 0.0f;
-	params->drag = 0.0f;
-	params->lift = 0.0f;
-	params->numIterations = 3;
-	params->fluidRestDistance = 6.5f;
-	params->solidRestDistance = 6.5f;
+	parameters.radius = 10.f;
+	parameters.viscosity = 0.0f;
+	parameters.dynamicFriction = 0.5f;
+	parameters.staticFriction = 0.5f;
+	parameters.particleFriction = 0.0f;
+	parameters.freeSurfaceDrag = 0.0f;
+	parameters.drag = 0.0f;
+	parameters.lift = 0.0f;
+	parameters.numIterations = 3;
+	parameters.fluidRestDistance = 6.5f;
+	parameters.solidRestDistance = 6.5f;
 
-	params->anisotropyScale = 1.f;
-	params->anisotropyMin = 0.2f;
-	params->anisotropyMax = 2.f;
-	params->smoothing = 1.0f;
+	parameters.anisotropyScale = 1.f;
+	parameters.anisotropyMin = 0.2f;
+	parameters.anisotropyMax = 2.f;
+	parameters.smoothing = 1.0f;
 
-	params->dissipation = 0.f;
-	params->damping = 0.0f;
-	params->particleCollisionMargin = 0.f;
-	params->shapeCollisionMargin = 0.f;	// Increase if lots of water pressure is expected. Higher values cause more collision clipping
-	params->collisionDistance = 5.f; // Needed for tri-particle intersection
-	params->sleepThreshold = 0.1f;
-	params->shockPropagation = 0.0f;
-	params->restitution = 0.0f;
+	parameters.dissipation = 0.f;
+	parameters.damping = 0.0f;
+	parameters.particleCollisionMargin = 0.f;
+	parameters.shapeCollisionMargin = 0.f;	// Increase if lots of water pressure is expected. Higher values cause more collision clipping
+	parameters.collisionDistance = 5.f; // Needed for tri-particle intersection
+	parameters.sleepThreshold = 0.1f;
+	parameters.shockPropagation = 0.0f;
+	parameters.restitution = 0.0f;
 
-	params->maxSpeed = 1e5;
-	params->maxAcceleration = 1e5;
-	params->relaxationMode = eNvFlexRelaxationLocal;
-	params->relaxationFactor = 0.25f;	// only works with eNvFlexRelaxationGlobal
-	params->solidPressure = 0.5f;
-	params->adhesion = 0.0f;
-	params->cohesion = 0.01f;
-	params->surfaceTension = 0.000001f;
-	params->vorticityConfinement = 0.0f;
-	params->buoyancy = 1.0f;
+	parameters.maxSpeed = 1e5;
+	parameters.maxAcceleration = 1e5;
+	parameters.relaxationMode = eNvFlexRelaxationLocal;
+	parameters.relaxationFactor = 0.25f;	// only works with eNvFlexRelaxationGlobal
+	parameters.solidPressure = 0.5f;
+	parameters.adhesion = 0.0f;
+	parameters.cohesion = 0.01f;
+	parameters.surfaceTension = 0.000001f;
+	parameters.vorticityConfinement = 0.0f;
+	parameters.buoyancy = 1.0f;
 
-	params->diffuseThreshold = 100.f;
-	params->diffuseBuoyancy = 1.f;
-	params->diffuseDrag = 0.8f;
-	params->diffuseBallistic = 2;
-	params->diffuseLifetime = 5.f;	// not actually in seconds
+	parameters.diffuseThreshold = 100.f;
+	parameters.diffuseBuoyancy = 1.f;
+	parameters.diffuseDrag = 0.8f;
+	parameters.diffuseBallistic = 2;
+	parameters.diffuseLifetime = 5.f;	// not actually in seconds
 
-	params->numPlanes = 0;
+	parameters.numPlanes = 0;
 
-	param_map["gravity"] = &(params->gravity[2]);
-	param_map["radius"] = &params->radius;
-	param_map["viscosity"] = &params->viscosity;
-	param_map["dynamic_friction"] = &params->dynamicFriction;
-	param_map["static_friction"] = &params->staticFriction;
-	param_map["particle_friction"] = &params->particleFriction;
-	param_map["free_surface_drag"] = &params->freeSurfaceDrag;
-	param_map["drag"] = &params->drag;
-	param_map["lift"] = &params->lift;
+	param_map["gravity"] = &(parameters.gravity[2]);
+	param_map["radius"] = &parameters.radius;
+	param_map["viscosity"] = &parameters.viscosity;
+	param_map["dynamic_friction"] = &parameters.dynamicFriction;
+	param_map["static_friction"] = &parameters.staticFriction;
+	param_map["particle_friction"] = &parameters.particleFriction;
+	param_map["free_surface_drag"] = &parameters.freeSurfaceDrag;
+	param_map["drag"] = &parameters.drag;
+	param_map["lift"] = &parameters.lift;
 	//param_map["iterations"] = &params->numIterations;				// integer, cant map
-	param_map["fluid_rest_distance"] = &params->fluidRestDistance;
-	param_map["solid_rest_distance"] = &params->solidRestDistance;
-	param_map["anisotropy_scale"] = &params->anisotropyScale;
-	param_map["anisotropy_min"] = &params->anisotropyMin;
-	param_map["anisotropy_max"] = &params->anisotropyMax;
-	param_map["smoothing"] = &params->smoothing;
-	param_map["dissipation"] = &params->dissipation;
-	param_map["damping"] = &params->damping;
-	param_map["particle_collision_margin"] = &params->particleCollisionMargin;
-	param_map["shape_collision_margin"] = &params->shapeCollisionMargin;
-	param_map["collision_distance"] = &params->collisionDistance;
-	param_map["sleep_threshold"] = &params->sleepThreshold;
-	param_map["shock_propagation"] = &params->shockPropagation;
-	param_map["restitution"] = &params->restitution;
-	param_map["max_speed"] = &params->maxSpeed;
-	param_map["max_acceleration"] = &params->maxAcceleration;
-	//param_map["relaxation_mode"] = &params->relaxationMode;		// ^
-	param_map["relaxation_factor"] = &params->relaxationFactor;
-	param_map["solid_pressure"] = &params->solidPressure;
-	param_map["adhesion"] = &params->adhesion;
-	param_map["cohesion"] = &params->cohesion;
-	param_map["surface_tension"] = &params->surfaceTension;
-	param_map["vorticity_confinement"] = &params->vorticityConfinement;
-	param_map["buoyancy"] = &params->buoyancy;
-	param_map["diffuse_threshold"] = &params->diffuseThreshold;
-	param_map["diffuse_buoyancy"] = &params->diffuseBuoyancy;
-	param_map["diffuse_drag"] = &params->diffuseDrag;
-	//param_map["diffuse_ballistic"] = &params->diffuseBallistic;	// ^
-	param_map["diffuse_lifetime"] = &params->diffuseLifetime;
+	param_map["fluid_rest_distance"] = &parameters.fluidRestDistance;
+	param_map["solid_rest_distance"] = &parameters.solidRestDistance;
+	param_map["anisotropy_scale"] = &parameters.anisotropyScale;
+	param_map["anisotropy_min"] = &parameters.anisotropyMin;
+	param_map["anisotropy_max"] = &parameters.anisotropyMax;
+	param_map["smoothing"] = &parameters.smoothing;
+	param_map["dissipation"] = &parameters.dissipation;
+	param_map["damping"] = &parameters.damping;
+	param_map["particle_collision_margin"] = &parameters.particleCollisionMargin;
+	param_map["shape_collision_margin"] = &parameters.shapeCollisionMargin;
+	param_map["collision_distance"] = &parameters.collisionDistance;
+	param_map["sleep_threshold"] = &parameters.sleepThreshold;
+	param_map["shock_propagation"] = &parameters.shockPropagation;
+	param_map["restitution"] = &parameters.restitution;
+	param_map["max_speed"] = &parameters.maxSpeed;
+	param_map["max_acceleration"] = &parameters.maxAcceleration;
+	//param_map["relaxation_mode"] = &parameters.relaxationMode;		// ^
+	param_map["relaxation_factor"] = &parameters.relaxationFactor;
+	param_map["solid_pressure"] = &parameters.solidPressure;
+	param_map["adhesion"] = &parameters.adhesion;
+	param_map["cohesion"] = &parameters.cohesion;
+	param_map["surface_tension"] = &parameters.surfaceTension;
+	param_map["vorticity_confinement"] = &parameters.vorticityConfinement;
+	param_map["buoyancy"] = &parameters.buoyancy;
+	param_map["diffuse_threshold"] = &parameters.diffuseThreshold;
+	param_map["diffuse_buoyancy"] = &parameters.diffuseBuoyancy;
+	param_map["diffuse_drag"] = &parameters.diffuseDrag;
+	//param_map["diffuse_ballistic"] = &parameters.diffuseBallistic;	// ^
+	param_map["diffuse_lifetime"] = &parameters.diffuseLifetime;
 	// Extra values we store which are not stored in flexes default parameters
 	param_map["substeps"] = new float(3);
 	param_map["timescale"] = new float(1);
@@ -559,7 +558,6 @@ FlexSolver::~FlexSolver() {
 	delete param_map["substeps"];		// Seperate since its externally stored & not a default parameter
 	delete param_map["timescale"];		// ^
 	delete param_map["reaction_forces"];// ^
-	delete params;
 
 	NvFlexExtDestroyForceFieldCallback(force_field_callback);
 
