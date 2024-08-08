@@ -9,25 +9,55 @@ ENT.Author			= "Mee"
 ENT.Purpose			= ""
 ENT.Instructions	= ""
 ENT.Spawnable   	= true
+ENT.Editable		= true
 
 function ENT:Initialize()
-	if CLIENT then 
-		hook.Add("gwater2_posttick", self, function(self, succ)
-			if !succ and gwater2.solver:GetActiveParticles() != 0 then return end
-			local mat = Matrix()
-			mat:SetScale(Vector(6.5, 6.5, 6.5))
-			--mat:SetAngles(self:LocalToWorldAngles(Angle(0, CurTime() * 200, 0)))
-			mat:SetAngles(self:LocalToWorldAngles(Angle(0, 0, 0)))
-			mat:SetTranslation(self:GetPos() + self:GetUp() * 10)
-		 
-			gwater2.solver:AddCylinder(mat, Vector(6, 6, 1), {vel = self:GetUp() * 60})
-		end)
-	else
-		self:SetModel("models/mechanics/wheels/wheel_speed_72.mdl")
-		self:PhysicsInit(SOLID_VPHYSICS)
-		self:SetMoveType(MOVETYPE_VPHYSICS)
-		self:SetSolid(SOLID_VPHYSICS)
-	end
+	if CLIENT then return end
+	self:SetModel("models/mechanics/wheels/wheel_speed_72.mdl")
+	self:PhysicsInit(SOLID_VPHYSICS)
+	self:SetMoveType(MOVETYPE_VPHYSICS)
+	self:SetSolid(SOLID_VPHYSICS)
+end
+
+function ENT:SpawnFunction(ply, tr, class)
+	if not tr.Hit then return end
+	local ent = ents.Create(class)
+	ent:SetPos(tr.HitPos)
+	ent:Spawn()
+	ent:Activate()
+
+	ent:SetRadius(6)
+	ent:SetStrength(60)
+	ent:SetSpread(0.65)
+	ent:SetOn(true)
+
+	return ent
+end
+
+function ENT:SetupDataTables()
+	self:NetworkVar("Int", 0, "Radius", {KeyName = "Radius", Edit = {type = "Int", order = 0, min = 1, max = 9}})
+	self:NetworkVar("Float", 0, "Spread", {KeyName = "Spread", Edit = {type = "Float", order = 1, min = 0.5, max = 1}})
+	self:NetworkVar("Float", 1, "Strength", {KeyName = "Strength", Edit = {type = "Float", order = 2, min = 1, max = 200}})
+	self:NetworkVar("Bool", 0, "On", {KeyName = "On", Edit = {type = "Bool", order = 3}})
+
+	if SERVER then return end
+
+	hook.Add("gwater2_posttick", self, function(succ)
+		if !self:GetOn() then return end
+
+		local particle_radius = gwater2.solver:GetParameter("radius")
+		local radius = self:GetRadius()
+		local spread = self:GetSpread() * particle_radius
+		local strength = self:GetStrength()
+
+		local mat = Matrix()
+		mat:SetScale(Vector(spread, spread, spread))
+		--mat:SetAngles(self:LocalToWorldAngles(Angle(0, CurTime() * 200, 0)))
+		mat:SetAngles(self:LocalToWorldAngles(Angle(0, 0, 0)))
+		mat:SetTranslation(self:GetPos() + self:GetUp() * (particle_radius + 5) * math.Rand(0.99, 1))
+	 
+		gwater2.solver:AddCylinder(mat, Vector(radius, radius, 1), {vel = self:GetUp() * strength})
+	end)
 end
 
 function ENT:OnRemove()

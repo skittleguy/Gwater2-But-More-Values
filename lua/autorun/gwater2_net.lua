@@ -11,8 +11,36 @@ if SERVER then
 		AddCloth = function(pos, size, particle_data)
 			net.Start("GWATER2_ADDCLOTH")
 				net.WriteVector(pos)
-				net.WriteUInt(size[1], 16)
-				net.WriteUInt(size[2], 16)
+				net.WriteUInt(size[1], 8)
+				net.WriteUInt(size[2], 8)
+				net.WriteTable(particle_data or {}) -- empty table only takes 3 bits
+			net.Broadcast()
+		end,
+
+		AddCylinder = function(translation, size, particle_data)
+			net.Start("GWATER2_ADDCYLINDER")
+				net.WriteMatrix(translation)
+				net.WriteUInt(size[1], 8)
+				net.WriteUInt(size[2], 8)
+				net.WriteUInt(size[3], 8)
+				net.WriteTable(particle_data or {}) -- empty table only takes 3 bits
+			net.Broadcast()
+		end,
+
+		AddSphere = function(translation, radius, particle_data)
+			net.Start("GWATER2_ADDSPHERE")
+				net.WriteMatrix(translation)
+				net.WriteUInt(radius, 8)
+				net.WriteTable(particle_data or {}) -- empty table only takes 3 bits
+			net.Broadcast()
+		end,
+
+		AddCube = function(translation, size, particle_data)
+			net.Start("GWATER2_ADDCUBE")
+				net.WriteMatrix(translation)
+				net.WriteUInt(size[1], 8)
+				net.WriteUInt(size[2], 8)
+				net.WriteUInt(size[3], 8)
 				net.WriteTable(particle_data or {}) -- empty table only takes 3 bits
 			net.Broadcast()
 		end,
@@ -21,11 +49,35 @@ if SERVER then
 else	-- CLIENT
 	net.Receive("GWATER2_ADDCLOTH", function(len)
 		local pos = net.ReadVector()	-- pos
-		local size_x = net.ReadUInt(16)
-		local size_y = net.ReadUInt(16)
+		local size_x = net.ReadUInt(8)
+		local size_y = net.ReadUInt(8)
 		local extra = net.ReadTable()	-- the one time this function is actually useful
 		gwater2.solver:AddCloth(pos, Vector(size_x, size_y), extra)
 		gwater2.cloth_pos = pos
 	end)
 
+	net.Receive("GWATER2_ADDCYLINDER", function(len)
+		local translation = net.ReadMatrix()
+		local size_x = net.ReadUInt(8)
+		local size_y = net.ReadUInt(8)
+		local size_z = net.ReadUInt(8)
+		local extra = net.ReadTable()
+		gwater2.solver:AddCylinder(translation, Vector(size_x, size_y, size_z), extra)
+	end)
+
+	net.Receive("GWATER2_ADDSPHERE", function(len)
+		local translation = net.ReadMatrix()
+		local radius = net.ReadUInt(8)
+		local extra = net.ReadTable()
+		gwater2.solver:AddSphere(translation, radius, extra)
+	end)
+
+	net.Receive("GWATER2_ADDCUBE", function(len)
+		local translation = net.ReadMatrix()
+		local size_x = net.ReadUInt(8)
+		local size_y = net.ReadUInt(8)
+		local size_z = net.ReadUInt(8)
+		local extra = net.ReadTable()
+		gwater2.solver:AddCube(translation, Vector(size_x, size_y, size_z), extra)
+	end)
 end

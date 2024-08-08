@@ -85,7 +85,7 @@ elseif CLIENT then
 	end
 
 	function ENT:OnRemove()
-		hook.Remove("gwater2_pretick", self)
+		hook.Remove("gwater2_posttick", self)
 		if self.PARTICLE_EMITTER then 
 			self.PARTICLE_EMITTER:Finish()
 		end

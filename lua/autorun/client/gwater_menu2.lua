@@ -546,7 +546,7 @@ concommand.Add("gwater2_menu", function()
 		labels[11], sliders["Vorticity Confinement"] = create_slider(scrollPanel, "Vorticity Confinement", 0, 200, 0, 417, 300, 75)
 
 		create_label(scrollPanel, "Reaction Force Parameters", "'Reaction Forces' (in performance tab) must be set to 2 for these to work!", 462, 200)
-		labels[12], sliders["Force Multiplier"] = create_slider(scrollPanel, "Force Multiplier", 0.001, 0.02, 3, 514, 315, 55)
+		labels[12], sliders["Force Multiplier"] = create_slider(scrollPanel, "Force Multiplier", 0.001, 0.05, 3, 514, 315, 55)
 		labels[13], sliders["Force Buoyancy"] = create_slider(scrollPanel, "Force Buoyancy", 0, 500, 1, 544, 315, 55)
 		labels[14], sliders["Force Dampening"] = create_slider(scrollPanel, "Force Dampening", 0, 1, 2, 574, 315, 55)
 		
