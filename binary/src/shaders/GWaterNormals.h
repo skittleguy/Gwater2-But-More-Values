@@ -26,7 +26,7 @@ SHADER_FALLBACK{
 SHADER_DRAW {
 	SHADOW_STATE {
 		pShaderShadow->VertexShaderVertexFormat(VERTEX_GWATER2, 1, 0, 0);
-		//pShaderShadow->EnableAlphaWrites(true);
+		pShaderShadow->EnableAlphaWrites(true);	// we write to the alpha channel
 
 		DECLARE_STATIC_VERTEX_SHADER(GWaterNormals_vs30);
 		SET_STATIC_VERTEX_SHADER(GWaterNormals_vs30);

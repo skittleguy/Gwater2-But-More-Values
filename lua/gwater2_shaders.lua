@@ -64,7 +64,6 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	render.ClearRenderTarget(cache_depth, Color(0, 0, 0, 0))
 	render.ClearRenderTarget(cache_absorption, Color(0, 0, 0, 0))
 	render.ClearRenderTarget(cache_bloom, Color(0, 0, 0, 0))
-	render.OverrideAlphaWriteEnable(true, true)	-- TODO(?): do this internally in shader shadow/dynamic state
 
 	-- cached variables
 	local scrw = ScrW()
@@ -163,9 +162,7 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	water:SetTexture("$depthtexture", cache_absorption)
 	render.SetMaterial(water)
 	gwater2.renderer:DrawWater()
-	render.RenderFlashlights( function() gwater2.renderer:DrawWater() end )
-
-	render.OverrideAlphaWriteEnable(false, false)
+	render.RenderFlashlights(function() gwater2.renderer:DrawWater() end)
 
 	render.SetMaterial(water_mist)
 	gwater2.renderer:DrawDiffuse()

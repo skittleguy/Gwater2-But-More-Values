@@ -34,6 +34,7 @@ SHADER_DRAW {
 		pShaderShadow->VertexShaderVertexFormat(flags, 1, 0, 0);
 		pShaderShadow->EnableTexture(SHADER_SAMPLER0, true);
 		pShaderShadow->EnableTexture(SHADER_SAMPLER1, true);
+		pShaderShadow->EnableAlphaWrites(true);	// We use and update the alpha channel
 
 		DECLARE_STATIC_VERTEX_SHADER(GWaterVolumetric_vs30);
 		SET_STATIC_VERTEX_SHADER(GWaterVolumetric_vs30);
