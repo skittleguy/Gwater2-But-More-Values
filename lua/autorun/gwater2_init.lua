@@ -76,7 +76,6 @@ end
 gwater2 = {
 	solver = FlexSolver(100000),
 	renderer = FlexRenderer(),
-	new_ticker = true,
 	cloth_pos = Vector(),
 	material = Material("gwater2/finalpass"),--Material("vgui/circle"),--Material("sprites/sent_ball"),
 	update_meshes = function(index, id, rep)
@@ -140,23 +139,8 @@ gwater2["force_multiplier"] = 0.01
 gwater2["force_buoyancy"] = 0
 gwater2["force_dampening"] = 0
 
--- tick particle solver
-local last_systime = os.clock()
 local limit_fps = 1 / 60
-local average_frametime = limit_fps
-local function gwater_tick()
-	if gwater2.new_ticker then return end
-
-	-- Defined in C++
-	GWATER2_QuickHackRemoveMeASAP(LocalPlayer():EntIndex(), 0)	-- TODO: REMOVE THIS HACKY SHIT!!!!!!!!!!!!!
-	LocalPlayer().GWATER2_CONTACTS = 0
-
-	local systime = os.clock()
-	hook.Run("gwater2_posttick", gwater2.solver:Tick(limit_fps, 1))
-end
-
 local function gwater_tick2()
-	last_systime = os.clock()
 	gwater2.solver:ApplyContacts(limit_fps * gwater2["force_multiplier"], 3, gwater2["force_buoyancy"], gwater2["force_dampening"])
 	local particles_in_radius = gwater2.solver:GetParticlesInRadius(LocalPlayer():GetPos() + LocalPlayer():OBBCenter(), gwater2.solver:GetParameter("fluid_rest_distance") * 3, GWATER2_PARTICLES_TO_SWIM)
 	GWATER2_QuickHackRemoveMeASAP(	-- TODO: REMOVE THIS HACKY SHIT!!!!!!!!!!!!!
@@ -170,19 +154,7 @@ local function gwater_tick2()
 	hook.Run("gwater2_posttick", gwater2.solver:Tick(limit_fps, 0))
 end
 
-// run whenever possible, as often as possible. we dont know when flex will finish calculations
-local no = function() end
-hook.Add("PreRender", "gwater_tick", gwater_tick)
-hook.Add("PostRender", "gwater_tick", gwater_tick)
-hook.Add("Think", "gwater_tick", function()
-	if gwater2.new_ticker then return end
-	gwater2.solver:IterateMeshes(gwater2.update_meshes)
-end)
-
-timer.Create("gwater2_tick", limit_fps, 0, function()
-	if !gwater2.new_ticker then return end
-	gwater_tick2()
-end)
+timer.Create("gwater2_tick", limit_fps, 0, gwater_tick2)
 
 hook.Add("InitPostEntity", "gwater2_addprop", gwater2.reset_solver)
 hook.Add("OnEntityCreated", "gwater2_addprop", function(ent) timer.Simple(0, function() add_prop(ent) end) end)	// timer.0 so data values are setup correctly

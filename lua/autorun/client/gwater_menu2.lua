@@ -63,7 +63,6 @@ local options = {
 	["Depth Fix"] = {text = "Makes particles appear spherical instead of flat, creating a cleaner and smoother water surface.\n\nCauses shader overdraw.\n\nMedium-High performance impact."},
 	["Particle Limit"] = {text = "USE THIS PARAMETER AT YOUR OWN RISK.\n\nChanges the limit of particles.\n\nNote that a higher limit will negatively impact performance even with the same number of particles spawned."},
 	["Reaction Forces"] = {text = "0 = No reaction forces\n\n1 = Simple reaction forces. (Swimming)\n\n2 = Full reaction forces (Water can move props).\n\nNote that reaction forces only work with 'New Solver' on."},
-	["New Solver"] = {text = "If unchecked, uses the solver used in 0.1b and 0.2b.\n\nThe old solver usually grants better performance, but causes more particle leakage.\n\nI suggest using the old solver when recording."},
 	
 	["Size"] = {text = "Size of the box the particles spawn in"},
 	["Density"] = {text = "Density of particles.\n Controls how far apart they are"},
@@ -701,7 +700,6 @@ concommand.Add("gwater2_menu", function()
 			Color(255, 0, 0), 
 			Color(250, 250, 0),
 			Color(255, 127, 0),
-			Color(255, 0, 0),
 		}
 
 		local slider
@@ -845,23 +843,6 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 		function box:OnChange(val)
 			options.depth_fix:SetBool(val)
 			normals:SetInt("$depthfix", val and 1 or 0)
-		end
-
-		-- Solver checkbox
-		local label = vgui.Create("DLabel", scrollPanel)	
-		label:SetPos(10, 260)
-		label:SetSize(100, 100)
-		label:SetFont("GWater2Param")
-		label:SetText("New Solver")
-		label:SetContentAlignment(7)
-		labels[8] = label
-
-		local box = vgui.Create("DCheckBox", scrollPanel)
-		box:SetPos(132, 260)
-		box:SetSize(20, 20)
-		box:SetChecked(gwater2.new_ticker)
-		function box:OnChange(val)
-			gwater2.new_ticker = !gwater2.new_ticker
 		end
 
 		-- light up & change explanation area

@@ -23,7 +23,7 @@ end
 
 -- dont.
 function ENT:Draw()
-
+	self:SetNoDraw(true)
 end
 
 -- remove all cloth, as theres not a way to remove individually yet
