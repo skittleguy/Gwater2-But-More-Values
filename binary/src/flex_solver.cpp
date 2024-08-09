@@ -26,8 +26,10 @@ void FlexBuffers::destroy() {
 // clears all particles
 void FlexSolver::reset() {
 	reset_cloth();
+
 	copy_active.elementCount = 0;
 	particle_queue.clear();
+	particle_queue_index = 0;
 
 	// clear diffuse
 	hosts.diffuse_count = (int*)NvFlexMap(buffers.diffuse_count, eNvFlexMapWait);
@@ -247,11 +249,12 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 		// TODO: This could potentially be modified to work in a compute shader during FleX updates, would this be faster? (is this algorithm even parallelizable?)
 		bool active_modified = false;
 		for (int i = 0; i < copy_active.elementCount; i++) {
-			float& particle_life = hosts.particle_lifetime[hosts.particle_active[i]];
+			int& particle_index = hosts.particle_active[i];
+			float& particle_life = hosts.particle_lifetime[particle_index];
 			particle_life -= dt;
 			if (particle_life <= 0) {
-				hosts.particle_active[i] = hosts.particle_active[--copy_active.elementCount];
-				particle_queue_index = Min(particle_queue_index, hosts.particle_active[i]);
+				particle_queue_index = Min(particle_queue_index, particle_index);
+				particle_index = hosts.particle_active[--copy_active.elementCount];
 				active_modified = true;
 				i--;	// we just shifted a particle that wont be iterated over, go back and check it
 			}
