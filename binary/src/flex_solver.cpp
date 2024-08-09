@@ -97,8 +97,19 @@ void FlexSolver::add_particle(Particle particle) {
 	if (solver == nullptr) return;
 	if (get_active_particles() >= get_max_particles()) return;
 	
-	//set_particle(get_active_particles(), particle);
-	particle_queue.push_back(particle);
+	while (hosts.particle_lifetime[particle_queue_index] > 0) {
+		particle_queue_index++;
+
+		// This should NEVER run.. but.. just incase.. 
+		if (particle_queue_index > get_max_particles()) {
+			Warning("[GWater2 Internal Error]: PARTICLE QUEUE OVERFLOWED, EXITING! THIS SHOULD NEVER HAPPEN!\n");
+			particle_queue_index = 0;
+			break;
+		}
+	}
+
+	set_particle(particle_queue_index, get_active_particles(), particle);
+	particle_queue[particle_queue_index] = particle;
 }
 
 inline int _grid(int x, int y, int x_size) { return y * x_size + x; }
@@ -230,9 +241,9 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 
 	// Avoid ticking if the deltatime ends up being zero, as it invalidates the simulation
 	dt *= get_parameter("timescale");
-	if (dt > 0 && (get_active_particles() > 0 || get_active_diffuse() > 0)) {
+	if (dt > 0 && get_active_particles() > 0) {
 
-		// Invalidate particles with bad lifetimes
+		// Invalidate particles with bad lifetimes (NOTE THAT A LIFETIME OF ZERO IS STILL AN INVALID LIFETIME)
 		// TODO: This could potentially be modified to work in a compute shader during FleX updates, would this be faster? (is this algorithm even parallelizable?)
 		bool active_modified = false;
 		for (int i = 0; i < copy_active.elementCount; i++) {
@@ -240,6 +251,7 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 			particle_life -= dt;
 			if (particle_life <= 0) {
 				hosts.particle_active[i] = hosts.particle_active[--copy_active.elementCount];
+				particle_queue_index = Min(particle_queue_index, hosts.particle_active[i]);
 				active_modified = true;
 				i--;	// we just shifted a particle that wont be iterated over, go back and check it
 			}
@@ -252,11 +264,8 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 			hosts.particle_pos = (Vector4D*)NvFlexMap(buffers.particle_pos, eNvFlexMapWait);
 			hosts.particle_vel = (Vector*)NvFlexMap(buffers.particle_vel, eNvFlexMapWait);
 			// Add queued particles
-			int particle_index = 0;
-			for (int i = 0; particle_index < particle_queue.size() && i < get_max_particles(); i++) {
-				if (hosts.particle_lifetime[i] <= 0) {
-					set_particle(i, copy_active.elementCount++, particle_queue[particle_index++]);
-				}
+			for (const std::pair<int, Particle>& particle : particle_queue) {
+				set_particle(particle.first, copy_active.elementCount++, particle.second);
 			}
 			NvFlexUnmap(buffers.particle_pos);
 			NvFlexUnmap(buffers.particle_vel);
@@ -336,7 +345,7 @@ void FlexSolver::remove_mesh(int id) {
 	for (int i = meshes.size() - 1; i >= 0; i--) {
 		if (meshes[i].get_entity_id() == id) {
 			// Free mesh buffers
-			meshes[i].destroy(library);
+			meshes[i].destroy();
 			meshes.erase(meshes.begin() + i);
 		}
 	}
@@ -579,8 +588,7 @@ FlexSolver::~FlexSolver() {
 	if (solver == nullptr) return;
 
 	// Free props
-	for (FlexMesh mesh : meshes)
-		mesh.destroy(library);
+	for (FlexMesh mesh : meshes) mesh.destroy();
 	meshes.clear();
 
 	delete param_map["substeps"];		// Seperate since its externally stored & not a default parameter

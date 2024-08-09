@@ -29,21 +29,23 @@ Vector4D angle_to_quat(QAngle ang) {
 	));
 }
 
-void FlexMesh::destroy(NvFlexLibrary* lib) {
+void FlexMesh::destroy() {
 	if (vertices != nullptr) {
 		NvFlexFreeBuffer(vertices);
 		if (indices == nullptr) {
-			NvFlexDestroyConvexMesh(lib, id);
+			NvFlexDestroyConvexMesh(library, id);
 		} else {	// Convex meshes dont have an indices buffer, so the mesh must be concave
 			NvFlexFreeBuffer(indices);
-			NvFlexDestroyTriangleMesh(lib, id);
+			NvFlexDestroyTriangleMesh(library, id);
 		}
 	}
 }
 
 
-bool FlexMesh::init_convex(NvFlexLibrary* lib, std::vector<Vector> verts, bool dynamic) {
-	destroy(lib);
+bool FlexMesh::init_convex(std::vector<Vector> verts, bool dynamic) {
+	if (library == nullptr) return false;
+
+	destroy();
 
 	// Is Mesh invalid?
 	if (verts.size() == 0 || verts.size() % 3 != 0) {
@@ -51,7 +53,7 @@ bool FlexMesh::init_convex(NvFlexLibrary* lib, std::vector<Vector> verts, bool d
 	}
 
 	// Allocate buffers
-	vertices = NvFlexAllocBuffer(lib, verts.size() / 3, sizeof(Vector4D), eNvFlexBufferHost);
+	vertices = NvFlexAllocBuffer(library, verts.size() / 3, sizeof(Vector4D), eNvFlexBufferHost);
 	Vector4D* host_verts = (Vector4D*)NvFlexMap(vertices, eNvFlexMapWait);
 
 	// Find OBB Bounding box automatically during parsing
@@ -79,15 +81,17 @@ bool FlexMesh::init_convex(NvFlexLibrary* lib, std::vector<Vector> verts, bool d
 	float lower[3] = { min.x, min.y, min.z };
 	float upper[3] = { max.x, max.y, max.z };
 
-	id = NvFlexCreateConvexMesh(lib);
+	id = NvFlexCreateConvexMesh(library);
 	flags = NvFlexMakeShapeFlags(eNvFlexShapeConvexMesh, dynamic);
-	NvFlexUpdateConvexMesh(lib, id, vertices, verts.size() / 3, lower, upper);
+	NvFlexUpdateConvexMesh(library, id, vertices, verts.size() / 3, lower, upper);
 
 	return true;
 }
 
-bool FlexMesh::init_concave(NvFlexLibrary* lib, std::vector<Vector> verts, bool dynamic) {
-	destroy(lib);
+bool FlexMesh::init_concave(std::vector<Vector> verts, bool dynamic) {
+	if (library == nullptr) return false;
+
+	destroy();
 
 	// Is Mesh invalid?
 	if (verts.size() == 0 || verts.size() % 3 != 0) {
@@ -95,8 +99,8 @@ bool FlexMesh::init_concave(NvFlexLibrary* lib, std::vector<Vector> verts, bool 
 	}
 	
 	// Allocate buffers
-	vertices = NvFlexAllocBuffer(lib, verts.size(), sizeof(Vector4D), eNvFlexBufferHost);
-	indices = NvFlexAllocBuffer(lib, verts.size(), sizeof(int), eNvFlexBufferHost);
+	vertices = NvFlexAllocBuffer(library, verts.size(), sizeof(Vector4D), eNvFlexBufferHost);
+	indices = NvFlexAllocBuffer(library, verts.size(), sizeof(int), eNvFlexBufferHost);
 	Vector4D* host_verts = (Vector4D*)NvFlexMap(vertices, eNvFlexMapWait);
 	int* host_indices = (int*)NvFlexMap(indices, eNvFlexMapWait);
 
@@ -128,16 +132,18 @@ bool FlexMesh::init_concave(NvFlexLibrary* lib, std::vector<Vector> verts, bool 
 	float lower[3] = { min.x, min.y, min.z };
 	float upper[3] = { max.x, max.y, max.z };
 
-	id = NvFlexCreateTriangleMesh(lib);
+	id = NvFlexCreateTriangleMesh(library);
 	flags = NvFlexMakeShapeFlags(eNvFlexShapeTriangleMesh, dynamic);
-	NvFlexUpdateTriangleMesh(lib, id, vertices, indices, verts.size(), verts.size() / 3, lower, upper);
+	NvFlexUpdateTriangleMesh(library, id, vertices, indices, verts.size(), verts.size() / 3, lower, upper);
 
 	return true;
 }
 
 // this overload is only used for map collision, as the BSP Parser returns an array instead of a vector
-bool FlexMesh::init_concave(NvFlexLibrary* lib, Vector* verts, int num_verts, bool dynamic) {
-	destroy(lib);
+bool FlexMesh::init_concave(Vector* verts, int num_verts, bool dynamic) {
+	if (library == nullptr) return false;
+
+	destroy();
 
 	// Is Mesh invalid?
 	if (num_verts == 0 || num_verts % 3 != 0) {
@@ -145,8 +151,8 @@ bool FlexMesh::init_concave(NvFlexLibrary* lib, Vector* verts, int num_verts, bo
 	}
 
 	// Allocate buffers
-	vertices = NvFlexAllocBuffer(lib, num_verts, sizeof(Vector4D), eNvFlexBufferHost);
-	indices = NvFlexAllocBuffer(lib, num_verts, sizeof(int), eNvFlexBufferHost);
+	vertices = NvFlexAllocBuffer(library, num_verts, sizeof(Vector4D), eNvFlexBufferHost);
+	indices = NvFlexAllocBuffer(library, num_verts, sizeof(int), eNvFlexBufferHost);
 	Vector4D* host_verts = (Vector4D*)NvFlexMap(vertices, eNvFlexMapWait);
 	int* host_indices = (int*)NvFlexMap(indices, eNvFlexMapWait);
 
@@ -166,9 +172,9 @@ bool FlexMesh::init_concave(NvFlexLibrary* lib, Vector* verts, int num_verts, bo
 	float lower[3] = { min.x, min.y, min.z };
 	float upper[3] = { max.x, max.y, max.z };
 
-	id = NvFlexCreateTriangleMesh(lib);
+	id = NvFlexCreateTriangleMesh(library);
 	flags = NvFlexMakeShapeFlags(eNvFlexShapeTriangleMesh, dynamic);
-	NvFlexUpdateTriangleMesh(lib, id, vertices, indices, num_verts, num_verts / 3, lower, upper);
+	NvFlexUpdateTriangleMesh(library, id, vertices, indices, num_verts, num_verts / 3, lower, upper);
 
 	return true;
 }
@@ -224,10 +230,11 @@ int FlexMesh::get_flags() {
 }
 
 FlexMesh::FlexMesh() {
-	
+
 }
 
-FlexMesh::FlexMesh(int id) {
+FlexMesh::FlexMesh(NvFlexLibrary* lib, int id) {
+	library = lib;
 	entity_id = id;
 }
 

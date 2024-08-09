@@ -112,7 +112,8 @@ private:
 	NvFlexSolverDesc solver_description = NvFlexSolverDesc();	// stores stuff such as max particles
 	std::map<std::string, float*> param_map; // TODO: figure out if this is the best way to do this... Would a set/get switch statement be better..?
 	std::vector<FlexMesh> meshes;		// physics meshes.. not visual!
-	std::vector<Particle> particle_queue;
+	std::map<int, Particle> particle_queue;
+	int particle_queue_index = 0;
 	std::vector<NvFlexExtForceField> force_field_queue;
 
 	void set_particle(int particle_index, int active_index, Particle particle);

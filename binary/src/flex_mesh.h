@@ -7,11 +7,12 @@
 // Data wrapper for FleX collisions
 class FlexMesh {
 private:
-	int entity_id;	// id associated with the entity its attached to in source, as some physmeshes have multiple colliders (eg. ragdolls)
-	NvFlexTriangleMeshId id;
-	int flags;
+	NvFlexLibrary* library = nullptr;
 	NvFlexBuffer* vertices = nullptr;
 	NvFlexBuffer* indices = nullptr;
+	NvFlexTriangleMeshId id = 0;
+	int entity_id = 0;	// id associated with the entity its attached to in source, as some physmeshes have multiple colliders (eg. ragdolls)
+	int flags = 0;
 
 	Vector4D pos = Vector4D(0, 0, 0, 0);
 	Vector4D ang = Vector4D(0, 0, 0, 1); // Quaternion
@@ -20,10 +21,10 @@ private:
 	Vector4D pang = Vector4D(0, 0, 0, 1);	// Previous ang
 
 public:
-	bool init_concave(NvFlexLibrary* lib, std::vector<Vector> verts, bool dynamic);	
-	bool init_concave(NvFlexLibrary* lib, Vector* verts, int num_verts, bool dynamic);	// Used only for maps
-	bool init_convex(NvFlexLibrary* lib, std::vector<Vector> verts, bool dynamic);
-	void destroy(NvFlexLibrary* lib);
+	bool init_concave(std::vector<Vector> verts, bool dynamic);	
+	bool init_concave(Vector* verts, int num_verts, bool dynamic);	// Used only for maps
+	bool init_convex(std::vector<Vector> verts, bool dynamic);
+	void destroy();
 
 	void set_pos(Vector pos);
 	void set_pos(Vector4D pos);
@@ -41,7 +42,7 @@ public:
 	int get_flags();
 
 	void update();	// sets the previous position/angle to current position/angle (previous_pos = pos; previous_ang = ang)
-	
-	FlexMesh(int mesh_id);
+
 	FlexMesh();
+	FlexMesh(NvFlexLibrary* lib, int mesh_id);
 };

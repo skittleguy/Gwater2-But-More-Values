@@ -249,8 +249,8 @@ LUA_FUNCTION(FLEXSOLVER_AddConcaveMesh) {
 		LUA->Pop(2); //pop table & position
 	}
 
-	FlexMesh mesh = FlexMesh((int)LUA->GetNumber(2));
-	if (!mesh.init_concave(FLEX_LIBRARY, verts, true)) {
+	FlexMesh mesh = FlexMesh(FLEX_LIBRARY, (int)LUA->GetNumber(2));
+	if (!mesh.init_concave(verts, true)) {
 		LUA->ThrowError("Tried to add concave mesh with invalid data (NumVertices is not a multiple of 3!)");
 		return 0;
 	}
@@ -286,8 +286,8 @@ LUA_FUNCTION(FLEXSOLVER_AddConvexMesh) {
 		LUA->Pop(2); //pop table & position
 	}
 
-	FlexMesh mesh = FlexMesh((int)LUA->GetNumber(2));
-	if (!mesh.init_convex(FLEX_LIBRARY, verts, true)) {
+	FlexMesh mesh = FlexMesh(FLEX_LIBRARY, (int)LUA->GetNumber(2));
+	if (!mesh.init_convex(verts, true)) {
 		LUA->ThrowError("Tried to add convex mesh with invalid data (NumVertices is not a multiple of 3!)");
 		return 0;
 	}
@@ -421,7 +421,7 @@ LUA_FUNCTION(FLEXSOLVER_AddMapMesh) {
 	// Get path, check if it exists
 	std::string path = "maps/" + (std::string)LUA->GetString(3) + ".bsp";
 	if (!FileSystem::Exists(path.c_str(), "GAME")) {
-		LUA->ThrowError(("[GWater2 Internal Error]: Map path " + path + " not found! (Is the map subscribed to?)").c_str());
+		LUA->ThrowError(("Map path " + path + " not found! (Is the map subscribed to?)").c_str());
 		return 0;
 	}
 
@@ -430,15 +430,15 @@ LUA_FUNCTION(FLEXSOLVER_AddMapMesh) {
 	uint32_t filesize = FileSystem::Size(file);
 	uint8_t* data = (uint8_t*)malloc(filesize);
 	if (data == nullptr) {
-		LUA->ThrowError("[GWater2 Internal Error]: Map collision data failed to load!");
+		LUA->ThrowError("Map collision data failed to load! (Unsupported BSP Format)");
 		return 0;
 	}
 	FileSystem::Read(data, filesize, file);
 	FileSystem::Close(file);
 
 	BSPMap map = BSPMap(data, filesize, false);
-	FlexMesh mesh = FlexMesh((int)LUA->GetNumber(2));
-	if (!mesh.init_concave(FLEX_LIBRARY, (Vector*)map.GetVertices(), map.GetNumVertices(), false)) {
+	FlexMesh mesh = FlexMesh(FLEX_LIBRARY, (int)LUA->GetNumber(2));
+	if (!mesh.init_concave((Vector*)map.GetVertices(), map.GetNumVertices(), false)) {
 		free(data);
 		LUA->ThrowError("Tried to add map mesh with invalid data (NumVertices is 0 or not a multiple of 3!)");
 
@@ -505,7 +505,7 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 			float prop_id = (int)contact_vel[plane_index].w;
 			if (prop_id < 0) break;	//	planes defined by FleX will return -1
 
-			FlexMesh prop = FlexMesh(0);
+			FlexMesh prop;
 			try {
 				prop = meshes.at(prop_id);
 			} catch (std::exception e) {
@@ -530,7 +530,7 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 				prop.set_ang(ang);
 			}
 			catch (std::exception e) {
-				forces[prop_entity_id] = FlexMesh(prop_entity_id);
+				forces[prop_entity_id] = FlexMesh(FLEX_LIBRARY, prop_entity_id);
 				forces[prop_entity_id].set_pos(Vector4D(contact_pos.x, contact_pos.y, contact_pos.z, 1));
 				forces[prop_entity_id].set_ang(Vector4D(impact_vel.x, impact_vel.y, impact_vel.z, 0));
 			}

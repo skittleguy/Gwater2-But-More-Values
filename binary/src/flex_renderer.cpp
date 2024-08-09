@@ -5,8 +5,6 @@ extern IVEngineClient* engine = NULL;
 
 //extern IMaterialSystem* materials = NULL;	// stops main branch compile from bitching
 
-#define min(a, b) a < b ? a : b
-
 // lord have mercy brothers
 
 float water_u[3] = { 0.5 - SQRT3 / 2, 0.5, 0.5 + SQRT3 / 2 };
@@ -15,7 +13,7 @@ float water_v[3] = { 1, -0.5, 1 };
 // Builds meshes of water particles with anisotropy
 IMesh* _build_water_anisotropy(int id, FlexRendererThreadData data) {
 	int start = id * MAX_PRIMATIVES;
-	int end = min((id + 1) * MAX_PRIMATIVES, data.max_particles);
+	int end = Min((id + 1) * MAX_PRIMATIVES, data.max_particles);
 
 	// We need to figure out how many and which particles are going to be rendered
 	int particle_indices[MAX_PRIMATIVES];
@@ -90,7 +88,7 @@ IMesh* _build_water_anisotropy(int id, FlexRendererThreadData data) {
 // Builds meshes of diffuse particles (scaled by velocity, buffer shoved inside ani0)
 IMesh* _build_diffuse(int id, FlexRendererThreadData data) {
 	int start = id * MAX_PRIMATIVES;
-	int end = min((id + 1) * MAX_PRIMATIVES, data.max_particles);
+	int end = Min((id + 1) * MAX_PRIMATIVES, data.max_particles);
 
 	// We need to figure out how many and which particles are going to be rendered
 	int particle_indices[MAX_PRIMATIVES];
@@ -154,7 +152,7 @@ float cloth_u[6] = {0, 0, 1, 1, 0, 1};
 float cloth_v[6] = {1, 0, 1, 1, 0, 0};
 IMesh* _build_cloth(int id, FlexRendererThreadData data) {
 	int start = id * MAX_PRIMATIVES;
-	int end = min((id + 1) * MAX_PRIMATIVES, data.max_particles);
+	int end = Min((id + 1) * MAX_PRIMATIVES, data.max_particles);
 
 	// start building our mesh
 	IMesh* mesh = materials->GetRenderContext()->CreateStaticMesh(MATERIAL_VERTEX_FORMAT_MODEL, "");
