@@ -7,10 +7,10 @@ extern IVEngineClient* engine = NULL;
 
 #define min(a, b) a < b ? a : b
 
+// lord have mercy brothers
+
 float water_u[3] = { 0.5 - SQRT3 / 2, 0.5, 0.5 + SQRT3 / 2 };
 float water_v[3] = { 1, -0.5, 1 };
-
-// lord have mercy brothers
 
 // Builds meshes of water particles with anisotropy
 IMesh* _build_water_anisotropy(int id, FlexRendererThreadData data) {
@@ -20,7 +20,8 @@ IMesh* _build_water_anisotropy(int id, FlexRendererThreadData data) {
 	// We need to figure out how many and which particles are going to be rendered
 	int particle_indices[MAX_PRIMATIVES];
 	int particles_to_render = 0;	// Frustrum culling disabled for now, as mesh generation wont have a cam context
-	for (int particle_index = start; particle_index < end; ++particle_index) {
+	for (int i = start; i < end; ++i) {
+		int particle_index = data.particle_active[i];
 		if (data.particle_phases[particle_index] != FlexPhase::WATER) continue;	// not water, bail
 
 		Vector particle_pos = data.particle_positions[particle_index].AsVector3D();
@@ -161,7 +162,7 @@ IMesh* _build_cloth(int id, FlexRendererThreadData data) {
 	mesh_builder.Begin(mesh, MATERIAL_TRIANGLES, end - start);
 	for (int mesh_index = start; mesh_index < end; ++mesh_index) {
 		for (int i = 0; i < 3; i++) {
-			int particle_index = data.particle_phases[mesh_index * 3 + i];
+			int particle_index = data.particle_phases[data.particle_active[mesh_index * 3 + i]];
 			Vector particle_pos = data.particle_positions[particle_index].AsVector3D();
 			Vector particle_normal = -data.particle_ani0[particle_index].AsVector3D();	// flex generates different triangle winding data, so normals must be inverted
 			float userdata[4] = {0, 0, 0, 0};
@@ -210,6 +211,7 @@ void FlexRenderer::build_meshes(FlexSolver* flex, float diffuse_radius) {
 	water_data.view_projection_matrix = view_projection_matrix;
 	water_data.particle_positions = flex->get_parameter("smoothing") != 0 ? flex->hosts.particle_smooth : (Vector4D*)flex->hosts.particle_pos;
 	water_data.particle_phases = flex->hosts.particle_phase;
+	water_data.particle_active = flex->hosts.particle_active;
 	water_data.max_particles = active_particles;
 	water_data.radius = flex->get_parameter("radius");
 	water_data.eye_pos = eye_pos;
@@ -254,6 +256,7 @@ void FlexRenderer::build_meshes(FlexSolver* flex, float diffuse_radius) {
 		cloth_data.max_particles = active_triangles;
 		cloth_data.particle_ani0 = flex->hosts.triangle_normals;
 		cloth_data.particle_phases = flex->hosts.triangle_indices;
+		cloth_data.particle_active = flex->hosts.particle_active;
 
 		for (int mesh_index = 0; mesh_index < ceil(active_triangles / (float)MAX_PRIMATIVES); mesh_index++) {
 			triangle_queue.push_back(threads->enqueue(_build_cloth, mesh_index, cloth_data));

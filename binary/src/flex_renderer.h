@@ -18,6 +18,7 @@ struct FlexRendererThreadData {
 	Vector4D* particle_ani1;
 	Vector4D* particle_ani2;
 	int* particle_phases;	// also used as triangle indices
+	int* particle_active;
 	Vector eye_pos;
 	//int* render_buffer;
 	int max_particles;

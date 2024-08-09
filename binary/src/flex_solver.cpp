@@ -30,8 +30,10 @@ void FlexSolver::reset() {
 	particle_queue.clear();
 
 	// clear diffuse
-	NvFlexSetDiffuseParticles(solver, NULL, NULL, 0);
+	hosts.diffuse_count = (int*)NvFlexMap(buffers.diffuse_count, eNvFlexMapWait);
 	hosts.diffuse_count[0] = 0;
+	NvFlexUnmap(buffers.diffuse_count);
+	NvFlexSetDiffuseParticles(solver, NULL, NULL, 0);
 
 	memset(hosts.particle_lifetime, 0, sizeof(float) * get_max_particles());
 
