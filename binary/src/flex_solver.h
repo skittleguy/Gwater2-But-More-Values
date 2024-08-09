@@ -16,7 +16,8 @@ enum FlexPhase {
 struct Particle {
 	Vector4D pos = Vector4D(0, 0, 0, 1);
 	Vector vel = Vector(0, 0, 0);
-	int phase = 0;
+	int phase = FlexPhase::WATER;
+	float lifetime = FLT_MAX;
 };
 
 // Holds flex buffer information
@@ -68,6 +69,7 @@ struct FlexHosts {
 	int* particle_phase;
 	int* particle_active;
 	Vector4D* particle_smooth;
+	float* particle_lifetime;
 
 	Vector4D* particle_ani0;
 	Vector4D* particle_ani1;
@@ -105,7 +107,6 @@ private:
 	NvFlexExtForceFieldCallback* force_field_callback = nullptr;	// unsure why this is required. crashes without it
 	NvFlexParams parameters = NvFlexParams();
 	NvFlexCopyDesc copy_active = NvFlexCopyDesc();
-	NvFlexCopyDesc copy_particles = NvFlexCopyDesc();
 	NvFlexCopyDesc copy_triangles = NvFlexCopyDesc();
 	NvFlexCopyDesc copy_springs = NvFlexCopyDesc();
 	NvFlexSolverDesc solver_description = NvFlexSolverDesc();	// stores stuff such as max particles
@@ -113,6 +114,8 @@ private:
 	std::vector<FlexMesh> meshes;		// physics meshes.. not visual!
 	std::vector<Particle> particle_queue;
 	std::vector<NvFlexExtForceField> force_field_queue;
+
+	void set_particle(int particle_index, int active_index, Particle particle);
 
 public:
 	FlexBuffers buffers;
@@ -130,7 +133,6 @@ public:
 
 	void add_particle(Particle particle);
 	void add_cloth(Particle particle, Vector2D size);
-	void set_particle(int index, Particle particle);
 	void add_force_field(NvFlexExtForceField force_field);
 	
 	bool tick(float dt, NvFlexMapFlags wait);

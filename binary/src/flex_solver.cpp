@@ -26,7 +26,6 @@ void FlexBuffers::destroy() {
 // clears all particles
 void FlexSolver::reset() {
 	reset_cloth();
-	copy_particles.elementCount = 0;
 	copy_active.elementCount = 0;
 	particle_queue.clear();
 
@@ -34,13 +33,15 @@ void FlexSolver::reset() {
 	NvFlexSetDiffuseParticles(solver, NULL, NULL, 0);
 	hosts.diffuse_count[0] = 0;
 
-	// These buffers are getted AND setted, so we need to make sure they are mapped before adding more particles
-	NvFlexMap(buffers.particle_pos, eNvFlexMapWait);
+	memset(hosts.particle_lifetime, 0, sizeof(float) * get_max_particles());
+
+	/*
+	NvFlexMap(buffers.particle_pos, eNvFlexMapWait); // These buffers are getted AND setted, so we need to make sure they are mapped before adding more particles
 	NvFlexUnmap(buffers.particle_pos);
 	if (get_parameter("reaction_forces") > 2) {
 		NvFlexMap(buffers.particle_vel, eNvFlexMapWait);
 		NvFlexUnmap(buffers.particle_vel);
-	}
+	}*/
 }
 
 void FlexSolver::reset_cloth() {
@@ -50,7 +51,7 @@ void FlexSolver::reset_cloth() {
 }
 
 int FlexSolver::get_active_particles() {
-	return copy_particles.elementCount + particle_queue.size();
+	return copy_active.elementCount + particle_queue.size();
 }
 
 int FlexSolver::get_active_triangles() {
@@ -78,33 +79,36 @@ std::vector<FlexMesh>* FlexSolver::get_meshes() {
 }
 
 // Resets particle to base parameters
-void FlexSolver::set_particle(int index, Particle particle) {
-	hosts.particle_pos[index] = particle.pos;
-	hosts.particle_smooth[index] = particle.pos;
-	hosts.particle_vel[index] = particle.vel;
-	hosts.particle_phase[index] = particle.phase;
-	hosts.particle_active[index] = index;
-	hosts.particle_ani0[index] = Vector4D(0, 0, 0, 0);
-	hosts.particle_ani1[index] = Vector4D(0, 0, 0, 0);
-	hosts.particle_ani2[index] = Vector4D(0, 0, 0, 0);
+void FlexSolver::set_particle(int particle_index, int active_index, Particle particle) {
+	hosts.particle_pos[particle_index] = particle.pos;
+	hosts.particle_smooth[particle_index] = particle.pos;
+	hosts.particle_vel[particle_index] = particle.vel;
+	hosts.particle_phase[particle_index] = particle.phase;
+	hosts.particle_lifetime[particle_index] = particle.lifetime;
+	hosts.particle_ani0[particle_index] = Vector4D(0, 0, 0, 0);
+	hosts.particle_ani1[particle_index] = Vector4D(0, 0, 0, 0);
+	hosts.particle_ani2[particle_index] = Vector4D(0, 0, 0, 0);
+	hosts.particle_active[active_index] = particle_index;
 }
 
 void FlexSolver::add_particle(Particle particle) {
 	if (solver == nullptr) return;
 	if (get_active_particles() >= get_max_particles()) return;
 	
-	set_particle(get_active_particles(), particle);
+	//set_particle(get_active_particles(), particle);
 	particle_queue.push_back(particle);
 }
 
 inline int _grid(int x, int y, int x_size) { return y * x_size + x; }
-void FlexSolver::add_cloth(Particle particle, Vector2D size) {
+void FlexSolver::add_cloth(Particle particle, Vector2D size) {	// TODO: FIX
 	float radius = parameters.solidRestDistance;
 	particle.phase = FlexPhase::CLOTH;	// force to cloth
+	particle.lifetime = FLT_MAX;		// no die
 	particle.pos.x -= size.x * radius / 2.0;
 	particle.pos.y -= size.y * radius / 2.0;
+
 	NvFlexCopyDesc desc;
-	desc.srcOffset = copy_particles.elementCount;
+	desc.srcOffset = copy_active.elementCount;
 	desc.dstOffset = desc.srcOffset;
 	desc.elementCount = 0;
 
@@ -123,7 +127,7 @@ void FlexSolver::add_cloth(Particle particle, Vector2D size) {
 			if (get_active_particles() >= get_max_particles()) break;
 
 			// Add particle
-			int index = copy_particles.elementCount++;
+			int index = copy_active.elementCount++;
 			particle_pos[index] = particle.pos + Vector4D(x * radius, y * radius, 0, 0);
 			particle_vel[index] = particle.vel;
 			particle_phase[index] = particle.phase;	// force to cloth
@@ -181,7 +185,7 @@ void FlexSolver::add_cloth(Particle particle, Vector2D size) {
 	NvFlexSetVelocities(solver, buffers.particle_vel, &desc);
 	NvFlexSetPhases(solver, buffers.particle_phase, &desc);
 	NvFlexSetActive(solver, buffers.particle_active, &desc);
-	NvFlexSetActiveCount(solver, copy_particles.elementCount);
+	NvFlexSetActiveCount(solver, copy_active.elementCount);
 	NvFlexSetDynamicTriangles(solver, buffers.triangle_indices, NULL, copy_triangles.elementCount);
 	NvFlexSetSprings(solver, buffers.spring_indices, buffers.spring_restlengths, buffers.spring_stiffness, copy_springs.elementCount);
 }
@@ -224,31 +228,49 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 
 	// Avoid ticking if the deltatime ends up being zero, as it invalidates the simulation
 	dt *= get_parameter("timescale");
-	if (dt > 0 && get_active_particles() > 0) {
+	if (dt > 0 && (get_active_particles() > 0 || get_active_diffuse() > 0)) {
+
+		// Invalidate particles with bad lifetimes
+		// TODO: This could potentially be modified to work in a compute shader during FleX updates, would this be faster? (is this algorithm even parallelizable?)
+		bool active_modified = false;
+		for (int i = 0; i < copy_active.elementCount; i++) {
+			float& particle_life = hosts.particle_lifetime[hosts.particle_active[i]];
+			particle_life -= dt;
+			if (particle_life <= 0) {
+				hosts.particle_active[i] = hosts.particle_active[--copy_active.elementCount];
+				active_modified = true;
+				i--;	// we just shifted a particle that wont be iterated over, go back and check it
+			}
+		}
+
 		// Map positions to CPU memory
 		if (!particle_queue.empty()) {
+			// These are both getted AND setted, so we *have* to map them
+			NvFlexGetVelocities(solver, buffers.particle_vel, NULL);
+			hosts.particle_pos = (Vector4D*)NvFlexMap(buffers.particle_pos, eNvFlexMapWait);
+			hosts.particle_vel = (Vector*)NvFlexMap(buffers.particle_vel, eNvFlexMapWait);
 			// Add queued particles
-			for (int i = 0; i < particle_queue.size(); i++) {
-				int particle_index = copy_particles.elementCount + i;
-				//particle_pos[particle_index] = particle_queue[i].pos;
-				set_particle(particle_index, particle_queue[i]);
+			int particle_index = 0;
+			for (int i = 0; particle_index < particle_queue.size() && i < get_max_particles(); i++) {
+				if (hosts.particle_lifetime[i] <= 0) {
+					set_particle(i, copy_active.elementCount++, particle_queue[particle_index++]);
+				}
 			}
+			NvFlexUnmap(buffers.particle_pos);
+			NvFlexUnmap(buffers.particle_vel);
 
-			// Only copy what we just added
-			NvFlexCopyDesc desc;
-			desc.dstOffset = copy_particles.elementCount;
-			desc.elementCount = particle_queue.size();
-			desc.srcOffset = desc.dstOffset;
-
-			copy_particles.elementCount += particle_queue.size();
 			particle_queue.clear();
-				
+			
 			// Update particle information
-			NvFlexSetParticles(solver, buffers.particle_pos, &desc);
-			NvFlexSetVelocities(solver, buffers.particle_vel, &desc);
-			NvFlexSetPhases(solver, buffers.particle_phase, &desc);
-			NvFlexSetActive(solver, buffers.particle_active, &desc);
-			NvFlexSetActiveCount(solver, copy_particles.elementCount);
+			NvFlexSetParticles(solver, buffers.particle_pos, NULL);
+			NvFlexSetVelocities(solver, buffers.particle_vel, NULL);
+			NvFlexSetPhases(solver, buffers.particle_phase, NULL);
+			active_modified = true;
+		}
+
+		if (active_modified) {
+			NvFlexSetActive(solver, buffers.particle_active, &copy_active);
+			NvFlexSetActiveCount(solver, copy_active.elementCount);
 		}
 
 		// write to device (async)
@@ -269,23 +291,23 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 		NvFlexUpdateSolver(solver, dt, (int)get_parameter("substeps"), false);
 
 		// read back (async)
-		NvFlexGetParticles(solver, buffers.particle_pos, &copy_particles);
+		NvFlexGetParticles(solver, buffers.particle_pos, NULL);
 		NvFlexGetDiffuseParticles(solver, buffers.diffuse_pos, buffers.diffuse_vel, buffers.diffuse_count);
 
 		if (get_active_triangles() > 0) {
-			NvFlexGetNormals(solver, buffers.triangle_normals, &copy_particles);
+			NvFlexGetNormals(solver, buffers.triangle_normals, NULL);
 		}
 
 		if (parameters.anisotropyScale != 0) {
-			NvFlexGetAnisotropy(solver, buffers.particle_ani0, buffers.particle_ani1, buffers.particle_ani2, &copy_particles);
+			NvFlexGetAnisotropy(solver, buffers.particle_ani0, buffers.particle_ani1, buffers.particle_ani2, NULL);
 		}
 
 		if (parameters.smoothing != 0) {
-			NvFlexGetSmoothParticles(solver, buffers.particle_smooth, &copy_particles);
+			NvFlexGetSmoothParticles(solver, buffers.particle_smooth, NULL);
 		}
 
 		if (get_parameter("reaction_forces") > 1) {
-			NvFlexGetVelocities(solver, buffers.particle_vel, &copy_particles);
+			NvFlexGetVelocities(solver, buffers.particle_vel, NULL);
 			NvFlexGetContacts(solver, buffers.contact_planes, buffers.contact_vel, buffers.contact_indices, buffers.contact_count);
 		}
 
@@ -542,7 +564,12 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	buffers.spring_restlengths = buffers.init(library, &hosts.spring_restlengths, particles * 2);
 	buffers.spring_stiffness = buffers.init(library, &hosts.spring_stiffness, particles * 2);
 
+	// This is the only exception buffer, as it is never sent to the GPU
+	hosts.particle_lifetime = (float*)malloc(sizeof(float) * particles);
+
 	force_field_callback = NvFlexExtCreateForceFieldCallback(solver);
+
+	reset();
 };
 
 // Free memory
@@ -562,6 +589,7 @@ FlexSolver::~FlexSolver() {
 
 	// Free buffers / hosts
 	buffers.destroy();
+	free((void*)hosts.particle_lifetime);
 
 	NvFlexDestroySolver(solver);	// bye bye solver
 	solver = nullptr;

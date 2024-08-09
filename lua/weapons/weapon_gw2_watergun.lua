@@ -75,7 +75,7 @@ function SWEP:SecondaryAttack()
 	mat:SetScale(Vector(sprite_size, sprite_size, sprite_size))
 	mat:SetTranslation(owner:EyePos() + forward * 40 * sprite_size)
 
-	gwater2.solver:AddCube(mat, Vector(33, 33, 33), {vel = forward * 100})
+	gwater2.solver:AddCube(mat, Vector(33, 33, 33), {vel = forward * 100, lifetime = 5})
 end
 
 function SWEP:Reload()

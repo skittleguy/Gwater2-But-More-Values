@@ -47,38 +47,37 @@ LUA_FUNCTION(FLEXSOLVER_GarbageCollect) {
 // Table on the top of the stack is parsed
 // ParticleData = {velocity = Vector(), mass = 1}
 Particle parse_particle(ILuaBase* LUA) {
-	Vector vel = Vector(0, 0, 0);
-	float inv_mass = 1;
-	int phase = FlexPhase::WATER;
+	Particle particle = Particle();
 
 	if (LUA->GetType(-1) == Type::Table) {
 		// Get velocity (default = Vector())
 		LUA->GetField(-1, "vel");
 		if (LUA->GetType(-1) == Type::Vector) {
-			vel = LUA->GetVector(-1);
+			particle.vel = LUA->GetVector(-1);
 		}
 		LUA->Pop();
 
 		// Get mass (default = 1)
 		LUA->GetField(-1, "mass");
 		if (LUA->GetType(-1) == Type::Number) {
-			inv_mass = 1.0 / LUA->GetNumber(-1);
+			particle.pos.w = 1.0 / LUA->GetNumber(-1);
 		}
 		LUA->Pop();
 
 		// Gets phase (default = self colliding fluid)
 		LUA->GetField(-1, "phase");	// literally nobody is going to use this, but whatever
 		if (LUA->GetType(-1) == Type::Number) {
-			phase = NvFlexMakePhase(0, LUA->GetNumber(1));
+			particle.phase = NvFlexMakePhase(0, LUA->GetNumber(-1));
 		}
 		LUA->Pop();
-		
-	}
 
-	Particle particle;
-	particle.pos.w = inv_mass;
-	particle.vel = vel;
-	particle.phase = phase;
+		// how long the fluid lasts in simulation seconds (default = infinite)
+		LUA->GetField(-1, "lifetime");
+		if (LUA->GetType(-1) == Type::Number) {
+			particle.lifetime = LUA->GetNumber(-1) * CM_2_INCH;		// dont forget to multiply by our fucked up timescale speedup
+		}
+		LUA->Pop();
+	}
 
 	return particle;
 }
