@@ -205,7 +205,7 @@ void FlexRenderer::build_meshes(FlexSolver* flex, float diffuse_radius) {
 	MatrixMultiply(projection_matrix, view_matrix, view_projection_matrix);
 
 	///// Water particles /////
-	FlexRendererThreadData water_data;
+	FlexRendererThreadData water_data = FlexRendererThreadData();
 	water_data.view_projection_matrix = view_projection_matrix;
 	water_data.particle_positions = flex->get_parameter("smoothing") != 0 ? flex->hosts.particle_smooth : (Vector4D*)flex->hosts.particle_pos;
 	water_data.particle_phases = flex->hosts.particle_phase;
@@ -217,10 +217,6 @@ void FlexRenderer::build_meshes(FlexSolver* flex, float diffuse_radius) {
 		water_data.particle_ani0 = flex->hosts.particle_ani0;
 		water_data.particle_ani1 = flex->hosts.particle_ani1;
 		water_data.particle_ani2 = flex->hosts.particle_ani2;
-	} else {
-		water_data.particle_ani0 = nullptr;
-		water_data.particle_ani1 = nullptr;
-		water_data.particle_ani2 = nullptr;
 	}
 
 	for (int mesh_index = 0; mesh_index < ceil(active_particles / (float)MAX_PRIMATIVES); mesh_index++) {

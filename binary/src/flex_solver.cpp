@@ -38,14 +38,6 @@ void FlexSolver::reset() {
 	NvFlexSetDiffuseParticles(solver, NULL, NULL, 0);
 
 	memset(hosts.particle_lifetime, 0, sizeof(float) * get_max_particles());
-
-	/*
-	NvFlexMap(buffers.particle_pos, eNvFlexMapWait); // These buffers are getted AND setted, so we need to make sure they are mapped before adding more particles
-	NvFlexUnmap(buffers.particle_pos);
-	if (get_parameter("reaction_forces") > 2) {
-		NvFlexMap(buffers.particle_vel, eNvFlexMapWait);
-		NvFlexUnmap(buffers.particle_vel);
-	}*/
 }
 
 void FlexSolver::reset_cloth() {
@@ -261,24 +253,37 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 		}
 
 		// Map positions to CPU memory
-		if (!particle_queue.empty()) {
+		if (!particle_queue.empty()) {	
+			
+			// the way youre intended to add particles. problem is, mapping is expensive, especially every frame
+			/*NvFlexGetVelocities(solver, buffers.particle_vel, NULL);
+
 			// These are both getted AND setted, so we *have* to map them
-			NvFlexGetVelocities(solver, buffers.particle_vel, NULL);
 			hosts.particle_pos = (Vector4D*)NvFlexMap(buffers.particle_pos, eNvFlexMapWait);
 			hosts.particle_vel = (Vector*)NvFlexMap(buffers.particle_vel, eNvFlexMapWait);
-			// Add queued particles
 			for (const std::pair<int, Particle>& particle : particle_queue) {
 				set_particle(particle.first, copy_active.elementCount++, particle.second);
 			}
 			NvFlexUnmap(buffers.particle_pos);
 			NvFlexUnmap(buffers.particle_vel);
-
-			particle_queue.clear();
 			
 			// Update particle information
 			NvFlexSetParticles(solver, buffers.particle_pos, NULL);
-			NvFlexSetVelocities(solver, buffers.particle_vel, NULL);
+			NvFlexSetVelocities(solver, buffers.particle_vel, NULL);*/
+
+			NvFlexCopyDesc copy = NvFlexCopyDesc();
+			for (const std::pair<int, Particle>& particle : particle_queue) {
+				set_particle(particle.first, copy_active.elementCount++, particle.second);
+				copy.elementCount++;
+
+				if (copy.)
+
+				NvFlexSetParticles(solver, buffers.particle_pos_buffer, &copy);
+				NvFlexSetVelocities(solver, buffers.particle_vel_buffer, &copy);
+			}
+
 			NvFlexSetPhases(solver, buffers.particle_phase, NULL);
+			particle_queue.clear();
 			active_modified = true;
 		}
 
@@ -546,7 +551,9 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 
 	// FleX GPU Buffers
 	buffers.particle_pos = buffers.init(library, &hosts.particle_pos, particles);
+	buffers.particle_pos_buffer = buffers.init(library, &hosts.particle_pos_buffer, MAX_BUFFER_PARTICLES);
 	buffers.particle_vel = buffers.init(library, &hosts.particle_vel, particles);
+	buffers.particle_vel_buffer = buffers.init(library, &hosts.particle_vel_buffer, MAX_BUFFER_PARTICLES);
 	buffers.particle_phase = buffers.init(library, &hosts.particle_phase, particles);
 	buffers.particle_active = buffers.init(library, &hosts.particle_active, particles);
 	buffers.particle_smooth = buffers.init(library, &hosts.particle_smooth, particles);

@@ -14,9 +14,9 @@
 struct FlexRendererThreadData {
 	VMatrix view_projection_matrix;
 	Vector4D* particle_positions;
-	Vector4D* particle_ani0;	// also used as triangle normals
-	Vector4D* particle_ani1;
-	Vector4D* particle_ani2;
+	Vector4D* particle_ani0 = nullptr;	// also used as triangle normals
+	Vector4D* particle_ani1 = nullptr;
+	Vector4D* particle_ani2 = nullptr;
 	int* particle_phases;	// also used as triangle indices
 	int* particle_active;
 	Vector eye_pos;
