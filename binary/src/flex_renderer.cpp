@@ -160,7 +160,7 @@ IMesh* _build_cloth(int id, FlexRendererThreadData data) {
 	mesh_builder.Begin(mesh, MATERIAL_TRIANGLES, end - start);
 	for (int mesh_index = start; mesh_index < end; ++mesh_index) {
 		for (int i = 0; i < 3; i++) {
-			int particle_index = data.particle_phases[data.particle_active[mesh_index * 3 + i]];
+			int particle_index = data.particle_active[mesh_index * 3 + i];
 			Vector particle_pos = data.particle_positions[particle_index].AsVector3D();
 			Vector particle_normal = -data.particle_ani0[particle_index].AsVector3D();	// flex generates different triangle winding data, so normals must be inverted
 			float userdata[4] = {0, 0, 0, 0};
@@ -249,8 +249,7 @@ void FlexRenderer::build_meshes(FlexSolver* flex, float diffuse_radius) {
 		cloth_data.particle_positions = flex->hosts.particle_pos;
 		cloth_data.max_particles = active_triangles;
 		cloth_data.particle_ani0 = flex->hosts.triangle_normals;
-		cloth_data.particle_phases = flex->hosts.triangle_indices;
-		cloth_data.particle_active = flex->hosts.particle_active;
+		cloth_data.particle_active = flex->hosts.triangle_indices;
 
 		for (int mesh_index = 0; mesh_index < ceil(active_triangles / (float)MAX_PRIMATIVES); mesh_index++) {
 			triangle_queue.push_back(threads->enqueue(_build_cloth, mesh_index, cloth_data));

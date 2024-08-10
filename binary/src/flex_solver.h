@@ -117,6 +117,7 @@ private:
 	std::vector<NvFlexExtForceField> force_field_queue;
 
 	void set_particle(int particle_index, int active_index, Particle particle);
+	void next_particle();
 
 public:
 	FlexBuffers buffers;

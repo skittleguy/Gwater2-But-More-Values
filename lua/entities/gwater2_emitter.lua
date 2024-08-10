@@ -31,6 +31,7 @@ function ENT:SpawnFunction(ply, tr, class)
 	ent:SetSpread(0.65)
 	ent:SetLifetime(10)
 	ent:SetOn(true)
+	ent:SetCollisionGroup(COLLISION_GROUP_WORLD)
 
 	return ent
 end
@@ -39,7 +40,7 @@ function ENT:SetupDataTables()
 	self:NetworkVar("Int", 0, "Radius", {KeyName = "Radius", Edit = {type = "Int", order = 0, min = 1, max = 9}})
 	self:NetworkVar("Float", 0, "Spread", {KeyName = "Spread", Edit = {type = "Float", order = 1, min = 0.5, max = 1}})
 	self:NetworkVar("Float", 1, "Lifetime", {KeyName = "Spread", Edit = {type = "Float", order = 2, min = 1, max = 100}})
-	self:NetworkVar("Float", 2, "Strength", {KeyName = "Strength", Edit = {type = "Float", order = 3, min = 1, max = 200}})
+	self:NetworkVar("Float", 2, "Strength", {KeyName = "Strength", Edit = {type = "Float", order = 3, min = 1, max = 500}})
 	self:NetworkVar("Bool", 0, "On", {KeyName = "On", Edit = {type = "Bool", order = 4}})
 
 	if SERVER then return end

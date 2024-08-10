@@ -44,6 +44,14 @@ void FlexSolver::reset_cloth() {
 	copy_triangles.elementCount = 0;
 	copy_springs.elementCount = 0;
 	NvFlexSetSprings(solver, NULL, NULL, NULL, 0);
+
+	// kill all cloth
+	for (int i = 0; i < copy_active.elementCount; i++) {
+		int active_index = hosts.particle_active[i];
+		if (hosts.particle_phase[active_index] == FlexPhase::CLOTH) {
+			hosts.particle_lifetime[active_index] = 0;
+		}
+	}
 }
 
 int FlexSolver::get_active_particles() {
@@ -74,6 +82,20 @@ std::vector<FlexMesh>* FlexSolver::get_meshes() {
 	return &meshes;
 }
 
+// Finds next avaliable particle, value outputted as particle_queue_index variable
+void FlexSolver::next_particle() {
+	while (hosts.particle_lifetime[particle_queue_index] > 0) {
+		particle_queue_index++;
+
+		// This should NEVER run.. but.. just incase.. 
+		if (particle_queue_index > get_max_particles()) {
+			Warning("[GWater2 Internal Error]: PARTICLE QUEUE OVERFLOWED, EXITING! THIS SHOULD NEVER HAPPEN!\n");
+			particle_queue_index = 0;
+			break;
+		}
+	}
+}
+
 // Resets particle to base parameters
 void FlexSolver::set_particle(int particle_index, int active_index, Particle particle) {
 	hosts.particle_pos[particle_index] = particle.pos;
@@ -91,33 +113,18 @@ void FlexSolver::add_particle(Particle particle) {
 	if (solver == nullptr) return;
 	if (get_active_particles() >= get_max_particles()) return;
 	
-	while (hosts.particle_lifetime[particle_queue_index] > 0) {
-		particle_queue_index++;
-
-		// This should NEVER run.. but.. just incase.. 
-		if (particle_queue_index > get_max_particles()) {
-			Warning("[GWater2 Internal Error]: PARTICLE QUEUE OVERFLOWED, EXITING! THIS SHOULD NEVER HAPPEN!\n");
-			particle_queue_index = 0;
-			break;
-		}
-	}
-
+	next_particle();
 	set_particle(particle_queue_index, get_active_particles(), particle);
 	particle_queue[particle_queue_index] = particle;
 }
 
 inline int _grid(int x, int y, int x_size) { return y * x_size + x; }
-void FlexSolver::add_cloth(Particle particle, Vector2D size) {	// TODO: FIX
+void FlexSolver::add_cloth(Particle particle, Vector2D size) {
 	float radius = parameters.solidRestDistance;
 	particle.phase = FlexPhase::CLOTH;	// force to cloth
 	particle.lifetime = FLT_MAX;		// no die
 	particle.pos.x -= size.x * radius / 2.0;
 	particle.pos.y -= size.y * radius / 2.0;
-
-	NvFlexCopyDesc desc;
-	desc.srcOffset = copy_active.elementCount;
-	desc.dstOffset = desc.srcOffset;
-	desc.elementCount = 0;
 
 	// ridiculous amount of buffers to map
 	int* triangle_indices = (int*)NvFlexMap(buffers.triangle_indices, eNvFlexMapWait);
@@ -129,35 +136,39 @@ void FlexSolver::add_cloth(Particle particle, Vector2D size) {	// TODO: FIX
 	float* spring_restlengths = (float*)NvFlexMap(buffers.spring_restlengths, eNvFlexMapWait);
 	float* spring_stiffness = (float*)NvFlexMap(buffers.spring_stiffness, eNvFlexMapWait);
 
+	int* activated = (int*)malloc(sizeof(int) * size.x * size.y);	// TODO: would using alloca be valid here?
+
 	for (int y = 0; y < size.y; y++) {
 		for (int x = 0; x < size.x; x++) {
 			if (get_active_particles() >= get_max_particles()) break;
 
+			next_particle();
+
 			// Add particle
-			int index = copy_active.elementCount++;
-			particle_pos[index] = particle.pos + Vector4D(x * radius, y * radius, 0, 0);
-			particle_vel[index] = particle.vel;
-			particle_phase[index] = particle.phase;	// force to cloth
-			particle_active[index] = index;
-			desc.elementCount++;
+			particle_pos[particle_queue_index] = particle.pos + Vector4D(x * radius, y * radius, 0, 0);
+			particle_vel[particle_queue_index] = particle.vel;
+			particle_phase[particle_queue_index] = particle.phase;	// force to cloth
+			particle_active[copy_active.elementCount++] = particle_queue_index;
+			hosts.particle_lifetime[particle_queue_index] = particle.lifetime;
+			activated[_grid(x, y, size.x)] = particle_queue_index;
 			
 			// Add triangles
 			if (x > 0 && y > 0) {
-				triangle_indices[copy_triangles.elementCount * 3	] = desc.srcOffset + _grid(x, y - 1, size.x);
-				triangle_indices[copy_triangles.elementCount * 3 + 1] = desc.srcOffset + _grid(x - 1, y - 1, size.x);
-				triangle_indices[copy_triangles.elementCount * 3 + 2] = desc.srcOffset + _grid(x, y, size.x);
+				triangle_indices[copy_triangles.elementCount * 3	] = activated[_grid(x, y - 1, size.x)];
+				triangle_indices[copy_triangles.elementCount * 3 + 1] = activated[_grid(x - 1, y - 1, size.x)];
+				triangle_indices[copy_triangles.elementCount * 3 + 2] = activated[_grid(x, y, size.x)];
 				copy_triangles.elementCount++;
 				
-				triangle_indices[copy_triangles.elementCount * 3	] = desc.srcOffset + _grid(x, y, size.x);
-				triangle_indices[copy_triangles.elementCount * 3 + 1] = desc.srcOffset + _grid(x - 1, y - 1, size.x);
-				triangle_indices[copy_triangles.elementCount * 3 + 2] = desc.srcOffset + _grid(x - 1, y, size.x);
+				triangle_indices[copy_triangles.elementCount * 3	] = activated[_grid(x, y, size.x)];
+				triangle_indices[copy_triangles.elementCount * 3 + 1] = activated[_grid(x - 1, y - 1, size.x)];
+				triangle_indices[copy_triangles.elementCount * 3 + 2] = activated[_grid(x - 1, y, size.x)];
 				copy_triangles.elementCount++;
 			}
 			
 			// Create spring between particle x,y and x-1,y
 			if (x > 0) {
-				int spring_index0 = desc.srcOffset + _grid(x, y, size.x);
-				int spring_index1 = desc.srcOffset + _grid(x - 1, y, size.x);
+				int spring_index0 = activated[_grid(x, y, size.x)];
+				int spring_index1 = activated[_grid(x - 1, y, size.x)];
 				spring_indices[copy_springs.elementCount * 2] = spring_index1;
 				spring_indices[copy_springs.elementCount * 2 + 1] = spring_index0;
 				spring_restlengths[copy_springs.elementCount] = particle_pos[spring_index0].AsVector3D().DistTo(particle_pos[spring_index1].AsVector3D());
@@ -167,8 +178,8 @@ void FlexSolver::add_cloth(Particle particle, Vector2D size) {	// TODO: FIX
 
 			// Create spring between particle x,y and x,y-1
 			if (y > 0) {
-				int spring_index0 = desc.srcOffset + _grid(x, y, size.x);
-				int spring_index1 = desc.srcOffset + _grid(x, y - 1, size.x);
+				int spring_index0 = activated[_grid(x, y, size.x)];
+				int spring_index1 = activated[_grid(x, y - 1, size.x)];
 				spring_indices[copy_springs.elementCount * 2] = spring_index0;
 				spring_indices[copy_springs.elementCount * 2 + 1] = spring_index1;
 				spring_restlengths[copy_springs.elementCount] = particle_pos[spring_index0].AsVector3D().DistTo(particle_pos[spring_index1].AsVector3D());
@@ -188,13 +199,14 @@ void FlexSolver::add_cloth(Particle particle, Vector2D size) {	// TODO: FIX
 	NvFlexUnmap(buffers.spring_stiffness);
 
 	// Update particle information
-	NvFlexSetParticles(solver, buffers.particle_pos, &desc);
-	NvFlexSetVelocities(solver, buffers.particle_vel, &desc);
-	NvFlexSetPhases(solver, buffers.particle_phase, &desc);
-	NvFlexSetActive(solver, buffers.particle_active, &desc);
+	NvFlexSetParticles(solver, buffers.particle_pos, NULL);
+	NvFlexSetVelocities(solver, buffers.particle_vel, NULL);
+	NvFlexSetPhases(solver, buffers.particle_phase, NULL);
+	NvFlexSetActive(solver, buffers.particle_active, NULL);
 	NvFlexSetActiveCount(solver, copy_active.elementCount);
 	NvFlexSetDynamicTriangles(solver, buffers.triangle_indices, NULL, copy_triangles.elementCount);
 	NvFlexSetSprings(solver, buffers.spring_indices, buffers.spring_restlengths, buffers.spring_stiffness, copy_springs.elementCount);
+	free(activated);
 }
 
 void FlexSolver::add_force_field(NvFlexExtForceField force_field) {
@@ -246,7 +258,7 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 			float& particle_life = hosts.particle_lifetime[particle_index];
 			particle_life -= dt;
 			if (particle_life <= 0) {
-				particle_queue_index = Min(particle_queue_index, particle_index);
+				particle_queue_index = Min(particle_queue_index, particle_index);	// don't forget to update our minimum valid particle index!
 				particle_index = hosts.particle_active[--copy_active.elementCount];
 				active_modified = true;
 				i--;	// we just shifted a particle that wont be iterated over, go back and check it

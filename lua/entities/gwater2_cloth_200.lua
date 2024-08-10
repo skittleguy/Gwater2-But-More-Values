@@ -26,10 +26,9 @@ function ENT:Draw()
 	self:SetNoDraw(true)
 end
 
--- remove all cloth, as theres not a way to remove individually yet
 function ENT:OnRemove()
 	if CLIENT then
-		gwater2.solver:Reset()
+		gwater2.solver:ResetCloth()	-- remove all cloth, as theres not a way to remove individually yet
 	else
 		for k, v in ipairs(ents.FindByClass("gwater2_cloth_*")) do	-- die
 			SafeRemoveEntity(v)
