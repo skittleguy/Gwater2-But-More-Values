@@ -29,7 +29,7 @@ function ENT:SpawnFunction(ply, tr, class)
 	ent:SetRadius(6)
 	ent:SetStrength(60)
 	ent:SetSpread(0.65)
-	ent:SetLifetime(30)
+	ent:SetLifetime(10)
 	ent:SetOn(true)
 
 	return ent

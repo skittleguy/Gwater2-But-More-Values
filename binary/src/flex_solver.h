@@ -24,9 +24,7 @@ struct Particle {
 // TODO(?): Should this be defined as an std::pair, so the host and FleX buffers are always together?
 struct FlexBuffers {
 	NvFlexBuffer* particle_pos;
-	NvFlexBuffer* particle_pos_buffer;
 	NvFlexBuffer* particle_vel;
-	NvFlexBuffer* particle_vel_buffer;
 	NvFlexBuffer* particle_phase;
 	NvFlexBuffer* particle_active;
 	NvFlexBuffer* particle_smooth;
@@ -67,9 +65,7 @@ struct FlexBuffers {
 // Holds CPU mapped NvFlexBuffer* data
 struct FlexHosts {
 	Vector4D* particle_pos;
-	Vector4D* particle_pos_buffer;
 	Vector* particle_vel;
-	Vector* particle_vel_buffer;
 	int* particle_phase;
 	int* particle_active;
 	Vector4D* particle_smooth;

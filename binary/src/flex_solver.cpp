@@ -237,9 +237,10 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 	dt *= get_parameter("timescale");
 	if (dt > 0 && get_active_particles() > 0) {
 
-		// Invalidate particles with bad lifetimes (NOTE THAT A LIFETIME OF ZERO IS STILL AN INVALID LIFETIME)
-		// TODO: This could potentially be modified to work in a compute shader during FleX updates, would this be faster? (is this algorithm even parallelizable?)
 		bool active_modified = false;
+
+		// Invalidate (remove) particles with bad lifetimes (NOTE THAT A LIFETIME OF ZERO IS STILL AN INVALID LIFETIME)
+		// TODO: This could potentially be modified to work in a compute shader during FleX updates, would this be faster? (is this algorithm even parallelizable?)
 		for (int i = 0; i < copy_active.elementCount; i++) {
 			int& particle_index = hosts.particle_active[i];
 			float& particle_life = hosts.particle_lifetime[particle_index];
@@ -252,13 +253,11 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 			}
 		}
 
-		// Map positions to CPU memory
+		// Add queued particles
 		if (!particle_queue.empty()) {	
-			
-			// the way youre intended to add particles. problem is, mapping is expensive, especially every frame
-			/*NvFlexGetVelocities(solver, buffers.particle_vel, NULL);
+			// this is the intended way youre intended to add particles. problem is, mapping is expensive, especially every frame
+			NvFlexGetVelocities(solver, buffers.particle_vel, NULL);
 
-			// These are both getted AND setted, so we *have* to map them
 			hosts.particle_pos = (Vector4D*)NvFlexMap(buffers.particle_pos, eNvFlexMapWait);
 			hosts.particle_vel = (Vector*)NvFlexMap(buffers.particle_vel, eNvFlexMapWait);
 			for (const std::pair<int, Particle>& particle : particle_queue) {
@@ -269,19 +268,34 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 			
 			// Update particle information
 			NvFlexSetParticles(solver, buffers.particle_pos, NULL);
-			NvFlexSetVelocities(solver, buffers.particle_vel, NULL);*/
+			NvFlexSetVelocities(solver, buffers.particle_vel, NULL);
 
+			// My "async" solution, which adds particles without needing to map a buffer
+			// this works but causes particle flickering, which I have yet to fix
+			/*
 			NvFlexCopyDesc copy = NvFlexCopyDesc();
 			for (const std::pair<int, Particle>& particle : particle_queue) {
+				// indices are split, set particles and reset copy description
+				if (particle.first - copy.srcOffset > 1) {
+					copy.srcOffset = copy.dstOffset;
+					NvFlexSetParticles(solver, buffers.particle_pos, &copy);
+					NvFlexSetVelocities(solver, buffers.particle_vel, &copy);
+					copy.dstOffset = particle.first;
+					copy.elementCount = 0;
+				}
+
 				set_particle(particle.first, copy_active.elementCount++, particle.second);
+				hosts.particle_pos_buffer[particle.first] = particle.second.pos;
+				hosts.particle_vel_buffer[particle.first] = particle.second.vel;
 				copy.elementCount++;
-
-				if (copy.)
-
-				NvFlexSetParticles(solver, buffers.particle_pos_buffer, &copy);
-				NvFlexSetVelocities(solver, buffers.particle_vel_buffer, &copy);
+				copy.srcOffset = particle.first;
 			}
-
+			// there will always be excess
+			copy.srcOffset = copy.dstOffset;
+			NvFlexSetParticles(solver, buffers.particle_pos, &copy);
+			NvFlexSetVelocities(solver, buffers.particle_vel, &copy);*/
+			
+			// finish
 			NvFlexSetPhases(solver, buffers.particle_phase, NULL);
 			particle_queue.clear();
 			active_modified = true;
@@ -551,9 +565,7 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 
 	// FleX GPU Buffers
 	buffers.particle_pos = buffers.init(library, &hosts.particle_pos, particles);
-	buffers.particle_pos_buffer = buffers.init(library, &hosts.particle_pos_buffer, MAX_BUFFER_PARTICLES);
 	buffers.particle_vel = buffers.init(library, &hosts.particle_vel, particles);
-	buffers.particle_vel_buffer = buffers.init(library, &hosts.particle_vel_buffer, MAX_BUFFER_PARTICLES);
 	buffers.particle_phase = buffers.init(library, &hosts.particle_phase, particles);
 	buffers.particle_active = buffers.init(library, &hosts.particle_active, particles);
 	buffers.particle_smooth = buffers.init(library, &hosts.particle_smooth, particles);
