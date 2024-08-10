@@ -217,6 +217,14 @@ void FlexMesh::set_ang(Vector4D a) {
 	ang = a;
 }
 
+void FlexMesh::set_collide(bool collide) {
+	if (collide) {
+		flags |= eNvFlexPhaseShapeChannelMask;
+	} else {
+		flags &= ~eNvFlexPhaseShapeChannelMask;
+	}
+}
+
 NvFlexTriangleMeshId FlexMesh::get_id() {
 	return id;
 }

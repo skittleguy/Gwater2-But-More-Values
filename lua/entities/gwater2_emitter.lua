@@ -32,6 +32,7 @@ function ENT:SpawnFunction(ply, tr, class)
 	ent:SetLifetime(10)
 	ent:SetOn(true)
 	ent:SetCollisionGroup(COLLISION_GROUP_WORLD)
+	ent:SetMaterial("phoenix_storms/gear")
 
 	return ent
 end

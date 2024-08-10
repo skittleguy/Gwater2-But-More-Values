@@ -30,6 +30,7 @@ public:
 	void set_pos(Vector4D pos);
 	void set_ang(QAngle ang);
 	void set_ang(Vector4D ang);
+	void set_collide(bool collide);
 
 	Vector4D get_pos();	// Returns a Vector4D for convenience
 	Vector4D get_ang();

@@ -77,7 +77,6 @@ gwater2 = {
 	solver = FlexSolver(100000),
 	renderer = FlexRenderer(),
 	cloth_pos = Vector(),
-	material = Material("gwater2/finalpass"),--Material("vgui/circle"),--Material("sprites/sent_ball"),
 	update_meshes = function(index, id, rep)
 		if id == 0 then return end	-- skip, entity is world
 
@@ -86,7 +85,9 @@ gwater2 = {
 			gwater2.solver:RemoveMesh(id)
 		else 
 			if !util.IsValidRagdoll(ent:GetModel()) then
-				gwater2.solver:UpdateMesh(index, ent:GetPos(), ent:GetAngles())	
+				gwater2.solver:SetMeshPos(index, ent:GetPos())
+				gwater2.solver:SetMeshAng(index, ent:GetAngles())
+				gwater2.solver:SetMeshCollide(index, ent:GetCollisionGroup() != COLLISION_GROUP_WORLD and bit.band(ent:GetSolidFlags(), FSOLID_NOT_SOLID) == 0)
 			else
 				-- horrible code for proper ragdoll collision. Still breaks half the time. Fuck source
 				local bone_index = ent:TranslatePhysBoneToBone(rep)
@@ -101,7 +102,9 @@ gwater2 = {
 						ang = ent:GetAngles()
 					end
 				end
-				gwater2.solver:UpdateMesh(index, pos, ang)
+				gwater2.solver:SetMeshPos(index, pos)
+				gwater2.solver:SetMeshAng(index, ang)
+				gwater2.solver:SetMeshCollide(index, ent:GetCollisionGroup() != COLLISION_GROUP_WORLD and bit.band(ent:GetSolidFlags(), FSOLID_NOT_SOLID) == 0)
 			end
 		end
 	end,

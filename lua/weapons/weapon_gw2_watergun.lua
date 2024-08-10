@@ -61,7 +61,7 @@ function SWEP:PrimaryAttack()
 	mat:SetAngles(owner:EyeAngles() + Angle(90, 0, 0))
 	mat:SetTranslation(owner:EyePos() + forward * 20 * sprite_size)
 	
-	gwater2.solver:AddCylinder(mat, Vector(gwater2["size"], gwater2["size"], 1), {vel = forward * gwater2["forward_velocity"], lifetime = 5})
+	gwater2.solver:AddCylinder(mat, Vector(gwater2["size"], gwater2["size"], 1), {vel = forward * gwater2["forward_velocity"]})
 end
 
 function SWEP:SecondaryAttack()
@@ -75,7 +75,7 @@ function SWEP:SecondaryAttack()
 	mat:SetScale(Vector(sprite_size, sprite_size, sprite_size))
 	mat:SetTranslation(owner:EyePos() + forward * 40 * sprite_size)
 
-	gwater2.solver:AddCube(mat, Vector(33, 33, 33), {vel = forward * 100, lifetime = 60})
+	gwater2.solver:AddCube(mat, Vector(33, 33, 33), {vel = forward * 100})
 end
 
 function SWEP:Reload()

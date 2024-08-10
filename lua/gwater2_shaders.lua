@@ -15,6 +15,7 @@ local cache_depth = GetRenderTargetGWater("1gwater_cache_depth", 1 / 1)
 local cache_absorption = GetRenderTargetGWater("2gwater_cache_absorption", 1 / 2, MATERIAL_RT_DEPTH_NONE)
 local cache_normals = GetRenderTargetGWater("1gwater_cache_normals", 1 / 1, MATERIAL_RT_DEPTH_SEPARATE)
 local cache_bloom = GetRenderTargetGWater("2gwater_cache_bloom", 1 / 2)	-- for blurring
+local water = Material("gwater2/finalpass")
 local water_blur = Material("gwater2/smooth")
 local water_volumetric = Material("gwater2/volumetric")
 local water_normals = Material("gwater2/normals")
@@ -32,14 +33,6 @@ local blur_scale = CreateClientConVar("gwater2_blur_scale", "1", true)
 local antialias = GetConVar("mat_antialias")
 
 local lightpos = EyePos()
--- rebuild meshes every frame (unused atm since PostDrawOpaque is being a bitch)
---[[[
-hook.Add("RenderScene", "gwater2_render", function(eye_pos, eye_angles, fov)
-	cam.Start3D(eye_pos, eye_angles, fov) -- BuildIMeshes requires a 3d cam context (for frustrum culling)
-		local radius = gwater2.solver:GetParameter("radius")
-		gwater2.renderer:BuildMeshes(gwater2.solver, radius * 0.5, radius * 0.15)
-	cam.End3D()
-end)]]
 
 -- makes lighting work properly in sourceengine
 local function unfuck_lighting(pos0, pos1)
@@ -57,8 +50,6 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 
 	if sky3d or render.GetRenderTarget() then return end
 
-	--if EyePos():DistToSqr(LocalPlayer():EyePos()) > 1 then return end	-- bail if skybox is rendering (used in postdrawopaque)
-
 	-- Clear render targets
 	render.ClearRenderTarget(cache_normals, Color(0, 0, 0, 0))
 	render.ClearRenderTarget(cache_depth, Color(0, 0, 0, 0))
@@ -68,11 +59,9 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	-- cached variables
 	local scrw = ScrW()
 	local scrh = ScrH()
-	local water = gwater2.material
 	local radius = gwater2.solver:GetParameter("radius")
 
 	gwater2.renderer:BuildMeshes(gwater2.solver, 0.2)
-	--render.SetMaterial(Material("models/props_combine/combine_interface_disp"))
 
 	-- cloth
 	unfuck_lighting(gwater2.cloth_pos, gwater2.cloth_pos)	-- fix cloth lighting, mostly
@@ -140,7 +129,6 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	render.SetMaterial(water_blur)
 	for i = 1, blur_passes:GetInt() do
 		-- Blur X
-		--local scale = (5 - i) * 0.05
 		local scale = (0.25 / i) * blur_scale:GetFloat()
 		water_blur:SetTexture("$normaltexture", cache_normals)
 		water_blur:SetVector("$scrs", Vector(scale / scrw, 0))
@@ -161,6 +149,7 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	water:SetTexture("$normaltexture", cache_normals)
 	water:SetTexture("$depthtexture", cache_absorption)
 	render.SetMaterial(water)
+	--render.SetMaterial(Material("models/props_combine/combine_interface_disp"))
 	gwater2.renderer:DrawWater()
 	render.RenderFlashlights(function() gwater2.renderer:DrawWater() end)
 

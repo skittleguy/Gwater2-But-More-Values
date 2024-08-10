@@ -78,10 +78,6 @@ int FlexSolver::get_max_contacts() {
 	return solver_description.maxContactsPerParticle;
 }
 
-std::vector<FlexMesh>* FlexSolver::get_meshes() {
-	return &meshes;
-}
-
 // Finds next avaliable particle, value outputted as particle_queue_index variable
 void FlexSolver::next_particle() {
 	while (hosts.particle_lifetime[particle_queue_index] > 0) {
@@ -110,7 +106,6 @@ void FlexSolver::set_particle(int particle_index, int active_index, Particle par
 }
 
 void FlexSolver::add_particle(Particle particle) {
-	if (solver == nullptr) return;
 	if (get_active_particles() >= get_max_particles()) return;
 	
 	next_particle();
@@ -215,8 +210,6 @@ void FlexSolver::add_force_field(NvFlexExtForceField force_field) {
 
 // ticks the solver
 bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
-	if (solver == nullptr) return false;
-
 	// Update collision geometry
 	NvFlexCollisionGeometry* geometry = (NvFlexCollisionGeometry*)NvFlexMap(buffers.geometry, wait);
 	if (!geometry) return false;
@@ -367,15 +360,11 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 }
 
 void FlexSolver::add_mesh(FlexMesh mesh) {
-	if (solver == nullptr) return;
-
 	meshes.push_back(mesh);
 }
 
 // TODO(?): Use a linked list instead of a vector
 void FlexSolver::remove_mesh(int id) {
-	if (solver == nullptr) return;
-
 	for (int i = meshes.size() - 1; i >= 0; i--) {
 		if (meshes[i].get_entity_id() == id) {
 			// Free mesh buffers
@@ -383,15 +372,6 @@ void FlexSolver::remove_mesh(int id) {
 			meshes.erase(meshes.begin() + i);
 		}
 	}
-}
-
-// sets the position and angles of a mesh object. The inputted angle is Eular
-void FlexSolver::update_mesh(int index, Vector new_pos, QAngle new_ang) {
-	if (solver == nullptr) return;
-	if (index < 0 || index >= meshes.size()) return;	// Invalid
-
-	meshes[index].set_pos(new_pos);
-	meshes[index].set_ang(new_ang);
 }
 
 bool FlexSolver::set_parameter(std::string param, float number) {
@@ -619,8 +599,6 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 
 // Free memory
 FlexSolver::~FlexSolver() {
-	if (solver == nullptr) return;
-
 	// Free props
 	for (FlexMesh mesh : meshes) mesh.destroy();
 	meshes.clear();

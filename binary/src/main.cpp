@@ -301,6 +301,49 @@ LUA_FUNCTION(FLEXSOLVER_AddConvexMesh) {
 	return 0;
 }
 
+// Updates position of a collider
+LUA_FUNCTION(FLEXSOLVER_SetMeshPos) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	LUA->CheckNumber(2);				// Mesh ID
+	LUA->CheckType(3, Type::Vector);	// Prop Pos
+
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+	int index = (int)LUA->GetNumber(2);
+	if (index < 0 || index >= flex->meshes.size()) return 0;	// nothin'
+
+	flex->meshes[index].set_pos(LUA->GetVector(3));
+
+	return 0;
+}
+
+LUA_FUNCTION(FLEXSOLVER_SetMeshAng) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	LUA->CheckNumber(2);				// Mesh ID
+	LUA->CheckType(3, Type::Angle);		// Prop angle
+
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+	int index = (int)LUA->GetNumber(2);
+	if (index < 0 || index >= flex->meshes.size()) return 0;	// nothin'
+
+	flex->meshes[index].set_ang(LUA->GetAngle(3));
+
+	return 0;
+}
+
+LUA_FUNCTION(FLEXSOLVER_SetMeshCollide) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	LUA->CheckNumber(2);				// Mesh ID
+	LUA->CheckType(3, Type::Bool);		// Enable collisions?
+
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+	int index = (int)LUA->GetNumber(2);
+	if (index < 0 || index >= flex->meshes.size()) return 0;	// nothin'
+
+	flex->meshes[index].set_collide(LUA->GetBool(3));
+
+	return 0;
+}
+
 // Removes all meshes associated with the entity id
 LUA_FUNCTION(FLEXSOLVER_RemoveMesh) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
@@ -340,19 +383,6 @@ LUA_FUNCTION(FLEXSOLVER_GetParameter) {
 	LUA->PushNumber(value);
 
 	return 1;
-}
-
-// Updates position and angles of a mesh collider
-LUA_FUNCTION(FLEXSOLVER_UpdateMesh) {
-	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	LUA->CheckNumber(2);				// Mesh ID
-	LUA->CheckType(3, Type::Vector);	// Prop Pos
-	LUA->CheckType(4, Type::Angle);		// Prop Angle
-
-	FlexSolver* flex = GET_FLEXSOLVER(1);
-	flex->update_mesh(LUA->GetNumber(2), LUA->GetVector(3), LUA->GetAngle(4));
-
-	return 0;
 }
 
 // removes all particles in a flex solver
@@ -492,7 +522,7 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 	float buoyancy_mul = LUA->GetNumber(4);
 	float dampening_mul = LUA->GetNumber(5);
 
-	std::vector<FlexMesh> meshes = *flex->get_meshes();
+	std::vector<FlexMesh> meshes = flex->meshes;
 	std::map<int, FlexMesh> forces;
 
 	// Get all props and average them
@@ -690,7 +720,7 @@ LUA_FUNCTION(FLEXSOLVER_IterateMeshes) {
 	int i = 0;
 	int repeat = 0;
 	int previous_id;
-	for (FlexMesh mesh : *flex->get_meshes()) {
+	for (FlexMesh mesh : flex->meshes) {
 		int id = mesh.get_entity_id();
 
 		repeat = (i != 0 && previous_id == id) ? repeat + 1 : 0;	// if (same as last time) {repeat = repeat + 1} else {repeat = 0}
@@ -915,7 +945,9 @@ GMOD_MODULE_OPEN() {
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddConcaveMesh, "AddConcaveMesh");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddConvexMesh, "AddConvexMesh");
 	ADD_FUNCTION(LUA, FLEXSOLVER_RemoveMesh, "RemoveMesh");
-	ADD_FUNCTION(LUA, FLEXSOLVER_UpdateMesh, "UpdateMesh");
+	ADD_FUNCTION(LUA, FLEXSOLVER_SetMeshPos, "SetMeshPos");
+	ADD_FUNCTION(LUA, FLEXSOLVER_SetMeshAng, "SetMeshAng");
+	ADD_FUNCTION(LUA, FLEXSOLVER_SetMeshCollide, "SetMeshCollide");
 	ADD_FUNCTION(LUA, FLEXSOLVER_SetParameter, "SetParameter");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetParameter, "GetParameter");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetActiveParticles, "GetActiveParticles");

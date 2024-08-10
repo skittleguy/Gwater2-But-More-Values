@@ -111,7 +111,7 @@ private:
 	NvFlexCopyDesc copy_springs = NvFlexCopyDesc();
 	NvFlexSolverDesc solver_description = NvFlexSolverDesc();	// stores stuff such as max particles
 	std::map<std::string, float*> param_map; // TODO: figure out if this is the best way to do this... Would a set/get switch statement be better..?
-	std::vector<FlexMesh> meshes;		// physics meshes.. not visual!
+	
 	std::map<int, Particle> particle_queue;
 	int particle_queue_index = 0;
 	std::vector<NvFlexExtForceField> force_field_queue;
@@ -120,6 +120,7 @@ private:
 	void next_particle();
 
 public:
+	std::vector<FlexMesh> meshes;		// physics meshes.. not visual!
 	FlexBuffers buffers;
 	FlexHosts hosts;
 
@@ -131,7 +132,6 @@ public:
 	int get_max_particles();
 	int get_max_diffuse_particles();
 	int get_max_contacts();
-	std::vector<FlexMesh>* get_meshes();
 
 	void add_particle(Particle particle);
 	void add_cloth(Particle particle, Vector2D size);
@@ -141,7 +141,6 @@ public:
 
 	void add_mesh(FlexMesh mesh);
 	void remove_mesh(int id);
-	void update_mesh(int id, Vector new_pos, QAngle new_ang);
 
 	bool set_parameter(std::string param, float number);	// Returns true on success, false otherwise
 	float get_parameter(std::string param);	// returns NaN on invalid parameter
