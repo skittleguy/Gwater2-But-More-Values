@@ -13,6 +13,7 @@ ENT.Editable		= true
 
 function ENT:Initialize()
 	if CLIENT then return end
+
 	self:SetModel("models/mechanics/wheels/wheel_speed_72.mdl")
 	self:PhysicsInit(SOLID_VPHYSICS)
 	self:SetMoveType(MOVETYPE_VPHYSICS)
@@ -47,10 +48,9 @@ function ENT:SetupDataTables()
 	if SERVER then return end
 
 	-- runs per client FleX frame, this may be different per client.
-	-- more particles might be spawned depending on the client which is unfortunate, but this setup allows for laminar flow, which I think looks better
+	-- more particles might be spawned depending on the client which is weird, but this setup allows for laminar flow, which I think looks better
 	-- The alternative is running a gwater2.AddCylinder in a serverside Think hook, however different clients may see different results
-	-- It is better to use the gwater2_posttick hook
-	hook.Add("gwater2_posttick", self, function(self, succ)
+	hook.Add("gwater2_posttick", self, function()
 		if !self:GetOn() then return end
 
 		local particle_radius = gwater2.solver:GetParameter("radius")
@@ -60,8 +60,8 @@ function ENT:SetupDataTables()
 
 		local mat = Matrix()
 		mat:SetScale(Vector(spread, spread, spread))
+		mat:SetAngles(self:GetAngles())
 		--mat:SetAngles(self:LocalToWorldAngles(Angle(0, CurTime() * 200, 0)))
-		mat:SetAngles(self:LocalToWorldAngles(Angle(0, 0, 0)))
 		mat:SetTranslation(self:GetPos() + self:GetUp() * (particle_radius + 5) * math.Rand(0.99, 1))
 	 
 		gwater2.solver:AddCylinder(mat, Vector(radius, radius, 1), {vel = self:GetUp() * strength, lifetime = self:GetLifetime()})
