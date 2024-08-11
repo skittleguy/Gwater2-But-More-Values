@@ -134,7 +134,7 @@ public:
 	int get_max_contacts();
 
 	void add_particle(Particle particle);
-	void add_cloth(Particle particle, Vector2D size);
+	void add_cloth(VMatrix translation, Vector2D size, Particle particle);
 	void add_force_field(NvFlexExtForceField force_field);
 	
 	bool tick(float dt, NvFlexMapFlags wait);

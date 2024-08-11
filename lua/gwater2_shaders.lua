@@ -61,6 +61,7 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	local scrh = ScrH()
 	local radius = gwater2.solver:GetParameter("radius")
 
+	gwater2.renderer:SetHang(false)
 	gwater2.renderer:BuildMeshes(gwater2.solver, 0.2)
 
 	-- cloth

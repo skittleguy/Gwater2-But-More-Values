@@ -2,6 +2,7 @@
 #include <NvFlex.h>
 #include "mathlib/vector.h"
 #include "mathlib/vector4d.h"
+#include "mathlib/vmatrix.h"
 #include <vector>
 
 // Data wrapper for FleX collisions

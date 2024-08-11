@@ -27,7 +27,6 @@ struct FlexRendererThreadData {
 
 class FlexRenderer {
 private:
-	//int allocated = 0;
 	ThreadPool* threads = nullptr;
 	//int* water_buffer = nullptr;	// which particles should be rendered?
 	//int* diffuse_buffer = nullptr;	// ^
@@ -45,6 +44,8 @@ private:
 	void update_diffuse();
 	void update_cloth();
 public:
+	bool hang = false;	// guess my renderer is emo now
+
 	void draw_water();
 	void draw_diffuse();
 	void draw_cloth();

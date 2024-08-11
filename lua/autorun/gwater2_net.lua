@@ -8,9 +8,9 @@ if SERVER then
 	util.AddNetworkString("GWATER2_ADDSPHERE")
 
 	gwater2 = {
-		AddCloth = function(pos, size, particle_data)
+		AddCloth = function(translation, size, particle_data)
 			net.Start("GWATER2_ADDCLOTH")
-				net.WriteVector(pos)
+				net.WriteMatrix(translation)
 				net.WriteUInt(size[1], 8)
 				net.WriteUInt(size[2], 8)
 				net.WriteTable(particle_data or {}) -- empty table only takes 3 bits
@@ -55,12 +55,13 @@ if SERVER then
 
 else	-- CLIENT
 	net.Receive("GWATER2_ADDCLOTH", function(len)
-		local pos = net.ReadVector()	-- pos
+		local translation = net.ReadMatrix()
 		local size_x = net.ReadUInt(8)
 		local size_y = net.ReadUInt(8)
 		local extra = net.ReadTable()	-- the one time this function is actually useful
-		gwater2.solver:AddCloth(pos, Vector(size_x, size_y), extra)
-		gwater2.cloth_pos = pos
+		translation:SetScale(translation:GetScale() * gwater2.solver:GetParameter("solid_rest_distance"))
+		gwater2.solver:AddCloth(translation, Vector(size_x, size_y), extra)
+		gwater2.cloth_pos = translation:GetTranslation()
 	end)
 
 	net.Receive("GWATER2_ADDCYLINDER", function(len)
@@ -69,6 +70,8 @@ else	-- CLIENT
 		local size_y = net.ReadUInt(8)
 		local size_z = net.ReadUInt(8)
 		local extra = net.ReadTable()
+
+		translation:SetScale(translation:GetScale() * gwater2.solver:GetParameter("fluid_rest_distance"))
 		gwater2.solver:AddCylinder(translation, Vector(size_x, size_y, size_z), extra)
 	end)
 
@@ -76,6 +79,7 @@ else	-- CLIENT
 		local translation = net.ReadMatrix()
 		local radius = net.ReadUInt(8)
 		local extra = net.ReadTable()
+		translation:SetScale(translation:GetScale() * gwater2.solver:GetParameter("fluid_rest_distance"))
 		gwater2.solver:AddSphere(translation, radius, extra)
 	end)
 
@@ -85,6 +89,7 @@ else	-- CLIENT
 		local size_y = net.ReadUInt(8)
 		local size_z = net.ReadUInt(8)
 		local extra = net.ReadTable()
+		translation:SetScale(translation:GetScale() * gwater2.solver:GetParameter("fluid_rest_distance"))
 		gwater2.solver:AddCube(translation, Vector(size_x, size_y, size_z), extra)
 	end)
 

@@ -198,21 +198,18 @@ LUA_FUNCTION(FLEXSOLVER_AddCylinder) {
 
 LUA_FUNCTION(FLEXSOLVER_AddCloth) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	LUA->CheckType(2, Type::Vector);	// pos
+	LUA->CheckType(2, Type::Matrix);	// pos
 	LUA->CheckType(3, Type::Vector);	// size
 	//LUA->CheckType(4, Type::Table);	// ParticleData
 	
 	FlexSolver* flex = GET_FLEXSOLVER(1);
-	Vector pos = LUA->GetVector(2);
+	VMatrix transform = *LUA->GetUserType<VMatrix>(2, Type::Matrix);
 	Vector size = LUA->GetVector(3);
 
 	LUA->Push(4);
 	Particle data = parse_particle(LUA);
-	data.pos.x = pos.x;
-	data.pos.y = pos.y;
-	data.pos.z = pos.z;
 
-	flex->add_cloth(data, Vector2D(size.x, size.y));
+	flex->add_cloth(transform, Vector2D(size.x, size.y), data);
 
 	return 0;
 }
@@ -795,6 +792,14 @@ LUA_FUNCTION(FLEXRENDERER_DrawCloth) {
 	return 0;
 }
 
+LUA_FUNCTION(FLEXRENDERER_SetHang) {
+	LUA->CheckType(1, FLEXRENDERER_METATABLE);
+	LUA->CheckType(2, Type::Bool);
+	GET_FLEXRENDERER(1)->hang = LUA->GetBool(2);
+
+	return 0;
+}
+
 /************************************* Global LUA Interface **********************************************/
 
 #define ADD_FUNCTION(LUA, funcName, tblName) LUA->PushCFunction(funcName); LUA->SetField(-2, tblName)
@@ -975,6 +980,7 @@ GMOD_MODULE_OPEN() {
 	ADD_FUNCTION(LUA, FLEXRENDERER_DrawWater, "DrawWater");
 	ADD_FUNCTION(LUA, FLEXRENDERER_DrawDiffuse, "DrawDiffuse");
 	ADD_FUNCTION(LUA, FLEXRENDERER_DrawCloth, "DrawCloth");
+	ADD_FUNCTION(LUA, FLEXRENDERER_SetHang, "SetHang");
 	LUA->SetField(-2, "__index");
 
 	// _G.FlexSolver = NewFlexSolver

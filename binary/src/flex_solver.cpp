@@ -114,12 +114,9 @@ void FlexSolver::add_particle(Particle particle) {
 }
 
 inline int _grid(int x, int y, int x_size) { return y * x_size + x; }
-void FlexSolver::add_cloth(Particle particle, Vector2D size) {
-	float radius = parameters.solidRestDistance;
+void FlexSolver::add_cloth(VMatrix translation, Vector2D size, Particle particle) {
 	particle.phase = FlexPhase::CLOTH;	// force to cloth
 	particle.lifetime = FLT_MAX;		// no die
-	particle.pos.x -= size.x * radius / 2.0;
-	particle.pos.y -= size.y * radius / 2.0;
 
 	// ridiculous amount of buffers to map
 	int* triangle_indices = (int*)NvFlexMap(buffers.triangle_indices, eNvFlexMapWait);
@@ -140,7 +137,8 @@ void FlexSolver::add_cloth(Particle particle, Vector2D size) {
 			next_particle();
 
 			// Add particle
-			particle_pos[particle_queue_index] = particle.pos + Vector4D(x * radius, y * radius, 0, 0);
+			Vector pos = translation * Vector(x - size.x / 2.0, y - size.y / 2.0, 0);
+			particle_pos[particle_queue_index] = Vector4D(pos.x, pos.y, pos.z, particle.pos.w);
 			particle_vel[particle_queue_index] = particle.vel;
 			particle_phase[particle_queue_index] = particle.phase;	// force to cloth
 			particle_active[copy_active.elementCount++] = particle_queue_index;
@@ -276,7 +274,7 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 			NvFlexSetVelocities(solver, buffers.particle_vel, NULL);
 
 			// My "async" solution, which adds particles without needing to map a buffer
-			// this works but causes particle flickering, which I have yet to fix
+			// this works, but causes particle flickering, which I have yet to fix
 			/*
 			NvFlexCopyDesc copy = NvFlexCopyDesc();
 			for (const std::pair<int, Particle>& particle : particle_queue) {
@@ -322,6 +320,7 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 			buffers.geometry_flags,
 			meshes.size()
 		);
+
 		NvFlexSetParams(solver, &parameters);
 		NvFlexExtSetForceFields(force_field_callback, force_field_queue.data(), force_field_queue.size());
 

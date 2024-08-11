@@ -186,9 +186,12 @@ IMesh* _build_cloth(int id, FlexRendererThreadData data) {
 void FlexRenderer::build_meshes(FlexSolver* flex, float diffuse_radius) {
 	// Clear previous imeshes since they are being rebuilt
 	destroy_meshes();
-	//update_water();
-	//update_cloth();
-	//update_diffuse();
+
+	if (hang) {
+		update_water();
+		update_cloth();
+		update_diffuse();
+	}
 
 	int active_particles = flex->get_active_particles();
 	if (active_particles == 0) return;
@@ -286,19 +289,19 @@ void FlexRenderer::update_cloth() {
 
 // Renders water meshes
 void FlexRenderer::draw_water() {
-	update_water();
+	if (!hang) update_water();
 
 	for (IMesh* mesh : water_meshes) mesh->Draw();
 };
 
 void FlexRenderer::draw_diffuse() {
-	update_diffuse();
+	if (!hang) update_diffuse();
 
 	for (IMesh* mesh : diffuse_meshes) mesh->Draw();
 };
 
 void FlexRenderer::draw_cloth() {
-	update_cloth();
+	if (!hang) update_cloth();
 
 	for (IMesh* mesh : triangle_meshes) mesh->Draw();
 };
