@@ -105,7 +105,7 @@ gwater2 = {
 				gwater2.solver:SetMeshPos(index, pos)
 				gwater2.solver:SetMeshAng(index, ang)
 				gwater2.solver:SetMeshCollide(index, ent:GetCollisionGroup() != COLLISION_GROUP_WORLD and bit.band(ent:GetSolidFlags(), FSOLID_NOT_SOLID) == 0)
-				--if in_water(ent) then gwater2.solver:SetMeshCollide(index, false) end
+				if in_water(ent) then gwater2.solver:SetMeshCollide(index, false) end
 			end
 		end
 	end,
