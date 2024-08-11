@@ -1,6 +1,6 @@
 AddCSLuaFile()
 
-include("gwater2_swimming.lua")
+local in_water = include("gwater2_swimming.lua")
 include("gwater2_net.lua")
 
 if SERVER then return end
@@ -105,6 +105,7 @@ gwater2 = {
 				gwater2.solver:SetMeshPos(index, pos)
 				gwater2.solver:SetMeshAng(index, ang)
 				gwater2.solver:SetMeshCollide(index, ent:GetCollisionGroup() != COLLISION_GROUP_WORLD and bit.band(ent:GetSolidFlags(), FSOLID_NOT_SOLID) == 0)
+				--if in_water(ent) then gwater2.solver:SetMeshCollide(index, false) end
 			end
 		end
 	end,

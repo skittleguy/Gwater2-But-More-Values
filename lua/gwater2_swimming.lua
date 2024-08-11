@@ -59,3 +59,5 @@ hook.Add("GetFallDamage", "gwater2_swimming", function(ply, speed)
 	ply:EmitSound("Physics.WaterSplash")
 	return 0
 end)
+
+return in_water

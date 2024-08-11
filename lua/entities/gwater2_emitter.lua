@@ -62,7 +62,7 @@ function ENT:SetupDataTables()
 		mat:SetScale(Vector(spread, spread, spread))
 		mat:SetAngles(self:GetAngles())
 		--mat:SetAngles(self:LocalToWorldAngles(Angle(0, CurTime() * 200, 0)))
-		mat:SetTranslation(self:GetPos() + self:GetUp() * particle_radius * math.Rand(0.99, 1))
+		mat:SetTranslation(self:GetPos() + self:GetUp() * particle_radius * math.Rand(0.999, 1))
 	 
 		gwater2.solver:AddCylinder(mat, Vector(radius, radius, 1), {vel = self:GetUp() * strength, lifetime = self:GetLifetime()})
 	end)

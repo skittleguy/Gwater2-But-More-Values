@@ -639,8 +639,12 @@ LUA_FUNCTION(FLEXSOLVER_GetParticlesInRadius) {
 	int num_particles = 0;
 	if (flex->get_parameter("reaction_forces") > 0) {
 		Vector4D* particle_pos = flex->hosts.particle_pos;
+		int* particle_active = flex->hosts.particle_active;
+		int* particle_phase = flex->hosts.particle_phase;
 		for (int i = 0; i < flex->get_active_particles(); i++) {
-			if (particle_pos[i].AsVector3D().DistToSqr(pos) > radius) continue;
+			int particle_index = particle_active[i];
+			if (particle_phase[particle_index] != FlexPhase::WATER) continue;
+			if (particle_pos[particle_index].AsVector3D().DistToSqr(pos) > radius) continue;
 
 			num_particles++;
 			if (early_exit && num_particles >= early_exit) break;

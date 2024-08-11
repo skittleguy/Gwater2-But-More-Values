@@ -44,6 +44,13 @@ if SERVER then
 				net.WriteTable(particle_data or {}) -- empty table only takes 3 bits
 			net.Broadcast()
 		end,
+
+		AddParticle = function(pos, particle_data)
+			net.Start("GWATER2_ADDPARTICLE")
+				net.WriteVector(pos)
+				net.WriteTable(particle_data or {}) -- empty table only takes 3 bits
+			net.Broadcast()
+		end,
 	}
 
 else	-- CLIENT
@@ -79,5 +86,11 @@ else	-- CLIENT
 		local size_z = net.ReadUInt(8)
 		local extra = net.ReadTable()
 		gwater2.solver:AddCube(translation, Vector(size_x, size_y, size_z), extra)
+	end)
+
+	net.Receive("GWATER2_ADDPARTICLE", function(len)
+		local pos = net.ReadVector()
+		local extra = net.ReadTable()
+		gwater2.solver:AddParticle(pos, extra)
 	end)
 end
