@@ -140,6 +140,7 @@ public:
 	bool tick(float dt, NvFlexMapFlags wait);
 
 	void add_mesh(FlexMesh mesh);
+	bool update_meshes(NvFlexMapFlags wait);
 	void remove_mesh(int id);
 
 	bool set_parameter(std::string param, float number);	// Returns true on success, false otherwise

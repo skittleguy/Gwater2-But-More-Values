@@ -206,16 +206,13 @@ void FlexSolver::add_force_field(NvFlexExtForceField force_field) {
 	force_field_queue.push_back(force_field);
 }
 
-// ticks the solver
-bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
-	// Update collision geometry
+// Updates collision geometry
+bool FlexSolver::update_meshes(NvFlexMapFlags wait) {
 	NvFlexCollisionGeometry* geometry = (NvFlexCollisionGeometry*)NvFlexMap(buffers.geometry, wait);
 	if (!geometry) return false;
 
 	for (int i = 0; i < meshes.size(); i++) {
 		FlexMesh mesh = meshes[i];
-
-		hosts.geometry_flags[i] = mesh.get_flags();
 		geometry[i].triMesh.mesh = mesh.get_id();
 		geometry[i].triMesh.scale[0] = 1;
 		geometry[i].triMesh.scale[1] = 1;
@@ -225,6 +222,8 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 		geometry[i].convexMesh.scale[0] = 1;
 		geometry[i].convexMesh.scale[1] = 1;
 		geometry[i].convexMesh.scale[2] = 1;
+		
+		hosts.geometry_flags[i] = mesh.get_flags();
 
 		hosts.geometry_prevpos[i] = mesh.get_ppos();
 		hosts.geometry_pos[i] = mesh.get_pos();
@@ -236,6 +235,11 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 	}
 	NvFlexUnmap(buffers.geometry);
 
+	return true;
+}
+
+// ticks the solver
+bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 	// Avoid ticking if the deltatime ends up being zero, as it invalidates the simulation
 	dt *= get_parameter("timescale");
 	if (dt > 0 && get_active_particles() > 0) {
@@ -243,7 +247,9 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 		bool active_modified = false;
 
 		// Invalidate (remove) particles with bad lifetimes (NOTE THAT A LIFETIME OF ZERO IS STILL AN INVALID LIFETIME)
-		// TODO: This could potentially be modified to work in a compute shader during FleX updates, would this be faster? (is this algorithm even parallelizable?)
+		// we do this first, because it is relatively expensive (loop over every particle). mapping buffers waits for the GPU to finish calculations..
+		// ..so we may as well not waste time waiting for that and do this beforehand
+		// TODO: This could potentially be modified to work in a compute shader during FleX updates, this may be faster? (is this algorithm even parallelizable?)
 		for (int i = 0; i < copy_active.elementCount; i++) {
 			int& particle_index = hosts.particle_active[i];
 			float& particle_life = hosts.particle_lifetime[particle_index];
@@ -256,9 +262,12 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 			}
 		}
 
+		if (!update_meshes(wait)) return false;
+
 		// Add queued particles
 		if (!particle_queue.empty()) {	
 			// this is the intended way youre intended to add particles. problem is, mapping is expensive, especially every frame
+			
 			NvFlexGetVelocities(solver, buffers.particle_vel, NULL);
 
 			hosts.particle_pos = (Vector4D*)NvFlexMap(buffers.particle_pos, eNvFlexMapWait);
@@ -276,20 +285,26 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 			// My "async" solution, which adds particles without needing to map a buffer
 			// this works, but causes particle flickering, which I have yet to fix
 			/*
+			bool first = true;
 			NvFlexCopyDesc copy = NvFlexCopyDesc();
 			for (const std::pair<int, Particle>& particle : particle_queue) {
 				// indices are split, set particles and reset copy description
-				if (particle.first - copy.srcOffset > 1) {
-					copy.srcOffset = copy.dstOffset;
-					NvFlexSetParticles(solver, buffers.particle_pos, &copy);
-					NvFlexSetVelocities(solver, buffers.particle_vel, &copy);
+				if (first) {
 					copy.dstOffset = particle.first;
-					copy.elementCount = 0;
+					first = false;
+				} else {
+					if (particle.first - copy.srcOffset > 1) {
+						copy.srcOffset = copy.dstOffset;
+						NvFlexSetParticles(solver, buffers.particle_pos, &copy);
+						NvFlexSetVelocities(solver, buffers.particle_vel, &copy);
+						copy.dstOffset = particle.first;
+						copy.elementCount = 0;
+					}
 				}
 
 				set_particle(particle.first, copy_active.elementCount++, particle.second);
-				hosts.particle_pos_buffer[particle.first] = particle.second.pos;
-				hosts.particle_vel_buffer[particle.first] = particle.second.vel;
+				//hosts.particle_pos_buffer[particle.first] = particle.second.pos;
+				//hosts.particle_vel_buffer[particle.first] = particle.second.vel;
 				copy.elementCount++;
 				copy.srcOffset = particle.first;
 			}
@@ -352,6 +367,7 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 
 		return true;
 	} else {
+		update_meshes(wait);
 		force_field_queue.clear();
 
 		return false;

@@ -29,7 +29,7 @@ function ENT:SpawnFunction(ply, tr, class)
 
 	ent:SetRadius(6)
 	ent:SetStrength(60)
-	ent:SetSpread(0.65)
+	ent:SetSpread(1)
 	ent:SetLifetime(10)
 	ent:SetOn(true)
 	ent:SetCollisionGroup(COLLISION_GROUP_WORLD)
@@ -40,7 +40,7 @@ end
 
 function ENT:SetupDataTables()
 	self:NetworkVar("Int", 0, "Radius", {KeyName = "Radius", Edit = {type = "Int", order = 0, min = 1, max = 9}})
-	self:NetworkVar("Float", 0, "Spread", {KeyName = "Spread", Edit = {type = "Float", order = 1, min = 0.5, max = 1}})
+	self:NetworkVar("Float", 0, "Spread", {KeyName = "Spread", Edit = {type = "Float", order = 1, min = 1, max = 2}})
 	self:NetworkVar("Float", 1, "Lifetime", {KeyName = "Lifetime", Edit = {type = "Float", order = 2, min = 1, max = 100}})
 	self:NetworkVar("Float", 2, "Strength", {KeyName = "Strength", Edit = {type = "Float", order = 3, min = 1, max = 500}})
 	self:NetworkVar("Bool", 0, "On", {KeyName = "On", Edit = {type = "Bool", order = 4}})
@@ -55,7 +55,7 @@ function ENT:SetupDataTables()
 
 		local particle_radius = gwater2.solver:GetParameter("radius")
 		local radius = self:GetRadius()
-		local spread = self:GetSpread() * particle_radius
+		local spread = self:GetSpread()
 		local strength = self:GetStrength()
 
 		local mat = Matrix()

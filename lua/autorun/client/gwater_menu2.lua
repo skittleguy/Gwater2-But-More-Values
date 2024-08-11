@@ -465,7 +465,6 @@ concommand.Add("gwater2_menu", function()
 
 		-- 2d simulation
 		local mat = Matrix()
-		mat:SetScale(Vector(1, 1, 1) * options.solver:GetParameter("fluid_rest_distance"))
 		mat:SetTranslation(Vector(x + 60 + math.random(), 0, y + 50))
 		options.solver:InitBounds(Vector(x, 0, y + 25), Vector(x + 192, options.solver:GetParameter("radius"), y + 390))
 		options.solver:AddCube(mat, Vector(4, 1, 1), {vel = Vector(0, 0, 50)})

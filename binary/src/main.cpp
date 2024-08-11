@@ -44,6 +44,8 @@ LUA_FUNCTION(FLEXSOLVER_GarbageCollect) {
 	return 0;
 }
 
+// ********** Adding particles ********** //
+
 // Table on the top of the stack is parsed
 // ParticleData = {velocity = Vector(), mass = 1}
 Particle parse_particle(ILuaBase* LUA) {
@@ -82,15 +84,31 @@ Particle parse_particle(ILuaBase* LUA) {
 	return particle;
 }
 
+// scales vmatrix while preserving rotation and translation
+void scale(VMatrix& mat, float scale) {
+	mat[0][0] *= scale;
+	mat[1][0] *= scale;
+	mat[2][0] *= scale;
+
+	mat[0][1] *= scale;
+	mat[1][1] *= scale;
+	mat[2][1] *= scale;
+
+	mat[0][2] *= scale;
+	mat[1][2] *= scale;
+	mat[2][2] *= scale;
+}
+
 LUA_FUNCTION(FLEXSOLVER_AddParticle) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckType(2, Type::Vector);	// transform (position)
-	//LUA->CheckType(3, Type::Table);	// ParticleData {velocity = Vector(), mass = 1}
+	//LUA->CheckType(3, Type::Table);	// ParticleData
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 	Vector pos = LUA->GetVector(2);
 
-	LUA->Push(3);	// Push table to top of stack
+	// Push table to top of stack
+	LUA->Push(3);
 	Particle particle = parse_particle(LUA);
 	particle.pos.x = pos.x;
 	particle.pos.y = pos.y;
@@ -111,6 +129,7 @@ LUA_FUNCTION(FLEXSOLVER_AddCube) {
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 	VMatrix transform = *LUA->GetUserType<VMatrix>(2, Type::Matrix);
 	Vector size = LUA->GetVector(3);
+	scale(transform, flex->get_parameter("fluid_rest_distance"));
 
 	LUA->Push(4);
 	Particle data = parse_particle(LUA);
@@ -141,6 +160,7 @@ LUA_FUNCTION(FLEXSOLVER_AddSphere) {
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 	VMatrix transform = *LUA->GetUserType<VMatrix>(2, Type::Matrix);
 	int size = LUA->GetNumber(3);
+	scale(transform, flex->get_parameter("fluid_rest_distance"));
 
 	LUA->Push(4);
 	Particle data = parse_particle(LUA);
@@ -163,7 +183,6 @@ LUA_FUNCTION(FLEXSOLVER_AddSphere) {
 	return 0;
 }
 
-
 LUA_FUNCTION(FLEXSOLVER_AddCylinder) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckType(2, Type::Matrix);	// transform
@@ -174,6 +193,7 @@ LUA_FUNCTION(FLEXSOLVER_AddCylinder) {
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 	VMatrix transform = *LUA->GetUserType<VMatrix>(2, Type::Matrix);
 	Vector size = LUA->GetVector(3);
+	scale(transform, flex->get_parameter("fluid_rest_distance"));
 
 	LUA->Push(4);
 	Particle data = parse_particle(LUA);
@@ -205,6 +225,7 @@ LUA_FUNCTION(FLEXSOLVER_AddCloth) {
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 	VMatrix transform = *LUA->GetUserType<VMatrix>(2, Type::Matrix);
 	Vector size = LUA->GetVector(3);
+	scale(transform, flex->get_parameter("solid_rest_distance"));
 
 	LUA->Push(4);
 	Particle data = parse_particle(LUA);
@@ -214,15 +235,64 @@ LUA_FUNCTION(FLEXSOLVER_AddCloth) {
 	return 0;
 }
 
-LUA_FUNCTION(FLEXSOLVER_Tick) {
+// ********** Removing particles ********** //
+
+LUA_FUNCTION(FLEXSOLVER_RemoveSphere) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	LUA->CheckNumber(2);	// Delta Time
+	LUA->CheckType(2, Type::Matrix);	// translation
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
-	LUA->PushBool(flex->tick(LUA->GetNumber(2) * CM_2_INCH, (NvFlexMapFlags)LUA->GetNumber(3)));
+	VMatrix transform = *LUA->GetUserType<VMatrix>(2, Type::Matrix);
+	VMatrix transform_inverse; MatrixInverseGeneral(transform, transform_inverse);
 
+	Vector4D* particle_pos = flex->hosts.particle_pos;
+	float* particle_lifetime = flex->hosts.particle_lifetime;
+	int* particle_active = flex->hosts.particle_active;
+	int* particle_phase = flex->hosts.particle_phase;
+	
+	int particles_removed = 0;
+	for (int i = 0; i < flex->get_active_particles(); i++) {
+		int particle_index = particle_active[i];
+		if (particle_phase[particle_index] != FlexPhase::WATER) continue;
+		if ((transform_inverse * particle_pos[particle_index].AsVector3D()).LengthSqr() > 0.5 * 0.5) continue;
+
+		particle_lifetime[particle_index] = 0;	// kill particle
+		particles_removed++;
+	}
+
+	LUA->PushNumber(particles_removed);
 	return 1;
 }
+
+LUA_FUNCTION(FLEXSOLVER_RemoveCube) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	LUA->CheckType(2, Type::Matrix);	// transform
+
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+	VMatrix transform = *LUA->GetUserType<VMatrix>(2, Type::Matrix);
+	VMatrix transform_inverse; MatrixInverseGeneral(transform, transform_inverse);
+
+	Vector4D* particle_pos = flex->hosts.particle_pos;
+	float* particle_lifetime = flex->hosts.particle_lifetime;
+	int* particle_active = flex->hosts.particle_active;
+	int* particle_phase = flex->hosts.particle_phase;
+
+	int particles_removed = 0;
+	for (int i = 0; i < flex->get_active_particles(); i++) {
+		int particle_index = particle_active[i];
+		if (particle_phase[particle_index] != FlexPhase::WATER) continue;
+		Vector pos = transform_inverse * particle_pos[particle_index].AsVector3D();
+		if (pos.x > 0.5 || pos.x < -0.5 || pos.y > 0.5 || pos.y < -0.5 || pos.z > 0.5 || pos.z < -0.5) continue;
+
+		particle_lifetime[particle_index] = 0;	// kill particle
+		particles_removed++;
+	}
+
+	LUA->PushNumber(particles_removed);
+	return 1;
+}
+
+// ********** Collision creation / modification / destruction ********** //
 
 // Adds a triangle collision mesh to a FlexSolver
 LUA_FUNCTION(FLEXSOLVER_AddConcaveMesh) {
@@ -298,146 +368,6 @@ LUA_FUNCTION(FLEXSOLVER_AddConvexMesh) {
 	return 0;
 }
 
-// Updates position of a collider
-LUA_FUNCTION(FLEXSOLVER_SetMeshPos) {
-	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	LUA->CheckNumber(2);				// Mesh ID
-	LUA->CheckType(3, Type::Vector);	// Prop Pos
-
-	FlexSolver* flex = GET_FLEXSOLVER(1);
-	int index = (int)LUA->GetNumber(2);
-	if (index < 0 || index >= flex->meshes.size()) return 0;	// nothin'
-
-	flex->meshes[index].set_pos(LUA->GetVector(3));
-
-	return 0;
-}
-
-LUA_FUNCTION(FLEXSOLVER_SetMeshAng) {
-	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	LUA->CheckNumber(2);				// Mesh ID
-	LUA->CheckType(3, Type::Angle);		// Prop angle
-
-	FlexSolver* flex = GET_FLEXSOLVER(1);
-	int index = (int)LUA->GetNumber(2);
-	if (index < 0 || index >= flex->meshes.size()) return 0;	// nothin'
-
-	flex->meshes[index].set_ang(LUA->GetAngle(3));
-
-	return 0;
-}
-
-LUA_FUNCTION(FLEXSOLVER_SetMeshCollide) {
-	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	LUA->CheckNumber(2);				// Mesh ID
-	LUA->CheckType(3, Type::Bool);		// Enable collisions?
-
-	FlexSolver* flex = GET_FLEXSOLVER(1);
-	int index = (int)LUA->GetNumber(2);
-	if (index < 0 || index >= flex->meshes.size()) return 0;	// nothin'
-
-	flex->meshes[index].set_collide(LUA->GetBool(3));
-
-	return 0;
-}
-
-// Removes all meshes associated with the entity id
-LUA_FUNCTION(FLEXSOLVER_RemoveMesh) {
-	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	LUA->CheckNumber(2); // Entity ID
-
-	FlexSolver* flex = GET_FLEXSOLVER(1);
-	flex->remove_mesh(LUA->GetNumber(2));
-
-	return 0;
-}
-
-// TODO: Implement
-/*
-LUA_FUNCTION(FLEXSOLVER_RemoveMeshIndex) {
-
-}*/
-
-LUA_FUNCTION(FLEXSOLVER_SetParameter) {
-	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	LUA->CheckString(2); // Param
-	LUA->CheckNumber(3); // Number
-
-	FlexSolver* flex = GET_FLEXSOLVER(1);
-	bool succ = flex->set_parameter(LUA->GetString(2), LUA->GetNumber(3));
-	if (!succ) LUA->ThrowError(("Attempt to set invalid parameter '" + (std::string)LUA->GetString(2) + "'").c_str());
-
-	return 0;
-}
-
-LUA_FUNCTION(FLEXSOLVER_GetParameter) {
-	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	LUA->CheckString(2); // Param
-
-	FlexSolver* flex = GET_FLEXSOLVER(1);
-	float value = flex->get_parameter(LUA->GetString(2));
-	if (isnan(value)) LUA->ThrowError(("Attempt to get invalid parameter '" + (std::string)LUA->GetString(2) + "'").c_str());
-	LUA->PushNumber(value);
-
-	return 1;
-}
-
-// removes all particles in a flex solver
-LUA_FUNCTION(FLEXSOLVER_Reset) {
-	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	FlexSolver* flex = GET_FLEXSOLVER(1);
-
-	flex->reset();
-
-	return 0;
-}
-
-// removes all cloth related particles
-LUA_FUNCTION(FLEXSOLVER_ResetCloth) {
-	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	FlexSolver* flex = GET_FLEXSOLVER(1);
-
-	flex->reset_cloth();
-
-	return 0;
-}
-
-LUA_FUNCTION(FLEXSOLVER_GetActiveParticles) {
-	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	FlexSolver* flex = GET_FLEXSOLVER(1);
-	LUA->PushNumber(flex->get_active_particles());
-
-	return 1;
-}
-
-LUA_FUNCTION(FLEXSOLVER_GetActiveDiffuse) {
-	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	FlexSolver* flex = GET_FLEXSOLVER(1);
-	LUA->PushNumber(flex->get_active_diffuse());
-
-	return 1;
-}
-
-
-// Iterates through all particles and calls a lua function with 1 parameter (position)
-LUA_FUNCTION(FLEXSOLVER_RenderParticles) {
-	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	LUA->CheckType(2, Type::Function);
-
-	FlexSolver* flex = GET_FLEXSOLVER(1);
-	Vector4D* host = flex->hosts.particle_smooth;
-	for (int i = 0; i < flex->get_active_particles(); i++) {
-		// render function
-		LUA->Push(2);
-		LUA->PushVector(host[i].AsVector3D());
-		LUA->PushNumber(host[i].w);
-		LUA->Call(2, 0);
-	}
-
-	return 0;
-}
-
-// TODO: rewrite this shit
 LUA_FUNCTION(FLEXSOLVER_AddMapMesh) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckNumber(2);
@@ -479,6 +409,143 @@ LUA_FUNCTION(FLEXSOLVER_AddMapMesh) {
 	return 0;
 }
 
+// Updates position of a collider
+LUA_FUNCTION(FLEXSOLVER_SetMeshPos) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	LUA->CheckNumber(2);				// Mesh ID
+	LUA->CheckType(3, Type::Vector);	// Prop Pos
+
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+	int index = (int)LUA->GetNumber(2);
+	if (index < 0 || index >= flex->meshes.size()) return 0;
+
+	flex->meshes[index].set_pos(LUA->GetVector(3));
+
+	return 0;
+}
+
+LUA_FUNCTION(FLEXSOLVER_SetMeshAng) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	LUA->CheckNumber(2);				// Mesh ID
+	LUA->CheckType(3, Type::Angle);		// Prop angle
+
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+	int index = (int)LUA->GetNumber(2);
+	if (index < 0 || index >= flex->meshes.size()) return 0;
+
+	flex->meshes[index].set_ang(LUA->GetAngle(3));
+
+	return 0;
+}
+
+LUA_FUNCTION(FLEXSOLVER_SetMeshCollide) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	LUA->CheckNumber(2);				// Mesh ID
+	LUA->CheckType(3, Type::Bool);		// Enable collisions?
+
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+	int index = (int)LUA->GetNumber(2);
+	if (index < 0 || index >= flex->meshes.size()) return 0;
+
+	flex->meshes[index].set_collide(LUA->GetBool(3));
+
+	return 0;
+}
+
+// Removes all meshes associated with the entity id
+LUA_FUNCTION(FLEXSOLVER_RemoveMesh) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	LUA->CheckNumber(2); // Entity ID
+
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+	flex->remove_mesh(LUA->GetNumber(2));
+
+	return 0;
+}
+
+// Runs a lua function with some data on all FlexMeshes stored in a FlexSolver
+// This is faster then returning a table of values and using ipairs and also allows removal / additions during function execution
+// first parameter is the index of the mesh inside the vector
+// second parameter is the entity id associated that was given during AddMesh
+// third parameter is the number of reoccurring id's in a row (eg. given id's 0,1,1,1 the parameter would be 2 at the end of execution since 1 was repeated two more times)
+// ^the third parameter sounds confusing but its useful for multi-joint entities such as ragdolls/players/npcs
+LUA_FUNCTION(FLEXSOLVER_IterateMeshes) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	LUA->CheckType(2, Type::Function);
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+
+	int i = 0;
+	int repeat = 0;
+	int previous_id;
+	for (FlexMesh mesh : flex->meshes) {
+		int id = mesh.get_entity_id();
+
+		repeat = (i != 0 && previous_id == id) ? repeat + 1 : 0;	// if (same as last time) {repeat = repeat + 1} else {repeat = 0}
+		previous_id = id;
+
+		// func(i, id, repeat)
+		LUA->Push(2);
+		LUA->PushNumber(i);
+		LUA->PushNumber(id);
+		LUA->PushNumber(repeat);
+		LUA->PCall(3, 0, 0);
+
+		i++;
+	}
+
+	return 0;
+}
+
+// ********** Miscellaneous ********** //
+
+LUA_FUNCTION(FLEXSOLVER_Tick) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	LUA->CheckNumber(2);	// Delta Time
+
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+	LUA->PushBool(flex->tick(LUA->GetNumber(2) * CM_2_INCH, (NvFlexMapFlags)LUA->GetNumber(3)));
+
+	return 1;
+}
+
+// removes all particles in a flex solver
+LUA_FUNCTION(FLEXSOLVER_Reset) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+
+	flex->reset();
+
+	return 0;
+}
+
+// removes all cloth related particles
+LUA_FUNCTION(FLEXSOLVER_ResetCloth) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+
+	flex->reset_cloth();
+
+	return 0;
+}
+
+// Iterates through all particles and calls a lua function with 1 parameter (position)
+LUA_FUNCTION(FLEXSOLVER_RenderParticles) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	LUA->CheckType(2, Type::Function);
+
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+	int* active = flex->hosts.particle_active;
+	Vector4D* pos = flex->hosts.particle_smooth;
+	for (int i = 0; i < flex->get_active_particles(); i++) {
+		// render function
+		LUA->Push(2);
+		LUA->PushVector(pos[active[i]].AsVector3D());
+		LUA->Call(1, 0);
+	}
+
+	return 0;
+}
+
 // Applies reaction forces on serverside objects
 #include "vphysics_interface.h"
 LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
@@ -495,6 +562,7 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 
 	Vector4D* particle_pos = flex->hosts.particle_pos;
 	Vector* particle_vel = flex->hosts.particle_vel;
+	int* particle_active = flex->hosts.particle_active;
 	/*
 	Vector4D* contact_vel = (Vector4D*)flex->get_host("contact_vel");
 	Vector4D* contact_planes = (Vector4D*)flex->get_host("contact_planes");
@@ -524,7 +592,8 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 
 	// Get all props and average them
 	for (int i = 0; i < flex->get_active_particles(); i++) {
-		int plane_id = contact_indices[i];
+		int particle_index = particle_active[i];
+		int plane_id = contact_indices[particle_index];
 		for (int contact = 0; contact < contact_count[plane_id]; contact++) {
 			int plane_index = plane_id * max_contacts + contact;
 			//int vel_index = i * max_contacts + contact;
@@ -543,8 +612,8 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 			int prop_entity_id = prop.get_entity_id();
 			
 			Vector plane = contact_planes[plane_index].AsVector3D();
-			Vector contact_pos = particle_pos[i].AsVector3D() - plane * radius * 0.5;	// Particle position is not directly *on* plane
-			Vector local_vel = particle_vel[i] * flex->get_parameter("timescale");
+			Vector contact_pos = particle_pos[particle_index].AsVector3D() - plane * radius * 0.5;	// Particle position is not directly *on* plane
+			Vector local_vel = particle_vel[particle_index] * flex->get_parameter("timescale");
 			Vector impact_vel = (plane * fmin(local_vel.Dot(plane), 0) - contact_vel[plane_index].AsVector3D() * feedback_mul) * volume_mul;
 
 			//phys->ApplyForceOffset(impact_vel, contact_pos);
@@ -620,38 +689,6 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 	return 0;
 }
 
-// Gets the total number of particles near a specified location.
-// 4th parameter specifies if the calculations should end early (small optimization to avoid looping over all particles)
-// As of now this is a quick hack to get swimming working for 0.4b
-LUA_FUNCTION(FLEXSOLVER_GetParticlesInRadius) {
-	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	LUA->CheckType(2, Type::Vector);
-	LUA->CheckNumber(3);
-
-	FlexSolver* flex = GET_FLEXSOLVER(1);
-	Vector pos = LUA->GetVector(2);
-	float radius = LUA->GetNumber(3) * LUA->GetNumber(3);	// calculation is squared to avoid sqrt()
-	int early_exit = (int)LUA->GetNumber(4);	// returns 0 if nil
-
-	int num_particles = 0;
-	if (flex->get_parameter("reaction_forces") > 0) {
-		Vector4D* particle_pos = flex->hosts.particle_pos;
-		int* particle_active = flex->hosts.particle_active;
-		int* particle_phase = flex->hosts.particle_phase;
-		for (int i = 0; i < flex->get_active_particles(); i++) {
-			int particle_index = particle_active[i];
-			if (particle_phase[particle_index] != FlexPhase::WATER) continue;
-			if (particle_pos[particle_index].AsVector3D().DistToSqr(pos) > radius) continue;
-
-			num_particles++;
-			if (early_exit && num_particles >= early_exit) break;
-		}
-	}
-
-	LUA->PushNumber(num_particles);
-	return 1;
-}
-
 LUA_FUNCTION(FLEXSOLVER_AddForceField) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckType(2, Type::Vector);
@@ -691,11 +728,53 @@ LUA_FUNCTION(FLEXSOLVER_InitBounds) {
 	return 0;
 }
 
+LUA_FUNCTION(FLEXSOLVER_SetParameter) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	LUA->CheckString(2); // Param
+	LUA->CheckNumber(3); // Number
+
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+	bool succ = flex->set_parameter(LUA->GetString(2), LUA->GetNumber(3));
+	if (!succ) LUA->ThrowError(("Attempt to set invalid parameter '" + (std::string)LUA->GetString(2) + "'").c_str());
+
+	return 0;
+}
+
+// ********** Getters ********** //
+
+LUA_FUNCTION(FLEXSOLVER_GetParameter) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	LUA->CheckString(2); // Param
+
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+	float value = flex->get_parameter(LUA->GetString(2));
+	if (isnan(value)) LUA->ThrowError(("Attempt to get invalid parameter '" + (std::string)LUA->GetString(2) + "'").c_str());
+	LUA->PushNumber(value);
+
+	return 1;
+}
+
+LUA_FUNCTION(FLEXSOLVER_GetActiveParticles) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+	LUA->PushNumber(flex->get_active_particles());
+
+	return 1;
+}
+
 LUA_FUNCTION(FLEXSOLVER_GetMaxParticles) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 
 	LUA->PushNumber(flex->get_max_particles());
+	return 1;
+}
+
+LUA_FUNCTION(FLEXSOLVER_GetActiveDiffuse) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+	LUA->PushNumber(flex->get_active_diffuse());
+
 	return 1;
 }
 
@@ -707,37 +786,36 @@ LUA_FUNCTION(FLEXSOLVER_GetMaxDiffuseParticles) {
 	return 1;
 }
 
-// Runs a lua function with some data on all FlexMeshes stored in a FlexSolver
-// This is faster then returning a table of values and using ipairs and also allows removal / additions during function execution
-// first parameter is the index of the mesh inside the vector
-// second parameter is the entity id associated that was given during AddMesh
-// third parameter is the number of reoccurring id's in a row (eg. given id's 0,1,1,1 the parameter would be 2 at the end of execution since 1 was repeated two more times)
-// ^the third parameter sounds confusing but its useful for multi-joint entities such as ragdolls/players/npcs
-LUA_FUNCTION(FLEXSOLVER_IterateMeshes) {
+// Gets the total number of particles near a specified location.
+// 4th parameter specifies if the calculations should end early (small optimization to avoid looping over all particles)
+// As of now this is a quick hack to get swimming working for 0.4b
+LUA_FUNCTION(FLEXSOLVER_GetParticlesInRadius) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
-	LUA->CheckType(2, Type::Function);
+	LUA->CheckType(2, Type::Vector);
+	LUA->CheckNumber(3);
+
 	FlexSolver* flex = GET_FLEXSOLVER(1);
+	Vector pos = LUA->GetVector(2);
+	float radius = LUA->GetNumber(3) * LUA->GetNumber(3);	// calculation is squared to avoid sqrt()
+	int early_exit = (int)LUA->GetNumber(4);	// returns 0 if nil
 
-	int i = 0;
-	int repeat = 0;
-	int previous_id;
-	for (FlexMesh mesh : flex->meshes) {
-		int id = mesh.get_entity_id();
+	int num_particles = 0;
+	if (flex->get_parameter("reaction_forces") > 0) {
+		Vector4D* particle_pos = flex->hosts.particle_pos;
+		int* particle_active = flex->hosts.particle_active;
+		int* particle_phase = flex->hosts.particle_phase;
+		for (int i = 0; i < flex->get_active_particles(); i++) {
+			int particle_index = particle_active[i];
+			if (particle_phase[particle_index] != FlexPhase::WATER) continue;
+			if (particle_pos[particle_index].AsVector3D().DistToSqr(pos) > radius) continue;
 
-		repeat = (i != 0 && previous_id == id) ? repeat + 1 : 0;	// if (same as last time) {repeat = repeat + 1} else {repeat = 0}
-		previous_id = id;
-
-		// func(i, id, repeat)
-		LUA->Push(2);
-		LUA->PushNumber(i);
-		LUA->PushNumber(id);
-		LUA->PushNumber(repeat);
-		LUA->PCall(3, 0, 0);
-
-		i++;
+			num_particles++;
+			if (early_exit && num_particles >= early_exit) break;
+		}
 	}
 
-	return 0;
+	LUA->PushNumber(num_particles);
+	return 1;
 }
 
 
@@ -948,6 +1026,8 @@ GMOD_MODULE_OPEN() {
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddCylinder, "AddCylinder");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddCloth, "AddCloth");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddForceField, "AddForceField");
+	ADD_FUNCTION(LUA, FLEXSOLVER_RemoveSphere, "RemoveSphere");
+	ADD_FUNCTION(LUA, FLEXSOLVER_RemoveCube, "RemoveCube");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetMaxParticles, "GetMaxParticles");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetMaxDiffuseParticles, "GetMaxDiffuseParticles");
 	ADD_FUNCTION(LUA, FLEXSOLVER_RenderParticles, "RenderParticles");

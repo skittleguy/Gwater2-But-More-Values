@@ -59,7 +59,6 @@ else	-- CLIENT
 		local size_x = net.ReadUInt(8)
 		local size_y = net.ReadUInt(8)
 		local extra = net.ReadTable()	-- the one time this function is actually useful
-		translation:SetScale(translation:GetScale() * gwater2.solver:GetParameter("solid_rest_distance"))
 		gwater2.solver:AddCloth(translation, Vector(size_x, size_y), extra)
 		gwater2.cloth_pos = translation:GetTranslation()
 	end)
@@ -70,8 +69,6 @@ else	-- CLIENT
 		local size_y = net.ReadUInt(8)
 		local size_z = net.ReadUInt(8)
 		local extra = net.ReadTable()
-
-		translation:SetScale(translation:GetScale() * gwater2.solver:GetParameter("fluid_rest_distance"))
 		gwater2.solver:AddCylinder(translation, Vector(size_x, size_y, size_z), extra)
 	end)
 
@@ -79,7 +76,6 @@ else	-- CLIENT
 		local translation = net.ReadMatrix()
 		local radius = net.ReadUInt(8)
 		local extra = net.ReadTable()
-		translation:SetScale(translation:GetScale() * gwater2.solver:GetParameter("fluid_rest_distance"))
 		gwater2.solver:AddSphere(translation, radius, extra)
 	end)
 
@@ -89,7 +85,6 @@ else	-- CLIENT
 		local size_y = net.ReadUInt(8)
 		local size_z = net.ReadUInt(8)
 		local extra = net.ReadTable()
-		translation:SetScale(translation:GetScale() * gwater2.solver:GetParameter("fluid_rest_distance"))
 		gwater2.solver:AddCube(translation, Vector(size_x, size_y, size_z), extra)
 	end)
 
