@@ -162,7 +162,7 @@ hook.Add("InitPostEntity", "gwater2_addprop", gwater2.reset_solver)
 hook.Add("OnEntityCreated", "gwater2_addprop", function(ent) timer.Simple(0, function() add_prop(ent) end) end)	// timer.0 so data values are setup correctly
 
 -- gravgun support
-local did_fire = false
+local can_fire = false
 local last_fire = 0
 hook.Add("gwater2_posttick", "gwater2_gravgun_grab", function(succ)
 	if !succ then return end
@@ -170,7 +170,7 @@ hook.Add("gwater2_posttick", "gwater2_gravgun_grab", function(succ)
 	local lp = LocalPlayer()
 	local gravgun = lp:GetActiveWeapon()
 	if !IsValid(gravgun) or lp:GetActiveWeapon():GetClass() != "weapon_physcannon" then 
-		did_fire = false
+		can_fire = false
 		return 
 	end
 
@@ -180,11 +180,11 @@ hook.Add("gwater2_posttick", "gwater2_gravgun_grab", function(succ)
 	end
 
 	-- left click (punt)
-	if did_fire and last_fire != gravgun:GetNextPrimaryFire() then
+	if can_fire and last_fire != gravgun:GetNextPrimaryFire() then
 		last_fire = gravgun:GetNextPrimaryFire()
 		gwater2.solver:AddForceField(lp:EyePos(), 320, 200, 1, false)
 	else
 		last_fire = gravgun:GetNextPrimaryFire()
-		did_fire = true
+		can_fire = true
 	end
 end)
