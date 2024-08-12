@@ -1,4 +1,4 @@
-GWaterVolumetric {
+UnlitGeneric {
 	$basetexture gwater2/bubble
 	$translucent 1
 	$additive 1
