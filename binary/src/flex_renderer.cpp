@@ -123,7 +123,7 @@ IMesh* _build_diffuse(int id, FlexRendererThreadData data) {
 		// warp diffuse based on velocity
 		Vector ani0 = data.particle_ani0[particle_index].AsVector3D() * 0.03;
 		float scalar = data.radius * particle_pos.w;
-		if (ani0.LengthSqr() > 3 * 3) ani0 = ani0.Normalized() * 3;	// 3 = max stretch (hardcoded)
+		if (ani0.LengthSqr() > 2 * 2) ani0 = ani0.Normalized() * 2;	// 2 = max stretch (hardcoded)
 
 		// extract normal / right and up (to rotate sprite toward player)
 		Vector forward = (particle_pos.AsVector3D() - data.eye_pos).Normalized();
