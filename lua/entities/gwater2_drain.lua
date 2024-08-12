@@ -19,10 +19,7 @@ function ENT:SetupDataTables()
 
 	self.PARTICLE_EMITTER = ParticleEmitter(self:GetPos(), false)
 	hook.Add("gwater2_posttick", self, function()
-		local mat = Matrix() 
-		mat:SetScale(Vector(1, 1, 1) * self:GetRadius()) 
-		mat:SetTranslation(self:GetPos()) 
-		gwater2.solver:RemoveSphere(mat)
+		gwater2.solver:RemoveSphere(gwater2.quick_matrix(self:GetPos(), nil, self:GetRadius()))
 		gwater2.solver:AddForceField(self:GetPos(), self:GetRadius(), -self:GetStrength(), 0, true)
 	end)
 end

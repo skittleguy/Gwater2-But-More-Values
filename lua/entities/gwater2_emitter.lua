@@ -48,8 +48,8 @@ function ENT:SetupDataTables()
 	if SERVER then return end
 
 	-- runs per client FleX frame, this may be different per client.
-	-- more particles might be spawned depending on the client which is weird, but this setup allows for laminar flow, which I think looks better
-	-- The alternative is running a gwater2.AddCylinder in a serverside Think hook, however different clients may see different results
+	-- more particles might be spawned depending on the client, but this setup allows for laminar flow, which I think looks better
+	-- The alternative is running a gwater2.AddCylinder in a serverside Think hook, however with that setup different clients may see different results
 	hook.Add("gwater2_posttick", self, function()
 		if !self:GetOn() then return end
 

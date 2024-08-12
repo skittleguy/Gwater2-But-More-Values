@@ -44,13 +44,21 @@ if SERVER then
 				net.WriteTable(particle_data or {}) -- empty table only takes 3 bits
 			net.Broadcast()
 		end,
-
+		
 		AddParticle = function(pos, particle_data)
 			net.Start("GWATER2_ADDPARTICLE")
 				net.WriteVector(pos)
 				net.WriteTable(particle_data or {}) -- empty table only takes 3 bits
 			net.Broadcast()
 		end,
+
+		quick_matrix = function(pos, ang, scale)
+			local mat = Matrix()
+			if pos then mat:SetTranslation(pos) end
+			if ang then mat:SetAngles(ang) end
+			if scale then mat:SetScale(Vector(1, 1, 1) * scale) end
+			return mat
+		end
 	}
 
 else	-- CLIENT

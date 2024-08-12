@@ -35,10 +35,6 @@ SWEP.ViewModel			= "models/weapons/c_pistol.mdl"
 SWEP.WorldModel			= "models/weapons/w_pistol.mdl"
 SWEP.UseHands           = true
 
-function SWEP:Initialize()
-
-end 
-
 local function fuckgarry(w, s)
 	if SERVER then 
 		if game.SinglePlayer() then 
@@ -48,6 +44,10 @@ local function fuckgarry(w, s)
 	end
 	return IsFirstTimePredicted()
 end
+
+function SWEP:Initialize()
+
+end 
 
 function SWEP:PrimaryAttack()
 	--self:SetNextPrimaryFire(CurTime() + 1/60)
@@ -69,9 +69,7 @@ function SWEP:SecondaryAttack()
 	local owner = self:GetOwner()
 	local forward = owner:EyeAngles():Forward()
 
-	local mat = Matrix()
-	mat:SetTranslation(owner:EyePos() + forward * 40 * 10)
-	gwater2.solver:AddCube(mat, Vector(33, 33, 33), {vel = forward * 100})
+	gwater2.solver:AddSphere(gwater2.quick_matrix(owner:EyePos() + forward * 40 * gwater2.solver:GetParameter("fluid_rest_distance")), 20, {vel = forward * 100})
 end
 
 function SWEP:Reload()
@@ -83,8 +81,9 @@ end
 if SERVER then return end
 
 function SWEP:DrawHUD()
+	surface.DrawCircle(ScrW() / 2, ScrH() / 2, gwater2["size"] * gwater2["density"] * gwater2.solver:GetParameter("fluid_rest_distance") * 4, 255, 255, 255, 255)
 	draw.DrawText("Left-Click to Spawn Particles", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.75, color_white, TEXT_ALIGN_RIGHT)
-	draw.DrawText("Right-Click to Spawn a Cube", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.78, color_white, TEXT_ALIGN_RIGHT)
+	draw.DrawText("Right-Click to Spawn a Sphere", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.78, color_white, TEXT_ALIGN_RIGHT)
 	draw.DrawText("Reload to Remove All", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.81, color_white, TEXT_ALIGN_RIGHT)
 end
 
@@ -109,31 +108,6 @@ function SWEP:PostDrawViewModel(vm, weapon, ply)
 		draw.DrawText(text2, "CloseCaption_Normal", 0, 0, color_white, TEXT_ALIGN_CENTER)
 	cam.End3D2D()
 end
-
--- PostDrawViewModel^ doesn't write to depth buffer... add our own rendering hook
--- TODO: This code sucks. Rewrite this
-local wireframe = Material("models/wireframe")
-hook.Add("PostDrawTranslucentRenderables", "gwater2_fuckthisshitman", function()
-	local owner = LocalPlayer()
-	local wep = owner:GetActiveWeapon()
-	if IsValid(wep) and wep:GetClass() == "weapon_gw2_watergun" then
-		local forward = owner:EyeAngles():Forward()
-
-		-- tiny cube
-		local sprite_size = gwater2.solver:GetParameter("radius")
-		local pos = owner:EyePos() + forward * 20 * sprite_size
-		local size = Vector(1, 1, 1) * (gwater2["size"] * 0.5) * (sprite_size * gwater2["density"])
-
-		-- big cube
-		local sprite_size = gwater2.solver:GetParameter("fluid_rest_distance")
-		local pos2 = owner:EyePos() + forward * 40 * sprite_size
-		local size2 = Vector(16.5, 16.5, 16.5) * sprite_size
-
-		render.DrawWireframeBox(pos, Angle(), -size, size, Color(255, 255, 255, 255), true)
-		
-		--render.DrawWireframeBox(pos2, Angle(), -size2, size2, Color(255, 255, 255, 255), true)
-	end
-end)
 
 --[[ -- Benchmarking stuff (ignore)
 local avg = 0

@@ -12,9 +12,7 @@ ENT.Spawnable 		= true
 
 -- send cloth data to the client
 function ENT:SpawnFunction(ply, tr, class, type)
-	local mat = Matrix()
-	mat:SetTranslation(tr.HitPos + Vector(0, 0, 50))
-	gwater2.AddCloth(mat, Vector(50, 50))	-- network
+	gwater2.AddCloth(gwater2.quick_matrix(tr.HitPos + Vector(0, 0, 50)), Vector(50, 50))	-- network
 
 	local ent = ents.Create(class)
 	ent:SetPos(tr.HitPos + tr.HitNormal)
