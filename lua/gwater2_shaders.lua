@@ -62,7 +62,7 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	local radius = gwater2.solver:GetParameter("radius")
 
 	gwater2.renderer:SetHang(false)
-	gwater2.renderer:BuildMeshes(gwater2.solver, 0.2)
+	gwater2.renderer:BuildMeshes(gwater2.solver, 0.25)
 
 	-- cloth
 	unfuck_lighting(gwater2.cloth_pos, gwater2.cloth_pos)	-- fix cloth lighting, mostly
