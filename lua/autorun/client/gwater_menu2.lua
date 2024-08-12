@@ -886,10 +886,28 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 			Make sure to read the changelog to see what has been updated!
 
 			Changelog (v0.5b):
-			- Rewrote the internal ticker. GWater2 may run at slightly worse framerates, but feel smoother then previous versions
-			- Added cloth
-			- Added force fields to API (black hole entity)
-			- Changed absorption, reflection, and phong calculations to be more realistic
+			- Added cloth to spawnmenu
+
+			- Added black hole to spawnmenu
+			
+			- Added emitter, and drain entity to spawnmenu
+
+			- Added particle lifetimes (evaporation)
+
+			- Tweaked absorption, reflection, and phong calculations to be more realistic
+
+			- Tweaked diffuse visuals
+
+			- Tweaked portal gel preset to look more like portal gel
+
+			- Fixed particles not going through objects with 'Disable Collision' on
+
+			- Fixed a majority of particle clipping issues
+
+			- Fixed being able to 'fly' in adhesive liquids
+
+			- General backend code cleanup and API improvements
+
 		]])
 		label:SetColor(Color(255, 255, 255))
 		label:SetTextInset(5, 30)

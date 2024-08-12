@@ -212,7 +212,8 @@ public:
 	virtual int  GetShaders( int nFirstShader, int nCount, IShader **ppShaderList ) const = 0;
 };
 
-enum SpewType_t
+#ifndef GMOD_MAIN
+enum SpewType_t	// this isnt defined in chromiums tier0 lib for some reason
 {
 	SPEW_MESSAGE = 0,
 	SPEW_WARNING,
@@ -222,6 +223,7 @@ enum SpewType_t
 
 	SPEW_TYPE_COUNT
 };
+#endif
 
 class CShaderSystem : public IShaderSystemInternal
 {

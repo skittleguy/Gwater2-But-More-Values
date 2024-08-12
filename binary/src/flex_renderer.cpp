@@ -1,10 +1,10 @@
 #include "flex_renderer.h"
 #include "cdll_client_int.h"	//IVEngineClient
 
+#ifdef GMOD_MAIN
+extern IMaterialSystem* materials = NULL;
+#endif
 extern IVEngineClient* engine = NULL;
-
-//extern IMaterialSystem* materials = NULL;	// stops main branch compile from bitching
-
 // lord have mercy brothers
 
 float water_u[3] = { 0.5 - SQRT3 / 2, 0.5, 0.5 + SQRT3 / 2 };
