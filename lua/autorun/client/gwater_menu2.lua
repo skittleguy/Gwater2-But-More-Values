@@ -963,11 +963,11 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 
 			draw.DrawText("Patrons", "GWater2Title", 6, 6, Color(0, 0, 0), TEXT_ALIGN_LEFT)
 			draw.DrawText("Patrons", "GWater2Title", 5, 5, Color(187, 245, 255), TEXT_ALIGN_LEFT)
-			
-			-- unoptimized as shit but im at the mercy of vgui. 
+
 			local patron_color = Color(171, 255, 163)
-			for k, v in ipairs(patrons_table) do
-				draw.DrawText(v, "GWater2Param", 6, 150 + k * 20, patron_color, TEXT_ALIGN_LEFT)
+			local top = math.max(math.floor((scrollPanel:GetVBar():GetScroll() - 150) / 20), 1)	-- only draw what we see
+			for i = top, math.min(top + 20, #patrons_table) do
+				draw.DrawText(patrons_table[i], "GWater2Param", 6, 150 + i * 20, patron_color, TEXT_ALIGN_LEFT)
 			end
 
 			explanation:SetText(options.patron_tab_text)
