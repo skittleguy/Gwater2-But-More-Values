@@ -243,7 +243,11 @@ LUA_FUNCTION(FLEXSOLVER_RemoveSphere) {
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 	VMatrix transform = *LUA->GetUserType<VMatrix>(2, Type::Matrix);
-	VMatrix transform_inverse; MatrixInverseGeneral(transform, transform_inverse);
+	VMatrix transform_inverse; 
+	if (!MatrixInverseGeneral(transform, transform_inverse)) {
+		LUA->PushNumber(0);
+		return 1;
+	}
 
 	Vector4D* particle_pos = flex->hosts.particle_pos;
 	float* particle_lifetime = flex->hosts.particle_lifetime;
@@ -270,7 +274,11 @@ LUA_FUNCTION(FLEXSOLVER_RemoveCube) {
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 	VMatrix transform = *LUA->GetUserType<VMatrix>(2, Type::Matrix);
-	VMatrix transform_inverse; MatrixInverseGeneral(transform, transform_inverse);
+	VMatrix transform_inverse;
+	if (!MatrixInverseGeneral(transform, transform_inverse)) {
+		LUA->PushNumber(0);
+		return 1;
+	}
 
 	Vector4D* particle_pos = flex->hosts.particle_pos;
 	float* particle_lifetime = flex->hosts.particle_lifetime;

@@ -165,9 +165,7 @@ hook.Add("OnEntityCreated", "gwater2_addprop", function(ent) timer.Simple(0, fun
 -- gravgun support
 local can_fire = false
 local last_fire = 0
-hook.Add("gwater2_posttick", "gwater2_gravgun_grab", function(succ)
-	if !succ then return end
-
+hook.Add("gwater2_posttick", "gwater2_gravgun_grab", function()
 	local lp = LocalPlayer()
 	local gravgun = lp:GetActiveWeapon()
 	if !IsValid(gravgun) or lp:GetActiveWeapon():GetClass() != "weapon_physcannon" then 

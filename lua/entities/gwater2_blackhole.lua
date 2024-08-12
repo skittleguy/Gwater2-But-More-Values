@@ -11,17 +11,6 @@ ENT.Instructions = ""
 ENT.Spawnable    = true
 ENT.Editable	 = true
 
-function ENT:Initialize()
-	if CLIENT then return end
-	self:SetModel("models/hunter/misc/sphere075x075.mdl")
-	self:SetMaterial("lights/white")
-	
-	self:SetColor(Color(0, 0, 0))
-	self:PhysicsInit(SOLID_VPHYSICS)
-	self:SetMoveType(MOVETYPE_VPHYSICS)
-	self:SetSolid(SOLID_VPHYSICS)
-end
-
 function ENT:SetupDataTables()
     self:NetworkVar("Float", 0, "Radius", {KeyName = "Radius", Edit = {type = "Float", order = 0, min = 0, max = 2000}})
 	self:NetworkVar("Float", 1, "Strength", {KeyName = "Strength", Edit = {type = "Float", order = 1, min = -200, max = 200}})
@@ -37,6 +26,16 @@ function ENT:SetupDataTables()
 end
 
 if SERVER then
+	function ENT:Initialize()
+		self:SetModel("models/hunter/misc/sphere075x075.mdl")
+		self:SetMaterial("lights/white")
+		
+		self:SetColor(Color(0, 0, 0))
+		self:PhysicsInit(SOLID_VPHYSICS)
+		self:SetMoveType(MOVETYPE_VPHYSICS)
+		self:SetSolid(SOLID_VPHYSICS)
+	end
+
 	function ENT:SpawnFunction(ply, tr, class)
 		if not tr.Hit then return end
 		local ent = ents.Create(class)

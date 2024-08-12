@@ -273,7 +273,9 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 			hosts.particle_pos = (Vector4D*)NvFlexMap(buffers.particle_pos, eNvFlexMapWait);
 			hosts.particle_vel = (Vector*)NvFlexMap(buffers.particle_vel, eNvFlexMapWait);
 			for (const std::pair<int, Particle>& particle : particle_queue) {
-				set_particle(particle.first, copy_active.elementCount++, particle.second);
+				if (hosts.particle_lifetime[particle.first] > 0) {	// particle removed before being created (ie. between physics tick)
+					set_particle(particle.first, copy_active.elementCount++, particle.second);
+				}
 			}
 			NvFlexUnmap(buffers.particle_pos);
 			NvFlexUnmap(buffers.particle_vel);
