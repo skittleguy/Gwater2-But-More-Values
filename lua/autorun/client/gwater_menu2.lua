@@ -11,7 +11,7 @@ if SERVER or !gwater2 then return end
 	-- HALF OF THIS CODE WAS WRITTEN AT 3 AM
 -- THANK YOU FOR COMING TO MY TED TALK
 
-local version = "0.5b"
+local version = "0.6b"
 local options = {
 	solver = FlexSolver(1000),
 	tab = CreateClientConVar("gwater2_tab"..version, "1", true),
@@ -879,7 +879,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 
 		local label = vgui.Create("DLabel", scrollPanel)
 		label:SetPos(0, 0)
-		label:SetSize(383, 800)
+		label:SetSize(383, 820)
 		label:SetText([[
 			Thank you for downloading gwater2 beta! This menu is the interface that you will be using to control everything about gwater. So get used to it! :D
 
@@ -893,6 +893,8 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 			- Added emitter, and drain entity to spawnmenu
 
 			- Added particle lifetimes (evaporation)
+
+			- Added gravity gun interaction
 
 			- Tweaked absorption, reflection, and phong calculations to be more realistic
 

@@ -58,7 +58,7 @@ function SWEP:PrimaryAttack()
 	local mat = Matrix()
 	mat:SetScale(Vector(1, 1, 1) * gwater2["density"])
 	mat:SetAngles(owner:EyeAngles() + Angle(90, 0, 0))
-	mat:SetTranslation(owner:EyePos() + forward * 20 * 10)
+	mat:SetTranslation(owner:EyePos() + forward * 20 * gwater2.solver:GetParameter("fluid_rest_distance"))
 	
 	gwater2.solver:AddCylinder(mat, Vector(gwater2["size"], gwater2["size"], 1), {vel = forward * gwater2["forward_velocity"]})
 end
@@ -81,7 +81,7 @@ end
 if SERVER then return end
 
 function SWEP:DrawHUD()
-	surface.DrawCircle(ScrW() / 2, ScrH() / 2, gwater2["size"] * gwater2["density"] * gwater2.solver:GetParameter("fluid_rest_distance") * 4, 255, 255, 255, 255)
+	surface.DrawCircle(ScrW() / 2, ScrH() / 2, gwater2["size"] * gwater2["density"] * 4 * 10, 255, 255, 255, 255)
 	draw.DrawText("Left-Click to Spawn Particles", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.75, color_white, TEXT_ALIGN_RIGHT)
 	draw.DrawText("Right-Click to Spawn a Sphere", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.78, color_white, TEXT_ALIGN_RIGHT)
 	draw.DrawText("Reload to Remove All", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.81, color_white, TEXT_ALIGN_RIGHT)
