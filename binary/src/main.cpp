@@ -25,8 +25,6 @@ UTIL_EntityByIndexFN UTIL_EntityByIndex = nullptr;
 
 float CM_2_INCH = 2.54 * 2.54;	// FleX is in centimeters, source is in inches. We need to convert units
 
-//#define GET_FLEX(type, stack_pos) LUA->GetUserType<type>(stack_pos, type == FlexSolver ? FLEXSOLVER_METATABLE : FLEXRENDERER_METATABLE)
-
 /************************** Flex Solver LUA Interface *******************************/
 
 #define GET_FLEXSOLVER(stack_pos) LUA->GetUserType<FlexSolver>(stack_pos, FLEXSOLVER_METATABLE)

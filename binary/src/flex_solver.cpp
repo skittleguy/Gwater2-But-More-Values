@@ -84,7 +84,7 @@ void FlexSolver::next_particle() {
 		particle_queue_index++;
 
 		// This should NEVER run.. but.. just incase.. 
-		if (particle_queue_index > get_max_particles()) {
+		if (particle_queue_index >= get_max_particles()) {
 			Warning("[GWater2 Internal Error]: PARTICLE QUEUE OVERFLOWED, EXITING! THIS SHOULD NEVER HAPPEN!\n");
 			particle_queue_index = 0;
 			break;

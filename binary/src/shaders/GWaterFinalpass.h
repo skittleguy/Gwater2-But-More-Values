@@ -15,7 +15,7 @@ BEGIN_SHADER_PARAMS
 	SHADER_PARAM(IOR, SHADER_PARAM_TYPE_FLOAT, "1.333", "Ior of water")
 	SHADER_PARAM(COLOR2, SHADER_PARAM_TYPE_COLOR, "[1.0 1.0 1.0 1.0]", "Color of water. Alpha channel represents absorption amount")
 	//SHADER_PARAM(ABSORPTIONMULTIPLIER, SHADER_PARAM_TYPE_FLOAT, "1", "Absorbsion multiplier")
-	SHADER_PARAM(REFLECTANCE, SHADER_PARAM_TYPE_FLOAT, "0.5", "Reflectance of water")
+	SHADER_PARAM(REFLECTANCE, SHADER_PARAM_TYPE_FLOAT, "0.0", "Reflectance of water")
 	SHADER_PARAM(ENVMAP, SHADER_PARAM_TYPE_TEXTURE, "env_cubemap", "envmap")
 	SHADER_PARAM(FLASHLIGHTTEXTURE, SHADER_PARAM_TYPE_TEXTURE, "effects/flashlight001", "Flashlight")
 END_SHADER_PARAMS
@@ -26,6 +26,7 @@ SHADER_INIT_PARAMS() {
 	} else {
 		params[FLASHLIGHTTEXTURE]->SetStringValue("effects/flashlight001");
 	}
+
 	// This shader can be used with hw skinning
 	SET_FLAGS2(MATERIAL_VAR2_SUPPORTS_HW_SKINNING);
 	SET_FLAGS2(MATERIAL_VAR2_LIGHTING_VERTEX_LIT);
@@ -33,11 +34,18 @@ SHADER_INIT_PARAMS() {
 }
 
 SHADER_INIT {
-	LoadCubeMap(ENVMAP, TEXTUREFLAGS_SRGB);
-	LoadTexture(SCREENTEXTURE);
-	LoadTexture(NORMALTEXTURE);
-	LoadTexture(DEPTHTEXTURE);
-
+	if (params[ENVMAP]->IsDefined()) {
+		LoadCubeMap(ENVMAP, TEXTUREFLAGS_SRGB);
+	}
+	if (params[SCREENTEXTURE]->IsDefined()) {
+		LoadTexture(SCREENTEXTURE);
+	}
+	if (params[NORMALTEXTURE]->IsDefined()) {
+		LoadTexture(NORMALTEXTURE);
+	}
+	if (params[DEPTHTEXTURE]->IsDefined()) {
+		LoadTexture(DEPTHTEXTURE);
+	}
 	if (FLASHLIGHTTEXTURE != -1) {
 		LoadTexture(FLASHLIGHTTEXTURE, TEXTUREFLAGS_SRGB);
 	}
@@ -55,9 +63,9 @@ SHADER_DRAW {
 		pShaderShadow->EnableTexture(SHADER_SAMPLER0, true);	// Smoothed normals texture
 		pShaderShadow->EnableTexture(SHADER_SAMPLER1, true);	// Screen texture
 		pShaderShadow->EnableTexture(SHADER_SAMPLER2, true);	// Cubemap
-		if (g_pHardwareConfig->GetHDRType() != HDR_TYPE_NONE) {
-			pShaderShadow->EnableSRGBRead(SHADER_SAMPLER2, true);	// Doesn't seem to do anything?
-		}
+		//if (g_pHardwareConfig->GetHDRType() != HDR_TYPE_NONE) {
+			//pShaderShadow->EnableSRGBRead(SHADER_SAMPLER2, true);	// Doesn't seem to do anything?
+		//}
 		pShaderShadow->EnableTexture(SHADER_SAMPLER3, true);	// Depth
 
 		int nShadowFilterMode = 0;
@@ -73,21 +81,18 @@ SHADER_DRAW {
 			pShaderShadow->EnableAlphaWrites(false);
 
 			nShadowFilterMode = g_pHardwareConfig->GetShadowFilterMode();	// Based upon vendor and device dependent formats
-		} else {
-			if (SCREENTEXTURE != -1) {
-				SetDefaultBlendingShadowState(SCREENTEXTURE, true);
-			}
-		}
 
-		if (bHasFlashlight)
-		{
 			pShaderShadow->EnableTexture(SHADER_SAMPLER4, true);	// Shadow depth map
 			pShaderShadow->SetShadowDepthFiltering(SHADER_SAMPLER4);
 			pShaderShadow->EnableSRGBRead(SHADER_SAMPLER4, false);
 			pShaderShadow->EnableTexture(SHADER_SAMPLER5, true);	// Noise map
 			pShaderShadow->EnableTexture(SHADER_SAMPLER6, true);	// Flashlight cookie
-			pShaderShadow->EnableSRGBRead(SHADER_SAMPLER6, true); 
-		} 
+			pShaderShadow->EnableSRGBRead(SHADER_SAMPLER6, true);
+		} else {
+			if (SCREENTEXTURE != -1) {
+				SetDefaultBlendingShadowState(SCREENTEXTURE, true);
+			}
+		}
 		
 		DECLARE_STATIC_VERTEX_SHADER(GWaterFinalpass_vs30);
 		SET_STATIC_VERTEX_SHADER(GWaterFinalpass_vs30);
@@ -99,29 +104,8 @@ SHADER_DRAW {
 	}
 
 	DYNAMIC_STATE {
-		LightState_t lightState = { 0, false, false };
-		bool bFlashlightShadows = false;
-		if (bHasFlashlight) {
-			//Assert(info.m_nFlashlightTexture >= 0 && info.m_nFlashlightTextureFrame >= 0);
-			BindTexture(SHADER_SAMPLER6, FLASHLIGHTTEXTURE, FLASHLIGHTTEXTUREFRAME);
-			VMatrix worldToTexture;
-			ITexture* pFlashlightDepthTexture;
-			FlashlightState_t state = pShaderAPI->GetFlashlightStateEx(worldToTexture, &pFlashlightDepthTexture);
-			bFlashlightShadows = state.m_bEnableShadows && (pFlashlightDepthTexture != NULL);
-
-			SetFlashLightColorFromState(state, pShaderAPI, PSREG_FLASHLIGHT_COLOR);
-
-			if (pFlashlightDepthTexture && g_pConfig->ShadowDepthTexture() && state.m_bEnableShadows)
-			{
-				BindTexture(SHADER_SAMPLER4, pFlashlightDepthTexture, 0);
-				pShaderAPI->BindStandardTexture(SHADER_SAMPLER5, TEXTURE_SHADOW_NOISE_2D);
-			}
-		} else {
-			pShaderAPI->GetDX9LightState(&lightState);
-		}
-
 		// constants
-		int scr_x, scr_y = 1; pShaderAPI->GetBackBufferDimensions(scr_x, scr_y);
+		int scr_x, scr_y; pShaderAPI->GetBackBufferDimensions(scr_x, scr_y);
 		const float scr_s[2] = { 1.0 / scr_x, 1.0 / scr_y };
 		float radius = params[RADIUS]->GetFloatValue();
 		float ior = params[IOR]->GetFloatValue();
@@ -133,7 +117,7 @@ SHADER_DRAW {
 		pShaderAPI->SetPixelShaderConstant(1, &radius);
 		pShaderAPI->SetPixelShaderConstant(2, &ior);
 		pShaderAPI->SetPixelShaderConstant(3, &reflectance);
-		pShaderAPI->SetPixelShaderConstant(12, color2_normalized); // used to be 4, but that was overlapping with ambient cube.
+		pShaderAPI->SetPixelShaderConstant(4, color2_normalized);
 
 		/*
 		CMatRenderContextPtr pRenderContext(materials);
@@ -155,23 +139,28 @@ SHADER_DRAW {
 		BindTexture(SHADER_SAMPLER1, SCREENTEXTURE);
 		BindTexture(SHADER_SAMPLER2, ENVMAP);
 		BindTexture(SHADER_SAMPLER3, DEPTHTEXTURE);
-		
-		// pShaderAPI->SetPixelShaderStateAmbientLightCube( PSREG_AMBIENT_CUBE, false );	// Force to black if not bAmbientLight
-		
+
+		// Flashlight (lamp) shit
+
 		pShaderAPI->CommitPixelShaderLighting(PSREG_LIGHT_INFO_ARRAY);
-
-		DECLARE_DYNAMIC_VERTEX_SHADER(GWaterFinalpass_vs30);
-		SET_DYNAMIC_VERTEX_SHADER_COMBO(NUM_LIGHTS, lightState.m_nNumLights);
-		SET_DYNAMIC_VERTEX_SHADER(GWaterFinalpass_vs30);
-
-		DECLARE_DYNAMIC_PIXEL_SHADER(GWaterFinalpass_ps30);
-		SET_DYNAMIC_PIXEL_SHADER_COMBO(NUM_LIGHTS, lightState.m_nNumLights);
-		SET_DYNAMIC_PIXEL_SHADER_COMBO(FLASHLIGHTSHADOWS, bFlashlightShadows);
-		SET_DYNAMIC_PIXEL_SHADER_COMBO(OPAQUE, color2[3] > 254);
-		SET_DYNAMIC_PIXEL_SHADER(GWaterFinalpass_ps30);
-
+		LightState_t lightState = { 0, false, false };
+		bool bFlashlightShadows = false;
 		if (bHasFlashlight) {
+			//Assert(info.m_nFlashlightTexture >= 0 && info.m_nFlashlightTextureFrame >= 0);
+			BindTexture(SHADER_SAMPLER6, FLASHLIGHTTEXTURE, FLASHLIGHTTEXTUREFRAME);
 			VMatrix worldToTexture;
+			ITexture* pFlashlightDepthTexture;
+			FlashlightState_t state = pShaderAPI->GetFlashlightStateEx(worldToTexture, &pFlashlightDepthTexture);
+			bFlashlightShadows = state.m_bEnableShadows && (pFlashlightDepthTexture != NULL);
+
+			SetFlashLightColorFromState(state, pShaderAPI, PSREG_FLASHLIGHT_COLOR);
+
+			if (pFlashlightDepthTexture && g_pConfig->ShadowDepthTexture() && state.m_bEnableShadows)
+			{
+				BindTexture(SHADER_SAMPLER4, pFlashlightDepthTexture, 0);
+				pShaderAPI->BindStandardTexture(SHADER_SAMPLER5, TEXTURE_SHADOW_NOISE_2D);
+			}
+
 			float atten[4], pos[4], tweaks[4];
 
 			const FlashlightState_t& flashlightState = pShaderAPI->GetFlashlightState(worldToTexture);
@@ -205,7 +194,19 @@ SHADER_DRAW {
 			vScreenScale[0] = (float)nWidth / 32.0f;
 			vScreenScale[1] = (float)nHeight / 32.0f;
 			pShaderAPI->SetPixelShaderConstant(PSREG_FLASHLIGHT_SCREEN_SCALE, vScreenScale, 1);
+		} else {
+			pShaderAPI->GetDX9LightState(&lightState);
 		}
+
+		DECLARE_DYNAMIC_VERTEX_SHADER(GWaterFinalpass_vs30);
+		SET_DYNAMIC_VERTEX_SHADER_COMBO(NUM_LIGHTS, lightState.m_nNumLights);
+		SET_DYNAMIC_VERTEX_SHADER(GWaterFinalpass_vs30);
+
+		DECLARE_DYNAMIC_PIXEL_SHADER(GWaterFinalpass_ps30);
+		SET_DYNAMIC_PIXEL_SHADER_COMBO(NUM_LIGHTS, lightState.m_nNumLights);
+		SET_DYNAMIC_PIXEL_SHADER_COMBO(FLASHLIGHTSHADOWS, bFlashlightShadows);
+		SET_DYNAMIC_PIXEL_SHADER_COMBO(OPAQUE, color2[3] > 254);
+		SET_DYNAMIC_PIXEL_SHADER(GWaterFinalpass_ps30);
 
 		//pShaderAPI->SetVertexShaderConstant(4, matrix, 4, true);	// FORCE into cModelViewProj!
 	} 
