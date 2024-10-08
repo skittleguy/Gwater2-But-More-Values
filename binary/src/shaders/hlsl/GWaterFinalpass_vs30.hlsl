@@ -29,23 +29,23 @@ VS_OUTPUT main(const VS_INPUT v) {
 
 	o.projPosSetup = vProjPos;
 	o.coord = v.vTexCoord;
-	o.view_dir = normalize(world_pos - cEyePos);
+	o.view_dir = cEyePos;//normalize(world_pos - cEyePos);
 	o.proj = cViewProj;	
 	o.pos = world_pos; 
 	
 	// Scalar attenuations for four lights
 	o.lightAtten.xyz = float4(0,0,0,0);
-	#if ( NUM_LIGHTS > 0 )
-		o.lightAtten.x = GetVertexAttenForLight( world_pos, 0, false );
+	#if (NUM_LIGHTS > 0)
+		o.lightAtten.x = GetVertexAttenForLight(world_pos, 0, false);
 	#endif
-	#if ( NUM_LIGHTS > 1 )
-		o.lightAtten.y = GetVertexAttenForLight( world_pos, 1, false );
+	#if (NUM_LIGHTS > 1)
+		o.lightAtten.y = GetVertexAttenForLight(world_pos, 1, false);
 	#endif
-	#if ( NUM_LIGHTS > 2 )
-		o.lightAtten.z = GetVertexAttenForLight( world_pos, 2, false );
+	#if (NUM_LIGHTS > 2)
+		o.lightAtten.z = GetVertexAttenForLight(world_pos, 2, false);
 	#endif
-	#if ( NUM_LIGHTS > 3 )
-		o.lightAtten.w = GetVertexAttenForLight( world_pos, 3, false );
+	#if (NUM_LIGHTS > 3)
+		o.lightAtten.w = GetVertexAttenForLight(world_pos, 3, false);
 	#endif
 
 	return o;
