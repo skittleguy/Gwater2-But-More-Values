@@ -250,8 +250,13 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 		// we do this first, because it is relatively expensive (loop over every particle). mapping buffers waits for the GPU to finish calculations..
 		// ..so we may as well not waste time waiting for that and do this beforehand
 		// TODO: This could potentially be modified to work in a compute shader during FleX updates, this may be faster? (is this algorithm even parallelizable?)
+		int min_particle_index, max_particle_index;
+		min_particle_index = max_particle_index = hosts.particle_active[0];
 		for (int i = 0; i < copy_active.elementCount; i++) {
 			int& particle_index = hosts.particle_active[i];
+			min_particle_index = Min(min_particle_index, particle_index);
+			max_particle_index = Max(max_particle_index, particle_index);
+
 			float& particle_life = hosts.particle_lifetime[particle_index];
 			particle_life -= dt;
 			if (particle_life <= 0) {
@@ -264,11 +269,16 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 
 		if (!update_meshes(wait)) return false;
 
+		NvFlexCopyDesc copy = NvFlexCopyDesc();
+		copy.dstOffset = min_particle_index;
+		copy.srcOffset = min_particle_index;
+		copy.elementCount = max_particle_index - min_particle_index + 1;
+
 		// Add queued particles
 		if (!particle_queue.empty()) {	
 			// this is the intended way youre intended to add particles. problem is, mapping is expensive, especially every frame
 			
-			NvFlexGetVelocities(solver, buffers.particle_vel, NULL);
+			NvFlexGetVelocities(solver, buffers.particle_vel, &copy);
 
 			hosts.particle_pos = (Vector4D*)NvFlexMap(buffers.particle_pos, eNvFlexMapWait);
 			hosts.particle_vel = (Vector*)NvFlexMap(buffers.particle_vel, eNvFlexMapWait);
@@ -345,23 +355,23 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 		NvFlexUpdateSolver(solver, dt, (int)get_parameter("substeps"), false);
 
 		// read back (async)
-		NvFlexGetParticles(solver, buffers.particle_pos, NULL);
+		NvFlexGetParticles(solver, buffers.particle_pos, &copy);
 		NvFlexGetDiffuseParticles(solver, buffers.diffuse_pos, buffers.diffuse_vel, buffers.diffuse_count);
 
 		if (get_active_triangles() > 0) {
-			NvFlexGetNormals(solver, buffers.triangle_normals, NULL);
+			NvFlexGetNormals(solver, buffers.triangle_normals, &copy);
 		}
 
 		if (parameters.anisotropyScale != 0) {
-			NvFlexGetAnisotropy(solver, buffers.particle_ani0, buffers.particle_ani1, buffers.particle_ani2, NULL);
+			NvFlexGetAnisotropy(solver, buffers.particle_ani0, buffers.particle_ani1, buffers.particle_ani2, &copy);
 		}
 
 		if (parameters.smoothing != 0) {
-			NvFlexGetSmoothParticles(solver, buffers.particle_smooth, NULL);
+			NvFlexGetSmoothParticles(solver, buffers.particle_smooth, &copy);
 		}
 
 		if (get_parameter("reaction_forces") > 1) {
-			NvFlexGetVelocities(solver, buffers.particle_vel, NULL);
+			NvFlexGetVelocities(solver, buffers.particle_vel, &copy);
 			NvFlexGetContacts(solver, buffers.contact_planes, buffers.contact_vel, buffers.contact_indices, buffers.contact_count);
 		}
 
@@ -510,7 +520,7 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	parameters.restitution = 0.0f;
 
 	parameters.maxSpeed = 1e5;
-	parameters.maxAcceleration = 1e5;
+	parameters.maxAcceleration = 1e4;
 	parameters.relaxationMode = eNvFlexRelaxationLocal;
 	parameters.relaxationFactor = 0.25f;	// only works with eNvFlexRelaxationGlobal
 	parameters.solidPressure = 0.5f;

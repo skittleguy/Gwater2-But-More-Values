@@ -15,7 +15,8 @@ local cache_mipmap = get_gwater_rt("gwater2_mipmap", 1 / 1)
 local cache_absorption = get_gwater_rt("gwater2_absorption", 1 / 2, MATERIAL_RT_DEPTH_NONE)
 local cache_normals = get_gwater_rt("gwater2_normals", 1 / 1, MATERIAL_RT_DEPTH_SEPARATE)
 local cache_blur = get_gwater_rt("gwater2_blur", 1 / 2)
-local cache_caustics = GetRenderTargetEx("gwater2_caustics", 512, 512, RT_SIZE_DEFAULT, MATERIAL_RT_DEPTH_SEPARATE, 2 + 4 + 8 + 256, 0, -1)
+local caustics_res = 2048
+local cache_caustics = GetRenderTargetEx("gwater2_caustics" .. caustics_res, 2048, 2048, RT_SIZE_DEFAULT, MATERIAL_RT_DEPTH_SEPARATE, 2 + 4 + 8 + 256, 0, -1)
 
 local water = Material("gwater2/finalpass")
 local water_blur = Material("gwater2/smooth")
@@ -150,46 +151,78 @@ local function do_finalpass()
 	gwater2.renderer:DrawDiffuse()
 end
 
-local dist = 2070
+--[[
+local dist = 5000
 flashlight = flashlight or ProjectedTexture()
-flashlight:SetTexture("effects/flashlight/square")
-flashlight:SetFarZ(dist + 100)
-flashlight:SetBrightness(99999)
+flashlight:SetTexture(cache_caustics:GetName())
+flashlight:SetFarZ(dist * 2)
+flashlight:SetBrightness(999)
 flashlight:SetEnableShadows(true)
-flashlight:SetColor(Color(0, 255, 0, 255))
-flashlight:SetFOV(45)
---flashlight:SetNearZ(dist - 100)
+flashlight:SetColor(Color(255, 255, 255, 255))
+flashlight:SetFOV(15)
+flashlight:SetNearZ(dist / 2)
+--flashlight:SetNearZ(dist - 100)]]
+
 local function do_caustics()
 	local pos = LocalPlayer():GetPos()
-	local offset = Vector(1, 0, 0) * dist
+	local offset = Vector(0, 0, 1) * dist
 	local ang = (-offset):Angle()
+
 	flashlight:SetPos(pos + offset)
 	flashlight:SetAngles(ang)
 	flashlight:Update()
 
-	hook.Add("ShouldDrawLocalPlayer", "gwater2_drawplayer", function() return true end)
+	--hook.Add("ShouldDrawLocalPlayer", "gwater2_drawplayer", function() return true end)
+	render.ClearRenderTarget(cache_caustics, Color(0, 0, 0, 255))
 	render.PushRenderTarget(cache_caustics)
-	render.RenderView({
-		origin = pos + offset,
-		angles = ang,
-		fov = 45,
-		aspect = 1,
-		drawviewmodel = false,
-		w = 512,
-		h = 512,
-	})
+	render.ClearDepth()
+	render.OverrideColorWriteEnable(true, false)
+	--render.RenderView({
+	--	origin = pos + offset,
+	--	angles = ang,
+	--	fov = 30,
+	--	aspect = 1,
+	--	drawviewmodel = false,
+	--	w = caustics_res,
+	--	h = caustics_res,
+	--})
+	--render.SetLightingMode(1)
+	cam.Start3D(pos + offset, ang, 15, 0, 0, caustics_res, caustics_res)
+	render.SetMaterial(Material("effects/flashlight/caustics"))
+	--render.SetMaterial(Material("lights/white"))	-- FIX ME
+
+	render.SetStencilWriteMask(0xFF)
+	render.SetStencilTestMask(0xFF)
+	render.SetStencilReferenceValue(1)
+	render.SetStencilCompareFunction(STENCIL_ALWAYS)
+	render.SetStencilFailOperation(STENCIL_KEEP)
+	render.SetStencilZFailOperation(STENCIL_KEEP)
+	render.SetStencilPassOperation(STENCIL_REPLACE)
+	render.ClearStencil()
+	render.SetStencilEnable(true)
+
+	gwater2.renderer:DrawWater()
+	render.OverrideColorWriteEnable(false, false)
+
+	render.SetStencilCompareFunction(STENCIL_EQUAL)
+
+	render.DrawScreenQuad()
+
+	render.SetStencilEnable(false)
+	cam.End3D()
+	--render.BlurRenderTarget(cache_caustics, 0, 0, 0)
 	render.PopRenderTarget()
-	hook.Remove("ShouldDrawLocalPlayer", "gwater2_drawplayer")
-	debugoverlay.Line(pos, pos + offset, 0.1, Color(255, 0, 0, 255))
-	debugoverlay.Line(pos + offset, pos + offset + ang:Forward() * 10, 0.1, Color(0, 255, 0, 255))
+	--render.SetViewPort(0, 0, scrw, scrh)
+	--render.SetLightingMode(0)
+	render.DrawTextureToScreenRect(cache_caustics, 0, 0, 256, 256)
+
+	--debugoverlay.Line(pos, pos + offset, 0.1, Color(255, 0, 0, 255))
+	--debugoverlay.Line(pos + offset, pos + offset + ang:Forward() * 10, 0.1, Color(0, 255, 0, 255))
 end
 
 -- gwater2 shader pipeline
 hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky3d)	--PreDrawViewModels
-	if sky3d or render.GetRenderTarget() then return end	-- STOPS CAUSTICS FROM RECURSIVELY CRASHING
-
-	--do_caustics()
-	render.DrawTextureToScreenRect(cache_caustics, 0, 0, 256, 256)
+	if sky3d or render.GetRenderTarget() then return end
 
 	if gwater2.solver:GetActiveParticles() < 1 then return end
 	
@@ -207,7 +240,10 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	do_diffuse_inside()
 	do_normals()
 	do_finalpass()
-	do_caustics()
+
+	render.DrawTextureToScreenRect(cache_absorption, 0, 0, ScrW() / 4, ScrH() / 4)
+
+	--do_caustics()
 end)
 
 --hook.Add("NeedsDepthPass", "gwater2_depth", function()
