@@ -114,7 +114,7 @@ float3 do_specular(PS_INPUT i, float3 normal) {
 
 float3 do_cubemap(PS_INPUT i, float3 normal) {
 	#if HDR
-		return texCUBE(CUBEMAP, reflect(i.view_dir, normal)).xyz * ENV_MAP_SCALE * 2.2;
+		return pow(texCUBE(CUBEMAP, reflect(i.view_dir, normal)).xyz * ENV_MAP_SCALE, 1 / 2.2);
 	#endif
 	
 	return texCUBE(CUBEMAP, reflect(i.view_dir, normal)).xyz * ENV_MAP_SCALE;

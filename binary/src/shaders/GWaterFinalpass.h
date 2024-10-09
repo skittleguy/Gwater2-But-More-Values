@@ -4,7 +4,7 @@
 #include "shaders/inc/GWaterFinalpass_ps30.inc"
 #include "cpp_shader_constant_register_map.h"
 
-extern ConVar* gwater2_hdr_fix;
+ConVar* gwater2_hdr_fix;
 
 BEGIN_VS_SHADER(GWaterFinalpass, "gwater2 helper")
 
