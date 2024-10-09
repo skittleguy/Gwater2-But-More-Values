@@ -1,5 +1,6 @@
 // DYNAMIC: "OPAQUE" "0..1"
 // DYNAMIC: "NUM_LIGHTS"				"0..4"
+// DYNAMIC: "HDR"						"0..1"
 // STATIC: "FLASHLIGHT"					"0..1"
 // STATIC: "FLASHLIGHTDEPTHFILTERMODE"	"0..2"
 
@@ -112,7 +113,10 @@ float3 do_specular(PS_INPUT i, float3 normal) {
 }
 
 float3 do_cubemap(PS_INPUT i, float3 normal) {
-	//return pow(texCUBE(CUBEMAP, normalize(reflect(i.view_dir, normal))).xyz, 1/2.2) * 3.63102319481;// * ENV_MAP_SCALE / 2.2;
+	#if HDR
+		return texCUBE(CUBEMAP, reflect(i.view_dir, normal)).xyz * ENV_MAP_SCALE * 2.2;
+	#endif
+	
 	return texCUBE(CUBEMAP, reflect(i.view_dir, normal)).xyz * ENV_MAP_SCALE;
 }
 
@@ -148,12 +152,12 @@ float4 main(PS_INPUT i) : COLOR {
 	#endif
 
 	// Final lighting calculations
-	float fresnel = fresnel_schlicks(max(dot(smoothed_normal, -i.view_dir), 0.0), IOR);
 	#if OPAQUE
 		return final_output(do_diffuse(smoothed_normal) + do_specular(i, smoothed_normal));
 
 	#else // Translucent
 		// Chat is this accurate??
+		float fresnel = fresnel_schlicks(max(dot(smoothed_normal, -i.view_dir), 0.0), IOR);
 		return final_output((1.0 - fresnel) * do_refraction(i, smoothed_normal) * do_absorption(i) + do_cubemap(i, smoothed_normal) * fresnel + do_specular(i, smoothed_normal));
 	#endif
 };

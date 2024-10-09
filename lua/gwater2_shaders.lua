@@ -102,8 +102,6 @@ local function do_normals()
 	render.PopRenderTarget()
 	render.SetRenderTargetEx(1, nil)
 
-	render.SetStencilCompareFunction(STENCIL_EQUAL)
-
 	-- Blur normals
 	local scrw = ScrW()
 	local scrh = ScrH()
@@ -241,7 +239,7 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	do_normals()
 	do_finalpass()
 
-	render.DrawTextureToScreenRect(cache_absorption, 0, 0, ScrW() / 4, ScrH() / 4)
+	--render.DrawTextureToScreenRect(cache_absorption, 0, 0, ScrW() / 4, ScrH() / 4)
 
 	--do_caustics()
 end)

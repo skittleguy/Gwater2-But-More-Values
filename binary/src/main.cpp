@@ -1071,9 +1071,19 @@ GMOD_MODULE_OPEN() {
 
 	// _G.FlexSolver = NewFlexSolver
 	LUA->PushSpecial(SPECIAL_GLOB);
-	ADD_FUNCTION(LUA, NewFlexSolver, "FlexSolver");
-	ADD_FUNCTION(LUA, NewFlexRenderer, "FlexRenderer");
-	ADD_FUNCTION(LUA, GWATER2_QuickHackRemoveMeASAP, "GWATER2_QuickHackRemoveMeASAP");
+		ADD_FUNCTION(LUA, NewFlexSolver, "FlexSolver");
+		ADD_FUNCTION(LUA, NewFlexRenderer, "FlexRenderer");
+		ADD_FUNCTION(LUA, GWATER2_QuickHackRemoveMeASAP, "GWATER2_QuickHackRemoveMeASAP");
+
+		// gwater2_hdr_fix = ConVar("gwater2_hdr_fix", "0", FCVAR_ARCHIVE);
+		LUA->GetField(-1, "CreateConVar");
+		LUA->PushString("gwater2_hdr_fix");
+		LUA->PushString("0");
+		LUA->PushNumber(FCVAR_ARCHIVE);
+		LUA->Call(3, 1);
+		gwater2_hdr_fix = LUA->GetUserType<ConVar>(-1, Type::ConVar);
+
+		LUA->Pop();
 	LUA->Pop();
 
 	// Get serverside physics objects from client DLL. Since server.dll exists in memory, we can find it and avoid networking.
@@ -1090,6 +1100,7 @@ GMOD_MODULE_OPEN() {
 	}
 
 	UTIL_EntityByIndex = (UTIL_EntityByIndexFN)UTIL_EntityByIndexAddr;
+
 	return 0;
 }
 

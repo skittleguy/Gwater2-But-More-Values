@@ -4,6 +4,8 @@
 #include "shaders/inc/GWaterFinalpass_ps30.inc"
 #include "cpp_shader_constant_register_map.h"
 
+extern ConVar* gwater2_hdr_fix;
+
 BEGIN_VS_SHADER(GWaterFinalpass, "gwater2 helper")
 
 // Shader parameters
@@ -206,6 +208,7 @@ SHADER_DRAW {
 		SET_DYNAMIC_PIXEL_SHADER_COMBO(NUM_LIGHTS, lightState.m_nNumLights);
 		SET_DYNAMIC_PIXEL_SHADER_COMBO(FLASHLIGHTSHADOWS, bFlashlightShadows);
 		SET_DYNAMIC_PIXEL_SHADER_COMBO(OPAQUE, color2[3] > 254);
+		SET_DYNAMIC_PIXEL_SHADER_COMBO(HDR, gwater2_hdr_fix->GetInt());
 		SET_DYNAMIC_PIXEL_SHADER(GWaterFinalpass_ps30);
 
 		//pShaderAPI->SetVertexShaderConstant(4, matrix, 4, true);	// FORCE into cModelViewProj!
