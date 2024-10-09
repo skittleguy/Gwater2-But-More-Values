@@ -278,6 +278,8 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 		if (!particle_queue.empty()) {	
 			// this is the intended way youre intended to add particles. problem is, mapping is expensive, especially every frame
 			
+			// These aren't actually updated in the tick hook
+			NvFlexGetParticles(solver, buffers.particle_pos, &copy);
 			NvFlexGetVelocities(solver, buffers.particle_vel, &copy);
 
 			hosts.particle_pos = (Vector4D*)NvFlexMap(buffers.particle_pos, eNvFlexMapWait);
@@ -355,7 +357,6 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 		NvFlexUpdateSolver(solver, dt, (int)get_parameter("substeps"), false);
 
 		// read back (async)
-		NvFlexGetParticles(solver, buffers.particle_pos, &copy);
 		NvFlexGetDiffuseParticles(solver, buffers.diffuse_pos, buffers.diffuse_vel, buffers.diffuse_count);
 
 		if (get_active_triangles() > 0) {
@@ -371,6 +372,7 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 		}
 
 		if (get_parameter("reaction_forces") > 1) {
+			NvFlexGetParticles(solver, buffers.particle_pos, &copy);
 			NvFlexGetVelocities(solver, buffers.particle_vel, &copy);
 			NvFlexGetContacts(solver, buffers.contact_planes, buffers.contact_vel, buffers.contact_indices, buffers.contact_count);
 		}
@@ -506,8 +508,8 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	parameters.solidRestDistance = 6.5f;
 
 	parameters.anisotropyScale = 1.f;
-	parameters.anisotropyMin = 0.2f;
-	parameters.anisotropyMax = 2.f;
+	parameters.anisotropyMin = 0.1f;
+	parameters.anisotropyMax = 0.5f;
 	parameters.smoothing = 1.0f;
 
 	parameters.dissipation = 0.f;

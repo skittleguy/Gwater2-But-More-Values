@@ -210,7 +210,7 @@ void FlexRenderer::build_meshes(FlexSolver* flex, float diffuse_radius) {
 	///// Water particles /////
 	FlexRendererThreadData water_data = FlexRendererThreadData();
 	water_data.view_projection_matrix = view_projection_matrix;
-	water_data.particle_positions = flex->get_parameter("smoothing") != 0 ? flex->hosts.particle_smooth : (Vector4D*)flex->hosts.particle_pos;
+	water_data.particle_positions = flex->hosts.particle_smooth;
 	water_data.particle_phases = flex->hosts.particle_phase;
 	water_data.particle_active = flex->hosts.particle_active;
 	water_data.max_particles = active_particles;
@@ -249,7 +249,7 @@ void FlexRenderer::build_meshes(FlexSolver* flex, float diffuse_radius) {
 	if (active_triangles > 0) {
 		// update thread data
 		FlexRendererThreadData cloth_data;
-		cloth_data.particle_positions = flex->hosts.particle_pos;
+		cloth_data.particle_positions = flex->hosts.particle_smooth;
 		cloth_data.max_particles = active_triangles;
 		cloth_data.particle_ani0 = flex->hosts.triangle_normals;
 		cloth_data.particle_active = flex->hosts.triangle_indices;

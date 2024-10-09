@@ -93,7 +93,7 @@ local function do_normals()
 	local radius = gwater2.solver:GetParameter("radius")
 
 	-- grab normals
-	water_normals:SetFloat("$radius", radius)
+	water_normals:SetFloat("$radius", radius / 2)
 	render.SetMaterial(water_normals)
 	render.PushRenderTarget(cache_normals)
 	render.SetRenderTargetEx(1, cache_mipmap)
@@ -109,9 +109,9 @@ local function do_normals()
 	water_blur:SetFloat("$radius", radius)
 	water_blur:SetTexture("$depthtexture", cache_mipmap)
 	render.SetMaterial(water_blur)
-	for i = 1, blur_passes:GetInt() do
+	for i = 1, math.ceil(blur_passes:GetInt() * 1.1) do
 		-- Blur X
-		local scale = (0.25 / i) * blur_scale:GetFloat()
+		local scale = (0.3 / i) * blur_scale:GetFloat()
 		water_blur:SetTexture("$normaltexture", cache_normals)
 		water_blur:SetVector("$scrs", Vector(scale / scrw, 0))
 		render.PushRenderTarget(cache_blur)
