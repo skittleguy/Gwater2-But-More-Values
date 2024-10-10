@@ -51,7 +51,7 @@ bool is_zero(float3 i) {
 float fresnel_schlicks(float cos_theta, float ior) {
     float r0 = (1.0 - ior) / (1.0 + ior);
     r0 = r0 * r0;
-    return min(r0 + (1.0 - r0) * pow(1.0 - cos_theta, 5.0), 1);
+    return r0 + (1.0 - r0) * pow(1.0 - cos_theta, 5.0);
 }
 
 float4 final_output(float3 final) {
@@ -59,8 +59,8 @@ float4 final_output(float3 final) {
 }
 
 float3 do_flashlight(PS_INPUT i, float3 normal) {
-	float3 reflected;
-	float3 diffuse;
+	float3 reflected = float3(0, 0, 0);
+	float3 diffuse = float3(0, 0, 0);
 	float4 flashlightSpacePosition = mul(float4(i.pos, 1.0f), g_FlashlightWorldToTexture);
 	if (flashlightSpacePosition.z > 0) {
 		DoSpecularFlashlight(g_FlashlightPos, i.pos, flashlightSpacePosition, normal,
@@ -115,9 +115,9 @@ float3 do_specular(PS_INPUT i, float3 normal) {
 float3 do_cubemap(PS_INPUT i, float3 normal) {
 	#if HDR
 		return pow(texCUBE(CUBEMAP, reflect(i.view_dir, normal)).xyz * ENV_MAP_SCALE, 1 / 2.2);
+	#else
+		return texCUBE(CUBEMAP, reflect(i.view_dir, normal)).xyz * ENV_MAP_SCALE;
 	#endif
-	
-	return texCUBE(CUBEMAP, reflect(i.view_dir, normal)).xyz * ENV_MAP_SCALE;
 }
 
 // not accurate!
@@ -140,7 +140,7 @@ float4 main(PS_INPUT i) : COLOR {
 	float radius2 = dot(offset, offset);
 	if (radius2 > 1) discard;
 
-	i.view_dir = normalize(i.pos - i.view_dir);
+	//i.view_dir = normalize(i.pos - i.view_dir);
 	float3 smoothed_normal = tex2D(NORMALS, i.P * SCR_S).xyz;
 	
 	// Weight the normals forward, as the only visible part is facing the player
@@ -156,8 +156,10 @@ float4 main(PS_INPUT i) : COLOR {
 		return final_output(do_diffuse(smoothed_normal) + do_specular(i, smoothed_normal));
 
 	#else // Translucent
+		// incorrect fresnel calculation, but looks better
+		float fresnel = min(fresnel_schlicks(max(dot(smoothed_normal, -i.view_dir), 0.0), IOR) + 0.05, 1);
+		
 		// Chat is this accurate??
-		float fresnel = fresnel_schlicks(max(dot(smoothed_normal, -i.view_dir), 0.0), IOR);
 		return final_output((1.0 - fresnel) * do_refraction(i, smoothed_normal) * do_absorption(i) + do_cubemap(i, smoothed_normal) * fresnel + do_specular(i, smoothed_normal));
 	#endif
 };

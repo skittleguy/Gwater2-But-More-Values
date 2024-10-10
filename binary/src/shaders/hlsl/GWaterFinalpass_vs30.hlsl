@@ -29,7 +29,7 @@ VS_OUTPUT main(const VS_INPUT v) {
 
 	o.projPosSetup = vProjPos;
 	o.coord = v.vTexCoord;
-	o.view_dir = cEyePos;//normalize(world_pos - cEyePos);
+	o.view_dir = normalize(world_pos - cEyePos);
 	o.proj = cViewProj;	
 	o.pos = world_pos; 
 	

@@ -92,6 +92,17 @@ end
 local function do_normals()
 	local radius = gwater2.solver:GetParameter("radius")
 
+	-- stencils are used to only blur the pixels we want
+	render.SetStencilWriteMask(0xFF)
+	render.SetStencilTestMask(0xFF)
+	render.SetStencilReferenceValue(1)
+	render.SetStencilCompareFunction(STENCIL_ALWAYS)
+	render.SetStencilFailOperation(STENCIL_KEEP)
+	render.SetStencilZFailOperation(STENCIL_KEEP)
+	render.SetStencilPassOperation(STENCIL_REPLACE)
+	render.ClearStencil()
+	render.SetStencilEnable(true)
+
 	-- grab normals
 	water_normals:SetFloat("$radius", radius / 2)
 	render.SetMaterial(water_normals)
@@ -102,29 +113,37 @@ local function do_normals()
 	render.PopRenderTarget()
 	render.SetRenderTargetEx(1, nil)
 
+	render.SetStencilCompareFunction(STENCIL_EQUAL)
+	
 	-- Blur normals
-	local scrw = ScrW()
-	local scrh = ScrH()
+	local scrw = 1 / ScrW()
+	local scrh = 1 / ScrH()
 
 	water_blur:SetFloat("$radius", radius)
 	water_blur:SetTexture("$depthtexture", cache_mipmap)
 	render.SetMaterial(water_blur)
-	for i = 1, math.ceil(blur_passes:GetInt() * 1.1) do
-		-- Blur X
+	for i = 1, blur_passes:GetInt() do
 		local scale = (0.3 / i) * blur_scale:GetFloat()
+
+		-- Blur X
 		water_blur:SetTexture("$normaltexture", cache_normals)
-		water_blur:SetVector("$scrs", Vector(scale / scrw, 0))
+		water_blur:SetVector("$scrs", Vector(scale * scrw, 0))
+		render.SetStencilEnable(false)	-- cache_blur doesn't have a stencil buffer set up, so we cant use it
 		render.PushRenderTarget(cache_blur)
 		render.DrawScreenQuad()
 		render.PopRenderTarget()
 		
 		-- Blur Y
+		
 		water_blur:SetTexture("$normaltexture", cache_blur)
-		water_blur:SetVector("$scrs", Vector(0, scale / scrh))
+		water_blur:SetVector("$scrs", Vector(0, scale * scrh))
+		render.SetStencilEnable(true)
 		render.PushRenderTarget(cache_normals)
 		render.DrawScreenQuad()
 		render.PopRenderTarget()
 	end
+
+	render.SetStencilEnable(false)
 end
 
 local lightpos = EyePos()
@@ -239,7 +258,7 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	do_normals()
 	do_finalpass()
 
-	--render.DrawTextureToScreenRect(cache_absorption, 0, 0, ScrW() / 4, ScrH() / 4)
+	render.DrawTextureToScreenRect(cache_blur, 0, 0, ScrW() / 4, ScrH() / 4)
 
 	--do_caustics()
 end)
