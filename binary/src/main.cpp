@@ -46,33 +46,33 @@ LUA_FUNCTION(FLEXSOLVER_GarbageCollect) {
 
 // Table on the top of the stack is parsed
 // ParticleData = {velocity = Vector(), mass = 1}
-Particle parse_particle(ILuaBase* LUA) {
+Particle parse_particle(ILuaBase* LUA, int stack_pos) {
 	Particle particle = Particle();
 
-	if (LUA->GetType(-1) == Type::Table) {
+	if (LUA->GetType(stack_pos) == Type::Table) {
 		// Get velocity (default = Vector())
-		LUA->GetField(-1, "vel");
+		LUA->GetField(stack_pos, "vel");
 		if (LUA->GetType(-1) == Type::Vector) {
-			particle.vel = LUA->GetVector(-1);
+			particle.vel = LUA->GetVector(-1) * CM_2_INCH;
 		}
 		LUA->Pop();
 
 		// Get mass (default = 1)
-		LUA->GetField(-1, "mass");
+		LUA->GetField(stack_pos, "mass");
 		if (LUA->GetType(-1) == Type::Number) {
 			particle.pos.w = 1.0 / LUA->GetNumber(-1);
 		}
 		LUA->Pop();
 
 		// Gets phase (default = self colliding fluid)
-		LUA->GetField(-1, "phase");	// literally nobody is going to use this, but whatever
+		LUA->GetField(stack_pos, "phase");	// literally nobody is going to use this, but whatever
 		if (LUA->GetType(-1) == Type::Number) {
 			particle.phase = NvFlexMakePhase(0, LUA->GetNumber(-1));
 		}
 		LUA->Pop();
 
 		// how long the fluid lasts in simulation seconds (default = infinite)
-		LUA->GetField(-1, "lifetime");
+		LUA->GetField(stack_pos, "lifetime");
 		if (LUA->GetType(-1) == Type::Number) {
 			particle.lifetime = LUA->GetNumber(-1) * CM_2_INCH;		// dont forget to multiply by our fucked up timescale speedup
 		}
@@ -80,6 +80,19 @@ Particle parse_particle(ILuaBase* LUA) {
 	}
 
 	return particle;
+}
+
+std::vector<Vector> parse_verts(ILuaBase* LUA, int stack_pos) {
+	std::vector<Vector> verts;	// mnnmm yess... vector vector
+	for (int i = 0; i < LUA->ObjLen(stack_pos); i++) {
+		LUA->PushNumber(i + 1);	// dont forget lua is 1 indexed!
+		LUA->GetTable(stack_pos);
+		LUA->GetField(-1, "pos");
+
+		verts.push_back(LUA->GetType(-2) == Type::Vector ? LUA->GetVector(-2) : LUA->GetVector());
+		LUA->Pop(2); //pop table & position
+	}
+	return verts;
 }
 
 // scales vmatrix while preserving rotation and translation
@@ -107,7 +120,7 @@ LUA_FUNCTION(FLEXSOLVER_AddParticle) {
 
 	// Push table to top of stack
 	LUA->Push(3);
-	Particle particle = parse_particle(LUA);
+	Particle particle = parse_particle(LUA, 3);
 	particle.pos.x = pos.x;
 	particle.pos.y = pos.y;
 	particle.pos.z = pos.z;
@@ -130,7 +143,7 @@ LUA_FUNCTION(FLEXSOLVER_AddCube) {
 	scale(transform, flex->get_parameter("fluid_rest_distance"));
 
 	LUA->Push(4);
-	Particle data = parse_particle(LUA);
+	Particle data = parse_particle(LUA, 4);
 
 	for (float z = 0; z < size.z; z++) {
 		for (float y = 0; y < size.y; y++) {
@@ -161,7 +174,7 @@ LUA_FUNCTION(FLEXSOLVER_AddSphere) {
 	scale(transform, flex->get_parameter("fluid_rest_distance"));
 
 	LUA->Push(4);
-	Particle data = parse_particle(LUA);
+	Particle data = parse_particle(LUA, 4);
 
 	for (int z = -size + 1; z < size; z++) {
 		for (int y = -size + 1; y < size; y++) {
@@ -194,7 +207,7 @@ LUA_FUNCTION(FLEXSOLVER_AddCylinder) {
 	scale(transform, flex->get_parameter("fluid_rest_distance"));
 
 	LUA->Push(4);
-	Particle data = parse_particle(LUA);
+	Particle data = parse_particle(LUA, 4);
 
 	for (int z = -size.z + 1; z < size.z; z++) {
 		for (int y = -size.y + 1; y < size.y; y++) {
@@ -214,6 +227,54 @@ LUA_FUNCTION(FLEXSOLVER_AddCylinder) {
 	return 0;
 }
 
+LUA_FUNCTION(FLEXSOLVER_AddMesh) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	LUA->CheckType(2, Type::Matrix);	// Translation
+	LUA->CheckType(3, Type::Table);		// Mesh data
+	//LUA->CheckType(4, Type::Table);	// ParticleData
+
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+	VMatrix transform = *LUA->GetUserType<VMatrix>(2, Type::Matrix);
+	Particle particle_data = parse_particle(LUA, 4);
+	
+	// Indices and vertices must be separated
+	std::vector<Vector> verts = parse_verts(LUA, 3);
+
+	// Size of data is invalid
+	if (verts.size() % 3 != 0) {
+		LUA->PushBool(false);
+		return 1;
+	}
+
+	int* indices = (int*)malloc(verts.size() * sizeof(int));
+	for (int i = 0; i < verts.size(); i++) indices[i] = i;
+	
+	// Triangulate data
+	NvFlexExtAsset* asset = NvFlexExtCreateRigidFromMesh((float*)verts.data(), verts.size(), indices, verts.size(), flex->get_parameter("fluid_rest_distance"), 0);
+
+	free(indices);
+	// Data couldn't be triangulated
+	if (!asset) {
+		LUA->PushBool(false);
+		return 1;
+	}
+
+	// Add Particles
+	for (int i = 0; i < asset->numParticles; i++) {
+		Vector pos = transform * ((Vector4D*)asset->particles)[i].AsVector3D();
+		particle_data.pos.x = pos.x;
+		particle_data.pos.y = pos.y;
+		particle_data.pos.z = pos.z;
+
+		flex->add_particle(particle_data);
+	}
+
+	NvFlexExtDestroyAsset(asset);
+
+	LUA->PushBool(true);
+	return 1;
+}
+
 LUA_FUNCTION(FLEXSOLVER_AddCloth) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckType(2, Type::Matrix);	// pos
@@ -226,7 +287,7 @@ LUA_FUNCTION(FLEXSOLVER_AddCloth) {
 	scale(transform, flex->get_parameter("solid_rest_distance"));
 
 	LUA->Push(4);
-	Particle data = parse_particle(LUA);
+	Particle data = parse_particle(LUA, 4);
 
 	flex->add_cloth(transform, Vector2D(size.x, size.y), data);
 
@@ -301,7 +362,7 @@ LUA_FUNCTION(FLEXSOLVER_RemoveCube) {
 // ********** Collision creation / modification / destruction ********** //
 
 // Adds a triangle collision mesh to a FlexSolver
-LUA_FUNCTION(FLEXSOLVER_AddConcaveMesh) {
+LUA_FUNCTION(FLEXSOLVER_AddConcaveCollider) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckNumber(2);				// Entity ID
 	LUA->CheckType(3, Type::Table);		// Mesh data
@@ -312,16 +373,7 @@ LUA_FUNCTION(FLEXSOLVER_AddConcaveMesh) {
 	QAngle ang = LUA->GetAngle(5);
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
-	std::vector<Vector> verts;	// mnnmm yess... vector vector
-	for (int i = 1; i <= LUA->ObjLen(3); i++) {	// dont forget lua is 1 indexed!
-		LUA->PushNumber(i);
-		LUA->GetTable(3);
-		LUA->GetField(-1, "pos");
-
-		verts.push_back(LUA->GetType(-2) == Type::Vector ? LUA->GetVector(-2) : LUA->GetVector());
-		LUA->Pop(2); //pop table & position
-	}
-
+	std::vector<Vector> verts = parse_verts(LUA, 3);
 	FlexMesh mesh = FlexMesh(FLEX_LIBRARY, (int)LUA->GetNumber(2));
 	if (!mesh.init_concave(verts, true)) {
 		LUA->ThrowError("Tried to add concave mesh with invalid data (NumVertices is not a multiple of 3!)");
@@ -338,7 +390,7 @@ LUA_FUNCTION(FLEXSOLVER_AddConcaveMesh) {
 }
 
 // Adds a convex collision mesh to a FlexSolver
-LUA_FUNCTION(FLEXSOLVER_AddConvexMesh) {
+LUA_FUNCTION(FLEXSOLVER_AddConvexCollider) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckNumber(2);				// Entity ID
 	LUA->CheckType(3, Type::Table);		// Mesh data
@@ -349,15 +401,7 @@ LUA_FUNCTION(FLEXSOLVER_AddConvexMesh) {
 	QAngle ang = LUA->GetAngle(5);
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
-	std::vector<Vector> verts;
-	for (int i = 1; i <= LUA->ObjLen(3); i++) {	// dont forget lua is 1 indexed!
-		LUA->PushNumber(i);
-		LUA->GetTable(3);
-		LUA->GetField(-1, "pos");
-
-		verts.push_back(LUA->GetType(-2) == Type::Vector ? LUA->GetVector(-2) : LUA->GetVector());
-		LUA->Pop(2); //pop table & position
-	}
+	std::vector<Vector> verts = parse_verts(LUA, 3);
 
 	FlexMesh mesh = FlexMesh(FLEX_LIBRARY, (int)LUA->GetNumber(2));
 	if (!mesh.init_convex(verts, true)) {
@@ -374,7 +418,7 @@ LUA_FUNCTION(FLEXSOLVER_AddConvexMesh) {
 	return 0;
 }
 
-LUA_FUNCTION(FLEXSOLVER_AddMapMesh) {
+LUA_FUNCTION(FLEXSOLVER_AddMapCollider) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckNumber(2);
 	LUA->CheckString(3);	// Map name
@@ -416,7 +460,7 @@ LUA_FUNCTION(FLEXSOLVER_AddMapMesh) {
 }
 
 // Updates position of a collider
-LUA_FUNCTION(FLEXSOLVER_SetMeshPos) {
+LUA_FUNCTION(FLEXSOLVER_SetColliderPos) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckNumber(2);				// Mesh ID
 	LUA->CheckType(3, Type::Vector);	// Prop Pos
@@ -430,7 +474,7 @@ LUA_FUNCTION(FLEXSOLVER_SetMeshPos) {
 	return 0;
 }
 
-LUA_FUNCTION(FLEXSOLVER_SetMeshAng) {
+LUA_FUNCTION(FLEXSOLVER_SetColliderAng) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckNumber(2);				// Mesh ID
 	LUA->CheckType(3, Type::Angle);		// Prop angle
@@ -444,7 +488,7 @@ LUA_FUNCTION(FLEXSOLVER_SetMeshAng) {
 	return 0;
 }
 
-LUA_FUNCTION(FLEXSOLVER_SetMeshCollide) {
+LUA_FUNCTION(FLEXSOLVER_SetColliderEnabled) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckNumber(2);				// Mesh ID
 	LUA->CheckType(3, Type::Bool);		// Enable collisions?
@@ -459,7 +503,7 @@ LUA_FUNCTION(FLEXSOLVER_SetMeshCollide) {
 }
 
 // Removes all meshes associated with the entity id
-LUA_FUNCTION(FLEXSOLVER_RemoveMesh) {
+LUA_FUNCTION(FLEXSOLVER_RemoveCollider) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckNumber(2); // Entity ID
 
@@ -475,7 +519,7 @@ LUA_FUNCTION(FLEXSOLVER_RemoveMesh) {
 // second parameter is the entity id associated that was given during AddMesh
 // third parameter is the number of reoccurring id's in a row (eg. given id's 0,1,1,1 the parameter would be 2 at the end of execution since 1 was repeated two more times)
 // ^the third parameter sounds confusing but its useful for multi-joint entities such as ragdolls/players/npcs
-LUA_FUNCTION(FLEXSOLVER_IterateMeshes) {
+LUA_FUNCTION(FLEXSOLVER_IterateColliders) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckType(2, Type::Function);
 	FlexSolver* flex = GET_FLEXSOLVER(1);
@@ -1030,6 +1074,7 @@ GMOD_MODULE_OPEN() {
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddCube, "AddCube");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddSphere, "AddSphere");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddCylinder, "AddCylinder");
+	ADD_FUNCTION(LUA, FLEXSOLVER_AddMesh, "AddMesh");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddCloth, "AddCloth");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddForceField, "AddForceField");
 	ADD_FUNCTION(LUA, FLEXSOLVER_RemoveSphere, "RemoveSphere");
@@ -1037,19 +1082,19 @@ GMOD_MODULE_OPEN() {
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetMaxParticles, "GetMaxParticles");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetMaxDiffuseParticles, "GetMaxDiffuseParticles");
 	ADD_FUNCTION(LUA, FLEXSOLVER_RenderParticles, "RenderParticles");
-	ADD_FUNCTION(LUA, FLEXSOLVER_AddConcaveMesh, "AddConcaveMesh");
-	ADD_FUNCTION(LUA, FLEXSOLVER_AddConvexMesh, "AddConvexMesh");
-	ADD_FUNCTION(LUA, FLEXSOLVER_RemoveMesh, "RemoveMesh");
-	ADD_FUNCTION(LUA, FLEXSOLVER_SetMeshPos, "SetMeshPos");
-	ADD_FUNCTION(LUA, FLEXSOLVER_SetMeshAng, "SetMeshAng");
-	ADD_FUNCTION(LUA, FLEXSOLVER_SetMeshCollide, "SetMeshCollide");
+	ADD_FUNCTION(LUA, FLEXSOLVER_AddConcaveCollider, "AddConcaveCollider");
+	ADD_FUNCTION(LUA, FLEXSOLVER_AddConvexCollider, "AddConvexCollider");
+	ADD_FUNCTION(LUA, FLEXSOLVER_RemoveCollider, "RemoveCollider");
+	ADD_FUNCTION(LUA, FLEXSOLVER_SetColliderPos, "SetColliderPos");
+	ADD_FUNCTION(LUA, FLEXSOLVER_SetColliderAng, "SetColliderAng");
+	ADD_FUNCTION(LUA, FLEXSOLVER_SetColliderEnabled, "SetColliderEnabled");
 	ADD_FUNCTION(LUA, FLEXSOLVER_SetParameter, "SetParameter");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetParameter, "GetParameter");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetActiveParticles, "GetActiveParticles");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetActiveDiffuse, "GetActiveDiffuse");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetParticlesInRadius, "GetParticlesInRadius");
-	ADD_FUNCTION(LUA, FLEXSOLVER_AddMapMesh, "AddMapMesh");
-	ADD_FUNCTION(LUA, FLEXSOLVER_IterateMeshes, "IterateMeshes");
+	ADD_FUNCTION(LUA, FLEXSOLVER_AddMapCollider, "AddMapCollider");
+	ADD_FUNCTION(LUA, FLEXSOLVER_IterateColliders, "IterateColliders");
 	ADD_FUNCTION(LUA, FLEXSOLVER_ApplyContacts, "ApplyContacts");
 	ADD_FUNCTION(LUA, FLEXSOLVER_InitBounds, "InitBounds");
 	ADD_FUNCTION(LUA, FLEXSOLVER_Reset, "Reset");

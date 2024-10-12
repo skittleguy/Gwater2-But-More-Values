@@ -118,6 +118,9 @@ void FlexSolver::add_cloth(VMatrix translation, Vector2D size, Particle particle
 	particle.phase = FlexPhase::CLOTH;	// force to cloth
 	particle.lifetime = FLT_MAX;		// no die
 
+	NvFlexGetParticles(solver, buffers.particle_pos, NULL);
+	NvFlexGetVelocities(solver, buffers.particle_vel, NULL);
+
 	// ridiculous amount of buffers to map
 	int* triangle_indices = (int*)NvFlexMap(buffers.triangle_indices, eNvFlexMapWait);
 	Vector4D* particle_pos = (Vector4D*)NvFlexMap(buffers.particle_pos, eNvFlexMapWait);
