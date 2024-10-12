@@ -467,7 +467,7 @@ concommand.Add("gwater2_menu", function()
 		local mat = Matrix()
 		mat:SetTranslation(Vector(x + 60 + math.random(), 0, y + 50))
 		options.solver:InitBounds(Vector(x, 0, y + 25), Vector(x + 192, options.solver:GetParameter("radius"), y + 390))
-		options.solver:AddCube(mat, Vector(4, 1, 1), {vel = Vector(0, 0, 50)})
+		options.solver:AddCube(mat, Vector(4, 1, 1), {vel = Vector(0, 0, 7.5)})
 		options.solver:Tick(1 / 60)
 		
 		--average_fps = average_fps + (FrameTime() - average_fps) * 0.01
@@ -947,7 +947,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 
 		labels[1], sliders["Size"] = create_slider(scrollPanel, "Size", 1, 10, 0, 50, 370, 0)
 		labels[2], sliders["Density"] = create_slider(scrollPanel, "Density", 0.5, 5, 1, 80, 370, 0)
-		labels[3], sliders["Forward Velocity"] = create_slider(scrollPanel, "Forward Velocity", 0, 300, 0, 110, 370, 0)
+		labels[3], sliders["Forward Velocity"] = create_slider(scrollPanel, "Forward Velocity", 0, 50, 0, 110, 370, 0)
 	end
 
 	local function patron_tab(tabs)

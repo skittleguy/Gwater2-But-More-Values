@@ -3,24 +3,33 @@ AddCSLuaFile()
 ENT.Type = "anim"
 ENT.Base = "base_anim"
 
-ENT.Category     = "GWater2"
-ENT.PrintName    = "Transmuter"
-ENT.Author       = "Meetric"
-ENT.Purpose      = "Turns objects into water"
-ENT.Instructions = "Touch it"
-ENT.Spawnable    = true
-ENT.AdminOnly 	 = true
-ENT.RenderGroup = RENDERGROUP_OPAQUE	-- make sure water sees this object
+ENT.Category     	= "GWater2"
+ENT.PrintName    	= "Transmuter"
+ENT.Author       	= "Meetric"
+ENT.Purpose      	= "Turns objects into water"
+ENT.Instructions 	= "Touch it"
+ENT.Spawnable    	= true
+ENT.AdminOnly 	 	= true
+ENT.RenderGroup 	= RENDERGROUP_OPAQUE	-- make sure water sees this object
+ENT.GWATER2_TOUCHED = true
 
 if SERVER then
+	function ENT:SetupDataTables()
+		self:NetworkVar("Bool", 0, "On", {KeyName = "On", Edit = {type = "Bool", order = 0}})
+	end
+
+	function ENT:UpdateMaterial()
+		self:SetSubMaterial(1, self:GetOn() and "models/alyx/emptool_glow" or "Models/effects/vol_light001")
+	end
+	
 	function ENT:Initialize()
-		self:SetModel("models/props_phx/construct/glass/glass_plate2x2.mdl")
-		self:SetSubMaterial(0, "models/spawn_effect2")
-		--self:SetSubMaterial(1, "models/wireframe")
-		
+		self:SetModel("models/props_phx/construct/plastic/plastic_panel2x2.mdl")
+		self:UpdateMaterial()
 		self:PhysicsInit(SOLID_VPHYSICS)
 		self:SetMoveType(MOVETYPE_VPHYSICS)
 		self:SetSolid(SOLID_VPHYSICS)
+		self:DrawShadow(false)
+		self:SetUseType(SIMPLE_USE)
 		self:SetTrigger(true)
 
 		util.PrecacheModel("models/props_c17/oildrum001.mdl")
@@ -30,6 +39,7 @@ if SERVER then
 		if not tr.Hit then return end
 		local ent = ents.Create(class)
 		ent:SetPos(tr.HitPos)
+		ent:SetOn(true)
 		ent:Spawn()
 		ent:Activate()
 
@@ -37,11 +47,14 @@ if SERVER then
 	end
 
 	function ENT:StartTouch(ent)
-		if !self:GetTouchTrace().Hit or ent.GWATER2_TOUCHED then return end
+		if !self:GetOn() or ent.GWATER2_TOUCHED or !self:GetTouchTrace().Hit then return end
 
 		if ent:IsPlayer() then
-			ent:KillSilent()
-			gwater2.AddModel(gwater2.quick_matrix(ent:GetPos(), nil, Vector(1, 1, 1.5)), "models/props_c17/oildrum001.mdl", {vel = ent:GetVelocity() * FrameTime()})
+			if ent:Alive() then
+				ent:KillSilent()
+				gwater2.AddModel(gwater2.quick_matrix(ent:GetPos(), nil, Vector(1, 1, 1.5)), "models/props_c17/oildrum001.mdl", {vel = ent:GetVelocity() * FrameTime()})
+			end
+
 			return
 		end
 
@@ -61,7 +74,7 @@ if SERVER then
 		ent.GWATER2_TOUCHED = true
 		--ent:Remove()
 
-		-- net is too fast and can explode sometimes
+		-- net is too fast and can cause water to explode sometimes
 		timer.Simple(0.0, function()
 			gwater2.AddModel(transform, model, extra)
 			SafeRemoveEntity(ent)
@@ -69,4 +82,9 @@ if SERVER then
 	end
 
 	ENT.Touch = ENT.StartTouch
+
+	function ENT:Use(_, _, type)
+		self:SetOn(!self:GetOn())
+		self:UpdateMaterial()
+	end
 end

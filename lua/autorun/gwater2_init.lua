@@ -147,7 +147,7 @@ gwater2["blur_passes"] = 3
 -- watergun specific (remove in 0.6)
 gwater2["size"] = 4
 gwater2["density"] = 1
-gwater2["forward_velocity"] = 100
+gwater2["forward_velocity"] = 15
 -- reaction force specific
 gwater2["force_multiplier"] = 0.01
 gwater2["force_buoyancy"] = 0
