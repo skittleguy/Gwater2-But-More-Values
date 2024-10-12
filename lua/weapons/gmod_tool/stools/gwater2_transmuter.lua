@@ -1,15 +1,15 @@
 TOOL.Category = "GWater2"
-TOOL.Name = "#Tool.gwater2_transmutator.name"
+TOOL.Name = "#Tool.gwater2_transmuter.name"
 
 if CLIENT then
-	language.Add("Tool.gwater2_transmutator.name", "Transmutator")
-	language.Add("Tool.gwater2_transmutator.desc", "Turns props into liquid")
+	language.Add("Tool.gwater2_transmuter.name", "Transmuter")
+	language.Add("Tool.gwater2_transmuter.desc", "Turns props into liquid")
 
 	TOOL.Information = {
 		{name = "left"},
 	}
 
-	language.Add("Tool.gwater2_transmutator.left", "Turns props into liquid.  Complex models may lag!")
+	language.Add("Tool.gwater2_transmuter.left", "Turns props into liquid.  Complex models may lag!")
 end
 
 function TOOL:LeftClick(trace)
@@ -22,7 +22,7 @@ function TOOL:LeftClick(trace)
 		local phys = ent:GetPhysicsObject()
 		if !IsValid(phys) then return end
 
-		local transform = gwater2.quick_matrix(ent:GetPos(), ent:GetAngles())
+		local transform = gwater2.quick_matrix(phys:GetPos(), phys:GetAngles())
 		local model = ent:GetModel()
 		local extra = {
 			ent_vel = phys:GetVelocity() * FrameTime(),

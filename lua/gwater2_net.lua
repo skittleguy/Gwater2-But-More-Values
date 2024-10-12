@@ -139,6 +139,11 @@ else	-- CLIENT
 		phys:SetAngleVelocity(extra.ent_angvel or Vector())
 
 		local colliders = CreatePhysCollidesFromModel(model)
+		if !colliders then 
+			cs_ent:Remove() 
+			return 
+		end
+		
 		local radius = gwater2.solver:GetParameter("fluid_rest_distance")
 		local offset = radius / 2
 		mins = mins + Vector(offset, offset, offset)
@@ -169,7 +174,7 @@ else	-- CLIENT
 		end
 
 		::megabreak::
-
+		for k, v in ipairs(colliders) do v:Destroy() end
 		cs_ent:Remove()
 	end)
 
