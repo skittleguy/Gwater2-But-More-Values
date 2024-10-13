@@ -62,7 +62,7 @@ local options = {
 	["Absorption"] = {text = "Enables absorption of light over distance inside of fluid.\n\n(more depth = darker color)\n\nMedium performance impact."},
 	["Depth Fix"] = {text = "Makes particles appear spherical instead of flat, creating a cleaner and smoother water surface.\n\nCauses shader overdraw.\n\nMedium-High performance impact."},
 	["Particle Limit"] = {text = "USE THIS PARAMETER AT YOUR OWN RISK.\n\nChanges the limit of particles.\n\nNote that a higher limit will negatively impact performance even with the same number of particles spawned."},
-	["Reaction Forces"] = {text = "0 = No reaction forces\n\n1 = Simple reaction forces. (Swimming)\n\n2 = Full reaction forces (Water can move props).\n\nNote that reaction forces only work with 'New Solver' on."},
+	["Reaction Forces"] = {text = "0 = No reaction forces\n\n1 = Simple reaction forces. (Swimming)\n\n2 = Full reaction forces (Water can move props)."},
 	
 	["Size"] = {text = "Size of the box the particles spawn in"},
 	["Density"] = {text = "Density of particles.\n Controls how far apart they are"},
@@ -892,7 +892,7 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 			
 			- Added emitter, and drain entity to spawnmenu
 
-			- Added spawnmenu icons
+			- Added spawnmenu icons to entities
 
 			- Improved blur performance
 			
