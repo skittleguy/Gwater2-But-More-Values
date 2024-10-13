@@ -11,7 +11,7 @@ if SERVER or !gwater2 then return end
 	-- HALF OF THIS CODE WAS WRITTEN AT 3 AM
 -- THANK YOU FOR COMING TO MY TED TALK
 
-local version = "0.6b"
+local version = "0.5.1b"
 local options = {
 	solver = FlexSolver(1000),
 	tab = CreateClientConVar("gwater2_tab"..version, "1", true),
@@ -885,28 +885,22 @@ I DO NOT take responsiblity for any hardware damage this may cause]], "DermaDefa
 
 			Make sure to read the changelog to see what has been updated!
 
-			Changelog (v0.5b):
-			- Added cloth to spawnmenu
+			Changelog (v0.5.1b):
+			- Added transmuter tool
 
-			- Added black hole to spawnmenu
+			- Added transmuter entity to spawnmenu
 			
 			- Added emitter, and drain entity to spawnmenu
 
-			- Added particle lifetimes (evaporation)
+			- Added spawnmenu icons
 
-			- Added gravity gun interaction
+			- Improved blur performance
+			
+			- Improved particle performance at larger limits
 
-			- Tweaked absorption, reflection, and phong calculations to be more realistic
+			- Improved underwater effect
 
-			- Tweaked diffuse visuals
-
-			- Tweaked portal gel preset to look more like portal gel
-
-			- Fixed particles not going through objects with 'Disable Collision' on
-
-			- Fixed a majority of particle clipping issues
-
-			- Fixed being able to 'fly' in adhesive liquids
+			- Fixed reflections with HDR enabled
 
 			- General backend code cleanup and API improvements
 
