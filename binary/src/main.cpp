@@ -308,7 +308,7 @@ LUA_FUNCTION(FLEXSOLVER_RemoveSphere) {
 		return 1;
 	}
 
-	Vector4D* particle_pos = flex->hosts.particle_smooth;
+	Vector4D* particle_pos = flex->hosts.particle_pos;
 	float* particle_lifetime = flex->hosts.particle_lifetime;
 	int* particle_active = flex->hosts.particle_active;
 	int* particle_phase = flex->hosts.particle_phase;
@@ -339,7 +339,7 @@ LUA_FUNCTION(FLEXSOLVER_RemoveCube) {
 		return 1;
 	}
 
-	Vector4D* particle_pos = flex->hosts.particle_smooth;
+	Vector4D* particle_pos = flex->hosts.particle_pos;
 	float* particle_lifetime = flex->hosts.particle_lifetime;
 	int* particle_active = flex->hosts.particle_active;
 	int* particle_phase = flex->hosts.particle_phase;
@@ -851,7 +851,7 @@ LUA_FUNCTION(FLEXSOLVER_GetParticlesInRadius) {
 
 	int num_particles = 0;
 	if (flex->get_parameter("reaction_forces") > 0) {
-		Vector4D* particle_pos = flex->hosts.particle_smooth;
+		Vector4D* particle_pos = flex->hosts.particle_pos;
 		int* particle_active = flex->hosts.particle_active;
 		int* particle_phase = flex->hosts.particle_phase;
 		for (int i = 0; i < flex->get_active_particles(); i++) {

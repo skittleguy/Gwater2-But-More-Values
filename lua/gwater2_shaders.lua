@@ -122,7 +122,7 @@ local function do_normals()
 	water_blur:SetTexture("$depthtexture", cache_mipmap)
 	render.SetMaterial(water_blur)
 	for i = 1, blur_passes:GetInt() do
-		local scale = (0.3 / math.max(i, 2)) * blur_scale:GetFloat()
+		local scale = (0.3 / i) * blur_scale:GetFloat()
 
 		-- Blur X
 		water_blur:SetTexture("$normaltexture", cache_normals)

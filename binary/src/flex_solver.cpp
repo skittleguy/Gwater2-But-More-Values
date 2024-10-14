@@ -241,7 +241,7 @@ bool FlexSolver::update_meshes(NvFlexMapFlags wait) {
 	return true;
 }
 
-// ticks the solver
+// please do not ask me how this code works or what its doing. I honestly don't know. Don't touch it.
 bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 	// Avoid ticking if the deltatime ends up being zero, as it invalidates the simulation
 	dt *= get_parameter("timescale");
@@ -256,7 +256,7 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 		int min_particle_index, max_particle_index;
 		min_particle_index = max_particle_index = hosts.particle_active[0];
 		for (int i = 0; i < copy_active.elementCount; i++) {
-			int& particle_index = hosts.particle_active[i];
+			int particle_index = hosts.particle_active[i];
 			min_particle_index = Min(min_particle_index, particle_index);
 			max_particle_index = Max(max_particle_index, particle_index);
 
@@ -264,9 +264,9 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 			particle_life -= dt;
 			if (particle_life <= 0) {
 				particle_queue_index = Min(particle_queue_index, particle_index);	// don't forget to update our minimum valid particle index!
-				particle_index = hosts.particle_active[--copy_active.elementCount];
-				active_modified = true;
+				hosts.particle_active[i] = hosts.particle_active[--copy_active.elementCount];	// swap index 'i' and end index
 				i--;	// we just shifted a particle that wont be iterated over, go back and check it
+				active_modified = true;
 			}
 		}
 
@@ -279,25 +279,33 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 
 		// Add queued particles
 		if (!particle_queue.empty()) {	
-			// this is the intended way youre intended to add particles. problem is, mapping is expensive, especially every frame
+			// this is the intended way youre intended to add particles.
 			
 			// These aren't actually updated in the tick hook
-			NvFlexGetParticles(solver, buffers.particle_pos, &copy);
-			NvFlexGetVelocities(solver, buffers.particle_vel, &copy);
+			//NvFlexGetParticles(solver, buffers.particle_pos, &copy);
+			//NvFlexGetVelocities(solver, buffers.particle_vel, &copy);
 
 			hosts.particle_pos = (Vector4D*)NvFlexMap(buffers.particle_pos, eNvFlexMapWait);
 			hosts.particle_vel = (Vector*)NvFlexMap(buffers.particle_vel, eNvFlexMapWait);
 			for (const std::pair<int, Particle>& particle : particle_queue) {
 				if (hosts.particle_lifetime[particle.first] > 0) {	// particle removed before being created (ie. between physics tick)
 					set_particle(particle.first, copy_active.elementCount++, particle.second);
+
+					// Don't forget to recalculate!
+					min_particle_index = Min(min_particle_index, particle.first);
+					max_particle_index = Max(max_particle_index, particle.first);
 				}
 			}
 			NvFlexUnmap(buffers.particle_pos);
 			NvFlexUnmap(buffers.particle_vel);
 			
+			copy.dstOffset = min_particle_index;
+			copy.srcOffset = min_particle_index;
+			copy.elementCount = max_particle_index - min_particle_index + 1;
+
 			// Update particle information
-			NvFlexSetParticles(solver, buffers.particle_pos, NULL);
-			NvFlexSetVelocities(solver, buffers.particle_vel, NULL);
+			NvFlexSetParticles(solver, buffers.particle_pos, &copy);
+			NvFlexSetVelocities(solver, buffers.particle_vel, &copy);
 
 			// My "async" solution, which adds particles without needing to map a buffer
 			// this works, but causes particle flickering, which I have yet to fix
@@ -331,7 +339,7 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 			NvFlexSetVelocities(solver, buffers.particle_vel, &copy);*/
 			
 			// finish
-			NvFlexSetPhases(solver, buffers.particle_phase, NULL);
+			NvFlexSetPhases(solver, buffers.particle_phase, &copy);
 			particle_queue.clear();
 			active_modified = true;
 		}
@@ -360,6 +368,8 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 		NvFlexUpdateSolver(solver, dt, (int)get_parameter("substeps"), false);
 
 		// read back (async)
+		NvFlexGetParticles(solver, buffers.particle_pos, NULL);		// what the fuck.
+		NvFlexGetVelocities(solver, buffers.particle_vel, NULL);	// ^
 		NvFlexGetDiffuseParticles(solver, buffers.diffuse_pos, buffers.diffuse_vel, buffers.diffuse_count);
 
 		if (get_active_triangles() > 0) {
@@ -375,7 +385,7 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 		}
 
 		if (get_parameter("reaction_forces") > 1) {
-			NvFlexGetParticles(solver, buffers.particle_pos, &copy);
+			//NvFlexGetParticles(solver, buffers.particle_pos, &copy);
 			NvFlexGetVelocities(solver, buffers.particle_vel, &copy);
 			NvFlexGetContacts(solver, buffers.contact_planes, buffers.contact_vel, buffers.contact_indices, buffers.contact_count);
 		}
