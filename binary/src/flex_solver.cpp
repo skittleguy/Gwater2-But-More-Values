@@ -282,8 +282,8 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 			// this is the intended way youre intended to add particles.
 			
 			// These aren't actually updated in the tick hook
-			//NvFlexGetParticles(solver, buffers.particle_pos, &copy);
-			//NvFlexGetVelocities(solver, buffers.particle_vel, &copy);
+			NvFlexGetParticles(solver, buffers.particle_pos, &copy);
+			NvFlexGetVelocities(solver, buffers.particle_vel, &copy);
 
 			hosts.particle_pos = (Vector4D*)NvFlexMap(buffers.particle_pos, eNvFlexMapWait);
 			hosts.particle_vel = (Vector*)NvFlexMap(buffers.particle_vel, eNvFlexMapWait);
@@ -368,8 +368,8 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 		NvFlexUpdateSolver(solver, dt, (int)get_parameter("substeps"), false);
 
 		// read back (async)
-		NvFlexGetParticles(solver, buffers.particle_pos, NULL);		// what the fuck.
-		NvFlexGetVelocities(solver, buffers.particle_vel, NULL);	// ^
+		//NvFlexGetParticles(solver, buffers.particle_pos, NULL);		// what the fuck.
+		//NvFlexGetVelocities(solver, buffers.particle_vel, NULL);	// ^
 		NvFlexGetDiffuseParticles(solver, buffers.diffuse_pos, buffers.diffuse_vel, buffers.diffuse_count);
 
 		if (get_active_triangles() > 0) {
@@ -385,7 +385,7 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 		}
 
 		if (get_parameter("reaction_forces") > 1) {
-			//NvFlexGetParticles(solver, buffers.particle_pos, &copy);
+			NvFlexGetParticles(solver, buffers.particle_pos, &copy);
 			NvFlexGetVelocities(solver, buffers.particle_vel, &copy);
 			NvFlexGetContacts(solver, buffers.contact_planes, buffers.contact_vel, buffers.contact_indices, buffers.contact_count);
 		}

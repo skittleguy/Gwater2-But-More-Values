@@ -113,7 +113,7 @@ IMesh* _build_diffuse(int id, FlexRendererThreadData data) {
 	if (particles_to_render == 0) return nullptr;
 
 	// mesh data is valid, start building our mesh
-	IMesh* mesh = materials->GetRenderContext()->CreateStaticMesh(VERTEX_GWATER2, "");
+	IMesh* mesh = materials->GetRenderContext()->CreateStaticMesh(MATERIAL_VERTEX_FORMAT_MODEL, "");
 	CMeshBuilder mesh_builder;
 	mesh_builder.Begin(mesh, MATERIAL_TRIANGLES, particles_to_render);
 	for (int mesh_index = start; mesh_index < start + particles_to_render; ++mesh_index) {
@@ -130,15 +130,19 @@ IMesh* _build_diffuse(int id, FlexRendererThreadData data) {
 		Vector right = (forward.Cross(Vector(0, 0, 1))).Normalized();
 		Vector up = forward.Cross(right);
 
+		float userdata[4] = { 0, 0, 0, 0 };
 		for (int i = 0; i < 3; i++) {	
 			Vector local_pos = (right * (water_u[i] - 0.5) + up * (water_v[i] - 0.5)) * scalar;
+			Vector local_normal = local_pos.Normalized() - forward;
 
 			// Anisotropy warping
 			local_pos += ani0 * local_pos.Dot(ani0);
 
 			mesh_builder.TexCoord2f(0, water_u[i], water_v[i]);
 			mesh_builder.Position3f(particle_pos.x + local_pos.x, particle_pos.y + local_pos.y, particle_pos.z + local_pos.z);
+			mesh_builder.UserData(userdata);
 			//mesh_builder.Normal3f(-forward.x, -forward.y, -forward.z);
+			mesh_builder.Normal3f(local_normal.x, local_normal.y, local_normal.z);
 			mesh_builder.AdvanceVertex();
 		}
 	}

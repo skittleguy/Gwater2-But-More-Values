@@ -38,11 +38,18 @@ local function unfuck_lighting(pos0, pos1)
 	render.OverrideColorWriteEnable(false, false)
 end
 
+local lightpos = EyePos()
 local function do_cloth()
 	unfuck_lighting(gwater2.cloth_pos, gwater2.cloth_pos)	-- fix cloth lighting, mostly
 	render.SetMaterial(cloth)
 	gwater2.renderer:DrawCloth()
 	render.RenderFlashlights(function() gwater2.renderer:DrawCloth() end)
+
+	-- setup water lighting
+	local tr = util.QuickTrace( EyePos(), LocalPlayer():EyeAngles():Forward() * 800, LocalPlayer())
+	local dist = math.min(230, (tr.HitPos - tr.StartPos):Length() / 1.5)	
+	lightpos = LerpVector(1.6 * FrameTime(), lightpos, EyePos() + (LocalPlayer():EyeAngles():Forward() * dist))	-- fucking hell
+	unfuck_lighting(EyePos(), lightpos)	
 end
 
 local function do_absorption()
@@ -82,6 +89,7 @@ local function do_diffuse_inside()
 		render.SetMaterial(water_bubble)
 		render.UpdateScreenEffectTexture(1)
 		gwater2.renderer:DrawDiffuse()
+		render.RenderFlashlights(function() gwater2.renderer:DrawDiffuse() end)
 		render.CopyTexture(render.GetRenderTarget(), cache_screen0)
 		render.DrawTextureToScreen(cache_screen1)
 	end
@@ -145,15 +153,8 @@ local function do_normals()
 	render.SetStencilEnable(false)
 end
 
-local lightpos = EyePos()
 local function do_finalpass()
 	local radius = gwater2.solver:GetParameter("radius")
-
-	-- setup water lighting
-	local tr = util.QuickTrace( EyePos(), LocalPlayer():EyeAngles():Forward() * 800, LocalPlayer())
-	local dist = math.min(230, (tr.HitPos - tr.StartPos):Length() / 1.5)	
-	lightpos = LerpVector(0.8 * FrameTime(), lightpos, EyePos() + (LocalPlayer():EyeAngles():Forward() * dist))	-- fucking hell
-	unfuck_lighting(EyePos(), lightpos)	
 
 	-- Setup water material parameters
 	water:SetFloat("$radius", radius)
@@ -165,6 +166,7 @@ local function do_finalpass()
 
 	render.SetMaterial(water_mist)
 	gwater2.renderer:DrawDiffuse()
+	render.RenderFlashlights(function() gwater2.renderer:DrawDiffuse() end)
 end
 
 -- gwater2 shader pipeline
