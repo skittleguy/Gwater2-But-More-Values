@@ -12,7 +12,7 @@ end
 local cache_screen0 = render.GetScreenEffectTexture()
 local cache_screen1 = render.GetScreenEffectTexture(1)
 local cache_mipmap = get_gwater_rt("gwater2_mipmap", 1 / 1)
-local cache_absorption = get_gwater_rt("gwater2_absorption", 1 / 2, MATERIAL_RT_DEPTH_NONE)
+local cache_absorption = get_gwater_rt("gwater2_absorption", 1 / 4, MATERIAL_RT_DEPTH_NONE)
 local cache_normals = get_gwater_rt("gwater2_normals", 1 / 1, MATERIAL_RT_DEPTH_SEPARATE)
 local cache_blur = get_gwater_rt("gwater2_blur", 1 / 2)
 
@@ -72,6 +72,11 @@ local function do_absorption()
 		gwater2.renderer:DrawWater()
 		render.CopyTexture(render.GetRenderTarget(), cache_absorption)
 		render.DrawTextureToScreen(cache_screen0)
+
+		--render.PushRenderTarget(cache_absorption)
+		--render.SetMaterial(water_volumetric)
+		--gwater2.renderer:DrawWater()
+		--render.PopRenderTarget()
 	else
 		-- no absorption calculations, so just use solid color
 		render.PushRenderTarget(cache_absorption)
@@ -169,6 +174,14 @@ local function do_finalpass()
 	render.RenderFlashlights(function() gwater2.renderer:DrawDiffuse() end)
 end
 
+--[[
+hook.Add("RenderScene", "gwater2_render", function(eye_pos, eye_angles, fov)
+	cam.Start3D(eye_pos, eye_angles, fov)
+		gwater2.renderer:SetHang(false)
+		gwater2.renderer:BuildMeshes(gwater2.solver, 0.25)
+	cam.End3D()
+end)]]
+
 -- gwater2 shader pipeline
 hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky3d)	--PreDrawViewModels
 	if sky3d or render.GetRenderTarget() then return end
@@ -190,7 +203,7 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	do_normals()
 	do_finalpass()
 
-	--render.DrawTextureToScreenRect(cache_normals, 0, 0, ScrW() / 4, ScrH() / 4)
+	--render.DrawTextureToScreenRect(cache_absorption, 0, 0, ScrW() / 4, ScrH() / 4)
 end)
 
 --hook.Add("NeedsDepthPass", "gwater2_depth", function()

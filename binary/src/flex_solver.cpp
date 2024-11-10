@@ -214,7 +214,7 @@ bool FlexSolver::update_meshes(NvFlexMapFlags wait) {
 	NvFlexCollisionGeometry* geometry = (NvFlexCollisionGeometry*)NvFlexMap(buffers.geometry, wait);
 	if (!geometry) return false;
 
-	for (int i = 0; i < meshes.size(); i++) {
+	for (int i = 0; i < Min(meshes.size(), (size_t)MAX_COLLIDERS); i++) {
 		FlexMesh mesh = meshes[i];
 		geometry[i].triMesh.mesh = mesh.get_id();
 		geometry[i].triMesh.scale[0] = 1;

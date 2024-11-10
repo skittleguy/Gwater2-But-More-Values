@@ -39,9 +39,6 @@ end
 local function add_prop(ent)
 	if !IsValid(ent) or !ent:IsSolid() or ent:IsWeapon() or !ent:GetModel() then return end
 
-	-- Note: if we want to respect no collide from the tool or context menu, check for COLLISION_GROUP_WORLD
-	-- if ent:GetCollisionGroup() == COLLISION_GROUP_WORLD or (IsValid(ent:GetPhysicsObject()) and (!ent:GetPhysicsObject():IsCollisionEnabled())) then return end
-
 	local convexes = unfucked_get_mesh(ent)
 	if !convexes then return end
 
@@ -153,10 +150,16 @@ gwater2["force_multiplier"] = 0.01
 gwater2["force_buoyancy"] = 0
 gwater2["force_dampening"] = 0
 
+local no_lerp = false
 local limit_fps = 1 / 60
 local function gwater_tick2()
 	local lp = LocalPlayer()
 	if !IsValid(lp) then return end
+
+	if gwater2.solver:GetActiveParticles() <= 0 then 
+		no_lerp = true
+		return
+	end
 
 	gwater2.solver:ApplyContacts(limit_fps * gwater2["force_multiplier"], 3, gwater2["force_buoyancy"], gwater2["force_dampening"])
 	local particles_in_radius = gwater2.solver:GetParticlesInRadius(lp:GetPos() + lp:OBBCenter(), gwater2.solver:GetParameter("fluid_rest_distance") * 3, GWATER2_PARTICLES_TO_SWIM)
@@ -167,6 +170,12 @@ local function gwater_tick2()
 	lp.GWATER2_CONTACTS = particles_in_radius
 
 	gwater2.solver:IterateColliders(gwater2.update_colliders)
+
+	-- collisions will lerp from positions they were at a long time ago if no particles have been initialized for a while
+	if no_lerp then 
+		gwater2.solver:IterateColliders(gwater2.update_colliders) 
+		no_lerp = false
+	end
 
 	hook.Run("gwater2_posttick", gwater2.solver:Tick(limit_fps, 0))
 end
