@@ -11,7 +11,7 @@
 #include "shader_inject.h"
 #include "cdll_client_int.h"
 
-#include "sighack.h"	// for reaction forces
+#include "scanning/symbolfinder.hpp"	// for reaction forces
 
 using namespace GarrysMod::Lua;
 
@@ -1135,12 +1135,14 @@ GMOD_MODULE_OPEN() {
 
 	// Get serverside physics objects from client DLL. Since server.dll exists in memory, we can find it and avoid networking.
 	// Pretty sure this is what hacked clients do
-#ifdef WIN64 
-	const char* sig = "48 83 EC ?? 8B D1 85 C9 7E ?? 48 8B ?? ?? ?? ?? ?? 48 8B";
+#ifdef WIN64
+	// \x2A = "*"
+	const uint8_t sig[] = "\x48\x83\xEC\x2A\x8B\xD1\x85\xC9\x7E\x2A\x48\x8B\x2A\x2A\x2A\x2A\x2A\x48\x8B";
 #else
-	const char* sig = "55 8B EC 8B ?? ?? 85 D2 ?? ?? 8B 0D ?? ?? ?? ?? 52 8B ?? FF 50 ?? 8B C8 85 C9";
+	const uint8_t sig[] = "\x55\x8B\xEC\x8B\x2A\x2A\x85\xD2\x2A\x2A\x8B\x0D\x2A\x2A\x2A\x2A\x52\x8B\x2A\xFF\x50\x2A\x8B\xC8\x85\xC9";
 #endif
-	void* UTIL_EntityByIndexAddr = Scan("server.dll", sig);
+	SymbolFinder finder;
+	void* UTIL_EntityByIndexAddr = finder.FindPatternFromBinary("server.dll", sig, sizeof(sig) - 1);
 	if (UTIL_EntityByIndexAddr == nullptr) {
 		Warning("[GWater2 Internal Error] Couldn't find UTIL_EntityByIndex!\n");
 		return 0;
