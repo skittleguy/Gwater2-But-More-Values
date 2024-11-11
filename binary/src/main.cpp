@@ -1121,7 +1121,11 @@ GMOD_MODULE_OPEN() {
 		ADD_FUNCTION(LUA, GWATER2_QuickHackRemoveMeASAP, "GWATER2_QuickHackRemoveMeASAP");
 
 		// gwater2_hdr_fix = ConVar("gwater2_hdr_fix", hdr_on, FCVAR_NONE);
-		char hdr_on[2]; itoa(g_pHardwareConfig->GetHDRType() != HDR_TYPE_NONE, hdr_on, 10);
+		char hdr_on[2] = { 
+			g_pHardwareConfig->GetHDRType() != HDR_TYPE_NONE + '0', 
+			0
+		};
+
 		LUA->GetField(-1, "CreateConVar");
 		LUA->PushString("gwater2_hdr_fix");
 		LUA->PushString(hdr_on);
