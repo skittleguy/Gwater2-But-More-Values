@@ -48,9 +48,11 @@ CreateWorkspace({name = "gwater2", abi_compatible = true, path = ""})
 
 		filter({"system:windows", "platforms:x86"})
 			targetsuffix("_win32")
+
 			libdirs {
 				"FleX/lib/win32",
 			}
+
 			links { 
 				"NvFlexReleaseD3D_x86",
 				"NvFlexDeviceRelease_x86",
@@ -59,22 +61,34 @@ CreateWorkspace({name = "gwater2", abi_compatible = true, path = ""})
 
 		filter({"system:windows", "platforms:x86_64"})
 			targetsuffix("_win64")
+
 			libdirs {
 				"FleX/lib/win64",
 			}
+
 			links { 
 				"NvFlexReleaseD3D_x64",
 				"NvFlexDeviceRelease_x64",
 				"NvFlexExtReleaseD3D_x64",
 			}
 			
+		-- to compile for linux you must have CUDA (and CUDA toolkits?) installed to properly link the libraries
 		filter({"system:linux", "platforms:x86_64"})
 			targetsuffix("_linux64")
+
 			libdirs {
 				"FleX/lib/linux64"
 			}
+			
 			links { 
-				"FleX/lib/linux64/NvFlexReleaseCUDA_x64.a",
-				"FleX/lib/linux64/NvFlexDeviceRelease_x64.a",
-				"FleX/lib/linux64/NvFlexExtReleaseCUDA_x64.a"
+				":NvFlexReleaseCUDA_x64.a",
+				":NvFlexDeviceRelease_x64.a",
+				":NvFlexExtReleaseCUDA_x64.a",
+				"cuda",
+				"cudart"
+			}
+			
+			defines {
+				"DX_TO_GL_ABSTRACTION",
+				"IsPlatformOpenGL()"
 			}
