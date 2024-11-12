@@ -1025,8 +1025,19 @@ LUA_FUNCTION(GWATER2_QuickHackRemoveMeASAP) {
 }*/
 
 GMOD_MODULE_OPEN() {
+	Msg("[GWater2]: Module opened\n");
+	Msg("[GWater2]: Loading lua_shared interface\n");
 	if (!Sys_LoadInterface("lua_shared.dll", GMOD_LUASHARED_INTERFACE, NULL, (void**)&GLOBAL_LUA))
 		LUA->ThrowError("[GWater2 Internal Error]: LuaShared failed to load!");
+
+	Msg("[GWater2]: Loading FleX instance\n");
+	NvFlexInitDesc desc = NvFlexInitDesc();
+
+#ifndef _LINUX
+	desc.computeType = eNvFlexD3D11;
+#else
+	desc.computeType = eNvFlexCUDA;
+#endif
 
 	FLEX_LIBRARY = NvFlexInit(
 		NV_FLEX_VERSION, 
@@ -1034,15 +1045,18 @@ GMOD_MODULE_OPEN() {
 			std::string error = "[GWater2 Internal Error]: " + (std::string)message;
 			ILuaBase* LUA = (ILuaBase*)GLOBAL_LUA->GetLuaInterface(State::CLIENT);//->ThrowError(error.c_str());
 			LUA->ThrowError(error.c_str());
-		}
+		},
+		&desc
 	);
 
 	if (FLEX_LIBRARY == nullptr) 
 		LUA->ThrowError("[GWater2 Internal Error]: Nvidia FleX Failed to load! (Does your GPU meet the minimum requirements to run FleX?)");
 
+	Msg("[GWater2]: Loading engine interface\n");
 	if (!Sys_LoadInterface("engine", VENGINE_CLIENT_INTERFACE_VERSION, NULL, (void**)&engine))
 		LUA->ThrowError("[GWater2 Internal Error]: C++ EngineClient failed to load!");
 
+	Msg("[GWater2]: Loading materialsystem interface\n");
 	if (!Sys_LoadInterface("materialsystem", MATERIAL_SYSTEM_INTERFACE_VERSION, NULL, (void**)&materials))
 		LUA->ThrowError("[GWater2 Internal Error]: C++ Materialsystem failed to load!");
 
@@ -1056,13 +1070,16 @@ GMOD_MODULE_OPEN() {
 	//	LUA->ThrowError("[GWater2 Internal Error]: C++ Studiorender failed to load!");
 
 	// Defined in 'shader_inject.h'
+	Msg("[GWater2]: Injecting shaders\n");
 	if (!inject_shaders())
 		LUA->ThrowError("[GWater2 Internal Error]: C++ Shadersystem failed to load!");
 
 	// GMod filesystem (Used for bsp parser)
+	Msg("[GWater2]: Loading gmfs\n");
 	if (FileSystem::LoadFileSystem() != FILESYSTEM_STATUS::OK)
 		LUA->ThrowError("[GWater2 Internal Error]: C++ Filesystem failed to load!");
 
+	Msg("[GWater2]: Generating FlexSolver and FlexRenderer metatables\n");
 	FLEXSOLVER_METATABLE = LUA->CreateMetaTable("FlexSolver");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GarbageCollect, "__gc");	// FlexMetaTable.__gc = FlexGC
 
@@ -1122,9 +1139,11 @@ GMOD_MODULE_OPEN() {
 
 		// gwater2_hdr_fix = ConVar("gwater2_hdr_fix", hdr_on, FCVAR_NONE);
 		char hdr_on[2] = { 
-			g_pHardwareConfig->GetHDRType() != HDR_TYPE_NONE + '0', 
+			'0' + (g_pHardwareConfig->GetHDRType() != HDR_TYPE_NONE),
 			0
 		};
+
+		Msg("[GWater2]: Creating gwater_hdr_fix ConVar %c\n", hdr_on[0]);
 
 		LUA->GetField(-1, "CreateConVar");
 		LUA->PushString("gwater2_hdr_fix");
@@ -1137,6 +1156,7 @@ GMOD_MODULE_OPEN() {
 		LUA->Pop();
 	LUA->Pop();
 
+	Msg("[GWater2]: Finding symbol for UTIL_EntityByIndex\n");
 	// Get serverside physics objects from client DLL. Since server.dll exists in memory, we can find it and avoid networking.
 	// Pretty sure this is what hacked clients do
 #ifdef WIN64
