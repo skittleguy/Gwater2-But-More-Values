@@ -42,6 +42,8 @@ local function add_prop(ent)
 	local convexes = unfucked_get_mesh(ent)
 	if !convexes then return end
 
+	ent.GWATER2_IS_RAGDOLL = util.IsValidRagdoll(ent:GetModel())
+
 	if #convexes < 16 then	-- too many convexes to be worth calculating
 		for k, v in ipairs(convexes) do
 			if #v <= 64 * 3 then	-- hardcoded limits.. No more than 64 planes per convex as it is a FleX limitation
@@ -81,7 +83,7 @@ gwater2 = {
 		if !IsValid(ent) then 
 			gwater2.solver:RemoveCollider(id)
 		else 
-			if !util.IsValidRagdoll(ent:GetModel()) then
+			if !ent.GWATER2_IS_RAGDOLL then
 				gwater2.solver:SetColliderPos(index, ent:GetPos())
 				gwater2.solver:SetColliderAng(index, ent:GetAngles())
 				gwater2.solver:SetColliderEnabled(index, ent:GetCollisionGroup() != COLLISION_GROUP_WORLD and bit.band(ent:GetSolidFlags(), FSOLID_NOT_SOLID) == 0)
@@ -168,7 +170,7 @@ local function gwater_tick2()
 		particles_in_radius
 	)
 	lp.GWATER2_CONTACTS = particles_in_radius
-
+	
 	gwater2.solver:IterateColliders(gwater2.update_colliders)
 
 	-- collisions will lerp from positions they were at a long time ago if no particles have been initialized for a while
