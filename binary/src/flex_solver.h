@@ -1,6 +1,7 @@
 #pragma once
 #include <NvFlex.h>
 #include <NvFlexExt.h>
+#include <NvFlexDevice.h>
 #include <map>
 #include <vector>
 #include <string>

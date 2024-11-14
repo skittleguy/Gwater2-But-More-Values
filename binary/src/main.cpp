@@ -1032,27 +1032,25 @@ GMOD_MODULE_OPEN() {
 
 	Msg("[GWater2]: Loading FleX instance\n");
 	NvFlexInitDesc desc = NvFlexInitDesc();
-
-#ifndef _LINUX
 	desc.computeType = eNvFlexD3D11;
-#else
-	desc.computeType = eNvFlexCUDA;
+
+#ifdef _LINUX
+	desc.deviceIndex = -1;
+	desc.computeType = eNvFlexCUDA;	// no DirectX on linux
 #endif
 
-	try {
-		FLEX_LIBRARY = NvFlexInit(
-			NV_FLEX_VERSION,
-			[](NvFlexErrorSeverity type, const char* message, const char* file, int line) {
-				std::string error = "[GWater2 Internal Error]: " + (std::string)message;
-				ILuaBase* LUA = (ILuaBase*)GLOBAL_LUA->GetLuaInterface(State::CLIENT);//->ThrowError(error.c_str());
-				LUA->ThrowError(error.c_str());
-			},
-			&desc
-		);
-	} catch (std::exception e) {
-		FLEX_LIBRARY = nullptr;
-		Warning("%s\n", e.what());
-	}
+	FLEX_LIBRARY = NvFlexInit(
+		NV_FLEX_VERSION,
+		[](NvFlexErrorSeverity type, const char* message, const char* file, int line) {
+			std::string error = "[GWater2 Internal Error]: " + (std::string)message + "\n";
+			//ILuaBase* LUA = (ILuaBase*)GLOBAL_LUA->GetLuaInterface(State::CLIENT);
+			//LUA->ThrowError(error.c_str());
+
+			// Breaking out of call stack in FleX functions is BAD
+			Warning(error.c_str());
+		},
+		&desc
+	);
 
 	if (FLEX_LIBRARY == nullptr) 
 		LUA->ThrowError("[GWater2 Internal Error]: Nvidia FleX Failed to load! (Does your GPU meet the minimum requirements to run FleX?)");
