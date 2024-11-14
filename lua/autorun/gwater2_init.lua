@@ -160,23 +160,22 @@ local function gwater_tick2()
 
 	if gwater2.solver:GetActiveParticles() <= 0 then 
 		no_lerp = true
-		return
-	end
+	else
+		gwater2.solver:ApplyContacts(limit_fps * gwater2["force_multiplier"], 3, gwater2["force_buoyancy"], gwater2["force_dampening"])
+		local particles_in_radius = gwater2.solver:GetParticlesInRadius(lp:GetPos() + lp:OBBCenter(), gwater2.solver:GetParameter("fluid_rest_distance") * 3, GWATER2_PARTICLES_TO_SWIM)
+		GWATER2_QuickHackRemoveMeASAP(	-- TODO: REMOVE THIS HACKY SHIT!!!!!!!!!!!!!
+		lp:EntIndex(), 
+			particles_in_radius
+		)
+		lp.GWATER2_CONTACTS = particles_in_radius
+		
+		gwater2.solver:IterateColliders(gwater2.update_colliders)
 
-	gwater2.solver:ApplyContacts(limit_fps * gwater2["force_multiplier"], 3, gwater2["force_buoyancy"], gwater2["force_dampening"])
-	local particles_in_radius = gwater2.solver:GetParticlesInRadius(lp:GetPos() + lp:OBBCenter(), gwater2.solver:GetParameter("fluid_rest_distance") * 3, GWATER2_PARTICLES_TO_SWIM)
-	GWATER2_QuickHackRemoveMeASAP(	-- TODO: REMOVE THIS HACKY SHIT!!!!!!!!!!!!!
-	lp:EntIndex(), 
-		particles_in_radius
-	)
-	lp.GWATER2_CONTACTS = particles_in_radius
-	
-	gwater2.solver:IterateColliders(gwater2.update_colliders)
-
-	-- collisions will lerp from positions they were at a long time ago if no particles have been initialized for a while
-	if no_lerp then 
-		gwater2.solver:IterateColliders(gwater2.update_colliders) 
-		no_lerp = false
+		-- collisions will lerp from positions they were at a long time ago if no particles have been initialized for a while
+		if no_lerp then 
+			gwater2.solver:IterateColliders(gwater2.update_colliders) 
+			no_lerp = false
+		end
 	end
 
 	hook.Run("gwater2_posttick", gwater2.solver:Tick(limit_fps, 0))

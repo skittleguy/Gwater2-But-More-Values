@@ -15,7 +15,7 @@
 
 using namespace GarrysMod::Lua;
 
-NvFlexLibrary* FLEX_LIBRARY;	// "The heart of all that is FleX" - AE
+NvFlexLibrary* FLEX_LIBRARY = nullptr;	// "The heart of all that is FleX" - AE
 ILuaShared* GLOBAL_LUA;			// used for flex error handling
 int FLEXSOLVER_METATABLE = 0;
 int FLEXRENDERER_METATABLE = 0;
@@ -1039,15 +1039,20 @@ GMOD_MODULE_OPEN() {
 	desc.computeType = eNvFlexCUDA;
 #endif
 
-	FLEX_LIBRARY = NvFlexInit(
-		NV_FLEX_VERSION, 
-		[](NvFlexErrorSeverity type, const char* message, const char* file, int line) {
-			std::string error = "[GWater2 Internal Error]: " + (std::string)message;
-			ILuaBase* LUA = (ILuaBase*)GLOBAL_LUA->GetLuaInterface(State::CLIENT);//->ThrowError(error.c_str());
-			LUA->ThrowError(error.c_str());
-		},
-		&desc
-	);
+	try {
+		FLEX_LIBRARY = NvFlexInit(
+			NV_FLEX_VERSION,
+			[](NvFlexErrorSeverity type, const char* message, const char* file, int line) {
+				std::string error = "[GWater2 Internal Error]: " + (std::string)message;
+				ILuaBase* LUA = (ILuaBase*)GLOBAL_LUA->GetLuaInterface(State::CLIENT);//->ThrowError(error.c_str());
+				LUA->ThrowError(error.c_str());
+			},
+			&desc
+		);
+	} catch (std::exception e) {
+		FLEX_LIBRARY = nullptr;
+		Warning("%s\n", e.what());
+	}
 
 	if (FLEX_LIBRARY == nullptr) 
 		LUA->ThrowError("[GWater2 Internal Error]: Nvidia FleX Failed to load! (Does your GPU meet the minimum requirements to run FleX?)");
