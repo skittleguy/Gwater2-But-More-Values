@@ -15,9 +15,9 @@ jobs:
     - uses: actions/checkout@v4
     - name: compile or somthing idk
       run: |
-       curl http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1710/x86_64/cuda-repo-ubuntu1710_9.2.148-1_amd64.deb 
-       sudo dpkg -i cuda-repo-ubuntu1710_9.2.148-1_amd64.deb
+       curl http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1710/x86_64/cuda-repo-ubuntu1710_9.2.148-1_amd64.deb
        ls
+       sudo dpkg -i cuda-repo-ubuntu1710_9.2.148-1_amd64.deb
        curl https://github.com/premake/premake-core/releases/download/v5.0.0-beta3/premake-5.0.0-beta3-linux.tar.gz -O -J -L
        tar -xvzf premake-5.0.0-beta3-linux.tar.gz
        ls
