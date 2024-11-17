@@ -24,7 +24,7 @@ jobs:
        sudo dpkg -i cuda-repo-ubuntu1710_9.2.148-1_amd64.deb
        sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1710/x86_64/7fa2af80.pub
        sudo apt-get update
-       sudo apt-get install cuda-libraries-9-2
+       sudo apt-get install cuda
        export PATH=/usr/local/cuda-9.2/bin:$PATH.
        cd /usr/local/cuda-9.2/lib64
        ls 
