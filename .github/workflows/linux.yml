@@ -23,13 +23,10 @@ jobs:
        sudo apt-get install cuda-libraries-9-2
        curl https://github.com/premake/premake-core/releases/download/v5.0.0-beta3/premake-5.0.0-beta3-linux.tar.gz -O -J -L
        tar -xvzf premake-5.0.0-beta3-linux.tar.gz
-       git clone https://github.com/keganpowers34/garrysmod_common.git --recursive -b x86-64-support-sourcesdk
        git clone https://github.com/NVIDIAGameWorks/FleX.git
        git clone https://github.com/Derpius/BSPParser.git
        git clone https://github.com/Derpius/GMFS.git
        sudo chmod +x ./premake5
        ./premake5 gmake
-       make config=release_x86_64
-       cd ..
        make config=release_x86_64
        
