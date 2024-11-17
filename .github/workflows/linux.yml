@@ -24,4 +24,4 @@ jobs:
        sudo chmod +x ./premake5
        ./premake5 gmake
        make config=release_x86_64
-       
+       ls 
