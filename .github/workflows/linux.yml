@@ -30,5 +30,6 @@ jobs:
        tar -xvzf premake-5.0.0-beta3-linux.tar.gz
        sudo chmod +x ./premake5
        ./premake5 gmake
+       cd /usr/local/cuda-9.2/lib64
        make config=release_x86_64
        
