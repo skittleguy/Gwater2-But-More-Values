@@ -15,6 +15,9 @@ jobs:
     - uses: actions/checkout@v4
     - name: compile or somthing idk
       run: |
+       cd ..
+       git clone https://github.com/meetric1/gwater2 --recursive
+       cd gwater2
        cd binary
        curl http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1710/x86_64/cuda-repo-ubuntu1710_9.2.148-1_amd64.deb -O -J -L
        sudo dpkg -i cuda-repo-ubuntu1710_9.2.148-1_amd64.deb
@@ -23,7 +26,6 @@ jobs:
        sudo apt-get install cuda-libraries-9-2
        curl https://github.com/premake/premake-core/releases/download/v5.0.0-beta3/premake-5.0.0-beta3-linux.tar.gz -O -J -L
        tar -xvzf premake-5.0.0-beta3-linux.tar.gz
-       git clone https://github.com/meetric1/gwater2 --recursive
        sudo chmod +x ./premake5
        ./premake5 gmake
        cd garrysmod_common
