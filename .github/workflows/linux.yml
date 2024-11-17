@@ -25,6 +25,12 @@ jobs:
     - name: compile or somthing idk
       run: |
        cd binary
+       curl http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1710/x86_64/cuda-repo-ubuntu1710_9.2.148-1_amd64.deb -O -J -L
+       sudo dpkg -i cuda-repo-ubuntu1710_9.2.148-1_amd64.deb
+       sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1710/x86_64/7fa2af80.pub
+       sudo apt-get update
+       sudo apt-get install cuda-libraries-9-2
+       export PATH=/usr/local/cuda-9.2.148/bin${PATH:+:${PATH}}
        curl https://github.com/premake/premake-core/releases/download/v5.0.0-beta3/premake-5.0.0-beta3-linux.tar.gz -O -J -L
        tar -xvzf premake-5.0.0-beta3-linux.tar.gz
        sudo chmod +x ./premake5
