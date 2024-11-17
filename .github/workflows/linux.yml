@@ -20,6 +20,7 @@ jobs:
       id: cuda-toolkit
       with:
         log-file-suffix: ${{ matrix.os }}.txt
+        cuda: '9.2.148'
         method: 'local'
     
     - name: compile or somthing idk
