@@ -22,7 +22,6 @@ jobs:
         log-file-suffix: ${{ matrix.os }}.txt
         cuda: '9.2.148'
         method: 'network'
-        sub-packages: '["cuda"]'
     
     - name: compile or somthing idk
       run: |
