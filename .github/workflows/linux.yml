@@ -29,6 +29,9 @@ jobs:
        git clone https://github.com/Derpius/GMFS.git
        sudo chmod +x ./premake5
        ./premake5 gmake
-       ls
+       cd garrysmod_common
+       sudo rm -rf sourcesdk-minimal
+       git clone https://github.com/danielga/sourcesdk-minimal -b x86-64-branch
+       cd ..
        make config=release_x86_64
        
