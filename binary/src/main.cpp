@@ -1027,8 +1027,14 @@ LUA_FUNCTION(GWATER2_QuickHackRemoveMeASAP) {
 GMOD_MODULE_OPEN() {
 	Msg("[GWater2]: Module opened\n");
 	Msg("[GWater2]: Loading lua_shared interface\n");
+
+#ifdef _LINUX
+	if (!Sys_LoadInterface("lua_shared.so", GMOD_LUASHARED_INTERFACE, NULL, (void**)&GLOBAL_LUA))
+		LUA->ThrowError("[GWater2 Internal Error]: LuaShared failed to load!");
+#else
 	if (!Sys_LoadInterface("lua_shared.dll", GMOD_LUASHARED_INTERFACE, NULL, (void**)&GLOBAL_LUA))
 		LUA->ThrowError("[GWater2 Internal Error]: LuaShared failed to load!");
+#endif
 
 	Msg("[GWater2]: Loading FleX instance\n");
 	NvFlexInitDesc desc = NvFlexInitDesc();
