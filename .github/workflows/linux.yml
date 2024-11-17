@@ -33,5 +33,6 @@ jobs:
        sudo rm -rf sourcesdk-minimal
        git clone https://github.com/danielga/sourcesdk-minimal -b x86-64-branch-backup
        cd ..
+       ./premake5 gmake
        make config=release_x86_64
        
