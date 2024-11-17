@@ -72,20 +72,27 @@ CreateWorkspace({name = "gwater2", abi_compatible = true, path = ""})
 				"NvFlexExtReleaseD3D_x64",
 			}
 			
-		-- to compile for linux you must have CUDA (and CUDA toolkits?) installed to properly link the libraries
 		filter({"system:linux", "platforms:x86_64"})
 			targetsuffix("_linux64")
 
+			includedirs {
+				--"/usr/local/cuda-9.2/include",
+				--"/usr/local/cuda-9.2/extras/cupti/include",
+			}
+
 			libdirs {
-				"FleX/lib/linux64"
+				"FleX/lib/linux64",
+				--"/usr/local/cuda-9.2/lib64"
 			}
 			
 			links { 
 				":NvFlexReleaseCUDA_x64.a",
 				":NvFlexDeviceRelease_x64.a",
 				":NvFlexExtReleaseCUDA_x64.a",
-				"cuda",
-				"cudart"
+				--":NvFlexDebugCUDA_x64.a",
+				--":NvFlexDeviceDebug_x64.a",
+				--":NvFlexExtDebugCUDA_x64.a",
+				"cudart_static",
 			}
 			
 			defines {
