@@ -29,5 +29,6 @@ jobs:
        git clone https://github.com/Derpius/GMFS.git
        sudo chmod +x ./premake5
        ./premake5 gmake
+       ls
        make config=release_x86_64
        
