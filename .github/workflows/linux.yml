@@ -15,15 +15,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
-
-    - uses: Jimver/cuda-toolkit@v0.2.19
-      id: cuda-toolkit
-      with:
-        log-file-suffix: ${{ matrix.os }}.txt
-        cuda: '9.2.148'
-        method: 'local'
-        linux-local-args: '[""]'
-    
+        
     - name: compile or somthing idk
       run: |
        cd binary
