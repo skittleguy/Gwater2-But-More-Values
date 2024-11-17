@@ -11,11 +11,15 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    steps:
+    steps:    
     - uses: actions/checkout@v4
       with:
         submodules: recursive
 
+    - uses: Jimver/cuda-toolkit@v0.2.19
+      id: cuda-toolkit
+      with:
+        cuda: '9.2.148'
     
     - name: compile or somthing idk
       run: |
