@@ -20,11 +20,14 @@ jobs:
       id: cuda-toolkit
       with:
         log-file-suffix: ${{ matrix.os }}.txt
-        method: 'network'
+        method: 'local'
     
     - name: compile or somthing idk
       run: |
-       cd /usr/local/cuda-9.2/lib64
-       ls 
-
+       cd binary
+       curl https://github.com/premake/premake-core/releases/download/v5.0.0-beta3/premake-5.0.0-beta3-linux.tar.gz -O -J -L
+       tar -xvzf premake-5.0.0-beta3-linux.tar.gz
+       sudo chmod +x ./premake5
+       ./premake5 gmake
+       make config=release_x86_64
        
