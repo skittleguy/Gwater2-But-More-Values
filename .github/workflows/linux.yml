@@ -13,11 +13,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: true
+  
     - name: compile or somthing idk
       run: |
-       cd ..
-       git clone https://github.com/meetric1/gwater2 --recursive
-       cd gwater2
        cd binary
        curl http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1710/x86_64/cuda-repo-ubuntu1710_9.2.148-1_amd64.deb -O -J -L
        sudo dpkg -i cuda-repo-ubuntu1710_9.2.148-1_amd64.deb
@@ -27,13 +27,6 @@ jobs:
        curl https://github.com/premake/premake-core/releases/download/v5.0.0-beta3/premake-5.0.0-beta3-linux.tar.gz -O -J -L
        tar -xvzf premake-5.0.0-beta3-linux.tar.gz
        sudo chmod +x ./premake5
-       ./premake5 gmake
-       cd garrysmod_common
-       sudo rm -rf sourcesdk-minimal
-       git clone https://github.com/danielga/sourcesdk-minimal -b x86-64-branch-backup
-       git checkout 0228e2392a420f55e407d1cd772a49fc9eec3a4a
-       git fetch
-       cd ..
        ./premake5 gmake
        make config=release_x86_64
        
