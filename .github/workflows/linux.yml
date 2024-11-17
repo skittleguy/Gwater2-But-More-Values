@@ -22,7 +22,7 @@ jobs:
         log-file-suffix: ${{ matrix.os }}.txt
         cuda: '9.2.148'
         method: 'local'
-        linux-local-args: '["--toolkit"]'
+        linux-local-args: '[""]'
     
     - name: compile or somthing idk
       run: |
