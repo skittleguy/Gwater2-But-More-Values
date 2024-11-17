@@ -24,4 +24,11 @@ jobs:
        sudo chmod +x ./premake5
        ./premake5 gmake
        make config=release_x86_64
-       
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4.3.1
+      with:
+          name: gmcl_gwater2_linux64.dll
+          path: binary/x86_64/Release/gmcl_gwater2_linux64.dll
+          if-no-files-found: error
+    
