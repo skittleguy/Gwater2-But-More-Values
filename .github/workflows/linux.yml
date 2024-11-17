@@ -27,10 +27,6 @@ jobs:
        sudo apt-get install cuda-libraries-9-2
        export PATH=/usr/local/cuda-9.2/bin:$PATH.
        cd /usr/local/cuda-9.2/lib64
-       ls -l
-       curl https://github.com/premake/premake-core/releases/download/v5.0.0-beta3/premake-5.0.0-beta3-linux.tar.gz -O -J -L
-       tar -xvzf premake-5.0.0-beta3-linux.tar.gz
-       sudo chmod +x ./premake5
-       ./premake5 gmake
-       make config=release_x86_64
+       ls 
+
        
