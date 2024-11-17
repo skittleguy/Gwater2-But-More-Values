@@ -82,7 +82,7 @@ CreateWorkspace({name = "gwater2", abi_compatible = true, path = ""})
 
 			libdirs {
 				"FleX/lib/linux64",
-				--"/usr/local/cuda-9.2/lib64"
+				"/usr/local/cuda-9.2/lib64"
 			}
 			
 			links { 
