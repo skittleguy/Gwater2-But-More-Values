@@ -46,10 +46,10 @@ local function do_cloth()
 	render.RenderFlashlights(function() gwater2.renderer:DrawCloth() end)
 
 	-- setup water lighting
-	local tr = util.QuickTrace( EyePos(), LocalPlayer():EyeAngles():Forward() * 800, LocalPlayer())
-	local dist = math.min(230, (tr.HitPos - tr.StartPos):Length() / 1.5)	
-	lightpos = LerpVector(1.6 * FrameTime(), lightpos, EyePos() + (LocalPlayer():EyeAngles():Forward() * dist))	-- fucking hell
-	unfuck_lighting(EyePos(), lightpos)	
+	--local tr = util.QuickTrace( EyePos(), LocalPlayer():EyeAngles():Forward() * 800, LocalPlayer())
+	--local dist = math.min(230, (tr.HitPos - tr.StartPos):Length() / 1.5)	
+	--lightpos = LerpVector(1.6 * FrameTime(), lightpos, EyePos() + (LocalPlayer():EyeAngles():Forward() * dist))	-- fucking hell
+	unfuck_lighting(EyePos(), EyePos())	
 end
 
 local function do_absorption()

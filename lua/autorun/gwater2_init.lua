@@ -12,7 +12,7 @@ include("gwater2_shaders.lua")
 local function unfucked_get_mesh(ent, raw)
 	-- Physics object exists
 	local phys = ent:GetPhysicsObject()
-	if phys:IsValid() then return phys:GetMesh() end
+	if phys:IsValid() then return (raw and phys:GetMesh() or phys:GetMeshConvexes()) end
 
 	local model = ent:GetModel()
 	local is_ragdoll = util.IsValidRagdoll(model)
