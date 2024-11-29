@@ -37,23 +37,28 @@ end
 
 -- adds entity to FlexSolver
 local function add_prop(ent)
-	if !IsValid(ent) or !ent:IsSolid() or ent:IsWeapon() or !ent:GetModel() then return end
+	if !IsValid(ent) then return end
+	
+	local ent_index = ent:EntIndex()
+	gwater2.solver:RemoveCollider(ent_index) -- incase source decides to reuse the same entity index
+
+	if !ent:IsSolid() or ent:IsWeapon() or !ent:GetModel() then return end
 
 	local convexes = unfucked_get_mesh(ent)
 	if !convexes then return end
 
 	ent.GWATER2_IS_RAGDOLL = util.IsValidRagdoll(ent:GetModel())
-
+	
 	if #convexes < 16 then	-- too many convexes to be worth calculating
 		for k, v in ipairs(convexes) do
 			if #v <= 64 * 3 then	-- hardcoded limits.. No more than 64 planes per convex as it is a FleX limitation
-				gwater2.solver:AddConvexCollider(ent:EntIndex(), v, ent:GetPos(), ent:GetAngles())
+				gwater2.solver:AddConvexCollider(ent_index, v, ent:GetPos(), ent:GetAngles())
 			else
-				gwater2.solver:AddConcaveCollider(ent:EntIndex(), v, ent:GetPos(), ent:GetAngles())
+				gwater2.solver:AddConcaveCollider(ent_index, v, ent:GetPos(), ent:GetAngles())
 			end
 		end
 	else
-		gwater2.solver:AddConcaveCollider(ent:EntIndex(), unfucked_get_mesh(ent, true), ent:GetPos(), ent:GetAngles())
+		gwater2.solver:AddConcaveCollider(ent_index, unfucked_get_mesh(ent, true), ent:GetPos(), ent:GetAngles())
 	end
 
 end
