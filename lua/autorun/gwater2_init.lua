@@ -89,6 +89,17 @@ gwater2 = {
 			gwater2.solver:RemoveCollider(id)
 		else 
 			if !ent.GWATER2_IS_RAGDOLL then
+
+				-- custom physics objects may be networked and initialized after the entity was created
+				if ent.GWATER2_PHYSOBJ or ent:GetPhysicsObjectCount() != 0 then
+					local phys = ent:GetPhysicsObject()	-- slightly expensive operation
+
+					if !IsValid(ent.GWATER2_PHYSOBJ) or ent.GWATER2_PHYSOBJ != phys then	-- we know physics object was recreated with a PhysicsInit* function
+						add_prop(ent)	-- internally cleans up entity colliders
+						ent.GWATER2_PHYSOBJ = phys
+					end
+				end
+
 				gwater2.solver:SetColliderPos(index, ent:GetPos())
 				gwater2.solver:SetColliderAng(index, ent:GetAngles())
 				gwater2.solver:SetColliderEnabled(index, ent:GetCollisionGroup() != COLLISION_GROUP_WORLD and bit.band(ent:GetSolidFlags(), FSOLID_NOT_SOLID) == 0)
