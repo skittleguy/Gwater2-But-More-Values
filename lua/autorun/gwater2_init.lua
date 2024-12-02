@@ -42,7 +42,7 @@ local function add_prop(ent)
 	local ent_index = ent:EntIndex()
 	gwater2.solver:RemoveCollider(ent_index) -- incase source decides to reuse the same entity index
 
-	if !ent:IsSolid() or ent:IsWeapon() or !ent:GetModel() then return end
+	if !ent:IsSolid() or ent:IsWeapon() or !ent:GetModel() or IsUselessModel(ent:GetModel()) then return end
 
 	local convexes = unfucked_get_mesh(ent)
 	if !convexes then return end
