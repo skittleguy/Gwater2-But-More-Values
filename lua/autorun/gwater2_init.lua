@@ -24,6 +24,12 @@ local function unfucked_get_mesh(ent, raw)
 		convexes = phys:IsValid() and (raw and phys:GetMesh() or phys:GetMeshConvexes())
 		cs_ent:Remove()
 	else 
+		-- no joke this is the hackiest shit ive ever done. 
+		-- for whatever reason the metrocop and ONLY the metrocop model has this problem
+		-- when creating a clientside ragdoll of the metrocop entity it will sometimes break all pistol and stunstick animations
+		-- I have no idea why this happens.
+		if model == "models/police.mdl" then model = "models/combine_soldier.mdl" end
+
 		local cs_ent = ClientsideRagdoll(model)
 		convexes = {}
 		for i = 0, cs_ent:GetPhysicsObjectCount() - 1 do
@@ -42,7 +48,7 @@ local function add_prop(ent)
 	local ent_index = ent:EntIndex()
 	gwater2.solver:RemoveCollider(ent_index) -- incase source decides to reuse the same entity index
 
-	if !ent:IsSolid() or ent:IsWeapon() or !ent:GetModel() or IsUselessModel(ent:GetModel()) then return end
+	if !ent:IsSolid() or ent:IsWeapon() or !ent:GetModel() then return end
 
 	local convexes = unfucked_get_mesh(ent)
 	if !convexes then return end
