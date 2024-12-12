@@ -36,20 +36,21 @@ local function define_scrollbar(sbar)
 	end
 end
 local function create_blocking_frame(mainFrame)
+	/*
 	local frame = vgui.Create("DFrame", mainFrame)
-	frame:SetSize(ScrW(), ScrH())
+	--frame:SetSize(ScrW(), ScrH())
 	frame:SetPos(0, 0)
 	frame:SetTitle("gwater2 (" .. gwater2.VERSION .. ")")
 	frame:MakePopup()
-	frame:ShowCloseButton(false)
-	frame:SetDraggable(false)
+	--frame:ShowCloseButton(false)
+	--frame:SetDraggable(false)
 	frame:SetBackgroundBlur(true)
 	frame:SetScreenLock(true)
 	function frame:Paint(w, h)
 		-- Blur background
 		render.UpdateScreenEffectTexture()
 		render.BlurRenderTarget(render.GetScreenEffectTexture(), 5, 5, 1)
----@diagnostic disable-next-line: missing-parameter
+
 		render.SetRenderTarget()
 		render.DrawScreenQuad()
 
@@ -60,25 +61,28 @@ local function create_blocking_frame(mainFrame)
 		-- main outline
 		surface.SetDrawColor(255, 255, 255)
 		surface.DrawOutlinedRect(0, 0, w, h)
-	end
-	local frame = vgui.Create("DFrame", frame)
+	end*/
+	local frame = vgui.Create("DFrame", mainFrame)
 	frame:SetSize(400, 200)
 	frame:Center()
 	frame:SetTitle("gwater2 (" .. gwater2.VERSION .. ")")
 	frame:MakePopup()
-	frame:ShowCloseButton(false)
-	
-	local close = frame.Close
-	function frame:Close()
----@diagnostic disable-next-line: undefined-field
-		frame:GetParent():Close()
-		close(frame)
-	end
-	function frame:Think()
-		frame:MoveToFront()
-	end
+	frame:SetBackgroundBlur(true)	-- doesn't actually blur the background
+	frame:SetScreenLock(true)
+	--frame:ShowCloseButton(false)
+
 	function frame:Paint(w, h)
-		draw_main_background(0, 0, w, h)
+		-- Blur background
+		local rt = render.GetRenderTarget()
+		render.UpdateScreenEffectTexture()
+		render.BlurRenderTarget(render.GetScreenEffectTexture(), 5, 5, 1)
+		render.SetRenderTarget(rt)	-- blurrendertarget doesnt restore the rt
+		render.DrawScreenQuad()
+
+		surface.SetDrawColor(0, 0, 0, 200)
+		surface.DrawRect(0, 0, w, h)
+	
+		draw_main_background_outline(0, 0, w, h)
 	end
 	return frame
 end

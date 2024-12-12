@@ -46,13 +46,14 @@ gwater2.options = gwater2.options or {
 		end, defined=true},
 		swimfriction = {real=1, default=1, val=1, defined=true, func=function() end},
 		swimspeed = {real=2, default=2, val=2, defined=true, func=function() end},
-		swimbuoyancy = {real=0.5, default=0.5, val=0.5, defined=true, func=function() end},
+		swimbuoyancy = {real=0.49, default=0.49, val=0.49, defined=true, func=function() end},
 		multiplyparticles = {real=4, default=4, val=4, defined=true, func=function() end},
 		multiplywalk = {real=1, default=1, val=1, defined=true, func=function() end},
 		multiplyjump = {real=1, default=1, val=1, defined=true, func=function() end},
 		touchdamage = {real=0, default=0, val=0, defined=true, func=function() end},
 	}
 }
+gwater2.parameters = gwater2.options.parameters
 
 if not file.Exists("gwater2/config.txt", "DATA") then
 	gwater2.options.write_config({

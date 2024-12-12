@@ -180,8 +180,9 @@ local function make_parameter_scratch(tab, locale_parameter_name, parameter_name
 			self:SetValue(math.Round(val, parameter.decimals))
 			return
 		end
+
 		gwater2.options.parameters[string.lower(parameter_name):gsub(" ", "_")].real = val
-		set_gwater_parameter(string.lower(parameter_name):gsub(" ", "_"), val)
+		set_gwater_parameter(string.lower(parameter_name):gsub(" ", "_"), val, nil, true)
 	end
 	local defhelptext = nil
 	function panel:Paint()
@@ -193,14 +194,14 @@ local function make_parameter_scratch(tab, locale_parameter_name, parameter_name
 			gwater2.cursor_busy = panel
 			tab.help_text:SetText(get_localised(locale_parameter_name..".desc"))
 			if gwater2.options.read_config().sounds then  surface.PlaySound("gwater2/menu/rollover.wav", 75, 100, 1, CHAN_STATIC) end
-			label:SetColor(Color(187, 245, 255))
+			label:SetColor(label.fancycolor_hovered or Color(187, 245, 255))
 		elseif not hovered and panel.washovered then
 			panel.washovered = false
 			gwater2.cursor_busy = nil
 			if tab.help_text:GetText() == get_localised(locale_parameter_name..".desc") then
 				tab.help_text:SetText(defhelptext)
 			end
-			label:SetColor(Color(255, 255, 255))
+			label:SetColor(label.fancycolor or Color(255, 255, 255))
 		end
 	end
 	if not gwater2.options.parameters[string.lower(parameter_name):gsub(" ", "_")] then
@@ -326,14 +327,14 @@ local function make_parameter_check(tab, locale_parameter_name, parameter_name, 
 			gwater2.cursor_busy = panel
 			tab.help_text:SetText(get_localised(locale_parameter_name..".desc"))
 			if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/rollover.wav", 75, 100, 1, CHAN_STATIC) end
-			label:SetColor(Color(187, 245, 255))
+			label:SetColor(label.fancycolor_hovered or Color(187, 245, 255))
 		elseif not hovered and panel.washovered then
 			panel.washovered = false
 			gwater2.cursor_busy = nil
 			if tab.help_text:GetText() == get_localised(locale_parameter_name..".desc") then
 				tab.help_text:SetText(defhelptext)
 			end
-			label:SetColor(Color(255, 255, 255))
+			label:SetColor(label.fancycolor or Color(255, 255, 255))
 		end
 	end
 	panel:SetTall(panel:GetTall()+5)

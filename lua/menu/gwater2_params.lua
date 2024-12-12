@@ -134,18 +134,31 @@ local visuals = {
 		end
 	}
 }
+
 local performance = {
 	["001-Iterations"] = {
 		min=1,
 		max=10,
 		decimals=0,
-		type="scratch"
+		type="scratch",
+		setup = function(slider)
+			local label = slider:GetParent().label
+			label.fancycolor = Color(250, 250, 0)
+			label.fancycolor_hovered = Color(255, 255, 200)
+			label:SetColor(label.fancycolor)
+		end
 	},
 	["002-Substeps"] = {
 		min=1,
 		max=10,
 		decimals=0,
-		type="scratch"
+		type="scratch",
+		setup = function(slider)
+			local label = slider:GetParent().label
+			label.fancycolor = Color(255, 127, 0)
+			label.fancycolor_hovered = Color(255, 200, 127)
+			label:SetColor(label.fancycolor)
+		end
 	},
 	["003-Blur Passes"] = {
 		min=0,
@@ -157,6 +170,11 @@ local performance = {
 		end,
 		setup=function(slider)
 			slider:SetValue(gwater2.options.blur_passes:GetInt())
+
+			local label = slider:GetParent().label
+			label.fancycolor = Color(127, 255, 0)
+			label.fancycolor_hovered = Color(200, 255, 150)
+			label:SetColor(label.fancycolor)
 		end
 	},
 	["004-Particle Limit"] = {
@@ -166,6 +184,11 @@ local performance = {
 		type="scratch",
 		func=function(_) return true end,
 		setup=function(slider)
+			local label = slider:GetParent().label
+			label.fancycolor = Color(255, 0, 0)
+			label.fancycolor_hovered = Color(255, 127, 127)
+			label:SetColor(label.fancycolor)
+
 			slider:SetValue(gwater2.solver:GetMaxParticles())
 			local panel = slider:GetParent()
 			local button = panel:Add("DButton")
@@ -177,11 +200,11 @@ local performance = {
 			panel.button_apply = button
 			function button:DoClick()
 				local frame = styling.create_blocking_frame()
-				frame:SetSize(ScrW() / 2, ScrH() / 2)
+				frame:SetSize(600, 300)
 				frame:Center()
-				function frame:Paint(w, h)
-					styling.draw_main_background(0, 0, w, h)
-				end
+				--function frame:Paint(w, h)
+				--	styling.draw_main_background(0, 0, w, h)
+				--end
 
 				-- from testing it seems each particle is around 0.8kb so you could probably do some math to figure out the memory required and show it here
 				local size_fmt = 0.8*slider:GetValue() * 1024
@@ -195,28 +218,6 @@ local performance = {
 			    end
 			    size_fmt = math.Round(size_fmt)
 			    size_fmt = size_fmt..u.."B"
-
-			    local wrnpnl = frame:Add("DPanel")
-				wrnpnl:Dock(TOP)
-				function wrnpnl:Paint(w, h)
-					local r = (math.sin(RealTime() * 2) + 1) * 255 / 2
-					local s = 40
-					surface.SetDrawColor(r, 0, 0, r)
-					draw.NoTexture()
-					for x=-s*2,w+s,s do
-						x = x + ((RealTime() * 20) % s)
-						surface.DrawPoly({
-							{x=x, y=0}, {x=x+s/2, y=0}, {x=x+s, y=h}, {x=x+s/2, y=h}, 
-						})
-					end
-					surface.SetDrawColor(255-r, 0, 0, 255-r)
-					for x=-s/2-s,w-s/2+s,s do
-						x = x + ((RealTime() * 20) % s)
-						surface.DrawPoly({
-							{x=x, y=0}, {x=x+s/2, y=0}, {x=x+s, y=h}, {x=x+s/2, y=h}, 
-						})
-					end
-				end
 
 				local label = frame:Add("DLabel")
 				label:Dock(TOP)
@@ -236,16 +237,8 @@ local performance = {
 				label2:SetText("")
 				function label2:Paint() draw.DrawText(self.text, self:GetFont(), self:GetWide() / 2, 0, color_white, TEXT_ALIGN_CENTER) end
 
-				local btnpanel = frame:Add("DPanel")
-				btnpanel:Dock(BOTTOM)
-				function btnpanel:Paint() end
-
-				local wrnpnl2 = frame:Add("DPanel")
-				wrnpnl2:Dock(BOTTOM)
-				wrnpnl2.Paint = wrnpnl.Paint
-
-				local confirm = vgui.Create("DButton", btnpanel)
-				confirm:Dock(RIGHT)
+				local confirm = vgui.Create("DButton", frame)
+				confirm:SetPos(600 * (3/4) - 10, 170)
 				confirm:SetText("")
 				confirm:SetSize(20, 20)
 				confirm:SetImage("icon16/accept.png")
@@ -258,13 +251,13 @@ local performance = {
 					surface.PlaySound("gwater2/menu/select_ok.wav")
 				end
 
-				local deny = vgui.Create("DButton", btnpanel)
-				deny:Dock(LEFT)
+				local deny = vgui.Create("DButton", frame)
+				deny:SetPos(600 * (1/4) - 10, 170)
 				deny:SetText("")
 				deny:SetSize(20, 20)
 				deny:SetImage("icon16/cross.png")
 				deny.Paint = nil
-				function deny:DoClick()
+				function deny:DoClick() 
 					frame:Close()
 					surface.PlaySound("gwater2/menu/select_deny.wav")
 				end
@@ -282,6 +275,11 @@ local performance = {
 			return true
 		end,
 		setup=function(check)
+			local label = check:GetParent().label
+			label.fancycolor = Color(255, 255, 0)
+			label.fancycolor_hovered = Color(255, 255, 200)
+			label:SetColor(label.fancycolor)
+
 			check:SetValue(gwater2.options.absorption:GetBool())
 		end
 	},
@@ -294,6 +292,11 @@ local performance = {
 			return true
 		end,
 		setup=function(check)
+			local label = check:GetParent().label
+			label.fancycolor = Color(255, 127, 0)
+			label.fancycolor_hovered = Color(255, 200, 127)
+			label:SetColor(label.fancycolor)
+
 			check:SetValue(gwater2.options.depth_fix:GetBool())
 		end
 	}
@@ -305,6 +308,7 @@ local interaction = {
 				type="check",
 				func = function(val)
 					gwater2.solver:SetParameter("reaction_forces", val and 1 or 0)
+					gwater2.ChangeParameter("reaction_forces", val and 1 or 0)
 					return true
 				end,
 				setup=function(check)
@@ -337,6 +341,7 @@ local interaction = {
 				type="check",
 				func = function(val)
 					gwater2["player_interaction"] = val
+					gwater2.ChangeParameter("player_interaction", val)
 					return true
 				end,
 				setup = function(check)

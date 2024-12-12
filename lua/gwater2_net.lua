@@ -12,7 +12,6 @@ if SERVER then
 	util.AddNetworkString("GWATER2_CHANGEPARAMETER")
 	util.AddNetworkString("GWATER2_REQUESTPARAMETERSSNAPSHOT")
 
-	---@diagnostic disable-next-line: lowercase-global
 	gwater2 = {
 		parameters = {},
 

@@ -5,6 +5,7 @@ local GWATER2_PARTICLES_TO_SWIM = 30
 -- swim code provided by kodya (with permission)
 local gravity_convar = GetConVar("sv_gravity")
 local function in_water(ply) 
+	if gwater2.parameters.player_interaction == false then return end
 	if ply:OnGround() then return false end
 	return ply.GWATER2_CONTACTS and ply.GWATER2_CONTACTS >= GWATER2_PARTICLES_TO_SWIM
 end
@@ -37,7 +38,7 @@ local function do_swim(ply, move)
 	vel = vel * (1 - FrameTime() * 2)
 
 	local pgrav = ply:GetGravity() == 0 and 1 or ply:GetGravity()
-	local gravity = pgrav * gravity_convar:GetFloat() * (gwater2.parameters.swimbuoyancy or 0.5)
+	local gravity = pgrav * gravity_convar:GetFloat() * (gwater2.parameters.swimbuoyancy or 0.49)
 	vel.z = vel.z + FrameTime() * gravity
 
 	move:SetVelocity(vel * (gwater2.parameters.swimfriction or 1))
@@ -70,6 +71,8 @@ local function do_damage(ply)
 end
 
 hook.Add("Move", "gwater2_swimming", function(ply, move)
+	if gwater2.parameters.player_interaction == false then return end
+
 	do_swim(ply, move)
 	--if ticks ~= ply.gwater2_lasttick then
 		--ply.gwater2_lasttick = ticks
