@@ -289,8 +289,6 @@ local function create_menu()
 
 	frame.tabs = tabs
 
-	hook.Run("GWater2MenuPreInitialize", frame, params.parameters, params.visuals, params.performance, params.interaction)
-
 	local function about_tab(tabs)
 		local tab = vgui.Create("DPanel", tabs)
 		function tab:Paint() end
@@ -452,35 +450,22 @@ local function create_menu()
 
 	help_text:SetText(_util.get_localised("About Tab.help"))
 	
-	hook.Run("GWater2MenuAfterTab", "about", about_tab(tabs))
-
-	local _parameters, _tab = paramstabs.parameters_tab(tabs)
-	hook.Run("GWater2MenuAfterTab", "parameters", _tab)
-
-	local _visuals, _tab = paramstabs.visuals_tab(tabs)
-	hook.Run("GWater2MenuAfterTab", "visuals", _tab)
-	
-	local _interactions, _tab = paramstabs.interaction_tab(tabs)
-	hook.Run("GWater2MenuAfterTab", "interaction", _tab)
+	about_tab(tabs)
 
 	frame.params = {}	-- need to pass by reference into presets
-	hook.Run("GWater2MenuAfterTab", "presets", presets.presets_tab(tabs, frame.params))
+	frame.params._parameters = paramstabs.parameters_tab(tabs)
+	frame.params._visuals = paramstabs.visuals_tab(tabs)
+	frame.params._interactions = paramstabs.interaction_tab(tabs)
 
-	local _performance, _tab = paramstabs.performance_tab(tabs)
-	hook.Run("GWater2MenuAfterTab", "performance", _tab)
-	
-	hook.Run("GWater2MenuAfterTab", "menu", menu_tab(tabs))
+	presets.presets_tab(tabs, frame.params)
 
-	hook.Run("GWater2MenuAfterTab", "supporters", supporters_tab(tabs))
+	paramstabs.performance_tab(tabs)
+	menu_tab(tabs)
+	supporters_tab(tabs)
 	
 	if GetConVar("developer"):GetInt() != 0 then	-- developer tab for developer 1 only
 		local _tab = paramstabs.developer_tab(tabs)
-		hook.Run("GWater2MenuAfterTab", "developer", _tab)
 	end
-
-	frame.params._parameters = _parameters
-	frame.params._visuals = _visuals
-	frame.params._interactions = _interactions
 
 	for _,tab in pairs(tabs:GetItems()) do
 		local rt = tab
@@ -531,7 +516,6 @@ local function create_menu()
 		help_text:SetWide(help_text:GetWide()*2)
 	end
 	tabs:SetActiveTab(tabs.Items[gwater2.options.menu_tab:GetInt()].Tab)
-	hook.Run("GWater2MenuPostInitialize", frame)
 
 	return frame
 end
