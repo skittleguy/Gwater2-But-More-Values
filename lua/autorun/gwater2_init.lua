@@ -1,11 +1,13 @@
 AddCSLuaFile()
 
-local in_water = include("gwater2_swimming.lua")
-include("gwater2_net.lua")
-
-if SERVER then return end
+if SERVER then 
+	include("gwater2_net.lua")
+	include("gwater2_interactions.lua")
+	return
+end
 
 require((BRANCH == "x86-64" or BRANCH == "chromium" ) and "gwater2" or "gwater2_main")	-- carrying
+
 include("gwater2_shaders.lua")
 
 -- GetMeshConvexes but for client
@@ -83,6 +85,8 @@ local function get_map_vertices()
 	return all_vertices
 end
 
+local in_water = function() end
+
 gwater2 = {
 	solver = FlexSolver(100000),
 	renderer = FlexRenderer(),
@@ -135,7 +139,7 @@ gwater2 = {
 		xpcall(function()
 			gwater2.solver:AddMapCollider(0, game.GetMap())
 		end, function(e)
-			gwater2.solver:AddConcaveCollider(0, get_map_vertices(), Vector(), Angle())
+			gwater2.solver:AddConcaveCollider(0, get_map_vertices(), Vector(), Angle(0))
 			if !err then
 				ErrorNoHaltWithStack("[GWater2]: Map BSP structure is unsupported. Reverting to brushes. Collision WILL have holes!")
 			end
@@ -158,6 +162,9 @@ gwater2 = {
 	end
 }
 
+include("gwater2_net.lua")
+in_water = include("gwater2_interactions.lua")
+
 -- setup percentage values (used in menu)
 gwater2["surface_tension"] = gwater2.solver:GetParameter("surface_tension") * gwater2.solver:GetParameter("radius")^4	-- dont ask me why its a power of 4
 gwater2["fluid_rest_distance"] = gwater2.solver:GetParameter("fluid_rest_distance") / gwater2.solver:GetParameter("radius")
@@ -165,14 +172,13 @@ gwater2["solid_rest_distance"] = gwater2.solver:GetParameter("solid_rest_distanc
 gwater2["collision_distance"] = gwater2.solver:GetParameter("collision_distance") / gwater2.solver:GetParameter("radius")
 gwater2["cohesion"] = gwater2.solver:GetParameter("cohesion") * gwater2.solver:GetParameter("radius") * 0.1	-- cohesion scales by radius, for some reason..
 gwater2["blur_passes"] = 3
--- watergun specific (remove in 0.6)
-gwater2["size"] = 4
-gwater2["density"] = 1
-gwater2["forward_velocity"] = 15
 -- reaction force specific
 gwater2["force_multiplier"] = 0.01
 gwater2["force_buoyancy"] = 0
 gwater2["force_dampening"] = 0
+gwater2["player_interaction"] = true
+
+include("gwater2_menu.lua")
 
 local no_lerp = false
 local limit_fps = 1 / 60
@@ -193,11 +199,12 @@ local function gwater_tick2()
 		end
 	end
 	
-	local particles_in_radius = gwater2.solver:GetParticlesInRadius(lp:GetPos() + lp:OBBCenter(), gwater2.solver:GetParameter("fluid_rest_distance") * 3, GWATER2_PARTICLES_TO_SWIM)
+	local particles_in_radius = gwater2.solver:GetParticlesInRadius(lp:GetPos() + lp:OBBCenter(), gwater2.solver:GetParameter("fluid_rest_distance") * 3)
 	GWATER2_QuickHackRemoveMeASAP(	-- TODO: REMOVE THIS HACKY SHIT!!!!!!!!!!!!!
 		lp:EntIndex(), 
 		particles_in_radius
 	)
+
 	lp.GWATER2_CONTACTS = particles_in_radius
 
 	hook.Run("gwater2_posttick", gwater2.solver:Tick(limit_fps, 0))
@@ -213,7 +220,7 @@ local last_fire = 0
 hook.Add("gwater2_posttick", "gwater2_gravgun_grab", function()
 	local lp = LocalPlayer()
 	local gravgun = lp:GetActiveWeapon()
-	if !IsValid(gravgun) or lp:GetActiveWeapon():GetClass() != "weapon_physcannon" then 
+	if !IsValid(gravgun) or lp:GetActiveWeapon():GetClass() ~= "weapon_physcannon" then 
 		can_fire = false
 		return 
 	end
@@ -224,7 +231,7 @@ hook.Add("gwater2_posttick", "gwater2_gravgun_grab", function()
 	end
 
 	-- left click (punt)
-	if can_fire and last_fire != gravgun:GetNextPrimaryFire() then
+	if can_fire and last_fire ~= gravgun:GetNextPrimaryFire() then
 		last_fire = gravgun:GetNextPrimaryFire()
 		gwater2.solver:AddForceField(lp:EyePos(), 320, 200, 1, false)
 	else

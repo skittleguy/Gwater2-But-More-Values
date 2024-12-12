@@ -608,7 +608,7 @@ LUA_FUNCTION(FLEXSOLVER_ApplyContacts) {
 	if (UTIL_EntityByIndex == nullptr) return 0;	// not hosting server
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
-	if (flex->get_parameter("reaction_forces") < 2) return 0;	// Coupling planes arent being generated.. bail
+	if (!flex->get_parameter("reaction_forces")) return 0;	// Coupling planes arent being generated.. bail
 
 	Vector4D* particle_pos = flex->hosts.particle_smooth;
 	Vector* particle_vel = flex->hosts.particle_vel;
@@ -850,18 +850,16 @@ LUA_FUNCTION(FLEXSOLVER_GetParticlesInRadius) {
 	int early_exit = (int)LUA->GetNumber(4);	// returns 0 if nil
 
 	int num_particles = 0;
-	if (flex->get_parameter("reaction_forces") > 0) {
-		Vector4D* particle_pos = flex->hosts.particle_smooth;
-		int* particle_active = flex->hosts.particle_active;
-		int* particle_phase = flex->hosts.particle_phase;
-		for (int i = 0; i < flex->get_active_particles(); i++) {
-			int particle_index = particle_active[i];
-			if (particle_phase[particle_index] != FlexPhase::WATER) continue;
-			if (particle_pos[particle_index].AsVector3D().DistToSqr(pos) > radius) continue;
+	Vector4D* particle_pos = flex->hosts.particle_smooth;
+	int* particle_active = flex->hosts.particle_active;
+	int* particle_phase = flex->hosts.particle_phase;
+	for (int i = 0; i < flex->get_active_particles(); i++) {
+		int particle_index = particle_active[i];
+		if (particle_phase[particle_index] != FlexPhase::WATER) continue;
+		if (particle_pos[particle_index].AsVector3D().DistToSqr(pos) > radius) continue;
 
-			num_particles++;
-			if (early_exit && num_particles >= early_exit) break;
-		}
+		num_particles++;
+		if (early_exit && num_particles >= early_exit) break;
 	}
 
 	LUA->PushNumber(num_particles);

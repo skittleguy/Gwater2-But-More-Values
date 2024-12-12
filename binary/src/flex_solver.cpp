@@ -369,7 +369,7 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 
 		// read back (async)
 		//NvFlexGetParticles(solver, buffers.particle_pos, NULL);		// what the fuck.
-		//NvFlexGetVelocities(solver, buffers.particle_vel, NULL);	// ^
+		//NvFlexGetVelocities(solver, buffers.particle_vel, NULL);		// ^
 		NvFlexGetDiffuseParticles(solver, buffers.diffuse_pos, buffers.diffuse_vel, buffers.diffuse_count);
 
 		if (get_active_triangles() > 0) {
@@ -384,7 +384,7 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 			NvFlexGetSmoothParticles(solver, buffers.particle_smooth, &copy);
 		}
 
-		if (get_parameter("reaction_forces") > 1) {
+		if (get_parameter("reaction_forces")) {
 			NvFlexGetParticles(solver, buffers.particle_pos, &copy);
 			NvFlexGetVelocities(solver, buffers.particle_vel, &copy);
 			NvFlexGetContacts(solver, buffers.contact_planes, buffers.contact_vel, buffers.contact_indices, buffers.contact_count);
@@ -595,7 +595,7 @@ FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
 	// Extra values we store which are not stored in flexes default parameters
 	param_map["substeps"] = new float(3);
 	param_map["timescale"] = new float(1);
-	param_map["reaction_forces"] = new float(1);
+	param_map["reaction_forces"] = new float(0);
 
 	// FleX GPU Buffers
 	buffers.particle_pos = buffers.init(library, &hosts.particle_pos, particles);
