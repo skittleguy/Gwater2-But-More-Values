@@ -67,7 +67,6 @@ local params = include("menu/gwater2_params.lua")
 local paramstabs = include("menu/gwater2_paramstabs.lua")
 local styling = include("menu/gwater2_styling.lua")
 local _util = include("menu/gwater2_util.lua")
-include("menu/gf_scrollpanel.lua")
 if not file.Exists("gwater2", "DATA") then file.CreateDir("gwater2") end
 local presets = include("menu/gwater2_presets.lua")
 
@@ -296,7 +295,7 @@ local function create_menu()
 		local tab = vgui.Create("DPanel", tabs)
 		function tab:Paint() end
 		tabs:AddSheet(_util.get_localised("About Tab.title"), tab, "icon16/exclamation.png").Tab.realname = "About Tab"
-		tab = tab:Add("GF_ScrollPanel")
+		tab = tab:Add("DScrollPanel")
 		tab:Dock(FILL)
 
 		styling.define_scrollbar(tab:GetVBar())
@@ -375,7 +374,7 @@ local function create_menu()
 		function tab:Paint() end
 
 		tabs:AddSheet(_util.get_localised("Menu.title"), tab, "icon16/css_valid.png").Tab.realname = "Menu"
-		tab = tab:Add("GF_ScrollPanel")
+		tab = tab:Add("DScrollPanel")
 		tab:Dock(FILL)
 		tab.help_text = tabs.help_text
 

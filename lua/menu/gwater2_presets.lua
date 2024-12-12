@@ -183,7 +183,7 @@ local function presets_tab(tabs, params)
 	local tab = vgui.Create("DPanel", tabs)
 	function tab:Paint() end
 	tabs:AddSheet(_util.get_localised("Presets.title"), tab, "icon16/images.png").Tab.realname = "Presets"
-	tab = tab:Add("GF_ScrollPanel")
+	tab = tab:Add("DScrollPanel")
 	tab:Dock(FILL)
 
 	styling.define_scrollbar(tab:GetVBar())
@@ -466,7 +466,7 @@ local function presets_tab(tabs, params)
 			label:Dock(TOP)
 			label:SetText(_util.get_localised("Presets.save.include_params"))
 			label:SetFont("GWater2Title")
-			local panel = frame:Add("GF_ScrollPanel")
+			local panel = frame:Add("DScrollPanel")
 			panel:Dock(FILL)
 
 			local preset = {}

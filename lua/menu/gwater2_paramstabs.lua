@@ -6,7 +6,7 @@ local function parameters_tab(tabs)
 	local tab = vgui.Create("DPanel", tabs)
 	function tab:Paint() end
 	tabs:AddSheet(util.get_localised("Parameters.title"), tab, "icon16/cog.png").Tab.realname = "Parameters"
-	tab = tab:Add("GF_ScrollPanel")
+	tab = tab:Add("DScrollPanel")
 	tab:Dock(FILL)
 
 	styling.define_scrollbar(tab:GetVBar())
@@ -58,7 +58,7 @@ local function visuals_tab(tabs)
 	local tab = vgui.Create("DPanel", tabs)
 	function tab:Paint() end
 	tabs:AddSheet(util.get_localised("Visuals.title"), tab, "icon16/picture.png").Tab.realname = "Visuals"
-	tab = tab:Add("GF_ScrollPanel")
+	tab = tab:Add("DScrollPanel")
 	tab:Dock(FILL)
 
 	styling.define_scrollbar(tab:GetVBar())
@@ -104,7 +104,7 @@ local function performance_tab(tabs)
 	local tab = vgui.Create("DPanel", tabs)
 	function tab:Paint() end
 	tabs:AddSheet(util.get_localised("Performance.title"), tab, "icon16/application_xp_terminal.png").Tab.realname = "Performance"
-	tab = tab:Add("GF_ScrollPanel")
+	tab = tab:Add("DScrollPanel")
 	tab:Dock(FILL)
 
 	styling.define_scrollbar(tab:GetVBar())
@@ -150,7 +150,7 @@ local function interaction_tab(tabs)
 	local tab = vgui.Create("DPanel", tabs)
 	function tab:Paint() end
 	tabs:AddSheet(util.get_localised("Interactions.title"), tab, "icon16/chart_curve.png").Tab.realname = "Interactions"
-	tab = tab:Add("GF_ScrollPanel")
+	tab = tab:Add("DScrollPanel")
 	tab:Dock(FILL)
 
 	styling.define_scrollbar(tab:GetVBar())
@@ -202,7 +202,7 @@ local function developer_tab(tabs)
 	local tab = vgui.Create("DPanel", tabs)
 	function tab:Paint() end
 	tabs:AddSheet(util.get_localised("Developer.title"), tab, "icon16/bug.png").Tab.realname = "Developer"
-	tab = tab:Add("GF_ScrollPanel")
+	tab = tab:Add("DScrollPanel")
 	tab:Dock(FILL)
 
 	styling.define_scrollbar(tab:GetVBar())
