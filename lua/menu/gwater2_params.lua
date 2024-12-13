@@ -352,7 +352,7 @@ local interaction = {
 			},
 			["002-Force Multiplier"] = {
 				min=0.001,
-				max=0.02,
+				max=0.025,
 				decimals=3,
 				type="scratch"
 			},

@@ -225,7 +225,7 @@ local function make_parameter_color(tab, locale_parameter_name, parameter_name, 
 	local mixer = panel:Add("DColorMixer")
 	mixer:Dock(FILL)
 	mixer:DockPadding(5, 0, 5, 0)
-	panel:SetTall(110)
+	panel:SetTall(150)
 	mixer:SetPalette(false)
 	mixer:SetLabel()
 	mixer:SetAlphaBar(true)
