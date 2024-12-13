@@ -578,6 +578,28 @@ LUA_FUNCTION(FLEXSOLVER_ResetCloth) {
 	return 0;
 }
 
+// removes all diffuse particles in a flex solver
+LUA_FUNCTION(FLEXSOLVER_ResetDiffuse) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+
+	flex->reset_diffuse();
+
+	return 0;
+}
+
+// removes all diffuse particles in a flex solver
+LUA_FUNCTION(FLEXSOLVER_EnableDiffuse) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	LUA->CheckType(2, Type::Bool);
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+
+	bool enabled = LUA->GetBool(2);
+	flex->enable_diffuse(enabled);
+
+	return 0;
+}
+
 // Iterates through all particles and calls a lua function with 1 parameter (position)
 LUA_FUNCTION(FLEXSOLVER_RenderParticles) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
@@ -1105,6 +1127,7 @@ GMOD_MODULE_OPEN() {
 	ADD_FUNCTION(LUA, FLEXSOLVER_RemoveCube, "RemoveCube");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetMaxParticles, "GetMaxParticles");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetMaxDiffuseParticles, "GetMaxDiffuseParticles");
+	ADD_FUNCTION(LUA, FLEXSOLVER_EnableDiffuse, "EnableDiffuse");
 	ADD_FUNCTION(LUA, FLEXSOLVER_RenderParticles, "RenderParticles");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddConcaveCollider, "AddConcaveCollider");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddConvexCollider, "AddConvexCollider");
@@ -1123,6 +1146,7 @@ GMOD_MODULE_OPEN() {
 	ADD_FUNCTION(LUA, FLEXSOLVER_InitBounds, "InitBounds");
 	ADD_FUNCTION(LUA, FLEXSOLVER_Reset, "Reset");
 	ADD_FUNCTION(LUA, FLEXSOLVER_ResetCloth, "ResetCloth");
+	ADD_FUNCTION(LUA, FLEXSOLVER_ResetDiffuse, "ResetDiffuse");
 	LUA->SetField(-2, "__index");
 
 	FLEXRENDERER_METATABLE = LUA->CreateMetaTable("FlexRenderer");

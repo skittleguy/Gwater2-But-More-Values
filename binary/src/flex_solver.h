@@ -116,6 +116,7 @@ private:
 	std::map<int, Particle> particle_queue;
 	int particle_queue_index = 0;
 	std::vector<NvFlexExtForceField> force_field_queue;
+	bool diffuse_enabled = true;
 
 	void set_particle(int particle_index, int active_index, Particle particle);
 	void next_particle();
@@ -127,6 +128,7 @@ public:
 
 	void reset();
 	void reset_cloth();
+	void reset_diffuse();
 	int get_active_particles();
 	int get_active_diffuse();
 	int get_active_triangles();
@@ -148,6 +150,7 @@ public:
 	float get_parameter(std::string param);	// returns NaN on invalid parameter
 	void enable_bounds(Vector mins, Vector maxs);
 	void disable_bounds();
+	void enable_diffuse(bool enabled);
 
 	FlexSolver(NvFlexLibrary* library, int particles);
 	~FlexSolver();

@@ -19,6 +19,13 @@ void FlexBuffers::destroy() {
 	for (NvFlexBuffer* buffer : buffers) NvFlexFreeBuffer(buffer);
 }
 
+void FlexSolver::reset_diffuse() {
+	hosts.diffuse_count = (int*)NvFlexMap(buffers.diffuse_count, eNvFlexMapWait);
+	hosts.diffuse_count[0] = 0;
+	NvFlexUnmap(buffers.diffuse_count);
+	NvFlexSetDiffuseParticles(solver, NULL, NULL, 0);
+}
+
 //int diff = Max(n - copy_description->elementCount, 0);
 //particles.erase(particles.begin() + diff, particles.end());
 //copy_description->elementCount = Min(copy_description->elementCount, n);
@@ -31,14 +38,12 @@ void FlexSolver::reset() {
 	particle_queue.clear();
 	particle_queue_index = 0;
 
-	// clear diffuse
-	hosts.diffuse_count = (int*)NvFlexMap(buffers.diffuse_count, eNvFlexMapWait);
-	hosts.diffuse_count[0] = 0;
-	NvFlexUnmap(buffers.diffuse_count);
-	NvFlexSetDiffuseParticles(solver, NULL, NULL, 0);
+	reset_diffuse();
 
 	memset(hosts.particle_lifetime, 0, sizeof(float) * get_max_particles());
 }
+
+
 
 void FlexSolver::reset_cloth() {
 	copy_triangles.elementCount = 0;
@@ -370,7 +375,11 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 		// read back (async)
 		//NvFlexGetParticles(solver, buffers.particle_pos, NULL);		// what the fuck.
 		//NvFlexGetVelocities(solver, buffers.particle_vel, NULL);		// ^
-		NvFlexGetDiffuseParticles(solver, buffers.diffuse_pos, buffers.diffuse_vel, buffers.diffuse_count);
+		if (diffuse_enabled) {
+			NvFlexGetDiffuseParticles(solver, buffers.diffuse_pos, buffers.diffuse_vel, buffers.diffuse_count);
+		} else {
+			hosts.diffuse_count[0] = 0;
+		}
 
 		if (get_active_triangles() > 0) {
 			NvFlexGetNormals(solver, buffers.triangle_normals, &copy);
@@ -487,6 +496,10 @@ void FlexSolver::enable_bounds(Vector mins, Vector maxs) {
 
 void FlexSolver::disable_bounds() {
 	parameters.numPlanes = 0;
+}
+
+void FlexSolver::enable_diffuse(bool enabled) {
+	diffuse_enabled = enabled;
 }
 
 // Initializes a solver in a FleX library

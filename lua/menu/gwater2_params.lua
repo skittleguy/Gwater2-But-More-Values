@@ -318,6 +318,23 @@ local performance = {
 			check:SetValue(gwater2.options.player_collision:GetBool())
 		end
 	},
+	["009-Diffuse Enabled"] = {
+		type="check",
+		func=function(val)
+			gwater2.solver:ResetDiffuse()
+			gwater2.solver:EnableDiffuse(val)
+			gwater2.options.diffuse_enabled:SetBool(val)
+			return true
+		end,
+		setup=function(check)
+			local label = check:GetParent().label
+			label.fancycolor = Color(255, 255, 0)
+			label.fancycolor_hovered = Color(255, 255, 200)
+			label:SetColor(label.fancycolor)
+
+			check:SetValue(gwater2.options.diffuse_enabled:GetBool())
+		end
+	},
 }
 local interaction = {
 	["001-Reaction Force Parameters"] = {

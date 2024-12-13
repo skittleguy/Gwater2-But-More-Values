@@ -13,7 +13,8 @@ gwater2.options = gwater2.options or {
 	depth_fix = CreateClientConVar("gwater2_depth_fix", "0", true),
 	menu_key = CreateClientConVar("gwater2_menu2key", tostring(KEY_G), true),
 	menu_tab = CreateClientConVar("gwater2_menu2tab", "1", true),
-	player_collision = CreateClientConVar("gwater2_playercollision", "1", true),
+	player_collision = CreateClientConVar("gwater2_player_collision", "1", true),
+	diffuse_enabled = CreateClientConVar("gwater2_diffuse_enabled", "1", true),
 
 	config_cache = nil,
 
@@ -79,6 +80,8 @@ timer.Simple(0, function()
 	net.Start("GWATER2_REQUESTCOLLISION")
 	net.WriteBool(gwater2.options.player_collision:GetBool())
 	net.SendToServer()
+
+	gwater2.solver:EnableDiffuse(gwater2.options.diffuse_enabled:GetBool())
 end)
 
 gwater2.options.solver:SetParameter("gravity", 15.24)	-- flip gravity because y axis positive is down
