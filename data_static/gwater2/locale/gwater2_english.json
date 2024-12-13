@@ -103,6 +103,8 @@
     "gwater2.menu.Performance.Particle Limit.warning": "This can be dangerous, because all particles must be allocated on the GPU.\nDO NOT set the limit to a number higher then you think your computer can handle.\nI DO NOT take responsiblity for any hardware damage this may cause",
     "gwater2.menu.Performance.Iterations": "Iterations",
     "gwater2.menu.Performance.Iterations.desc": "Controls how many times the physics solver attempts to converge to a solution per substep.\n\nMedium performance impact.",
+    "gwater2.menu.Performance.Player Collision" : "Player Collision",
+    "gwater2.menu.Performance.Player Collision.desc" : "Enables / disables collision with the player (you).\n\nThis doesn't actually impact performance that much, but its in this tab anyways because presets cannot set this value",
     "gwater2.menu.Interactions.SwimSpeed": "Swim Speed",
     "gwater2.menu.Interactions.SwimSpeed.desc": "Controls how fast you swim when underwater",
     "gwater2.menu.Interactions.SwimFriction": "Swim Friction",

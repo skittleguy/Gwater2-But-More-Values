@@ -115,7 +115,7 @@ local visuals = {
 		max=3,
 		decimals=2,
 		setup=function(scratch)
-			--scratch:SetValue(gwater2.options.parameters.color_value_multiplier.real)
+			scratch:SetValue(gwater2.options.parameters.color_value_multiplier.real)
 		end
 	},
 	["008-Reflectance"] = {
@@ -160,7 +160,7 @@ local performance = {
 			label:SetColor(label.fancycolor)
 		end
 	},
-	["003-Blur Passes"] = {
+	["004-Blur Passes"] = {
 		min=0,
 		max=4,
 		decimals=0,
@@ -177,7 +177,7 @@ local performance = {
 			label:SetColor(label.fancycolor)
 		end
 	},
-	["004-Particle Limit"] = {
+	["003-Particle Limit"] = {
 		min=1,
 		max=1000000,
 		decimals=0,
@@ -299,7 +299,25 @@ local performance = {
 
 			check:SetValue(gwater2.options.depth_fix:GetBool())
 		end
-	}
+	},
+	["008-Player Collision"] = {
+		type="check",
+		func=function(val)
+			gwater2.options.player_collision:SetBool(val)
+			net.Start("GWATER2_REQUESTCOLLISION")
+			net.WriteBool(val)
+			net.SendToServer()
+			return true
+		end,
+		setup=function(check)
+			local label = check:GetParent().label
+			label.fancycolor = Color(127, 255, 0)
+			label.fancycolor_hovered = Color(200, 255, 127)
+			label:SetColor(label.fancycolor)
+
+			check:SetValue(gwater2.options.player_collision:GetBool())
+		end
+	},
 }
 local interaction = {
 	["001-Reaction Force Parameters"] = {

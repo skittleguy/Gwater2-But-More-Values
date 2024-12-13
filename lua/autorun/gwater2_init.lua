@@ -129,8 +129,18 @@ gwater2 = {
 				end
 				gwater2.solver:SetColliderPos(index, pos)
 				gwater2.solver:SetColliderAng(index, ang)
-				gwater2.solver:SetColliderEnabled(index, ent:GetCollisionGroup() != COLLISION_GROUP_WORLD and bit.band(ent:GetSolidFlags(), FSOLID_NOT_SOLID) == 0)
-				if in_water(ent) then gwater2.solver:SetColliderEnabled(index, false) end
+				
+				if in_water(ent) then 
+					gwater2.solver:SetColliderEnabled(index, false) 
+					return 
+				end
+
+				local should_collide = ent:GetCollisionGroup() != COLLISION_GROUP_WORLD and bit.band(ent:GetSolidFlags(), FSOLID_NOT_SOLID) == 0
+				if ent:IsPlayer() then
+					gwater2.solver:SetColliderEnabled(index, should_collide and ent:GetNW2Bool("GWATER2_COLLISION", true))
+				else
+					gwater2.solver:SetColliderEnabled(index, should_collide)
+				end
 			end
 		end
 	end,

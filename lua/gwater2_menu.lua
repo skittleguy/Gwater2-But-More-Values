@@ -13,6 +13,7 @@ gwater2.options = gwater2.options or {
 	depth_fix = CreateClientConVar("gwater2_depth_fix", "0", true),
 	menu_key = CreateClientConVar("gwater2_menu2key", tostring(KEY_G), true),
 	menu_tab = CreateClientConVar("gwater2_menu2tab", "1", true),
+	player_collision = CreateClientConVar("gwater2_playercollision", "1", true),
 
 	config_cache = nil,
 
@@ -74,6 +75,10 @@ local presets = include("menu/gwater2_presets.lua")
 timer.Simple(0, function() 
 	Material("gwater2/volumetric"):SetFloat("$alpha", gwater2.options.absorption:GetBool() and 0.125 or 0)
 	Material("gwater2/normals"):SetInt("$depthfix", gwater2.options.depth_fix:GetBool() and 1 or 0)
+
+	net.Start("GWATER2_REQUESTCOLLISION")
+	net.WriteBool(gwater2.options.player_collision:GetBool())
+	net.SendToServer()
 end)
 
 gwater2.options.solver:SetParameter("gravity", 15.24)	-- flip gravity because y axis positive is down

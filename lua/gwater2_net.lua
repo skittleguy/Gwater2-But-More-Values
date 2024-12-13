@@ -11,6 +11,7 @@ if SERVER then
 
 	util.AddNetworkString("GWATER2_CHANGEPARAMETER")
 	util.AddNetworkString("GWATER2_REQUESTPARAMETERSSNAPSHOT")
+	util.AddNetworkString("GWATER2_REQUESTCOLLISION")
 
 	gwater2 = {
 		parameters = {},
@@ -106,6 +107,10 @@ if SERVER then
 	net.Receive("GWATER2_REQUESTPARAMETERSSNAPSHOT", function(len, ply)
 		-- TODO
 	end)
+
+	net.Receive("GWATER2_REQUESTCOLLISION", function(len, ply)
+		ply:SetNW2Bool("GWATER2_COLLISION", net.ReadBool())
+	end)
 else	-- CLIENT
 	gwater2.ChangeParameter = function(name, value)
 		net.Start("GWATER2_CHANGEPARAMETER")
@@ -113,6 +118,7 @@ else	-- CLIENT
 			net.WriteType(value)
 		net.SendToServer()
 	end
+
 	gwater2.ResetSolver = function()
 		net.Start("GWATER2_RESETSOLVER")
 		net.SendToServer()
