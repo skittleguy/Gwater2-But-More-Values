@@ -87,6 +87,9 @@ end
 
 local in_water = function() end
 
+-- collisions will lerp from positions they were at a long time ago if no particles have been initialized for a while
+local no_lerp = false
+
 gwater2 = {
 	solver = FlexSolver(100000),
 	renderer = FlexRenderer(),
@@ -110,8 +113,8 @@ gwater2 = {
 					end
 				end
 
-				gwater2.solver:SetColliderPos(index, ent:GetPos())
-				gwater2.solver:SetColliderAng(index, ent:GetAngles())
+				gwater2.solver:SetColliderPos(index, ent:GetPos(), no_lerp)
+				gwater2.solver:SetColliderAng(index, ent:GetAngles(), no_lerp)
 				gwater2.solver:SetColliderEnabled(index, ent:GetCollisionGroup() != COLLISION_GROUP_WORLD and bit.band(ent:GetSolidFlags(), FSOLID_NOT_SOLID) == 0)
 			else
 				-- horrible code for proper ragdoll collision. Still breaks half the time. Fuck source
@@ -127,8 +130,8 @@ gwater2 = {
 						ang = ent:GetAngles()
 					end
 				end
-				gwater2.solver:SetColliderPos(index, pos)
-				gwater2.solver:SetColliderAng(index, ang)
+				gwater2.solver:SetColliderPos(index, pos, no_lerp)
+				gwater2.solver:SetColliderAng(index, ang, no_lerp)
 				
 				if in_water(ent) then 
 					gwater2.solver:SetColliderEnabled(index, false) 
@@ -190,7 +193,6 @@ gwater2["player_interaction"] = true
 
 include("gwater2_menu.lua")
 
-local no_lerp = false
 local limit_fps = 1 / 60
 local function gwater_tick2()
 	local lp = LocalPlayer()
@@ -202,9 +204,7 @@ local function gwater_tick2()
 		gwater2.solver:ApplyContacts(limit_fps * gwater2["force_multiplier"], 3, gwater2["force_buoyancy"], gwater2["force_dampening"])
 		gwater2.solver:IterateColliders(gwater2.update_colliders)
 
-		-- collisions will lerp from positions they were at a long time ago if no particles have been initialized for a while
 		if no_lerp then 
-			gwater2.solver:IterateColliders(gwater2.update_colliders) 
 			no_lerp = false
 		end
 	end

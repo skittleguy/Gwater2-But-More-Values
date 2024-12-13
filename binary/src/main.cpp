@@ -464,12 +464,18 @@ LUA_FUNCTION(FLEXSOLVER_SetColliderPos) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckNumber(2);				// Mesh ID
 	LUA->CheckType(3, Type::Vector);	// Prop Pos
+	//LUA->CheckType(4, Type::Bool);	// Update previous position
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 	int index = (int)LUA->GetNumber(2);
 	if (index < 0 || index >= flex->meshes.size()) return 0;
 
 	flex->meshes[index].set_pos(LUA->GetVector(3));
+
+	// Update previous position if desired
+	if (LUA->GetBool(4)) {
+		flex->meshes[index].update();
+	}
 
 	return 0;
 }
@@ -478,12 +484,18 @@ LUA_FUNCTION(FLEXSOLVER_SetColliderAng) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	LUA->CheckNumber(2);				// Mesh ID
 	LUA->CheckType(3, Type::Angle);		// Prop angle
+	//LUA->CheckType(4, Type::Bool);	// Update previous position
 
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 	int index = (int)LUA->GetNumber(2);
 	if (index < 0 || index >= flex->meshes.size()) return 0;
 
 	flex->meshes[index].set_ang(LUA->GetAngle(3));
+
+	// Update previous position if desired
+	if (LUA->GetBool(4)) {
+		flex->meshes[index].update();
+	}
 
 	return 0;
 }
