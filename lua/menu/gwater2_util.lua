@@ -339,7 +339,7 @@ local function make_parameter_check(tab, locale_parameter_name, parameter_name, 
 	end
 	panel:SetTall(panel:GetTall()+5)
 	if not gwater2.options.parameters[string.lower(parameter_name):gsub(" ", "_")] then
-		gwater2.options.parameters[string.lower(parameter_name):gsub(" ", "_")] = {real=check:GetValue(), default=check:GetValue()}
+		gwater2.options.parameters[string.lower(parameter_name):gsub(" ", "_")] = {real=check:GetChecked(), default=check:GetChecked()}
 	end
 	return panel
 end
