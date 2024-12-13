@@ -28,7 +28,7 @@ local default_presets = {
 	},
 	["002-Blood"]={
 		["CUST/Author"]="GHM",
-		["VISL/Color"]={240, 0, 0, 250},
+		["VISL/Color"]={210, 30, 30, 150},
 		["PHYS/Cohesion"]=0.45,
 		["PHYS/Adhesion"]=0.15,
 		["PHYS/Viscosity"]=1,
