@@ -94,13 +94,27 @@ if SERVER then
 			return mat
 		end
 	}
+
+	local admin_only = CreateConVar("gwater2_adminonly", "0", FCVAR_REPLICATED)
+	cvars.AddChangeCallback("gwater2_adminonly", function(name, old, new)
+		if tonumber(new or 0) != 0 then
+
+			-- reopen menus of all players. we need to make sure they're admins
+			for k, v in ipairs(player.GetAll()) do
+				v:ConCommand("gwater2_menu")
+			end
+		end
+	end)
+
 	net.Receive("GWATER2_CHANGEPARAMETER", function(len, ply)
-		-- if not ply:IsSuperAdmin() then return end -- do not accept change of parameters from non-superadmins
+		if admin_only:GetBool() and !ply:IsAdmin() then return end	-- admin only :P
+
 		gwater2.ChangeParameter(net.ReadString(), net.ReadType(), ply)
 	end)
 
 	net.Receive("GWATER2_RESETSOLVER", function(len, ply)
-		-- if not ply:IsSuperAdmin() then return end -- do not accept solver reset from non-superadmins
+		if admin_only:GetBool() and !ply:IsAdmin() then return end
+
 		gwater2.ResetSolver()
 	end)
 

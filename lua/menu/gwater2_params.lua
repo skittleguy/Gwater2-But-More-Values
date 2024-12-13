@@ -321,8 +321,8 @@ local performance = {
 	["009-Diffuse Enabled"] = {
 		type="check",
 		func=function(val)
-			gwater2.solver:ResetDiffuse()
 			gwater2.solver:EnableDiffuse(val)
+			gwater2.solver:ResetDiffuse()
 			gwater2.options.diffuse_enabled:SetBool(val)
 			return true
 		end,

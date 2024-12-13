@@ -377,8 +377,6 @@ bool FlexSolver::tick(float dt, NvFlexMapFlags wait) {
 		//NvFlexGetVelocities(solver, buffers.particle_vel, NULL);		// ^
 		if (diffuse_enabled) {
 			NvFlexGetDiffuseParticles(solver, buffers.diffuse_pos, buffers.diffuse_vel, buffers.diffuse_count);
-		} else {
-			hosts.diffuse_count[0] = 0;
 		}
 
 		if (get_active_triangles() > 0) {

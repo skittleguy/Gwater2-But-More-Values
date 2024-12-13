@@ -165,7 +165,7 @@
     "gwater2.menu.Developer.diffuse_drag.desc": "drag coefficient of diffuse particles.",
     "gwater2.menu.Menu.title": "Menu",
     "gwater2.menu.Menu.titletext": "Menu",
-    "gwater2.menu.Menu.help": "This tab controls visuals and behavior of menu.\n\nHover over a parameter to see it's description.",
+    "gwater2.menu.Menu.help": "This tab controls visuals and behavior of the menu.\n\nHover over a parameter to reveal its functionality.",
     "gwater2.menu.Menu.sounds": "Play sounds",
     "gwater2.menu.Menu.sounds.desc": "Enable/disable menu sounds",
     "gwater2.menu.Menu.animations": "Animate menu",
@@ -174,6 +174,8 @@
     "gwater2.menu.Menu.preview.desc": "Enables/disables the fluid preview (seen on left)\n\nHelps performance while in the menu a bit",
     "gwater2.menu.Menu.pixelate_preview": "Pixelated fluid preview",
     "gwater2.menu.Menu.pixelate_preview.desc": "Enable/disables pixelated fluid preview.",
+    "gwater2.menu.Menu.admin_only": "Admin only menu",
+    "gwater2.menu.Menu.admin_only.desc": "Enable/disables the menu only being accessable to admins.\n\nThis will force close the menu on all players when enabled.\n\nNOTE THAT ONLY THE SERVER HOST CAN CHANGE THIS VALUE. IF THIS SETTING DOESN'T WORK, RUN THE COMMAND:\ngwater2_adminonly (0-1)\nIN CONSOLE",
     "gwater2.menu.Fluid Preview.title": "Fluid Preview",
     "gwater2.menu.Explanation Area.title": "Explanation Area"
 }

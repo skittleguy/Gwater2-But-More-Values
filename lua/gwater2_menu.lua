@@ -11,8 +11,8 @@ gwater2.options = gwater2.options or {
 	blur_passes = CreateClientConVar("gwater2_blur_passes", "3", true),
 	absorption = CreateClientConVar("gwater2_absorption", "1", true),
 	depth_fix = CreateClientConVar("gwater2_depth_fix", "0", true),
-	menu_key = CreateClientConVar("gwater2_menu2key", tostring(KEY_G), true),
-	menu_tab = CreateClientConVar("gwater2_menu2tab", "1", true),
+	menu_key = CreateClientConVar("gwater2_menukey", tostring(KEY_G), true),
+	menu_tab = CreateClientConVar("gwater2_menutab", "1", true),
 	player_collision = CreateClientConVar("gwater2_player_collision", "1", true),
 	diffuse_enabled = CreateClientConVar("gwater2_diffuse_enabled", "1", true),
 
@@ -90,6 +90,7 @@ gwater2.options.solver:SetParameter("dynamic_friction", 0)	-- ^
 gwater2.options.solver:SetParameter("diffuse_threshold", math.huge)	-- no diffuse particles allowed in preview
 _util.set_gwater_parameter("radius", 10, true)	-- regen radius defaults, as they are scaled in the preview
 
+local admin_only = GetConVar("gwater2_adminonly")
 local function create_menu()
 	local frame = vgui.Create("DFrame")
 	frame:SetTitle("GWater 2 " .. gwater2.VERSION)
@@ -171,24 +172,6 @@ local function create_menu()
 	function qgun:DoClick()
 		RunConsoleCommand("gm_giveswep", "weapon_gw2_watergun")
 	end
-
-	/*
-	local qwater = q_access:Add("DImageButton")
-	qwater:SetImage("icon16/water.png")
-	qwater:SetSize(q_access:GetTall() - 4, q_access:GetTall() - 4)
-	qwater:SetPos(2*3+qreset:GetWide()*2, 2)
-	qwater:SetTooltip("Reset all parameters to their respective defaults (water preset)")
-	function qwater:DoClick()
-		for k,v in pairs(gwater2.options.parameters) do
-			print(k, gwater2.options.initialised[k])
-			if gwater2.options.initialised[k][2].SetColor then
-				gwater2.options.initialised[k][2]:SetColor(v.default)
-			else
-				gwater2.options.initialised[k][2]:SetValue(v.default)
-			end
-			--util.set_gwater_parameter(k, v.default)
-		end
-	end*/
 
 	local particle_material = nil
 	local pixelated = "hell"
@@ -452,6 +435,21 @@ local function create_menu()
 	        	return true
 	        end
     	})
+
+		-- TODO: does IsListenServerHost() work for this?
+		if LocalPlayer():IsSuperAdmin() then	-- must be host to change this value
+			_util.make_parameter_check(tab, "Menu.admin_only", "Admin Only", {
+				func=function(val)
+					RunConsoleCommand("gwater2_adminonly", val and "1" or "0")
+					return true
+				end,
+				setup=function(check)
+					check:GetParent().button:Remove()
+					check:SetValue(admin_only:GetBool())
+					return true
+				end
+			})
+		end
 	end
 
 	tabs.help_text = help_text
@@ -460,18 +458,22 @@ local function create_menu()
 	
 	about_tab(tabs)
 
-	frame.params = {}	-- need to pass by reference into presets
-	frame.params._parameters = paramstabs.parameters_tab(tabs)
-	frame.params._visuals = paramstabs.visuals_tab(tabs)
-	frame.params._interactions = paramstabs.interaction_tab(tabs)
+	local tabs_enabled = !admin_only:GetBool() or LocalPlayer():IsAdmin()
+	
+	if tabs_enabled then
+		frame.params = {}	-- need to pass by reference into presets
+		frame.params._parameters = paramstabs.parameters_tab(tabs)
+		frame.params._visuals = paramstabs.visuals_tab(tabs)
+		frame.params._interactions = paramstabs.interaction_tab(tabs)
 
-	presets.presets_tab(tabs, frame.params)
+		presets.presets_tab(tabs, frame.params)
+	end
 
 	paramstabs.performance_tab(tabs)
 	menu_tab(tabs)
 	supporters_tab(tabs)
 	
-	if GetConVar("developer"):GetInt() != 0 then	-- developer tab for developer 1 only
+	if tabs_enabled and GetConVar("developer"):GetInt() != 0 then	-- developer tab for developer 1 only
 		local _tab = paramstabs.developer_tab(tabs)
 	end
 
@@ -508,7 +510,9 @@ local function create_menu()
 
 	tabs.Items = tabs.Items or {}
 
+	-- force docking to work properly
 	tabs:SetActiveTab(tabs.Items[gwater2.options.menu_tab:GetInt() ~= 1 and 1 or 2].Tab)
+
 	function tabs:OnActiveTabChanged(_, new)
 		help_text:SetText(_util.get_localised(new.realname..".help"))
 		for k, v in ipairs(self.Items) do
@@ -523,7 +527,10 @@ local function create_menu()
 		help_text:GetParent():Dock(RIGHT)
 		help_text:SetWide(help_text:GetWide()*2)
 	end
-	tabs:SetActiveTab(tabs.Items[gwater2.options.menu_tab:GetInt()].Tab)
+
+	pcall(function()	-- tab can invalidate itself if you are non-admin
+		tabs:SetActiveTab(tabs.Items[gwater2.options.menu_tab:GetInt()].Tab)
+	end)
 
 	return frame
 end
@@ -564,7 +571,7 @@ surface.CreateFont("GWater2Title", {
     outline = false,
 })
 
-concommand.Add("gwater2_menu2", function()
+concommand.Add("gwater2_menu", function()
 	if gwater2.options.frame == nil or not IsValid(gwater2.options.frame) then
 		gwater2.options.frame = create_menu()
 		return
@@ -573,7 +580,7 @@ concommand.Add("gwater2_menu2", function()
 	gwater2.options.frame = nil
 end)
 
-hook.Add("GUIMousePressed", "gwater2_menu2close", function(mouse_code, aim_vector)
+hook.Add("GUIMousePressed", "gwater2_menuclose", function(mouse_code, aim_vector)
 	if not IsValid(gwater2.options.frame) then return end
 
 	local x, y = gui.MouseX(), gui.MouseY()
@@ -583,11 +590,11 @@ hook.Add("GUIMousePressed", "gwater2_menu2close", function(mouse_code, aim_vecto
 	end
 end)
 
-hook.Add("PopulateToolMenu", "gwater2_menu2", function()
-    spawnmenu.AddToolMenuOption("Utilities", "gwater2", "gwater2_menu2", "Menu Rewrite Options", "", "", function(panel)
+hook.Add("PopulateToolMenu", "gwater2_menu", function()
+    spawnmenu.AddToolMenuOption("Utilities", "gwater2", "gwater2_menu", "Menu Rewrite Options", "", "", function(panel)
 		panel:ClearControls()
-		panel:Button("Open Menu", "gwater2_menu2")
-        panel:KeyBinder("Menu Key", "gwater2_menu2key")
+		panel:Button("Open Menu", "gwater2_menu")
+        panel:KeyBinder("Menu Key", "gwater2_menukey")
 	end)
 end)
 
@@ -609,7 +616,7 @@ print("[GWater2]: Loaded language: " .. lang)
 -- shit breaks in singleplayer due to predicted hooks
 function OpenGW2Menu(ply, key)
 	if key != gwater2.options.menu_key:GetInt() or just_closed == true then return end
-	RunConsoleCommand("gwater2_menu2")
+	RunConsoleCommand("gwater2_menu")
 end
 
 function CloseGW2Menu(ply, key)
@@ -617,7 +624,7 @@ function CloseGW2Menu(ply, key)
 	just_closed = false
 end
 
-if game.SinglePlayer() then  return end
+if game.SinglePlayer() then return end
 
-hook.Add("PlayerButtonDown", "gwater2_menu2", OpenGW2Menu)
-hook.Add("PlayerButtonUp", "gwater2_menu2", CloseGW2Menu)
+hook.Add("PlayerButtonDown", "gwater2_menu", OpenGW2Menu)
+hook.Add("PlayerButtonUp", "gwater2_menu", CloseGW2Menu)
