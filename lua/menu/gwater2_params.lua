@@ -383,7 +383,7 @@ local interaction = {
 					check:SetValue(gwater2["player_interaction"])
 				end
 			},
-			["002-SwimSpeed"] = {
+			["003-SwimSpeed"] = {
 				type="scratch",
 				min=-20,
 				max=100,
@@ -391,7 +391,7 @@ local interaction = {
 				func=function(val) end,
 				setup=function(scratch) end
 			},
-			["003-SwimFriction"] = {
+			["004-SwimFriction"] = {
 				type="scratch",
 				min=0.75,
 				max=1,
@@ -399,7 +399,7 @@ local interaction = {
 				func=function(val) end,
 				setup=function(scratch) end
 			},
-			["004-SwimBuoyancy"] = {
+			["005-SwimBuoyancy"] = {
 				type="scratch",
 				min=-2,
 				max=2,
@@ -407,7 +407,7 @@ local interaction = {
 				func=function(val) end,
 				setup=function(scratch) end
 			},
-			["005-MultiplyParticles"] = {
+			["002-MultiplyParticles"] = {
 				type="scratch",
 				min=0,
 				max=200,

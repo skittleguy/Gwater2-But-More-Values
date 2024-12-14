@@ -245,7 +245,7 @@ local function make_parameter_color(tab, locale_parameter_name, parameter_name, 
 	if parameter.setup then parameter.setup(mixer) end
 	gwater2.options.initialised[string.lower(parameter_name):gsub(" ", "_")] = {parameter, mixer}
 	function button:DoClick()
-		mixer:SetColor(gwater2.options.parameters[string.lower(parameter_name):gsub(" ", "_")].default)
+		mixer:SetColor(Color(gwater2.options.parameters[string.lower(parameter_name):gsub(" ", "_")].default:Unpack()))
 		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/reset.wav", 75, 100, 1, CHAN_STATIC) end
 	end
 	function mixer:ValueChanged(val)

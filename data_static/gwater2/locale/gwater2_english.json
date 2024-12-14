@@ -169,7 +169,7 @@
     "gwater2.menu.Menu.sounds": "Play sounds",
     "gwater2.menu.Menu.sounds.desc": "Enable/disable menu sounds",
     "gwater2.menu.Menu.animations": "Animate menu",
-    "gwater2.menu.Menu.animations.desc": "Enable/disable menu animations.\n\nThis is disabled by default because snappy interfaces grant better user experiences",
+    "gwater2.menu.Menu.animations.desc": "Enable/disable simple menu load-in animations.",
     "gwater2.menu.Menu.preview": "Show fluid preview",
     "gwater2.menu.Menu.preview.desc": "Enables/disables the fluid preview (seen on left)\n\nHelps performance while in the menu a bit",
     "gwater2.menu.Menu.pixelate_preview": "Pixelated fluid preview",

@@ -66,7 +66,6 @@ local default_presets = {
 		["PHYS/Adhesion"]=0,
 		["PHYS/Viscosity"]=0,
 		["PHYS/Surface Tension"]=0,
-		["INTC/MultiplyWalk"]=0.25,
 		["CUST/Master Reset"]=true,
 		["CUST/Default Preset Version"]=1
 	},
