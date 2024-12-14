@@ -98,6 +98,7 @@ local function create_menu()
 	frame:SetSize(1000, 600)
 	frame:Center()
 	frame:MakePopup()
+	frame:SetScreenLock(true)
 	function frame:Paint(w, h)
 		styling.draw_main_background(0, 0, w, h)
 	end

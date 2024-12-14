@@ -479,13 +479,13 @@ local developer = {
 		decimals=2,
 		type="scratch"
 	},
-	["008-drag"] = {
+	["024-drag"] = {
 		min=-1,
 		max=1,
 		decimals=2,
 		type="scratch"
 	},
-	["009-lift"] = {
+	["025-lift"] = {
 		min=-1,
 		max=1,
 		decimals=2,
@@ -581,13 +581,13 @@ local developer = {
 		decimals=2,
 		type="scratch"
 	},
-	["025-relaxation_mode"] = {
+	["007-relaxation_mode"] = {
 		min=0,
 		max=1,
 		decimals=0,
 		type="scratch"
 	},
-	["026-relaxation_factor"] = {
+	["008-relaxation_factor"] = {
 		min=-1,
 		max=1,
 		decimals=2,

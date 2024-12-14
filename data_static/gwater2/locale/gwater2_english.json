@@ -162,7 +162,7 @@
     "gwater2.menu.Developer.diffuse_drag": "diffuse_drag",
     "gwater2.menu.Developer.diffuse_drag.desc": "drag coefficient of diffuse particles.",
     "gwater2.menu.Developer.relaxation_mode": "relaxation_mode",
-    "gwater2.menu.Developer.relaxation_mode.desc": "determines how particles interact.\n\n0 = local relaxation (calculated per-particle)\n\n1 = global relaxation (constant, defined by relaxation_factor parameter).\n\nwhen this parameter is 1, fluids tend to converge quicker",
+    "gwater2.menu.Developer.relaxation_mode.desc": "determines how particles interact.\n\n0 = global relaxation (constant, defined by relaxation_factor parameter).\n\n1 = local relaxation (calculated per-particle)\n\nwhen this parameter is 0, fluids tend to converge quicker, but less reliably (more likely to explode)",
     "gwater2.menu.Developer.relaxation_factor": "relaxation_factor",
     "gwater2.menu.Developer.relaxation_factor.desc": "controls the relaxation factor for global particle interaction. can cause explosions",
     "gwater2.menu.Menu.title": "Menu",
