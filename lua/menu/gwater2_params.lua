@@ -557,12 +557,6 @@ local developer = {
 		decimals=2,
 		type="scratch"
 	},
-	["021-relaxation_factor"] = {
-		min=-1,
-		max=1,
-		decimals=2,
-		type="scratch"
-	},
 	["022-solid_pressure"] = {
 		min=-1,
 		max=1,
@@ -582,6 +576,18 @@ local developer = {
 		type="scratch"
 	},
 	["025-diffuse_drag"] = {
+		min=-1,
+		max=1,
+		decimals=2,
+		type="scratch"
+	},
+	["025-relaxation_mode"] = {
+		min=0,
+		max=1,
+		decimals=0,
+		type="scratch"
+	},
+	["026-relaxation_factor"] = {
 		min=-1,
 		max=1,
 		decimals=2,

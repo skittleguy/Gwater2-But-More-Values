@@ -432,6 +432,9 @@ bool FlexSolver::set_parameter(std::string param, float number) {
 		if (param == "iterations") {	// defined as an int instead of a float, so it needs to be seperate
 			parameters.numIterations = (int)number;
 			return true;
+		} else if (param == "relaxation_mode") {
+			parameters.relaxationMode = (NvFlexRelaxationMode)number;
+			return true;
 		}
 		return false;
 	}
@@ -445,6 +448,8 @@ float FlexSolver::get_parameter(std::string param) {
 	catch (std::exception e) {
 		if (param == "iterations") {	// ^
 			return (float)parameters.numIterations;
+		} else if(param == "relaxation_mode") {
+			return (float)parameters.relaxationMode;
 		}
 		return NAN;
 	}
