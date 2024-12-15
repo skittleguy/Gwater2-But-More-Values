@@ -43,7 +43,7 @@ local parameters = {
 			["006-Surface Tension"] = {
 				min=0,
 				max=1,
-				decimals=2,
+				decimals=3,
 				type="scratch"
 			},
 			["007-Timescale"] = {

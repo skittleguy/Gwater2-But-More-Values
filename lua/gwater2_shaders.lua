@@ -170,7 +170,7 @@ local function do_finalpass()
 	local radius = gwater2.solver:GetParameter("radius")
 
 	-- Setup water material parameters
-	water:SetFloat("$radius", radius * 2)
+	water:SetFloat("$radius", radius * 1.5)
 	water:SetTexture("$normaltexture", cache_normals)
 	water:SetTexture("$depthtexture", cache_absorption)
 	render.SetMaterial(water)

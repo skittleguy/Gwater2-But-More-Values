@@ -176,7 +176,7 @@ local function make_parameter_scratch(tab, locale_parameter_name, parameter_name
 		local size_x, size_y = slider:GetSize()
 		
 		slider:Dock(NODOCK)
-		slider:SetPos(pos_x - size_x / 1.45, pos_y)
+		slider:SetPos(pos_x - size_x / 1.45, pos_y)	-- magic numbers. blame DNumSlider for this shit
 		slider:SetSize(size_x * 1.7, size_y)
 
 		slider.Paint = nil
