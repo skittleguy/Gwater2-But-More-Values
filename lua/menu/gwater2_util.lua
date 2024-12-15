@@ -164,8 +164,25 @@ local function make_parameter_scratch(tab, locale_parameter_name, parameter_name
 	panel.button = button
 	label:Dock(LEFT)
 	button:Dock(RIGHT)
+
+	slider:SetText("")
 	slider:Dock(FILL)
-	slider.Label:Hide()
+
+	-- HACKHACKHACK!!! Docking information is not set properly until after all elements are loaded
+	-- I want the weird arrow editor on the text part of the slider, so we need to move and resize the slider after
+	-- ..all of the docking information is loaded
+	slider.Paint = function(w, h)
+		local pos_x, pos_y = slider:GetPos()
+		local size_x, size_y = slider:GetSize()
+		
+		slider:Dock(NODOCK)
+		slider:SetPos(pos_x - size_x / 1.45, pos_y)
+		slider:SetSize(size_x * 1.7, size_y)
+
+		slider.Paint = nil
+	end
+	
+	--slider.Label:Hide()
 
 	slider.TextArea:SizeToContents()
 	if parameter.setup then parameter.setup(slider) end
