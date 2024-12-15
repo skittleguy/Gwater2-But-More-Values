@@ -55,7 +55,7 @@ function ENT:SetupDataTables()
 	-- runs per client FleX frame, this may be different per client.
 	-- more particles might be spawned depending on the client, but this setup allows for laminar flow, which I think looks better
 	-- The alternative is running a gwater2.AddCylinder in a serverside Think hook, however with that setup different clients may see different results
-	hook.Add("gwater2_posttick", self, function()
+	hook.Add("gwater2_tick_particles", self, function()
 		if !self:GetOn() then return end
 
 		local particle_radius = gwater2.solver:GetParameter("radius")

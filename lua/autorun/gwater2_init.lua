@@ -217,7 +217,19 @@ local function gwater_tick2()
 
 	lp.GWATER2_CONTACTS = particles_in_radius
 
-	hook.Run("gwater2_posttick", gwater2.solver:Tick(limit_fps, 0))
+	--[[
+		for whatever reason if you drain particles before adding them it will cause 
+		a problem where particles will swap velocities and positions randomly.
+
+		im 5 hours in trying to figure out what flawed logic in my code is causing this to happen, and
+		to be honest I do not have enough time or patience to figure out the underlying issue.. so for now we're
+		gonna have to deal with some mee++
+	]]
+		
+	hook.Run("gwater2_tick_particles")
+	hook.Run("gwater2_tick_drains")
+
+	gwater2.solver:Tick(limit_fps, 0)
 end
 
 timer.Create("gwater2_tick", limit_fps, 0, gwater_tick2)
@@ -227,7 +239,7 @@ hook.Add("OnEntityCreated", "gwater2_addprop", function(ent) timer.Simple(0, fun
 -- gravgun support
 local can_fire = false
 local last_fire = 0
-hook.Add("gwater2_posttick", "gwater2_gravgun_grab", function()
+hook.Add("gwater2_tick_drains", "gwater2_gravgun_grab", function()
 	local lp = LocalPlayer()
 	local gravgun = lp:GetActiveWeapon()
 	if !IsValid(gravgun) or lp:GetActiveWeapon():GetClass() ~= "weapon_physcannon" then 

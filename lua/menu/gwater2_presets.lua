@@ -49,8 +49,8 @@ local default_presets = {
 	},
 	["004-Lava"]={
 		["CUST/Author"]="Meetric",
-		["VISL/Color"]={255, 210, 0, 200},
-		["VISL/Color Value Multiplier"]=1.23,
+		["VISL/Color"]={255, 130, 0, 200},
+		["VISL/Color Value Multiplier"]=2.1,
 		["PHYS/Cohesion"]=0.1,
 		["PHYS/Adhesion"]=0.01,
 		["PHYS/Viscosity"]=10,
@@ -59,7 +59,7 @@ local default_presets = {
 		["CUST/Master Reset"]=true,
 		["CUST/Default Preset Version"]=1
 	},
-	["005-Oil"]={ -- SOMEONE SAID OIL?? *freedom sounds*
+	["005-Oil"]={
 		["CUST/Author"]="Meetric",
 		["VISL/Color"]={0, 0, 0, 255},
 		["PHYS/Cohesion"]=0,
