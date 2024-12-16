@@ -434,7 +434,10 @@ local function create_menu()
     	})
 
 		-- TODO: does IsListenServerHost() work for this?
-		if LocalPlayer():IsSuperAdmin() then	-- must be host to change this value
+		-- googer_: yes. yes it does
+		if LocalPlayer():IsSuperAdmin() then
+			-- meetric: must be host to change this value
+			-- googer_: no, just a superadmin. pretty sure all permission systems detour IsSuperAdmin
 			_util.make_parameter_check(tab, "Menu.admin_only", "Admin Only", {
 				func=function(val)
 					RunConsoleCommand("gwater2_adminonly", val and "1" or "0")
@@ -593,6 +596,15 @@ hook.Add("PopulateToolMenu", "gwater2_menu", function()
 		panel:Button("Open Menu", "gwater2_menu")
         panel:KeyBinder("Menu Key", "gwater2_menukey")
 	end)
+end)
+
+-- we need to initialse menu to make sure that our tables are set up
+hook.Add("HUDPaint", "GWATER2_InitializeMenu", function()
+	hook.Remove("HUDPaint", "GWATER2_InitializeMenu")
+	local sounds = gwater2.options.read_config().sounds
+	gwater2.options.read_config().sounds = false
+	create_menu():Close()
+	gwater2.options.read_config().sounds = sounds
 end)
 
 -- multi language support

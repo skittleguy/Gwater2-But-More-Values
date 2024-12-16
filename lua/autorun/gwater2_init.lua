@@ -200,8 +200,8 @@ gwater2["force_dampening"] = 0
 gwater2["player_interaction"] = true
 
 include("gwater2_shaders.lua")
-include("gwater2_net.lua")
 include("gwater2_menu.lua")
+include("gwater2_net.lua")
 
 local limit_fps = 1 / 60
 local function gwater_tick2()

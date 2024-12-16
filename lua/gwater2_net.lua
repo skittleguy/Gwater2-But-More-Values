@@ -91,12 +91,15 @@ if SERVER then
 		end
 	}
 
-	local admin_only = CreateConVar("gwater2_adminonly", "0", FCVAR_REPLICATED)
+	-- googer_: i think you also want to store this!!!
+	local admin_only = CreateConVar("gwater2_adminonly", "0", FCVAR_REPLICATED + FCVAR_ARCHIVE)
 	cvars.AddChangeCallback("gwater2_adminonly", function(name, old, new)
 		if tonumber(new or 0) != 0 then
 
-			-- reopen menus of all players. we need to make sure they're admins
+			-- meetric: reopen menus of all players. we need to make sure they're admins
+			-- googer_: just skip players that are admins?
 			for k, v in ipairs(player.GetAll()) do
+				if v:IsSuperAdmin() then continue end
 				v:ConCommand("gwater2_menu")
 			end
 		end
@@ -109,13 +112,15 @@ if SERVER then
 	end)
 
 	net.Receive("GWATER2_RESETSOLVER", function(len, ply)
-		if admin_only:GetBool() and !ply:IsAdmin() then return end
+		if admin_only:GetBool() and not ply:IsAdmin() then return end
 
 		gwater2.ResetSolver()
 	end)
 
 	net.Receive("GWATER2_REQUESTPARAMETERSSNAPSHOT", function(len, ply)
-		-- TODO
+		net.Start("GWATER2_REQUESTPARAMETERSSNAPSHOT")
+			net.WriteTable(gwater2.parameters)
+		net.Send(ply)
 	end)
 
 	net.Receive("GWATER2_REQUESTCOLLISION", function(len, ply)
@@ -135,9 +140,25 @@ else	-- CLIENT
 		net.SendToServer()
 	end
 
-	local util = include("menu/gwater2_util.lua")
+	local _util = include("menu/gwater2_util.lua")
+
+	-- HUDPaint gets called only AFTER player is ready to receive data
+	hook.Add("HUDPaint", "GWATER2_REQUESTPARAMETERSSNAPSHOT", function()
+		hook.Remove("HUDPaint", "GWATER2_REQUESTPARAMETERSSNAPSHOT")
+		print("GWater2: Requesting parameters")
+		net.Start("GWATER2_REQUESTPARAMETERSSNAPSHOT")
+		net.SendToServer()
+	end)
+
+	net.Receive("GWATER2_REQUESTPARAMETERSSNAPSHOT", function(len, ply)
+		local tbl = net.ReadTable()
+		print("GWater2: Received a total of "..(#table.GetKeys(tbl)).." changed parameters")
+		for k,v in pairs(tbl) do
+			_util.set_gwater_parameter(k, v)
+		end
+	end)
 	net.Receive("GWATER2_CHANGEPARAMETER", function(len)
-		util.set_gwater_parameter(net.ReadString(), net.ReadType())
+		_util.set_gwater_parameter(net.ReadString(), net.ReadType())
 	end)
 
 	net.Receive("GWATER2_RESETSOLVER", function(len)
