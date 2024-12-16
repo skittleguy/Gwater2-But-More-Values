@@ -238,7 +238,7 @@ local performance = {
 				label:SizeToContentsY()
 				label.text = label:GetText()
 				label:SetText("")
-				function label:Paint() draw.DrawText(self.text, self:GetFont(), self:GetWide() / 2, 0, color_white, TEXT_ALIGN_CENTER) end
+				function label:Paint(w, h) draw.DrawText(self.text, self:GetFont(), w / 2, 0, color_white, TEXT_ALIGN_CENTER) end
 
 				local label2 = frame:Add("DLabel")
 				label2:Dock(TOP)
@@ -247,10 +247,10 @@ local performance = {
 				label2:SizeToContentsY()
 				label2.text = label2:GetText()
 				label2:SetText("")
-				function label2:Paint() draw.DrawText(self.text, self:GetFont(), self:GetWide() / 2, 0, color_white, TEXT_ALIGN_CENTER) end
+				function label2:Paint(w, h) draw.DrawText(self.text, self:GetFont(), w / 2, 0, color_white, TEXT_ALIGN_CENTER) end
 
 				local confirm = vgui.Create("DButton", frame)
-				confirm:SetPos(600 * (3/4) - 10, 170)
+				confirm:SetPos(600 * (3/4) - 10, 270)
 				confirm:SetText("")
 				confirm:SetSize(20, 20)
 				confirm:SetImage("icon16/accept.png")
@@ -264,7 +264,7 @@ local performance = {
 				end
 
 				local deny = vgui.Create("DButton", frame)
-				deny:SetPos(600 * (1/4) - 10, 170)
+				deny:SetPos(600 * (1/4) - 10, 270)
 				deny:SetText("")
 				deny:SetSize(20, 20)
 				deny:SetImage("icon16/cross.png")
