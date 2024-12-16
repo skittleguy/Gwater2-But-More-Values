@@ -354,7 +354,7 @@ local interaction = {
 			["001-Reaction Forces"] = {
 				type="check",
 				func = function(val)
-					gwater2.solver:SetParameter("reaction_forces", val and 1 or 0)
+					--gwater2.solver:SetParameter("reaction_forces", val and 1 or 0)
 					gwater2.ChangeParameter("reaction_forces", val and 1 or 0)
 					return true
 				end,
@@ -395,12 +395,13 @@ local interaction = {
 					check:SetValue(gwater2["player_interaction"])
 				end
 			},
+			-- all of these parameters are server-side only. let's tell our code that we handled them already
 			["003-SwimSpeed"] = {
 				type="scratch",
 				min=-20,
 				max=100,
 				decimals=0,
-				func=function(val) end,
+				func=function(val) return true end,
 				setup=function(scratch) end
 			},
 			["004-SwimFriction"] = {
@@ -408,7 +409,7 @@ local interaction = {
 				min=0.75,
 				max=1,
 				decimals=3,
-				func=function(val) end,
+				func=function(val) return true end,
 				setup=function(scratch) end
 			},
 			["005-SwimBuoyancy"] = {
@@ -416,7 +417,7 @@ local interaction = {
 				min=-2,
 				max=2,
 				decimals=2,
-				func=function(val) end,
+				func=function(val) return true end,
 				setup=function(scratch) end
 			},
 			["002-MultiplyParticles"] = {
@@ -424,7 +425,7 @@ local interaction = {
 				min=0,
 				max=200,
 				decimals=0,
-				func=function(val) end,
+				func=function(val) return true end,
 				setup=function(scratch) end
 			},
 			["008-MultiplyWalk"] = {
@@ -432,7 +433,7 @@ local interaction = {
 				min=0,
 				max=2,
 				decimals=2,
-				func=function(val) end,
+				func=function(val) return true end,
 				setup=function(scratch) end
 			},
 			["009-MultiplyJump"] = {
@@ -440,7 +441,7 @@ local interaction = {
 				min=0,
 				max=2,
 				decimals=2,
-				func=function(val) end,
+				func=function(val) return true end,
 				setup=function(scratch) end
 			},
 			["010-TouchDamage"] = {
@@ -448,7 +449,7 @@ local interaction = {
 				min=-10,
 				max=10,
 				decimals=0,
-				func=function(val) end,
+				func=function(val) return true end,
 				setup=function(scratch) end
 			},
 		}
