@@ -24,7 +24,72 @@ local function is_hovered_any(panel)
 	return false
 end
 
-local function set_gwater_parameter(option, val, raw, dont_set)
+local function set_gwater_parameter(option, val) --, raw, dont_set)
+	print(option, val)
+	local param = gwater2.options.initialised[option]
+
+	if param[1].func then
+		if param[1].func(val) then return end
+	end
+
+	assert(param, "Parameter does not exist: "..option)
+	if not param[2].editing then
+		param[2].block = true
+		if param[1].type ~= "color" then param[2]:SetValue(val)
+		else param[2]:SetColor(val)
+		end
+		param[2].block = false
+		param[2].editing = false -- editing gets set to true, reset it back
+	end
+	gwater2.parameters[option] = val
+
+	if gwater2[option] then
+		gwater2[option] = val
+		local radius = gwater2.solver:GetParameter("radius")
+		if option == "surface_tension" then	-- hack hack hack! this parameter scales based on radius
+			local r1 = val / radius^4	-- cant think of a name for this variable rn
+			local r2 = val / math.min(radius * 1.3, 15)^4
+			gwater2.solver:SetParameter(option, r1)
+			gwater2.options.solver:SetParameter(option, r2)
+		elseif option == "fluid_rest_distance" or option == "collision_distance" or option == "solid_rest_distance" then -- hack hack hack! this parameter scales based on radius
+			local r1 = val * radius
+			local r2 = val * math.min(radius * 1.3, 15)
+			gwater2.solver:SetParameter(option, r1)
+			gwater2.options.solver:SetParameter(option, r2)
+		elseif option == "cohesion" then	-- also scales by radius
+			local r1 = math.min(val / radius * 10, 1)
+			local r2 = math.min(val / (radius * 1.3) * 10, 1)
+			gwater2.solver:SetParameter(option, r1)
+			gwater2.options.solver:SetParameter(option, r2)
+		end
+		return
+	end
+
+	gwater2.solver:SetParameter(option, val)
+
+	if option == "gravity" then val = -val end	-- hack hack hack! y coordinate is considered down in screenspace!
+	if option == "radius" then 					-- hack hack hack! radius needs to edit multiple parameters!
+		gwater2.solver:SetParameter("surface_tension", gwater2["surface_tension"] / val^4)	-- literally no idea why this is a power of 4
+		gwater2.solver:SetParameter("fluid_rest_distance", val * gwater2["fluid_rest_distance"])
+		gwater2.solver:SetParameter("solid_rest_distance", val * gwater2["solid_rest_distance"])
+		gwater2.solver:SetParameter("collision_distance", val * gwater2["collision_distance"])
+		gwater2.solver:SetParameter("cohesion", math.min(gwater2["cohesion"] / val * 10, 1))
+		
+		if val > 15 then val = 15 end	-- explody
+		val = val * 1.3
+		gwater2.options.solver:SetParameter("surface_tension", gwater2["surface_tension"] / val^4)
+		gwater2.options.solver:SetParameter("fluid_rest_distance", val * gwater2["fluid_rest_distance"])
+		gwater2.options.solver:SetParameter("solid_rest_distance", val * gwater2["solid_rest_distance"])
+		gwater2.options.solver:SetParameter("collision_distance", val * gwater2["collision_distance"])
+		gwater2.options.solver:SetParameter("cohesion", math.min(gwater2["cohesion"] / val * 10, 1))
+	end
+
+	if option ~= "diffuse_threshold" and option ~= "dynamic_friction" then -- hack hack hack! fluid preview doesn't use diffuse particles
+		gwater2.options.solver:SetParameter(option, val)
+	end
+
+	do return end
+	error("called here")
 	if !raw then
 		local parsed = false
 
@@ -40,11 +105,9 @@ local function set_gwater_parameter(option, val, raw, dont_set)
 			parsed = true
 		end
 
-		gwater2.ChangeParameter(option, val)
-
 		val = rval
 
-		gwater2.options.parameters[option].real = val
+		gwater2.parameters[option] = val
 
 		if !dont_set then 
 			if gwater2.options.initialised[option][1].type == "scratch" or gwater2.options.initialised[option][1].type == "check" then
@@ -66,11 +129,13 @@ local function set_gwater_parameter(option, val, raw, dont_set)
 			end
 		end
 
-		if gwater2.options.parameters[option].defined then
-			gwater2.options.parameters[option].val = val
-			gwater2.options.parameters[option].func()
+		--[[
+		if gwater2.parameters[option].defined then
+			gwater2.parameters[option] = val
+			gwater2.parameters[option].func()
 			return
 		end
+		]]
 	end
 
 	-- nondirect options (eg. parameter scales based on radius)
@@ -145,10 +210,13 @@ local function make_parameter_scratch(tab, locale_parameter_name, parameter_name
 	label:SizeToContents()
 	local slider = panel:Add("DNumSlider")
 	slider:SetMinMax(parameter.min, parameter.max)
+
+	local parameter_id = string.lower(parameter_name):gsub(" ", "_")
+
 	pcall(function()
-		local parameter_name = string.lower(parameter_name):gsub(" ", "_")
-		if gwater2.options.parameters[parameter_name] and gwater2.options.parameters[parameter_name].defined then
-			slider:SetValue(gwater2.options.parameters[parameter_name].val)
+		local parameter_name = parameter_id
+		if gwater2.parameters[parameter_name] and gwater2.parameters[parameter_name].defined then
+			slider:SetValue(gwater2.parameters[parameter_name].val)
 			return
 		end
 		slider:SetValue(gwater2[parameter_name] or gwater2.solver:GetParameter(parameter_name))
@@ -186,20 +254,26 @@ local function make_parameter_scratch(tab, locale_parameter_name, parameter_name
 
 	slider.TextArea:SizeToContents()
 	if parameter.setup then parameter.setup(slider) end
-	gwater2.options.initialised[string.lower(parameter_name):gsub(" ", "_")] = {parameter, slider}
+	gwater2.options.initialised[parameter_id] = {parameter, slider}
 	function button:DoClick()
-		slider:SetValue(gwater2.options.parameters[string.lower(parameter_name):gsub(" ", "_")].default)
+		slider:SetValue(gwater2.defaults[parameter_id])
 		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/reset.wav", 75, 100, 1, CHAN_STATIC) end
 	end
+	function slider.Slider.Knob:DoClick()
+		gwater2.ChangeParameter(parameter_id, math.Round(slider:GetValue(), parameter.decimals), true)
+		slider.editing = false
+	end
 	function slider:OnValueChanged(val)
+		slider.editing = true
 		if slider.block then return end
-		if parameter.decimals == 0 and val ~= math.Round(val, parameter.decimals) then
+		if val ~= math.Round(val, parameter.decimals) then
 			self:SetValue(math.Round(val, parameter.decimals))
 			return
 		end
 
-		gwater2.options.parameters[string.lower(parameter_name):gsub(" ", "_")].real = val
-		set_gwater_parameter(string.lower(parameter_name):gsub(" ", "_"), val, nil, true)
+		gwater2.parameters[parameter_id] = val
+		gwater2.ChangeParameter(parameter_id, val, false)
+		--set_gwater_parameter(parameter_id, val, nil, true)
 	end
 	local defhelptext = nil
 	function panel:Paint()
@@ -221,8 +295,9 @@ local function make_parameter_scratch(tab, locale_parameter_name, parameter_name
 			label:SetColor(label.fancycolor or Color(255, 255, 255))
 		end
 	end
-	if not gwater2.options.parameters[string.lower(parameter_name):gsub(" ", "_")] then
-		gwater2.options.parameters[string.lower(parameter_name):gsub(" ", "_")] = {real=slider:GetValue(), default=slider:GetValue()}
+	if not gwater2.parameters[parameter_id] then
+		gwater2.parameters[parameter_id] = slider:GetValue()
+		gwater2.defaults[parameter_id] = slider:GetValue()
 	end
 	panel:SetTall(panel:GetTall()+2)
 	return panel
@@ -239,6 +314,9 @@ local function make_parameter_color(tab, locale_parameter_name, parameter_name, 
 	label:Dock(LEFT)
 	label:SetMouseInputEnabled(true)
 	label:SizeToContents()
+
+	local parameter_id = string.lower(parameter_name):gsub(" ", "_")
+
 	local mixer = panel:Add("DColorMixer")
 	mixer:Dock(FILL)
 	mixer:DockPadding(5, 0, 5, 0)
@@ -247,7 +325,7 @@ local function make_parameter_color(tab, locale_parameter_name, parameter_name, 
 	mixer:SetLabel()
 	mixer:SetAlphaBar(true)
 	mixer:SetWangs(true)
-	mixer:SetColor(gwater2.options.parameters.color.real) 
+	mixer:SetColor(gwater2.parameters[parameter_id]) 
 	local button = panel:Add("DButton")
 	button:Dock(RIGHT)
 	button:SetText("")
@@ -260,15 +338,19 @@ local function make_parameter_color(tab, locale_parameter_name, parameter_name, 
 	panel.label = label
 
 	if parameter.setup then parameter.setup(mixer) end
-	gwater2.options.initialised[string.lower(parameter_name):gsub(" ", "_")] = {parameter, mixer}
+	gwater2.options.initialised[parameter_id] = {parameter, mixer}
 	function button:DoClick()
-		mixer:SetColor(Color(gwater2.options.parameters[string.lower(parameter_name):gsub(" ", "_")].default:Unpack()))
+		mixer:SetColor(Color(gwater2.defaults[parameter_id]:Unpack()))
 		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/reset.wav", 75, 100, 1, CHAN_STATIC) end
 	end
 	function mixer:ValueChanged(val)
+		--mixer.editing = true
+		-- TODO: find something to reset editing to false when user stops editing color
 		if mixer.block then return end
-		gwater2.options.parameters[string.lower(parameter_name):gsub(" ", "_")].real = val
-		set_gwater_parameter(string.lower(parameter_name):gsub(" ", "_"), Color(val.r, val.g, val.b, val.a), nil, true)
+		val = Color(val.r, val.g, val.b, val.a)
+
+		gwater2.parameters[parameter_id] = val
+		gwater2.ChangeParameter(parameter_id, val, true) -- TODO: ^
 	end
 
 	local defhelptext = nil
@@ -292,8 +374,10 @@ local function make_parameter_color(tab, locale_parameter_name, parameter_name, 
 		end
 	end
 	panel:SetTall(panel:GetTall()+5)
-	if not gwater2.options.parameters[string.lower(parameter_name):gsub(" ", "_")] then
-		gwater2.options.parameters[string.lower(parameter_name):gsub(" ", "_")] = {real=mixer:GetValue(), default=mixer:GetValue()}
+	if not gwater2.parameters[parameter_id] then
+
+		gwater2.parameters[parameter_id] = mixer:GetValue()
+		gwater2.defaults[parameter_id] = mixer:GetValue()
 	end
 	return panel
 end
@@ -317,22 +401,27 @@ local function make_parameter_check(tab, locale_parameter_name, parameter_name, 
 	button:SetText("")
 	button:SetImage("icon16/arrow_refresh.png")
 	button:SetWide(button:GetTall())
+
+	local parameter_id = string.lower(parameter_name):gsub(" ", "_")
+
 	button.Paint = nil
 	panel.label = label
 	panel.check = check
 	panel.button = button
 	if parameter.setup then parameter.setup(check) end
-	gwater2.options.initialised[string.lower(parameter_name):gsub(" ", "_")] = {parameter, check}
+	gwater2.options.initialised[parameter_id] = {parameter, check}
 	function button:DoClick()
-		check:SetValue(gwater2.options.parameters[string.lower(parameter_name):gsub(" ", "_")].default)
+		check:SetValue(gwater2.defaults[parameter_id])
 		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/reset.wav", 75, 100, 1, CHAN_STATIC) end
 	end
 	function check:OnChange(val)
 		if check.block then return end
 		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/toggle.wav", 75, 100, 1, CHAN_STATIC) end
-		gwater2.options.parameters[string.lower(parameter_name):gsub(" ", "_")].real = val
-		if parameter.func then if parameter.func(val) then return end end
-		set_gwater_parameter(string.lower(parameter_name):gsub(" ", "_"), val)
+
+		gwater2.parameters[parameter_id] = val
+		gwater2.ChangeParameter(parameter_id, val, true) -- all checkbox edits are final
+		--if parameter.func then if parameter.func(val) then return end end
+		--set_gwater_parameter(parameter_id, val)
 	end
 	local defhelptext = nil
 	function panel:Paint()
@@ -355,8 +444,9 @@ local function make_parameter_check(tab, locale_parameter_name, parameter_name, 
 		end
 	end
 	panel:SetTall(panel:GetTall()+5)
-	if not gwater2.options.parameters[string.lower(parameter_name):gsub(" ", "_")] then
-		gwater2.options.parameters[string.lower(parameter_name):gsub(" ", "_")] = {real=check:GetChecked(), default=check:GetChecked()}
+	if not gwater2.parameters[parameter_id] then
+		gwater2.parameters[parameter_id] = check:GetChecked()
+		gwater2.defaults[parameter_id] = check:GetChecked()
 	end
 	return panel
 end

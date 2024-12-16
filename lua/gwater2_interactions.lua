@@ -3,12 +3,7 @@
 local GWATER2_PARTICLES_TO_SWIM = 30
 
 local function param_unfucked(name) -- dammit googer
-	if CLIENT then
-		local option = gwater2.options.parameters[name]
-		return option and option.val
-	else
-		return gwater2.parameters[name]
-	end
+	return gwater2.parameters[name]
 end
 
 -- swim code provided by kodya (with permission)

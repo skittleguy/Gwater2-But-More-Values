@@ -101,9 +101,9 @@ local visuals = {
 		func=function(col)
 			local finalpass = Material("gwater2/finalpass")
 			local col = Color(col:Unpack())
-			col.r = col.r * gwater2.options.parameters.color_value_multiplier.real
-			col.g = col.g * gwater2.options.parameters.color_value_multiplier.real
-			col.b = col.b * gwater2.options.parameters.color_value_multiplier.real
+			col.r = col.r * gwater2.parameters.color_value_multiplier
+			col.g = col.g * gwater2.parameters.color_value_multiplier
+			col.b = col.b * gwater2.parameters.color_value_multiplier
 			--col.a = col.a * gwater2.options.parameters.color_value_multiplier.real
 			finalpass:SetVector4D("$color2", col:Unpack())
 			return true
@@ -115,7 +115,17 @@ local visuals = {
 		max=3,
 		decimals=2,
 		setup=function(scratch)
-			scratch:SetValue(gwater2.options.parameters.color_value_multiplier.real)
+			scratch:SetValue(gwater2.parameters.color_value_multiplier)
+		end,
+		func=function(val)
+			local col = gwater2.parameters.color
+			local finalpass = Material("gwater2/finalpass")
+			col.r = col.r * val
+			col.g = col.g * val
+			col.b = col.b * val
+			--col.a = col.a * gwater2.options.parameters.color_value_multiplier.real
+			finalpass:SetVector4D("$color2", col:Unpack())
+			return true
 		end
 	},
 	["008-Reflectance"] = {
@@ -126,11 +136,12 @@ local visuals = {
 		func=function(val)
 			local finalpass = Material("gwater2/finalpass")
 			finalpass:SetFloat("$ior", val)
-			return true
+			--return true
 		end,
 		setup=function(slider)
 			local finalpass = Material("gwater2/finalpass")
 			slider:SetValue(finalpass:GetFloat("$ior"))
+			return true
 		end
 	}
 }

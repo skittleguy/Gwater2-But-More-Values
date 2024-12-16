@@ -1,5 +1,7 @@
 AddCSLuaFile()
 
+gwater2 = nil
+
 if SERVER then 
 	include("gwater2_net.lua")
 	include("gwater2_interactions.lua")
@@ -96,6 +98,8 @@ gwater2 = {
 	solver = FlexSolver(100000),
 	renderer = FlexRenderer(),
 	cloth_pos = Vector(),
+	parameters = {},
+	defaults = {},
 	update_colliders = function(index, id, rep)
 		if id == 0 then return end	-- skip, entity is world
 
@@ -176,6 +180,11 @@ gwater2 = {
 		return mat
 	end
 }
+
+-- setup external default values
+gwater2.parameters.color = Color(209, 237, 255, 25)
+gwater2.parameters.color_value_multiplier = 1
+gwater2.defaults = table.Copy(gwater2.parameters)
 
 -- setup percentage values (used in menu)
 gwater2["surface_tension"] = gwater2.solver:GetParameter("surface_tension") * gwater2.solver:GetParameter("radius")^4	-- dont ask me why its a power of 4

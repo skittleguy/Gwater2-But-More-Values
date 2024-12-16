@@ -33,6 +33,7 @@ gwater2.options = gwater2.options or {
 	end,
 
 	initialised = {},
+	--[[
 	parameters = {
 		color = {real=Color(209, 237, 255, 25), default=Color(209, 237, 255, 25)},
 		color_value_multiplier = {real=1, default=1, val=1, func=function()
@@ -54,6 +55,7 @@ gwater2.options = gwater2.options or {
 		multiplyjump = {real=1, default=1, val=1, defined=true, func=function() end},
 		touchdamage = {real=0, default=0, val=0, defined=true, func=function() end},
 	}
+	]]
 }
 
 if not file.Exists("gwater2/config.txt", "DATA") then
@@ -80,14 +82,14 @@ timer.Simple(0, function()
 	net.WriteBool(gwater2.options.player_collision:GetBool())
 	net.SendToServer()
 
-	gwater2.solver:EnableDiffuse(gwater2.options.diffuse_enabled:GetBool())
+	--gwater2.solver:EnableDiffuse(gwater2.options.diffuse_enabled:GetBool())
 end)
 
 gwater2.options.solver:SetParameter("gravity", 15.24)	-- flip gravity because y axis positive is down
 gwater2.options.solver:SetParameter("static_friction", 0)	-- stop adhesion sticking to front and back walls
 gwater2.options.solver:SetParameter("dynamic_friction", 0)	-- ^
 gwater2.options.solver:SetParameter("diffuse_threshold", math.huge)	-- no diffuse particles allowed in preview
-_util.set_gwater_parameter("radius", 10, true)	-- regen radius defaults, as they are scaled in the preview
+-- _util.set_gwater_parameter("radius", 10, true)	-- regen radius defaults, as they are scaled in the preview
 
 local admin_only = GetConVar("gwater2_adminonly")
 local function create_menu()
@@ -180,7 +182,7 @@ local function create_menu()
 		styling.draw_main_background(0, 0, w, h)
 		local x, y = sim_preview:LocalToScreen(0, 0)
 		local function exp(v) return Vector(math.exp(v[1]), math.exp(v[2]), math.exp(v[3])) end
-		local is_translucent = gwater2.options.parameters.color.real.a < 255
+		local is_translucent = gwater2.parameters.color.a < 255
 		local radius = gwater2.options.solver:GetParameter("radius")
 		local collision_distance = gwater2.options.solver:GetParameter("collision_distance")
 
@@ -219,7 +221,10 @@ local function create_menu()
 			local alpha = is_translucent and 150 or 255
 			gwater2.options.solver:RenderParticles(function(pos)
 				local depth = math.max((pos[3] - y) / 584, 0) * 20	-- ranges from 0 to 20 down
-				local absorption = is_translucent and exp((gwater2.options.parameters.color.real:ToVector() * gwater2.options.parameters.color_value_multiplier.real - Vector(1, 1, 1)) * gwater2.options.parameters.color.real.a / 255 * depth) or (gwater2.options.parameters.color.real:ToVector() * gwater2.options.parameters.color_value_multiplier.real)
+				local absorption = is_translucent and exp(
+					(gwater2.parameters.color:ToVector() * gwater2.parameters.color_value_multiplier - Vector(1, 1, 1)) *
+					 gwater2.parameters.color.a / 255 * depth) or
+					(gwater2.parameters.color:ToVector() * gwater2.parameters.color_value_multiplier)
 				surface.SetDrawColor(absorption[1] * 255, absorption[2] * 255, absorption[3] * 255, alpha)
 				local px = pos[1] - x
 				local py = pos[3] - y

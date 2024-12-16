@@ -68,17 +68,13 @@ if SERVER then
 			net.Broadcast()
 		end,
 
-		ChangeParameter = function(name, value, omit)
+		ChangeParameter = function(name, value, final, sender)
 			if gwater2.parameters[name] == value then return end
-			net.Start("GWATER2_CHANGEPARAMETER")
+			net.Start("GWATER2_CHANGEPARAMETER", final)
 				net.WriteString(name)
 				net.WriteType(value)
+			net.Broadcast()
 			gwater2.parameters[name] = value
-			if not omit then
-				net.Broadcast()
-			else
-				net.SendOmit(omit)
-			end
 		end,
 
 		ResetSolver = function()
@@ -107,9 +103,9 @@ if SERVER then
 	end)
 
 	net.Receive("GWATER2_CHANGEPARAMETER", function(len, ply)
-		if admin_only:GetBool() and !ply:IsAdmin() then return end	-- admin only :P
+		if admin_only:GetBool() and not ply:IsAdmin() then return end	-- admin only :P
 
-		gwater2.ChangeParameter(net.ReadString(), net.ReadType(), ply)
+		gwater2.ChangeParameter(net.ReadString(), net.ReadType(), net.ReadBool(), ply)
 	end)
 
 	net.Receive("GWATER2_RESETSOLVER", function(len, ply)
@@ -126,10 +122,11 @@ if SERVER then
 		ply:SetNW2Bool("GWATER2_COLLISION", net.ReadBool())
 	end)
 else	-- CLIENT
-	gwater2.ChangeParameter = function(name, value)
-		net.Start("GWATER2_CHANGEPARAMETER")
+	gwater2.ChangeParameter = function(name, value, final)
+		net.Start("GWATER2_CHANGEPARAMETER", not final)
 			net.WriteString(name)
 			net.WriteType(value)
+			net.WriteBool(final)
 		net.SendToServer()
 	end
 
