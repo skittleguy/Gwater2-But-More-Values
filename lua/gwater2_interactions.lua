@@ -109,4 +109,31 @@ hook.Add("GetFallDamage", "gwater2_swimming", function(ply, speed)
 	return 0
 end)
 
+if SERVER then
+	-- explosions caused by props, rpg rockets, etc
+	hook.Add("OnEntityCreated", "gwater2_explosion", function(ent)
+		if !IsValid(ent) or ent:GetClass() != "env_explosion" then return end
+
+		timer.Simple(0, function()	-- wait for datatables to be set up
+			if !IsValid(ent) then return end
+
+			gwater2.AddForceField(ent:GetPos(), 250, 150, 1, true)
+		end)
+	end)
+
+	-- Best I could do for grenade detection. has a few problems:
+		-- does not detect instantly, can be a couple ticks behind
+		-- grenades that get exploded by other grenades (chain grenade explosions) are not detected
+	hook.Add("EntityRemoved", "gwater2_explosion", function(ent)
+		if !IsValid(ent) or ent:GetClass() != "npc_grenade_frag" then return end
+
+		-- the grenade will explode (and is not just being removed with remover tool)
+		if ent:GetInternalVariable("m_flDetonateTime") != -CurTime() then	
+			gwater2.AddForceField(ent:GetPos(), 250, 100, 1, true)
+		end
+	end)
+
+	-- gravity gun pickup code moved to "entities/gwater2_pickup.lua"
+end
+
 return in_water

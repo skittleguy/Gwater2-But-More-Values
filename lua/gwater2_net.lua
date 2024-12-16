@@ -9,6 +9,7 @@ if SERVER then
 	util.AddNetworkString("GWATER2_ADDCYLINDER")
 	util.AddNetworkString("GWATER2_ADDSPHERE")
 	util.AddNetworkString("GWATER2_ADDMODEL")
+	util.AddNetworkString("GWATER2_ADDFORCEFIELD")
 	util.AddNetworkString("GWATER2_RESETSOLVER")
 
 	util.AddNetworkString("GWATER2_CHANGEPARAMETER")
@@ -67,6 +68,16 @@ if SERVER then
 				net.WriteMatrix(translation)
 				net.WriteString(model)
 				net.WriteTable(particle_data or {})
+			net.Broadcast()
+		end,
+
+		AddForceField = function(pos, radius, strength, mode, linear)
+			net.Start("GWATER2_ADDFORCEFIELD")
+				net.WriteVector(pos)
+				net.WriteFloat(radius)
+				net.WriteFloat(strength)
+				net.WriteUInt(mode, 2)	-- 0-2 inclusive
+				net.WriteBool(linear)
 			net.Broadcast()
 		end,
 
@@ -155,6 +166,12 @@ else	-- CLIENT
 		local extra = net.ReadTable()	-- the one time this function is actually useful
 		gwater2.solver:AddCloth(translation, Vector(size_x, size_y), extra)
 		gwater2.cloth_pos = translation:GetTranslation()
+	end)
+
+	net.Receive("GWATER2_ADDPARTICLE", function(len)
+		local pos = net.ReadVector()
+		local extra = net.ReadTable()
+		gwater2.solver:AddParticle(pos, extra)
 	end)
 
 	net.Receive("GWATER2_ADDCYLINDER", function(len)
@@ -255,9 +272,12 @@ else	-- CLIENT
 		cs_ent:Remove()
 	end)
 
-	net.Receive("GWATER2_ADDPARTICLE", function(len)
+	net.Receive("GWATER2_ADDFORCEFIELD", function(len)
 		local pos = net.ReadVector()
-		local extra = net.ReadTable()
-		gwater2.solver:AddParticle(pos, extra)
+		local radius = net.ReadFloat()
+		local strength = net.ReadFloat()
+		local mode = net.ReadUInt(2)	-- 0-2 inclusive
+		local linear = net.ReadBool()
+		gwater2.solver:AddForceField(pos, radius, strength, mode, linear)
 	end)
 end
