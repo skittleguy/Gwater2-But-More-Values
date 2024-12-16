@@ -118,10 +118,6 @@ local function make_parameter_scratch(tab, locale_parameter_name, parameter_name
 
 	pcall(function()
 		local parameter_name = parameter_id
-		if gwater2.parameters[parameter_name] and gwater2.parameters[parameter_name].defined then
-			slider:SetValue(gwater2.parameters[parameter_name].val)
-			return
-		end
 		slider:SetValue(gwater2[parameter_name] or gwater2.solver:GetParameter(parameter_name))
 	end) -- if we can't get parameter, let's hope .setup() does that for us
 	slider:SetDecimals(parameter.decimals)
