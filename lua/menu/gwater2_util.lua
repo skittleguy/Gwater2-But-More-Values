@@ -28,11 +28,11 @@ local function set_gwater_parameter(option, val) --, raw, dont_set)
 	-- print(option, val)
 	local param = gwater2.options.initialised[option]
 
+	assert(param, "Parameter does not exist: "..option)
+
 	if param[1].func then
 		if param[1].func(val) then return end
 	end
-
-	assert(param, "Parameter does not exist: "..option)
 	if not param[2].editing then
 		param[2].block = true
 		if param[1].type ~= "color" then param[2]:SetValue(val)
@@ -43,103 +43,6 @@ local function set_gwater_parameter(option, val) --, raw, dont_set)
 	end
 	gwater2.parameters[option] = val
 
-	if gwater2[option] then
-		gwater2[option] = val
-		local radius = gwater2.solver:GetParameter("radius")
-		if option == "surface_tension" then	-- hack hack hack! this parameter scales based on radius
-			local r1 = val / radius^4	-- cant think of a name for this variable rn
-			local r2 = val / math.min(radius * 1.3, 15)^4
-			gwater2.solver:SetParameter(option, r1)
-			gwater2.options.solver:SetParameter(option, r2)
-		elseif option == "fluid_rest_distance" or option == "collision_distance" or option == "solid_rest_distance" then -- hack hack hack! this parameter scales based on radius
-			local r1 = val * radius
-			local r2 = val * math.min(radius * 1.3, 15)
-			gwater2.solver:SetParameter(option, r1)
-			gwater2.options.solver:SetParameter(option, r2)
-		elseif option == "cohesion" then	-- also scales by radius
-			local r1 = math.min(val / radius * 10, 1)
-			local r2 = math.min(val / (radius * 1.3) * 10, 1)
-			gwater2.solver:SetParameter(option, r1)
-			gwater2.options.solver:SetParameter(option, r2)
-		end
-		return
-	end
-
-	gwater2.solver:SetParameter(option, val)
-
-	if option == "gravity" then val = -val end	-- hack hack hack! y coordinate is considered down in screenspace!
-	if option == "radius" then 					-- hack hack hack! radius needs to edit multiple parameters!
-		gwater2.solver:SetParameter("surface_tension", gwater2["surface_tension"] / val^4)	-- literally no idea why this is a power of 4
-		gwater2.solver:SetParameter("fluid_rest_distance", val * gwater2["fluid_rest_distance"])
-		gwater2.solver:SetParameter("solid_rest_distance", val * gwater2["solid_rest_distance"])
-		gwater2.solver:SetParameter("collision_distance", val * gwater2["collision_distance"])
-		gwater2.solver:SetParameter("cohesion", math.min(gwater2["cohesion"] / val * 10, 1))
-		
-		if val > 15 then val = 15 end	-- explody
-		val = val * 1.3
-		gwater2.options.solver:SetParameter("surface_tension", gwater2["surface_tension"] / val^4)
-		gwater2.options.solver:SetParameter("fluid_rest_distance", val * gwater2["fluid_rest_distance"])
-		gwater2.options.solver:SetParameter("solid_rest_distance", val * gwater2["solid_rest_distance"])
-		gwater2.options.solver:SetParameter("collision_distance", val * gwater2["collision_distance"])
-		gwater2.options.solver:SetParameter("cohesion", math.min(gwater2["cohesion"] / val * 10, 1))
-	end
-
-	if option ~= "diffuse_threshold" and option ~= "dynamic_friction" then -- hack hack hack! fluid preview doesn't use diffuse particles
-		gwater2.options.solver:SetParameter(option, val)
-	end
-
-	do return end
-	error("called here")
-	if !raw then
-		local parsed = false
-
-		local rval = val
-
-		if type(val) == "table" and val[5] == "COLOR" and not parsed then
-			val = Color(val[1], val[2], val[3], val[4])
-			parsed = true
-		end
-		if IsColor(val) and not parsed then
-			val = val:ToTable()
-			val[5] = "COLOR"
-			parsed = true
-		end
-
-		val = rval
-
-		gwater2.parameters[option] = val
-
-		if !dont_set then 
-			if gwater2.options.initialised[option][1].type == "scratch" or gwater2.options.initialised[option][1].type == "check" then
-				gwater2.options.initialised[option][2].block = true
-				gwater2.options.initialised[option][2]:SetValue(val)
-				gwater2.options.initialised[option][2].block = false
-			end
-
-			if gwater2.options.initialised[option][1].type == "color" then 
-				gwater2.options.initialised[option][2].block = true
-				gwater2.options.initialised[option][2]:SetColor(val)
-				gwater2.options.initialised[option][2].block = false
-			end
-		end
-
-		if gwater2.options.initialised[option][1].func then
-			if gwater2.options.initialised[option][1].func(val) then 
-				return 
-			end
-		end
-
-		--[[
-		if gwater2.parameters[option].defined then
-			gwater2.parameters[option] = val
-			gwater2.parameters[option].func()
-			return
-		end
-		]]
-	end
-
-	-- nondirect options (eg. parameter scales based on radius)
-	-- preview radius is scaled by 1.3
 	if gwater2[option] then
 		gwater2[option] = val
 		local radius = gwater2.solver:GetParameter("radius")
