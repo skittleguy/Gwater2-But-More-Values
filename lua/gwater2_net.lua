@@ -1,5 +1,7 @@
 AddCSLuaFile()
 
+local admin_only = CreateConVar("gwater2_adminonly", "0", FCVAR_REPLICATED)
+
 if SERVER then
 	util.AddNetworkString("GWATER2_ADDCLOTH")
 	util.AddNetworkString("GWATER2_ADDPARTICLE")
@@ -95,7 +97,6 @@ if SERVER then
 		end
 	}
 
-	local admin_only = CreateConVar("gwater2_adminonly", "0", FCVAR_REPLICATED)
 	cvars.AddChangeCallback("gwater2_adminonly", function(name, old, new)
 		if tonumber(new or 0) != 0 then
 

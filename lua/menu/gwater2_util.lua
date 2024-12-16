@@ -46,7 +46,7 @@ local function set_gwater_parameter(option, val, raw, dont_set)
 
 		gwater2.options.parameters[option].real = val
 
-		if !dont_set then 
+		if !dont_set and IsValid(gwater2.options.initialised[option][2]) then 
 			if gwater2.options.initialised[option][1].type == "scratch" or gwater2.options.initialised[option][1].type == "check" then
 				gwater2.options.initialised[option][2].block = true
 				gwater2.options.initialised[option][2]:SetValue(val)
