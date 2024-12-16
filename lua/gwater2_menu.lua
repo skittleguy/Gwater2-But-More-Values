@@ -82,14 +82,14 @@ timer.Simple(0, function()
 	net.WriteBool(gwater2.options.player_collision:GetBool())
 	net.SendToServer()
 
-	--gwater2.solver:EnableDiffuse(gwater2.options.diffuse_enabled:GetBool())
+	gwater2.solver:EnableDiffuse(gwater2.options.diffuse_enabled:GetBool())
 end)
 
 gwater2.options.solver:SetParameter("gravity", 15.24)	-- flip gravity because y axis positive is down
 gwater2.options.solver:SetParameter("static_friction", 0)	-- stop adhesion sticking to front and back walls
 gwater2.options.solver:SetParameter("dynamic_friction", 0)	-- ^
 gwater2.options.solver:SetParameter("diffuse_threshold", math.huge)	-- no diffuse particles allowed in preview
--- _util.set_gwater_parameter("radius", 10, true)	-- regen radius defaults, as they are scaled in the preview
+--_util.set_gwater_parameter("radius", 10, true)	-- regen radius defaults, as they are scaled in the preview
 
 local admin_only = GetConVar("gwater2_adminonly")
 local function create_menu()
