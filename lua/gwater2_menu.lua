@@ -55,7 +55,6 @@ gwater2.options = gwater2.options or {
 		touchdamage = {real=0, default=0, val=0, defined=true, func=function() end},
 	}
 }
-gwater2.parameters = gwater2.options.parameters
 
 if not file.Exists("gwater2/config.txt", "DATA") then
 	gwater2.options.write_config({

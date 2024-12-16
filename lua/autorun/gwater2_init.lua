@@ -3,12 +3,16 @@ AddCSLuaFile()
 if SERVER then 
 	include("gwater2_net.lua")
 	include("gwater2_interactions.lua")
+
+	AddCSLuaFile("gwater2_interactions.lua")
+	AddCSLuaFile("gwater2_net.lua")
+	AddCSLuaFile("gwater2_shaders.lua")
+	AddCSLuaFile("gwater2_net.lua")
 	return
 end
 
 require((BRANCH == "x86-64" or BRANCH == "chromium" ) and "gwater2" or "gwater2_main")	-- carrying
-
-include("gwater2_shaders.lua")
+local in_water = include("gwater2_interactions.lua")
 
 -- GetMeshConvexes but for client
 local function unfucked_get_mesh(ent, raw)
@@ -84,8 +88,6 @@ local function get_map_vertices()
 
 	return all_vertices
 end
-
-local in_water = function() end
 
 -- collisions will lerp from positions they were at a long time ago if no particles have been initialized for a while
 local no_lerp = false
@@ -175,9 +177,6 @@ gwater2 = {
 	end
 }
 
-include("gwater2_net.lua")
-in_water = include("gwater2_interactions.lua")
-
 -- setup percentage values (used in menu)
 gwater2["surface_tension"] = gwater2.solver:GetParameter("surface_tension") * gwater2.solver:GetParameter("radius")^4	-- dont ask me why its a power of 4
 gwater2["fluid_rest_distance"] = gwater2.solver:GetParameter("fluid_rest_distance") / gwater2.solver:GetParameter("radius")
@@ -191,6 +190,8 @@ gwater2["force_buoyancy"] = 0
 gwater2["force_dampening"] = 0
 gwater2["player_interaction"] = true
 
+include("gwater2_shaders.lua")
+include("gwater2_net.lua")
 include("gwater2_menu.lua")
 
 local limit_fps = 1 / 60
