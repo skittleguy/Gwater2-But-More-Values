@@ -204,34 +204,26 @@ local function create_menu()
 
 		surface.SetMaterial(particle_material)
 
-		if gwater2.options.read_config().pixelate_preview then
-			local alpha = is_translucent and 50 or 255
-			gwater2.options.solver:RenderParticles(function(pos)
-				local depth = math.max((pos[3] - y) / 584, 0) * 20	-- ranges from 0 to 20 down
-				local absorption = is_translucent and exp((gwater2.options.parameters.color.real:ToVector() * gwater2.options.parameters.color_value_multiplier.real - Vector(1, 1, 1)) * gwater2.options.parameters.color.real.a / 255 * depth) or (gwater2.options.parameters.color.real:ToVector() * gwater2.options.parameters.color_value_multiplier.real)
-				surface.SetDrawColor(absorption[1] * 255, absorption[2] * 255, absorption[3] * 255, alpha)
-				local px = pos[1] - x
-				local py = pos[3] - y
+		local pixelate = gwater2.options.read_config().pixelate_preview 
+
+		local alpha = is_translucent and (pixelate and 50 or 150) or 255
+		gwater2.options.solver:RenderParticles(function(pos)
+			local depth = math.max((pos[3] - y) / 584, 0) * 20	-- ranges from 0 to 20 down
+			local absorption = is_translucent and exp(
+				(gwater2.parameters.color:ToVector() * gwater2.parameters.color_value_multiplier - Vector(1, 1, 1)) *
+					gwater2.parameters.color.a / 255 * depth) or
+				(gwater2.parameters.color:ToVector() * gwater2.parameters.color_value_multiplier)
+			surface.SetDrawColor(absorption[1] * 255, absorption[2] * 255, absorption[3] * 255, alpha)
+			local px = pos[1] - x
+			local py = pos[3] - y
+			if pixelate then
 				px = math.Round(px / radius) * radius
 				py = math.Round(py / radius) * radius
+			end
 
-				surface.DrawTexturedRect(px, py, radius, radius)
-			end)
-		else
-			local alpha = is_translucent and 150 or 255
-			gwater2.options.solver:RenderParticles(function(pos)
-				local depth = math.max((pos[3] - y) / 584, 0) * 20	-- ranges from 0 to 20 down
-				local absorption = is_translucent and exp(
-					(gwater2.parameters.color:ToVector() * gwater2.parameters.color_value_multiplier - Vector(1, 1, 1)) *
-					 gwater2.parameters.color.a / 255 * depth) or
-					(gwater2.parameters.color:ToVector() * gwater2.parameters.color_value_multiplier)
-				surface.SetDrawColor(absorption[1] * 255, absorption[2] * 255, absorption[3] * 255, alpha)
-				local px = pos[1] - x
-				local py = pos[3] - y
-				
-				surface.DrawTexturedRect(px, py, radius, radius)
-			end)
-		end
+			surface.DrawTexturedRect(px, py, radius, radius)
+		end)
+
 
 		styling.draw_main_background_outline(0, 0, w, h)
 
