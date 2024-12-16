@@ -240,18 +240,18 @@ local function presets_tab(tabs, params)
 				local paramlist = {}
 				for name,_ in pairs(_parameters) do
 					if _.slider then _.slider:SetValue(gwater2.defaults[name:lower():gsub(" ", "_")]) end
-					if _.check then _.check:SetValue(gwater2.defaults) end
-					if _.mixer then _.mixer:SetColor(gwater2.defaults) end
+					if _.check then _.check:SetValue(gwater2.defaults[name:lower():gsub(" ", "_")]) end
+					if _.mixer then _.mixer:SetColor(gwater2.defaults[name:lower():gsub(" ", "_")]) end
 				end
 				for name,_ in pairs(_visuals) do
-					if _.slider then _.slider:SetValue(gwater2.defaults) end
-					if _.check then _.check:SetValue(gwater2.defaults) end
-					if _.mixer then _.mixer:SetColor(gwater2.defaults) end
+					if _.slider then _.slider:SetValue(gwater2.defaults[name:lower():gsub(" ", "_")]) end
+					if _.check then _.check:SetValue(gwater2.defaults[name:lower():gsub(" ", "_")]) end
+					if _.mixer then _.mixer:SetColor(gwater2.defaults[name:lower():gsub(" ", "_")]) end
 				end
 				for name,_ in pairs(_interactions) do
-					if _.slider then _.slider:SetValue(gwater2.defaults) end
-					if _.check then _.check:SetValue(gwater2.defaults) end
-					if _.mixer then _.mixer:SetColor(gwater2.defaults) end
+					if _.slider then _.slider:SetValue(gwater2.defaults[name:lower():gsub(" ", "_")]) end
+					if _.check then _.check:SetValue(gwater2.defaults[name:lower():gsub(" ", "_")]) end
+					if _.mixer then _.mixer:SetColor(gwater2.defaults[name:lower():gsub(" ", "_")]) end
 				end
 			end
 			for k,v in pairs(v) do
