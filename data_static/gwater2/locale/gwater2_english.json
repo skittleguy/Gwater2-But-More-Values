@@ -179,5 +179,8 @@
     "gwater2.menu.Menu.admin_only": "Admin only menu",
     "gwater2.menu.Menu.admin_only.desc": "Enable/disables the menu only being accessable to admins.\n\nThis will force close the menu on all players when enabled.\n\nNOTE THAT ONLY THE SERVER HOST CAN CHANGE THIS VALUE. IF THIS SETTING DOESN'T WORK, RUN THE COMMAND:\ngwater2_adminonly (0-1)\nIN CONSOLE",
     "gwater2.menu.Fluid Preview.title": "Fluid Preview",
-    "gwater2.menu.Explanation Area.title": "Explanation Area"
+    "gwater2.menu.Explanation Area.title": "Explanation Area",
+    "gwater2.menu.WaterGun.Velocity": "Particle Velocity",
+    "gwater2.menu.WaterGun.Distance": "Max Distance",
+    "gwater2.menu.WaterGun.Density": "Particle Density"
 }

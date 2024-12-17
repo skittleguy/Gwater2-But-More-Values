@@ -67,21 +67,20 @@ function SWEP:PrimaryAttack()
 								owner).HitPos + owner:GetAimVector() * -10
 	pos = owner:EyePos() + (
 		(pos - owner:EyePos()) *
-		(gwater2.parameters.fluid_rest_distance or 0.55) *
-		owner:GetInfoNum("gwater2_gun_density", 1)
+		(gwater2.parameters.fluid_rest_distance or 0.55)
 	)
 
 	gwater2.AddCylinder(
 		gwater2.quick_matrix(
 			pos,
 			owner:EyeAngles() + Angle(90, 0, 0),
-			1),
+			owner:GetInfoNum("gwater2_gun_density", 1)),
 		Vector(4, 4, 1),
 		{vel = forward * owner:GetInfoNum("gwater2_gun_velocity", 10)}
 	)
 end
 
-function SWEP:SecondaryAttack()
+function SWEP:Reload()
 	if CLIENT then return end
 	if not self:GetOwner():IsPlayer() then return end -- someone gave weapon to a non-player!!
 
@@ -92,9 +91,15 @@ function SWEP:SecondaryAttack()
 	gwater2.ResetSolver()
 end
 
-function SWEP:Reload()
-	if SERVER then return end
-	if not self:GetOwner():IsPlayer() then return end -- someone gave weapon to a non-player!!
+local frame
+function SWEP:SecondaryAttack()
+	if SERVER then
+		if not IsFirstTimePredicted() then return end
+		return game.SinglePlayer() and self:CallOnClient("SecondaryAttack")
+	end
+
+	if IsValid(frame) then return frame:Close() end
+	frame = include("menu/gwater2_gunmenu.lua")(self)
 end
 
 if SERVER then return end
@@ -102,8 +107,8 @@ if SERVER then return end
 function SWEP:DrawHUD()
 	--surface.DrawCircle(ScrW() / 2, ScrH() / 2, gwater2["size"] * gwater2["density"] * 4 * 10, 255, 255, 255, 255)
 	draw.DrawText("Left-Click to Spawn Particles", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.75, color_white, TEXT_ALIGN_RIGHT)
-	draw.DrawText("Right-Click to Remove All", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.78, color_white, TEXT_ALIGN_RIGHT)
-	draw.DrawText("Reload to Open Menu", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.81, color_white, TEXT_ALIGN_RIGHT)
+	draw.DrawText("Right-Click to Open Gun Menu", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.78, color_white, TEXT_ALIGN_RIGHT)
+	draw.DrawText("Reload to Remove All", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.81, color_white, TEXT_ALIGN_RIGHT)
 end
 
 local function format_int(i)
@@ -139,7 +144,7 @@ function SWEP:PostDrawViewModel(vm, weapon, ply)
 		--surface.DrawCircle(0, 0, 160 * 5 * self.ParticleDensity:GetFloat(), 255, 255, 255, 255)
 		for i=0,5,1 do
 			surface.DrawCircle(0, 0, 160 * 5 * self.ParticleDensity:GetFloat() - 160*3*
-									 (self.ParticleVelocity:GetFloat()/100)*(i/5),
+									 math.ease.OutCubic(self.ParticleVelocity:GetFloat()/100*(i/5)),
 									-- (((100-self.ParticleVelocity:GetFloat())*(math.log(i)+1)/2.6)/100),
 									 255, 255, 255, 255)
 		end

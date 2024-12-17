@@ -98,7 +98,7 @@ gwater2.options.solver:SetParameter("diffuse_threshold", math.huge)	-- no diffus
 local admin_only = GetConVar("gwater2_adminonly")
 local function create_menu()
 	local frame = vgui.Create("DFrame")
-	frame:SetTitle("GWater 2 " .. gwater2.VERSION)
+	frame:SetTitle("GWater 2 " .. gwater2.VERSION .. ": Main Menu")
 	--frame:SetSize(ScrW() * 0.8, ScrH() * 0.6)
 	frame:SetSize(1000, 600)
 	frame:Center()
