@@ -166,17 +166,23 @@ function SWEP:PostDrawViewModel(vm, weapon, ply)
 		cam.Start3D2D(pos, angles, 0.03)
 			--surface.DrawCircle(0, 0, 160 * 5 * self.ParticleDensity:GetFloat(), 255, 255, 255, 255)
 			for i=0,5,1 do
+				local factor = math.ease.OutCubic(self.ParticleVelocity:GetFloat()/100*(i/5))
 				surface.DrawCircle(0, 0, 160 * 5 * self.ParticleDensity:GetFloat() - 160*3*
-										math.ease.OutCubic(self.ParticleVelocity:GetFloat()/100*(i/5))*
-										self.ParticleDensity:GetFloat(),
+										factor * self.ParticleDensity:GetFloat(),
 										-- (((100-self.ParticleVelocity:GetFloat())*(math.log(i)+1)/2.6)/100),
-										255, 255, 255, 255)
+										255, 255, 255, 255 * (1-factor))
 			end
 		cam.End3D2D()
 	end
 	if self.SpawnMode:GetInt() == 2 then
 		local edge = Vector(4, 4, 4) * self.ParticleDensity:GetFloat()^2 * 2
-		render.DrawWireframeBox(pos, angles, -edge, edge)
+		for i=0,5,1 do
+			local factor = math.ease.OutCubic(self.ParticleVelocity:GetFloat()/100*(i/5))
+			local ppos = pos + self:GetOwner():EyeAngles():Forward() * 100 * factor
+			-- TODO: try to fix alpha
+			local col = Color(255 * (1-factor), 255 * (1-factor), 255 * (1-factor))
+			render.DrawWireframeBox(ppos, angles, -edge + edge * factor * 0.6, edge - edge * factor * 0.6, col, true)
+		end
 	end
 end
 
