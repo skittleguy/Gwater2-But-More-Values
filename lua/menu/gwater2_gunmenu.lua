@@ -3,7 +3,7 @@
 local _util = include("menu/gwater2_util.lua")
 local styling = include("menu/gwater2_styling.lua")
 
-local function make_scratch(frame, locale_parameter_name, default, min, max, convar)
+local function make_scratch(frame, locale_parameter_name, default, min, max, decimals, convar)
     local panel = frame:Add("DPanel")
 	function panel:Paint() end
 	panel:Dock(TOP)
@@ -15,7 +15,7 @@ local function make_scratch(frame, locale_parameter_name, default, min, max, con
 	label:SizeToContents()
 	local slider = panel:Add("DNumSlider")
     slider:SetConVar(convar)
-	slider:SetDecimals(2)
+	slider:SetDecimals(decimals)
 	slider:SetMinMax(min, max)
 	local button = panel:Add("DButton")
 	button:SetText("")
@@ -101,9 +101,11 @@ return function(self)
         end
     end
 
-    make_scratch(frame, "WaterGun.Velocity", 10, 0, 100, "gwater2_gun_velocity")
-    make_scratch(frame, "WaterGun.Distance", 250, 100, 1000, "gwater2_gun_distance")
-    make_scratch(frame, "WaterGun.Density", 1, 0.1, 10, "gwater2_gun_density")
+    -- TODO: parameter explanations
+    make_scratch(frame, "WaterGun.Velocity", 10, 0, 100, 2, "gwater2_gun_velocity")
+    make_scratch(frame, "WaterGun.Distance", 250, 100, 1000, 2, "gwater2_gun_distance")
+    make_scratch(frame, "WaterGun.Density", 1, 0.1, 10, 2, "gwater2_gun_density")
+    make_scratch(frame, "WaterGun.SpawnMode", 1, 1, 2, 0, "gwater2_gun_spawnmode")
 
     return frame
 end

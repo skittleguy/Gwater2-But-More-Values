@@ -39,6 +39,10 @@ if CLIENT then
 	SWEP.ParticleVelocity = CreateClientConVar("gwater2_gun_velocity",  10, true, true, "",   0,  100)
 	SWEP.ParticleDistance = CreateClientConVar("gwater2_gun_distance", 250, true, true, "", 100, 1000)
 	SWEP.ParticleDensity  = CreateClientConVar("gwater2_gun_density",    1, true, true, "", 0.1,   10)
+
+	-- 1 is cylinder (default) (introduced in 0.5b iirc)
+	-- 2 is box (introduced in 0.1b)
+	SWEP.SpawnMode  = CreateClientConVar("gwater2_gun_spawnmode", 1, true, true, "", 1, 2)
 end
 
 local function fuckgarry(w, s)
@@ -58,26 +62,44 @@ end
 function SWEP:PrimaryAttack()
 	if CLIENT then return end
 	if not self:GetOwner():IsPlayer() then return end -- someone gave weapon to a non-player!!
+	self:SetNextPrimaryFire(CurTime() + 1/60) -- gwater runs at fixed 60 fps
 
 	local owner = self:GetOwner()
 	local forward = owner:EyeAngles():Forward()
 	
 	local pos = util.QuickTrace(owner:EyePos(),
 								owner:GetAimVector() * owner:GetInfoNum("gwater2_gun_distance", 250),
-								owner).HitPos + owner:GetAimVector() * -10
+								owner).HitPos
+
+	local mode = math.floor(owner:GetInfoNum("gwater2_gun_spawnmode", 1))
+
+	pos = pos + owner:GetAimVector() * -(gwater2.parameters.radius or 10)
 	pos = owner:EyePos() + (
 		(pos - owner:EyePos()) *
 		(gwater2.parameters.fluid_rest_distance or 0.55)
 	)
-
-	gwater2.AddCylinder(
-		gwater2.quick_matrix(
-			pos,
-			owner:EyeAngles() + Angle(90, 0, 0),
-			owner:GetInfoNum("gwater2_gun_density", 1)),
-		Vector(4, 4, 1),
-		{vel = forward * owner:GetInfoNum("gwater2_gun_velocity", 10)}
-	)
+	if mode == 1 then
+		gwater2.AddCylinder(
+			gwater2.quick_matrix(
+				pos,
+				owner:EyeAngles() + Angle(90, 0, 0),
+				owner:GetInfoNum("gwater2_gun_density", 1)),
+			Vector(4 * owner:GetInfoNum("gwater2_gun_density", 1), 4 * owner:GetInfoNum("gwater2_gun_density", 1), 1),
+			{vel = forward * owner:GetInfoNum("gwater2_gun_velocity", 10)}
+		)
+	end
+	if mode == 2 then
+		local size = 4 * owner:GetInfoNum("gwater2_gun_density", 1)
+		pos = pos + owner:GetAimVector() * (gwater2.parameters.radius or 10) * (size+1)
+		gwater2.AddCube(
+			gwater2.quick_matrix(
+				pos,
+				owner:EyeAngles() + Angle(90, 0, 0),
+				owner:GetInfoNum("gwater2_gun_density", 1)),
+				Vector(size, size, size),
+				{vel = forward * owner:GetInfoNum("gwater2_gun_velocity", 10)}
+		)
+	end
 end
 
 function SWEP:Reload()
@@ -138,18 +160,24 @@ function SWEP:PostDrawViewModel(vm, weapon, ply)
 	local angles = ply:EyeAngles()
 	local pos = util.QuickTrace(ply:EyePos(),
 								ply:GetAimVector() * self.ParticleDistance:GetFloat(),
-								ply).HitPos - ply:GetAimVector() * 10
+								ply).HitPos + ply:GetAimVector() * -(gwater2.parameters.radius or 10)
 	angles:RotateAroundAxis(angles:Right(), 90)
-	cam.Start3D2D(pos, angles, 0.03)
-		--surface.DrawCircle(0, 0, 160 * 5 * self.ParticleDensity:GetFloat(), 255, 255, 255, 255)
-		for i=0,5,1 do
-			surface.DrawCircle(0, 0, 160 * 5 * self.ParticleDensity:GetFloat() - 160*3*
-									 math.ease.OutCubic(self.ParticleVelocity:GetFloat()/100*(i/5))*
-									 self.ParticleDensity:GetFloat(),
-									-- (((100-self.ParticleVelocity:GetFloat())*(math.log(i)+1)/2.6)/100),
-									 255, 255, 255, 255)
-		end
-	cam.End3D2D()
+	if self.SpawnMode:GetInt() == 1 then
+		cam.Start3D2D(pos, angles, 0.03)
+			--surface.DrawCircle(0, 0, 160 * 5 * self.ParticleDensity:GetFloat(), 255, 255, 255, 255)
+			for i=0,5,1 do
+				surface.DrawCircle(0, 0, 160 * 5 * self.ParticleDensity:GetFloat() - 160*3*
+										math.ease.OutCubic(self.ParticleVelocity:GetFloat()/100*(i/5))*
+										self.ParticleDensity:GetFloat(),
+										-- (((100-self.ParticleVelocity:GetFloat())*(math.log(i)+1)/2.6)/100),
+										255, 255, 255, 255)
+			end
+		cam.End3D2D()
+	end
+	if self.SpawnMode:GetInt() == 2 then
+		local edge = Vector(4, 4, 4) * self.ParticleDensity:GetFloat()^2 * 2
+		render.DrawWireframeBox(pos, angles, -edge, edge)
+	end
 end
 
 --[[ -- Benchmarking stuff (ignore)

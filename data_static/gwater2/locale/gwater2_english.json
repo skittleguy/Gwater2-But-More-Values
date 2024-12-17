@@ -182,5 +182,6 @@
     "gwater2.menu.Explanation Area.title": "Explanation Area",
     "gwater2.menu.WaterGun.Velocity": "Particle Velocity",
     "gwater2.menu.WaterGun.Distance": "Max Distance",
-    "gwater2.menu.WaterGun.Density": "Particle Density"
+    "gwater2.menu.WaterGun.Density": "Particle Density",
+    "gwater2.menu.WaterGun.SpawnMode": "Shoot Mode"
 }
