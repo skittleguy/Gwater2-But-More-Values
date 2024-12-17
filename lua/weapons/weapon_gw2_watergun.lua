@@ -136,10 +136,12 @@ function SWEP:PostDrawViewModel(vm, weapon, ply)
 								ply).HitPos - ply:GetAimVector() * 10
 	angles:RotateAroundAxis(angles:Right(), 90)
 	cam.Start3D2D(pos, angles, 0.03)
-		surface.DrawCircle(0, 0, 160 * 5 * self.ParticleDensity:GetFloat(), 255, 255, 255, 255)
+		--surface.DrawCircle(0, 0, 160 * 5 * self.ParticleDensity:GetFloat(), 255, 255, 255, 255)
 		for i=0,5,1 do
-			surface.DrawCircle(0, 0, 160 * 5 * self.ParticleDensity:GetFloat() *
-									 ((100-self.ParticleVelocity:GetFloat()*(math.log(i)+2)/2.6)/200), 255, 255, 255, 255)
+			surface.DrawCircle(0, 0, 160 * 5 * self.ParticleDensity:GetFloat() - 160*3*
+									 (self.ParticleVelocity:GetFloat()/100)*(i/5),
+									-- (((100-self.ParticleVelocity:GetFloat())*(math.log(i)+1)/2.6)/100),
+									 255, 255, 255, 255)
 		end
 	cam.End3D2D()
 end
