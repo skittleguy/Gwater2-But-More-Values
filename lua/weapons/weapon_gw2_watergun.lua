@@ -144,7 +144,8 @@ function SWEP:PostDrawViewModel(vm, weapon, ply)
 		--surface.DrawCircle(0, 0, 160 * 5 * self.ParticleDensity:GetFloat(), 255, 255, 255, 255)
 		for i=0,5,1 do
 			surface.DrawCircle(0, 0, 160 * 5 * self.ParticleDensity:GetFloat() - 160*3*
-									 math.ease.OutCubic(self.ParticleVelocity:GetFloat()/100*(i/5)),
+									 math.ease.OutCubic(self.ParticleVelocity:GetFloat()/100*(i/5))*
+									 self.ParticleDensity:GetFloat(),
 									-- (((100-self.ParticleVelocity:GetFloat())*(math.log(i)+1)/2.6)/100),
 									 255, 255, 255, 255)
 		end
