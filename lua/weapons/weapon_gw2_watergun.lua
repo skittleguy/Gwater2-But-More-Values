@@ -35,6 +35,12 @@ SWEP.ViewModel			= "models/weapons/c_pistol.mdl"
 SWEP.WorldModel			= "models/weapons/w_pistol.mdl"
 SWEP.UseHands           = true
 
+if CLIENT then
+	SWEP.ParticleVelocity = CreateClientConVar("gwater2_gun_velocity",  10, true, true, "",   0,  100)
+	SWEP.ParticleDistance = CreateClientConVar("gwater2_gun_distance", 250, true, true, "", 100, 1000)
+	SWEP.ParticleDensity  = CreateClientConVar("gwater2_gun_density",    1, true, true, "", 0.1,   10)
+end
+
 local function fuckgarry(w, s)
 	if SERVER then 
 		if game.SinglePlayer() then 
@@ -51,12 +57,19 @@ end
 
 function SWEP:PrimaryAttack()
 	if CLIENT then return end
+	if not self:GetOwner():IsPlayer() then return end -- someone gave weapon to a non-player!!
 
 	local owner = self:GetOwner()
 	local forward = owner:EyeAngles():Forward()
 	
-	local pos = util.QuickTrace(owner:EyePos(), owner:GetAimVector() * 250, owner).HitPos + owner:GetAimVector() * -10
-	pos = owner:EyePos() + ((pos - owner:EyePos()) * (gwater2.parameters.fluid_rest_distance or 0.55))
+	local pos = util.QuickTrace(owner:EyePos(),
+								owner:GetAimVector() * owner:GetInfoNum("gwater2_gun_distance", 250),
+								owner).HitPos + owner:GetAimVector() * -10
+	pos = owner:EyePos() + (
+		(pos - owner:EyePos()) *
+		(gwater2.parameters.fluid_rest_distance or 0.55) *
+		owner:GetInfoNum("gwater2_gun_density", 1)
+	)
 
 	gwater2.AddCylinder(
 		gwater2.quick_matrix(
@@ -64,22 +77,24 @@ function SWEP:PrimaryAttack()
 			owner:EyeAngles() + Angle(90, 0, 0),
 			1),
 		Vector(4, 4, 1),
-		{vel = forward * 10}
+		{vel = forward * owner:GetInfoNum("gwater2_gun_velocity", 10)}
 	)
 end
 
 function SWEP:SecondaryAttack()
 	if CLIENT then return end
+	if not self:GetOwner():IsPlayer() then return end -- someone gave weapon to a non-player!!
 
-	local owner = self:GetOwner()
-	local forward = owner:EyeAngles():Forward()
+	--local owner = self:GetOwner()
+	--local forward = owner:EyeAngles():Forward()
+	--gwater2.AddSphere(gwater2.quick_matrix(owner:EyePos() + forward * 250), 20, {vel = forward * 10})
 
-	gwater2.AddSphere(gwater2.quick_matrix(owner:EyePos() + forward * 250), 20, {vel = forward * 10})
+	gwater2.ResetSolver()
 end
 
 function SWEP:Reload()
-	if CLIENT then return end
-	gwater2.ResetSolver()
+	if SERVER then return end
+	if not self:GetOwner():IsPlayer() then return end -- someone gave weapon to a non-player!!
 end
 
 if SERVER then return end
@@ -87,8 +102,8 @@ if SERVER then return end
 function SWEP:DrawHUD()
 	--surface.DrawCircle(ScrW() / 2, ScrH() / 2, gwater2["size"] * gwater2["density"] * 4 * 10, 255, 255, 255, 255)
 	draw.DrawText("Left-Click to Spawn Particles", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.75, color_white, TEXT_ALIGN_RIGHT)
-	draw.DrawText("Right-Click to Spawn a Sphere", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.78, color_white, TEXT_ALIGN_RIGHT)
-	draw.DrawText("Reload to Remove All", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.81, color_white, TEXT_ALIGN_RIGHT)
+	draw.DrawText("Right-Click to Remove All", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.78, color_white, TEXT_ALIGN_RIGHT)
+	draw.DrawText("Reload to Open Menu", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.81, color_white, TEXT_ALIGN_RIGHT)
 end
 
 local function format_int(i)
@@ -116,10 +131,16 @@ function SWEP:PostDrawViewModel(vm, weapon, ply)
 	cam.End3D2D()
 
 	local angles = ply:EyeAngles()
-	local pos = util.QuickTrace(ply:EyePos(), ply:GetAimVector() * 200, ply).HitPos - ply:GetAimVector() * 10
+	local pos = util.QuickTrace(ply:EyePos(),
+								ply:GetAimVector() * self.ParticleDistance:GetFloat(),
+								ply).HitPos - ply:GetAimVector() * 10
 	angles:RotateAroundAxis(angles:Right(), 90)
 	cam.Start3D2D(pos, angles, 0.03)
-		surface.DrawCircle(0, 0, 160 * 5, 255, 255, 255, 255)
+		surface.DrawCircle(0, 0, 160 * 5 * self.ParticleDensity:GetFloat(), 255, 255, 255, 255)
+		for i=0,5,1 do
+			surface.DrawCircle(0, 0, 160 * 5 * self.ParticleDensity:GetFloat() *
+									 ((100-self.ParticleVelocity:GetFloat()*(math.log(i)+2)/2.6)/100), 255, 255, 255, 255)
+		end
 	cam.End3D2D()
 end
 

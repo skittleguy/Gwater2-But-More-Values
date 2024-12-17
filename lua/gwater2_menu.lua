@@ -82,7 +82,11 @@ timer.Simple(0, function()
 	net.WriteBool(gwater2.options.player_collision:GetBool())
 	net.SendToServer()
 
-	gwater2.solver:EnableDiffuse(gwater2.options.diffuse_enabled:GetBool())
+	-- TODO: remove me!!
+	-- sometimes 0.6b binaries break when i'm changing stuff, so i swap them for 0.5b ones
+	if gwater2.solver.EnableDiffuse then
+		gwater2.solver:EnableDiffuse(gwater2.options.diffuse_enabled:GetBool())
+	end
 end)
 
 gwater2.options.solver:SetParameter("gravity", 15.24)	-- flip gravity because y axis positive is down
@@ -432,12 +436,7 @@ local function create_menu()
 	        	return true
 	        end
     	})
-
-		-- TODO: does IsListenServerHost() work for this?
-		-- googer_: yes. yes it does
-		if LocalPlayer():IsSuperAdmin() then
-			-- meetric: must be host to change this value
-			-- googer_: no, just a superadmin. pretty sure all permission systems detour IsSuperAdmin
+		if LocalPlayer():IsListenServerHost() then
 			_util.make_parameter_check(tab, "Menu.admin_only", "Admin Only", {
 				func=function(val)
 					RunConsoleCommand("gwater2_adminonly", val and "1" or "0")
@@ -490,18 +489,17 @@ local function create_menu()
 					surface.SetDrawColor(255, 255, 255, 255*delta)
 					surface.DrawOutlinedRect(0, 0, w - 4, self:IsActive() and h - 4 or h)
 				end
-				if gwater2.options.read_config().animations then
-					local children = {}
-					local function _(p)
-						for __,child in pairs(p:GetChildren()) do
-							children[#children+1] = child
-							_(child)
-						end
+				if not gwater2.options.read_config().animations then return end
+				local children = {}
+				local function _(p)
+					for __,child in pairs(p:GetChildren()) do
+						children[#children+1] = child
+						_(child)
 					end
-					_(rt.Panel:GetChildren()[1])
-					for i,v in pairs(children) do
-						v:SetAlpha((1-delta-i/500)*255*4)
-					end
+				end
+				_(rt.Panel:GetChildren()[1])
+				for i,v in pairs(children) do
+					v:SetAlpha((1-delta-i/500)*255*4)
 				end
 			end
 			surface.SetDrawColor(255, 255, 255, 255)
@@ -516,10 +514,9 @@ local function create_menu()
 	function tabs:OnActiveTabChanged(_, new)
 		help_text:SetText(_util.get_localised(new.realname..".help"))
 		for k, v in ipairs(self.Items) do
-			if v.Tab == new then
-				gwater2.options.menu_tab:SetInt(k)
-				break
-			end
+			if v.Tab ~= new then continue end
+			gwater2.options.menu_tab:SetInt(k)
+			break
 		end
 		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/select.wav") end
 		new.lastpush = RealTime()
