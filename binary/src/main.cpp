@@ -873,10 +873,12 @@ LUA_FUNCTION(FLEXSOLVER_GetMaxDiffuseParticles) {
 // gets average location of diffuse particles (used in sound)
 LUA_FUNCTION(FLEXSOLVER_GetActiveDiffuseParticlesPos) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	LUA->CheckNumber(2);
 	FlexSolver* flex = GET_FLEXSOLVER(1);
+	int iterator = LUA->GetNumber(2);
 
 	Vector average_pos = Vector();
-	for (int i = 0; i < flex->get_active_diffuse(); i++) {
+	for (int i = 0; i < flex->get_active_diffuse(); i += iterator) {
 		average_pos += flex->hosts.diffuse_pos[i].AsVector3D();
 	}
 	average_pos /= flex->get_active_diffuse();
