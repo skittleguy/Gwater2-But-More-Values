@@ -202,7 +202,7 @@ timer.Create("gwater2_calcdiffusesound", 0.1, 0, function()
 	local lp = LocalPlayer()
 	if !IsValid(lp) then return end
 
-	soundpatch = soundpatch or CreateSound(lp, "d1_canals.StirrerLoop")
+	soundpatch = soundpatch or CreateSound(lp, "gwater2/water_loop.wav")
 
 	local percent = gwater2.solver:GetActiveDiffuseParticles() / gwater2.solver:GetMaxDiffuseParticles()
 	if percent > 0.001 then
