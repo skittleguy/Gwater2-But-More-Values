@@ -195,6 +195,30 @@ include("gwater2_net.lua")
 include("gwater2_menu.lua")
 
 local limit_fps = 1 / 60
+local soundpatch
+
+-- no need to calculate sound every frame
+timer.Create("gwater2_calcdiffusesound", 0.1, 0, function()
+	local lp = LocalPlayer()
+	if !IsValid(lp) then return end
+
+	soundpatch = soundpatch or CreateSound(lp, "vehicles/airboat/pontoon_fast_water_loop1.wav")
+
+	local percent = gwater2.solver:GetActiveDiffuseParticles() / gwater2.solver:GetMaxDiffuseParticles()
+	if percent > 0.001 then
+		local radius = (gwater2.solver:GetParameter("radius") / 10) ^ 0.75
+		local sound_pos = gwater2.solver:GetActiveDiffuseParticlesPos()
+		local dist = math.max(EyePos():DistToSqr(sound_pos) / 500000, 1)
+
+		local volume = percent^0.6 / dist * radius	-- 0-1
+		local pitch = math.Clamp(((200 - math.min(percent, 1 / 4) * 4 * 100) - dist * 5) / radius, 10, 250)	-- 10-250
+		pitch = pitch - gwater2.solver:GetParameter("viscosity") * 5
+		soundpatch:PlayEx(volume, pitch)
+	else
+		soundpatch:Stop()
+	end
+end)
+
 local function gwater_tick2()
 	local lp = LocalPlayer()
 	if !IsValid(lp) then return end

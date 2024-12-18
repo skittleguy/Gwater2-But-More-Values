@@ -11,7 +11,7 @@ ENT.Instructions = ""
 ENT.Spawnable    = false
 
 -- This file includes multiplayer gravgun support for gwater2
--- this is done via an entity which is teleported in front of the players eyes
+-- this is done via a black hole esque entity which is teleported in front of the players eyes
 
 function ENT:SetupDataTables()
 

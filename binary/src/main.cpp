@@ -854,7 +854,7 @@ LUA_FUNCTION(FLEXSOLVER_GetMaxParticles) {
 	return 1;
 }
 
-LUA_FUNCTION(FLEXSOLVER_GetActiveDiffuse) {
+LUA_FUNCTION(FLEXSOLVER_GetActiveDiffuseParticles) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 	LUA->PushNumber(flex->get_active_diffuse());
@@ -867,6 +867,21 @@ LUA_FUNCTION(FLEXSOLVER_GetMaxDiffuseParticles) {
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 
 	LUA->PushNumber(flex->get_max_particles());
+	return 1;
+}
+
+// gets average location of diffuse particles (used in sound)
+LUA_FUNCTION(FLEXSOLVER_GetActiveDiffuseParticlesPos) {
+	LUA->CheckType(1, FLEXSOLVER_METATABLE);
+	FlexSolver* flex = GET_FLEXSOLVER(1);
+
+	Vector average_pos = Vector();
+	for (int i = 0; i < flex->get_active_diffuse(); i++) {
+		average_pos += flex->hosts.diffuse_pos[i].AsVector3D();
+	}
+	average_pos /= flex->get_active_diffuse();
+
+	LUA->PushVector(average_pos);
 	return 1;
 }
 
@@ -1139,6 +1154,7 @@ GMOD_MODULE_OPEN() {
 	ADD_FUNCTION(LUA, FLEXSOLVER_RemoveCube, "RemoveCube");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetMaxParticles, "GetMaxParticles");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetMaxDiffuseParticles, "GetMaxDiffuseParticles");
+	ADD_FUNCTION(LUA, FLEXSOLVER_GetActiveDiffuseParticlesPos, "GetActiveDiffuseParticlesPos");
 	ADD_FUNCTION(LUA, FLEXSOLVER_EnableDiffuse, "EnableDiffuse");
 	ADD_FUNCTION(LUA, FLEXSOLVER_RenderParticles, "RenderParticles");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddConcaveCollider, "AddConcaveCollider");
@@ -1150,7 +1166,7 @@ GMOD_MODULE_OPEN() {
 	ADD_FUNCTION(LUA, FLEXSOLVER_SetParameter, "SetParameter");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetParameter, "GetParameter");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetActiveParticles, "GetActiveParticles");
-	ADD_FUNCTION(LUA, FLEXSOLVER_GetActiveDiffuse, "GetActiveDiffuse");
+	ADD_FUNCTION(LUA, FLEXSOLVER_GetActiveDiffuseParticles, "GetActiveDiffuseParticles");
 	ADD_FUNCTION(LUA, FLEXSOLVER_GetParticlesInRadius, "GetParticlesInRadius");
 	ADD_FUNCTION(LUA, FLEXSOLVER_AddMapCollider, "AddMapCollider");
 	ADD_FUNCTION(LUA, FLEXSOLVER_IterateColliders, "IterateColliders");
