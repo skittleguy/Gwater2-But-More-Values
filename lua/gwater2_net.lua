@@ -1,6 +1,7 @@
 AddCSLuaFile()
 
 if SERVER then
+	-- TODO: too many network strings...
 	util.AddNetworkString("GWATER2_ADDCLOTH")
 	util.AddNetworkString("GWATER2_ADDPARTICLE")
 	util.AddNetworkString("GWATER2_ADDCUBE")

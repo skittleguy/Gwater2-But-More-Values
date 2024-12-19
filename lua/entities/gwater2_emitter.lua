@@ -28,7 +28,8 @@ function ENT:SpawnFunction(ply, tr, class)
 	ent:Spawn()
 	ent:Activate()
 
-	ent:SetRadius(6)
+	ent:SetRadiusX(6)
+	ent:SetRadiusY(6)
 	ent:SetStrength(10)
 	ent:SetSpread(1)
 	ent:SetLifetime(10)
@@ -40,14 +41,15 @@ function ENT:SpawnFunction(ply, tr, class)
 end
 
 function ENT:Use(_, _, type)
-	self:SetOn(!self:GetOn())
+	self:SetOn(not self:GetOn())
 end
 
 function ENT:SetupDataTables()
-	self:NetworkVar("Int", 0, "Radius", {KeyName = "Radius", Edit = {type = "Int", order = 0, min = 1, max = 10}})
-	self:NetworkVar("Float", 0, "Spread", {KeyName = "Spread", Edit = {type = "Float", order = 1, min = 1, max = 2}})
-	self:NetworkVar("Float", 1, "Lifetime", {KeyName = "Lifetime", Edit = {type = "Float", order = 2, min = 1, max = 100}})
-	self:NetworkVar("Float", 2, "Strength", {KeyName = "Strength", Edit = {type = "Float", order = 3, min = 1, max = 100}})
+	self:NetworkVar("Int", 0, "RadiusX", {KeyName = "RadiusX", Edit = {type = "Int", order = 0, min = 1, max = 20}})
+	self:NetworkVar("Int", 1, "RadiusY", {KeyName = "RadiusY", Edit = {type = "Int", order = 1, min = 1, max = 20}})
+	self:NetworkVar("Float", 0, "Spread", {KeyName = "Spread", Edit = {type = "Float", order = 2, min = 1, max = 2}})
+	self:NetworkVar("Float", 1, "Lifetime", {KeyName = "Lifetime", Edit = {type = "Float", order = 3, min = 1, max = 100}})
+	self:NetworkVar("Float", 2, "Strength", {KeyName = "Strength", Edit = {type = "Float", order = 4, min = 1, max = 100}})
 	self:NetworkVar("Bool", 0, "On", {KeyName = "On", Edit = {type = "Bool", order = 4}})
 
 	if SERVER then return end
@@ -59,7 +61,7 @@ function ENT:SetupDataTables()
 		if !self:GetOn() then return end
 
 		local particle_radius = gwater2.solver:GetParameter("radius")
-		local radius = self:GetRadius()
+		local radiusx, radiusy = self:GetRadiusX(), self:GetRadiusY()
 		local spread = self:GetSpread()
 		local strength = self:GetStrength()
 
@@ -69,10 +71,11 @@ function ENT:SetupDataTables()
 		--mat:SetAngles(self:LocalToWorldAngles(Angle(0, CurTime() * 200, 0)))
 		mat:SetTranslation(self:GetPos() + self:GetUp() * (6 + particle_radius) * math.Rand(0.999, 1))
 	 
-		gwater2.solver:AddCylinder(mat, Vector(radius, radius, 1), {vel = self:GetUp() * strength, lifetime = self:GetLifetime()})
+		gwater2.solver:AddCylinder(mat, Vector(radiusx, radiusy, 1), {vel = self:GetUp() * strength, lifetime = self:GetLifetime()})
 	end)
 end
 
 function ENT:OnRemove()
+	-- ???
 	hook.Remove("gwater2_posttick", self)
 end

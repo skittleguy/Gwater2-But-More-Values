@@ -241,8 +241,8 @@ local function gwater_tick2()
 	]]
 		
 	-- TODO: rename to more gmod styled names, like `GWater2TickParticles`?
-	hook.Run("gwater2_tick_particles")
-	hook.Run("gwater2_tick_drains")
+	pcall(function() hook.Run("gwater2_tick_particles") end)
+	pcall(function() hook.Run("gwater2_tick_drains") end)
 
 	gwater2.solver:Tick(limit_fps, 0)
 end
@@ -256,29 +256,3 @@ else
 	hook.Add("InitPostEntity", "gwater2_addprop", gwater2.reset_solver)
 end
 hook.Add("OnEntityCreated", "gwater2_addprop", function(ent) timer.Simple(0, function() add_prop(ent) end) end)	// timer.0 so data values are setup correctly
-
--- gravgun support
-local can_fire = false
-local last_fire = 0
-hook.Add("gwater2_tick_drains", "gwater2_gravgun_grab", function()
-	local lp = LocalPlayer()
-	local gravgun = lp:GetActiveWeapon()
-	if !IsValid(gravgun) or lp:GetActiveWeapon():GetClass() ~= "weapon_physcannon" then 
-		can_fire = false
-		return 
-	end
-
-	-- right click (hold)
-	if lp:KeyDown(IN_ATTACK2) then
-		gwater2.solver:AddForceField(lp:EyePos() + lp:GetAimVector() * 170, 150, -200, 0, true)
-	end
-
-	-- left click (punt)
-	if can_fire and last_fire ~= gravgun:GetNextPrimaryFire() then
-		last_fire = gravgun:GetNextPrimaryFire()
-		gwater2.solver:AddForceField(lp:EyePos(), 320, 200, 1, false)
-	else
-		last_fire = gravgun:GetNextPrimaryFire()
-		can_fire = true
-	end
-end)
