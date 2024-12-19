@@ -240,6 +240,7 @@ local function gwater_tick2()
 		gonna have to deal with some mee++
 	]]
 		
+	-- TODO: rename to more gmod styled names, like `GWater2TickParticles`?
 	hook.Run("gwater2_tick_particles")
 	hook.Run("gwater2_tick_drains")
 

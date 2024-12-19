@@ -60,6 +60,7 @@ function SWEP:Initialize()
 end 
 
 function SWEP:PrimaryAttack()
+	if not gwater2 then return end
 	if CLIENT then return end
 	if not self:GetOwner():IsPlayer() then return end -- someone gave weapon to a non-player!!
 	self:SetNextPrimaryFire(CurTime() + 1/60) -- gwater runs at fixed 60 fps
@@ -91,6 +92,7 @@ function SWEP:PrimaryAttack()
 	if mode == 2 then
 		local size = 4 * owner:GetInfoNum("gwater2_gun_density", 1)
 		pos = pos + owner:GetAimVector() * (gwater2.parameters.radius or 10) * (size+1)
+		pos = pos + owner:GetAimVector() * -(gwater2.parameters.radius or 10) * 5
 		gwater2.AddCube(
 			gwater2.quick_matrix(
 				pos,
@@ -103,6 +105,7 @@ function SWEP:PrimaryAttack()
 end
 
 function SWEP:Reload()
+	if not gwater2 then return end
 	if CLIENT then return end
 	if not self:GetOwner():IsPlayer() then return end -- someone gave weapon to a non-player!!
 
@@ -115,6 +118,7 @@ end
 
 local frame
 function SWEP:SecondaryAttack()
+	if not gwater2 then return end
 	if SERVER then
 		if not IsFirstTimePredicted() then return end
 		return game.SinglePlayer() and self:CallOnClient("SecondaryAttack")
@@ -127,6 +131,12 @@ end
 if SERVER then return end
 
 function SWEP:DrawHUD()
+	if not gwater2 then
+		local a = 255*(math.sin(CurTime()*2)+1)/2
+		draw.DrawText("GWater 2 failed to load!", "Trebuchet24", ScrW() / 2 + 1, ScrH() / 2 - 36 + 1, Color(0, 0, 0, a), TEXT_ALIGN_CENTER)
+		draw.DrawText("GWater 2 failed to load!", "Trebuchet24", ScrW() / 2, ScrH() / 2 - 36, Color(255, 0, 0, a), TEXT_ALIGN_CENTER)
+		return
+	end
 	--surface.DrawCircle(ScrW() / 2, ScrH() / 2, gwater2["size"] * gwater2["density"] * 4 * 10, 255, 255, 255, 255)
 	draw.DrawText("Left-Click to Spawn Particles", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.75, color_white, TEXT_ALIGN_RIGHT)
 	draw.DrawText("Right-Click to Open Gun Menu", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.78, color_white, TEXT_ALIGN_RIGHT)
@@ -138,10 +148,8 @@ local function format_int(i)
 end
 
 -- visual counter on gun
-local csent = ClientsideModel("models/hunter/tubes/tube2x2x1.mdl")
-csent:SetMaterial("models/wireframe")
-csent:SetNoDraw(true)
 function SWEP:PostDrawViewModel(vm, weapon, ply)
+	if not gwater2 then return end
 	local pos, ang = vm:GetBonePosition(39)--self:GetOwner():GetViewModel():GetBonePosition(0)
 	if !pos or !ang then return end
 	ang = ang + Angle(180, 0, -ang[3] * 2)
@@ -175,14 +183,17 @@ function SWEP:PostDrawViewModel(vm, weapon, ply)
 		cam.End3D2D()
 	end
 	if self.SpawnMode:GetInt() == 2 then
+		pos = pos + ply:GetAimVector() * -(gwater2.parameters.radius or 10) * 5
+		cam.Start3D2D(pos, angles, 0.03)
 		local edge = Vector(4, 4, 4) * self.ParticleDensity:GetFloat()^2 * 2
 		for i=0,5,1 do
 			local factor = math.ease.OutCubic(self.ParticleVelocity:GetFloat()/100*(i/5))
-			local ppos = pos + self:GetOwner():EyeAngles():Forward() * 100 * factor
-			-- TODO: try to fix alpha
-			local col = Color(255 * (1-factor), 255 * (1-factor), 255 * (1-factor))
-			render.DrawWireframeBox(ppos, angles, -edge + edge * factor * 0.6, edge - edge * factor * 0.6, col, true)
+			surface.SetDrawColor(255, 255, 255, 255 * (1-factor))
+			local size = 160 * 3 * self.ParticleDensity:GetFloat() - 160*2*
+						 factor * self.ParticleDensity:GetFloat()
+			surface.DrawOutlinedRect(-size/2, -size/2, size, size, 2)
 		end
+		cam.End3D2D()
 	end
 end
 
