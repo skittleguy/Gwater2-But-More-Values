@@ -340,8 +340,12 @@ local function create_menu()
 		label:SetContentAlignment(7)
 		label:SetFont("GWater2Param")
 
-		local supporters = file.Read("data_static/gwater2/patrons.txt", "THIRDPARTY") or "<Failed to load patron data!>"
-		local supporters_table = string.Split(supporters, "\n")
+		local supporters_table = {"<Failed to load patron data!>"}
+		
+		file.AsyncRead("data_static/gwater2/patrons.txt", "THIRDPARTY", function(name, path, status, data)
+			if status != FSASYNC_OK then return end
+			supporters_table = string.Split(data, "\n")
+		end)
 
 		-- Hi - Xenthio
 		-- DONT FORGET TO ADD 'Xenthio' & 'NecrosVideos'
