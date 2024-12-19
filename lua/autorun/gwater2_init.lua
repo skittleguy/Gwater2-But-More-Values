@@ -13,6 +13,10 @@ if SERVER then
 	return
 end
 
+-- load gmod_require if we can, just to get some useful information about failures
+if file.Exists("lua/includes/modules/require.lua", "GAME") 
+   and util.IsBinaryModuleInstalled("require.core") then require("require") end
+
 require((BRANCH == "x86-64" or BRANCH == "chromium" ) and "gwater2" or "gwater2_main")	-- carrying
 local in_water = include("gwater2_interactions.lua")
 
