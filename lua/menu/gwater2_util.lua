@@ -4,8 +4,11 @@ if SERVER or not gwater2 then return end
 
 gwater2.cursor_busy = nil
 
-local function get_localised(loc, ...)
-	return language.GetPhrase("gwater2.menu."..loc):gsub("^%s+", ""):format(...)
+local localed_cache = {}
+local function get_localised(loc, a,b,c,d,e,f,g,h)
+	if localed_cache[loc..a..b..c..d..e..f..g..h] then return localed_cache[loc..a..b..c..d..e..f..g..h] end
+	localed_cache[loc..a..b..c..d..e..f..g..h] = language.GetPhrase("gwater2.menu."..loc):gsub("^%s+", ""):format(a,b,c,d,e,f,g,h)
+	return localed_cache[loc..a..b..c..d..e..f..g..h]
 end
 
 local function is_hovered_any(panel)
