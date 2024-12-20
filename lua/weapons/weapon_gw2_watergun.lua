@@ -31,7 +31,7 @@ SWEP.Secondary.Delay = 0
 
 SWEP.ViewModelFlip		= false
 SWEP.ViewModelFOV		= 70
-SWEP.ViewModel			= "models/weapons/c_pistol.mdl" 
+SWEP.ViewModel			= "models/gwater2/water_gun.mdl" 
 SWEP.WorldModel			= "models/weapons/w_pistol.mdl"
 SWEP.UseHands           = true
 
@@ -155,6 +155,7 @@ function SWEP:PostDrawViewModel(vm, weapon, ply)
 	ang = ang + Angle(180, 0, -ang[3] * 2)
 	pos = pos - ang:Right() * 1.5
 
+	--[[
 	cam.Start3D2D(pos, ang, 0.03)
 		local text = "Water Particles: " .. format_int(gwater2.solver:GetActiveParticles()) .. "/" .. format_int(gwater2.solver:GetMaxParticles())
 		local text2 = "Foam Particles: " .. format_int(gwater2.solver:GetActiveDiffuse()) .. "/" .. format_int(gwater2.solver:GetMaxDiffuseParticles())
@@ -163,7 +164,7 @@ function SWEP:PostDrawViewModel(vm, weapon, ply)
 
 		draw.DrawText(text2, "CloseCaption_Normal", 2, 2, Color(0, 0, 0, 255), TEXT_ALIGN_CENTER)
 		draw.DrawText(text2, "CloseCaption_Normal", 0, 0, color_white, TEXT_ALIGN_CENTER)
-	cam.End3D2D()
+	cam.End3D2D()]]
 
 	local angles = ply:EyeAngles()
 	local pos = util.QuickTrace(ply:EyePos(),
