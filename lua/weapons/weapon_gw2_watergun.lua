@@ -57,7 +57,7 @@ local function trace_extrude(ply, size, extrude)
 	local scale = radius * size * (gwater2.parameters.fluid_rest_distance or 0.65)
 	local initial_trace = util.TraceLine({
 		start = ply:EyePos(),
-		endpos = ply:EyePos() + ply:EyeAngles():Right() * 20 - ply:EyeAngles():Up() * 8 + ply:GetAimVector() * 5 * math.max(extrude or size, 10),
+		endpos = ply:EyePos() + ply:EyeAngles():Right() * 20 - ply:EyeAngles():Up() * 8 + ply:GetAimVector() * 10 * math.max(extrude or radius, 5),
 		filter = ply,
 	})
 	
@@ -100,7 +100,7 @@ function SWEP:PrimaryAttack()
 	local forward = owner:EyeAngles():Forward() * radius * 2
 	local pos = trace_extrude(owner, 4)
 
-	gwater2.AddSphere(gwater2.quick_matrix(pos), 4, {vel = forward + owner:GetVelocity() * FrameTime()})
+	gwater2.AddSphere(gwater2.quick_matrix(pos), 4, {vel = forward / 2 + owner:GetVelocity() * FrameTime()})
 	owner:EmitSound("Water.ImpactSoft")
 end
 
@@ -117,10 +117,9 @@ function SWEP:SecondaryAttack()
 
 	local owner = self:GetOwner()
 	local radius = gwater2.parameters.radius or 10
-	local forward = owner:EyeAngles():Forward() * radius * 2
-	local pos = trace_extrude(owner, 20, 50)
+	local pos = trace_extrude(owner, 20, 2.5 * radius)
 
-	gwater2.AddSphere(gwater2.quick_matrix(pos), 20, {vel = forward})
+	gwater2.AddSphere(gwater2.quick_matrix(pos), 20, {vel = owner:EyeAngles():Forward() * math.min(gwater2.parameters.radius, 10)})
 	owner:EmitSound("NPC_CombineGunship.CannonStartSound")
 end
 
