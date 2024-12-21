@@ -1,8 +1,8 @@
 {
-    "gwater2.error.modulenotinstalled": "\n\n!!!PLEASE READ ME!!! GWATER2 FAILED TO FIND MODULE!\nThis likely means you did not install the GWater2 dll files.\nPlease install the binaries and ensure the gwater2 dlls are in GarrysMod/garrysmod/lua/bin.\nNote that GWater2 does NOT natively work on Linux or Mac systems.\n",
-    "gwater2.error.modulefailedtoload.1": "\n\n!!!PLEASE READ ME!!! GWATER2 FAILED TO LOAD MODULE!\nThis likely means you did not install the FleX binaries correctly into GarrysMod/\nPlease check your installation and restart the game.",
-    "gwater2.error.modulefailedtoload.2": "If you are 100%% sure you have installed it correctly, restart the game a few times. This is a problem with Garry's code and I cannot fix it\n",
-    "gwater2.error.modulefailedtoload.3": "Feel free to ask for help if the issue persists. PLEASE Provide the upcoming 3 lines when asking for help:\nError: %s\nBRANCH: %s\njit.arch: %s\n\n",
+    "gwater2.error.modulenotinstalled": "!!!PLEASE READ ME!!!\n\nGWATER2 FAILED TO FIND MODULE!\nThis likely means you did not install the GWater2 dll files.\nPlease install the binaries and ensure the gwater2 dlls are in GarrysMod/garrysmod/lua/bin.\nNote that GWater2 does NOT natively work on Linux or Mac systems.",
+    "gwater2.error.modulefailedtoload.1": "!!!PLEASE READ ME!!!\n\nGWATER2 FAILED TO LOAD MODULE!\nThis likely means you did not install the FleX binaries correctly into GarrysMod/\nPlease check your installation and restart the game.",
+    "gwater2.error.modulefailedtoload.2": "If you are 100%% sure you have installed it correctly, restart the game a few times. This is a problem with Garry's code and I cannot fix it",
+    "gwater2.error.modulefailedtoload.3": "Feel free to ask for help if the issue persists. PLEASE Provide the upcoming 3 lines when asking for help:\nError: %s\nBRANCH: %s\njit.arch: %s",
     "gwater2.menu.title": "GWater2 (%s)",
     "gwater2.menu.About Tab.title": "About",
     "gwater2.menu.About Tab.titletext": "Welcome to GWater2 (v%s)",

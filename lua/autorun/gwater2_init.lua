@@ -17,7 +17,6 @@ end
 local lang = GetConVar("cl_language"):GetString()
 local strings = file.Read("data_static/gwater2/locale/gwater2_".. lang .. ".json", "THIRDPARTY")
 if !strings then 
-	print("[GWater2]: Unsupported language: " .. lang .. ", defaulting to english")
 	lang = "english"
 	strings = file.Read("data_static/gwater2/locale/gwater2_english.json", "THIRDPARTY") or "{}" 
 end
@@ -26,29 +25,33 @@ for k,v in pairs(util.JSONToTable(strings)) do
 	language.Add(k, v) 
 end
 
-print("[GWater2]: Loaded language: " .. lang)
-
 local toload = (BRANCH == "x86-64" or BRANCH == "chromium") and "gwater2" or "gwater2_main" -- carrying
 if !util.IsBinaryModuleInstalled(toload) then
-	error(string.format(
-		language.GetPhrase("gwater2.error.modulenotinstalled") .. "\n" ..
-		language.GetPhrase("gwater2.error.modulefailedtoload.3"),
+	ErrorNoHalt(string.format(
+		"===========================================================\n\n" ..
+		language.GetPhrase("gwater2.error.modulenotinstalled") .."\n\n" ..
+		language.GetPhrase("gwater2.error.modulefailedtoload.3") .."\n\n" ..
+		"===========================================================\n",
 		"NONE", BRANCH, jit.arch
 	))
 	return
 end
 
 local noerror, pcerr = pcall(function() require(toload) end)
-if !noerror then
+if noerror then
 	pcerr = pcerr or "NONE"
-	error(string.format(
+	ErrorNoHalt(string.format(
+		"===========================================================\n\n" ..
 		language.GetPhrase("gwater2.error.modulefailedtoload.1").."\n"..
-		language.GetPhrase("gwater2.error.modulefailedtoload.2").."\n"..
-		language.GetPhrase("gwater2.error.modulefailedtoload.3"),
+		language.GetPhrase("gwater2.error.modulefailedtoload.2").."\n\n"..
+		language.GetPhrase("gwater2.error.modulefailedtoload.3") .."\n\n" ..
+		"===========================================================\n",
 		pcerr, BRANCH, jit.arch
 	))
 	return
 end
+
+print("[GWater2]: Loaded with language: " .. lang)
 local in_water = include("gwater2_interactions.lua")
 
 -- GetMeshConvexes but for client
