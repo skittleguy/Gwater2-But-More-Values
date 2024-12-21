@@ -14,7 +14,7 @@ SWEP.AdminOnly = false
 SWEP.AutoSwitchTo = false
 SWEP.AutoSwitchFrom = false
 SWEP.Weight = 1
-SWEP.WepSelectIcon = CLIENT and surface.GetTextureID("Entities/weapon_gw2_watergun")
+SWEP.WepSelectIcon = CLIENT and surface.GetTextureID("entities/weapon_gw2_watergun_icon")
 
 SWEP.Primary.ClipSize      = -1
 SWEP.Primary.DefaultClip   = 0
