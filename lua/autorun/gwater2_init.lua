@@ -126,16 +126,6 @@ if not noerror then
 		language.GetPhrase("gwater2.error.modulefailedtoload.3"),
 		pcerr, BRANCH, jit.arch
 	))
-	error_message("GWater 2 failed to load!\n\n"..
-				  "This may happen because GWater could not find FleX binaries.\n"..
-				  "Please check your install and restart the game.\n"..
-				  "If you are sure that your install is correct and you still get that error,\n"..
-				  "this can be a result of garry being a Very Unique Person With Weird Coding Styles :)\n"..
-				  "The only solution is to restart your game until it works"..
-				  " (can be any amount of restarts, usually 5-10)\n"..
-				  "and report bug if issue persists.\n\n"..
-				  "pcall error: "..pcerr.."\n"..
-				  "BRANCH="..BRANCH.."\njit.arch="..jit.arch)
 	return
 end
 local in_water = include("gwater2_interactions.lua")
