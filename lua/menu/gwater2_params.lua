@@ -214,6 +214,7 @@ local performance = {
 				local frame = styling.create_blocking_frame()
 				frame:SetSize(600, 300)
 				frame:Center()
+				frame:SetScreenLock(false)
 				--function frame:Paint(w, h)
 				--	styling.draw_main_background(0, 0, w, h)
 				--end
@@ -249,9 +250,50 @@ local performance = {
 				label2:SetText("")
 				function label2:Paint(w, h) draw.DrawText(self.text, self:GetFont(), w / 2, 0, color_white, TEXT_ALIGN_CENTER) end
 
-				local confirm = vgui.Create("DButton", frame)
-				confirm:SetPos(600 * (3/4) - 10, 270)
-				confirm:SetText("")
+				local statpanel = frame:Add("DPanel")
+				statpanel:Dock(FILL)
+				statpanel.createtime = RealTime()
+
+				local _0kcolor   = Color(0, 63, 255)
+				local _100kcolor = Color(0, 145, 255)
+				local _1mcolor   = Color(255, 127, 0)
+				local _0kh, _0ks, _0kl = ColorToHSL(_0kcolor)
+				local _1mh, _1ms, _1ml = ColorToHSL(_1mcolor)
+
+				function statpanel:Paint(w, h)
+					local _100ktall = (h-16)/1000000*100000
+					local _1mtall   = (h-16)/1000000*1000000
+					local _custtall = (h-16)/1000000*slider:GetValue()
+
+					local frac = math.ease.OutCirc(math.min(1, (RealTime() - self.createtime)))
+
+					local cfrac = slider:GetValue()/1000000*frac
+					local _custcolor = HSLToColor(Lerp(cfrac, _0kh, _1mh),
+												  Lerp(cfrac, _0ks, _1ms),
+												  Lerp(cfrac, _0kl, _1ml))
+
+					draw.RoundedBox(0, w/4-10, h-_100ktall*frac, 20, _100ktall*frac, _100kcolor)
+					draw.DrawText("def", "DermaDefault", w/4, h-16, color_white, TEXT_ALIGN_CENTER)
+					draw.DrawText("100k", "DermaDefault", w/4+15, h-_100ktall*frac/2-8, color_white)
+					draw.DrawText("78MB", "DermaDefault", w/4-15, h-_100ktall*frac/2-8, color_white, TEXT_ALIGN_RIGHT)
+
+					draw.RoundedBox(0, w/4*2-10, h-_1mtall*frac, 20, _1mtall*frac, _1mcolor)
+					draw.DrawText("max", "DermaDefault", w/4*2, h-16, color_white, TEXT_ALIGN_CENTER)
+					draw.DrawText("1000k", "DermaDefault", w/4*2+15, h-_1mtall*frac/2-8, color_white)
+					draw.DrawText("781MB", "DermaDefault", w/4*2-15, h-_1mtall*frac/2-8, color_white, TEXT_ALIGN_RIGHT)
+
+					draw.RoundedBox(0, w/4*3-10, h-_custtall*frac, 20, _custtall*frac, _custcolor)
+					draw.DrawText("you", "DermaDefault", w/4*3, h-16, color_white, TEXT_ALIGN_CENTER)
+					draw.DrawText(math.Round(slider:GetValue()/1000, 1).."k", "DermaDefault", w/4*3+15, h-_custtall*frac/2-8, color_white)
+					draw.DrawText(size_fmt, "DermaDefault", w/4*3-15, h-_custtall*frac/2-8, color_white, TEXT_ALIGN_RIGHT)
+				end
+
+				local buttons = frame:Add("DPanel")
+				function buttons:Paint() end
+				buttons:Dock(BOTTOM)
+
+				local confirm = vgui.Create("DImageButton", buttons)
+				confirm:SetPos(600 * (3/4) - 10, 0)
 				confirm:SetSize(20, 20)
 				confirm:SetImage("icon16/accept.png")
 				confirm.Paint = nil
@@ -266,9 +308,8 @@ local performance = {
 					surface.PlaySound("gwater2/menu/select_ok.wav")
 				end
 
-				local deny = vgui.Create("DButton", frame)
-				deny:SetPos(600 * (1/4) - 10, 270)
-				deny:SetText("")
+				local deny = vgui.Create("DImageButton", buttons)
+				deny:SetPos(600 * (1/4) - 10, 0)
 				deny:SetSize(20, 20)
 				deny:SetImage("icon16/cross.png")
 				deny.Paint = nil

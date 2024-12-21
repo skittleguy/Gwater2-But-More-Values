@@ -1,4 +1,9 @@
 {
+    "gwater2.error.systemnotsupported": "GWater 2 is not supported!\n\nGwater 2 is not supported on your system (%s).\nPlease, use Proton or play on Windows instead.",
+    "gwater2.error.modulenotinstalled": "GWater 2 is not installed!\n\nGWater 2 failed to locate it's binary modules (%s)\nPlease make sure that you have installed GWater 2 correctly and that your branch and architecture is supported.\nBRANCH=%s    jit.arch=%s",
+    "gwater2.error.modulefailedtoload.1": "GWater 2 failed to load!\n\nThis may happen because GWater could not find FleX binaries.\nPlease check your install and restart the game.",
+    "gwater2.error.modulefailedtoload.2": "If you are sure that your install is correct and you still get that error,\nthis can be a result of garry being a Very Unique Person With Weird Coding Styles :)\n",
+    "gwater2.error.modulefailedtoload.3": "The only solution is to restart your game until it works (can be any amount of restarts, usually 5-10)\nand report bug if issue persists.\n\npcall error: %s\nBRANCH=%s    jit.arch=%s",
     "gwater2.menu.title": "GWater2 (%s)",
     "gwater2.menu.About Tab.title": "About",
     "gwater2.menu.About Tab.titletext": "Welcome to GWater2 (v%s)",

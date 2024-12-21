@@ -93,33 +93,39 @@ local function error_message(text)
 end
 
 if system.IsLinux() or system.IsOSX() then
-	error_message("GWater 2 is not supported!\n\n"..
-				  "Gwater 2 is not supported on your system ("..(system.IsLinux() and "Linux" or "OSX")..")\n"..
-				  "Please, use Proton instead.")
+	error_message(string.format(
+		language.GetPhrase("gwater2.error.systemnotsupported"),
+		system.IsLinux() and "Linux" or "OSX"
+	))
 	return
 end
 
 local toload = (BRANCH == "x86-64" or BRANCH == "chromium" ) and "gwater2" or "gwater2_main" -- carrying
 
 if not util.IsBinaryModuleInstalled(toload) then
-	error_message("GWater 2 is not installed!\n\n"..
-				  "GWater 2 failed to locate it's binary modules ("..toload..")\n"..
-				  "Please make sure that you have installed GWater 2 correctly "..
-				  "and that your branch and architecture is supported.\n"..
-				  "BRANCH="..BRANCH.."    jit.arch="..jit.arch)
+	error_message(string.format(
+		language.GetPhrase("gwater2.error.modulenotinstalled"),
+		toload, BRANCH, jit.arch
+	))
 	return
 end
 
 -- load gmod_require if we can, just to get some useful information about failures
 if file.Exists("lua/includes/modules/require.lua", "GAME") 
    and util.IsBinaryModuleInstalled("require.core") then
-	print("[GWater 2] loading gmod_require")
+	print("[GWater 2] trying to load gmod_require")
 	require("require")
 end
 
 local noerror, pcerr = pcall(function() require(toload) end)
 if not noerror then
 	pcerr = pcerr or "<no error message>"
+	error_message(string.format(
+		language.GetPhrase("gwater2.error.modulefailedtoload.1").."\n"..
+		language.GetPhrase("gwater2.error.modulefailedtoload.2").."\n"..
+		language.GetPhrase("gwater2.error.modulefailedtoload.3"),
+		pcerr, BRANCH, jit.arch
+	))
 	error_message("GWater 2 failed to load!\n\n"..
 				  "This may happen because GWater could not find FleX binaries.\n"..
 				  "Please check your install and restart the game.\n"..
