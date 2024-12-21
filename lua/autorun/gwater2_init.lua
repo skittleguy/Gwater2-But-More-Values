@@ -38,7 +38,7 @@ if !util.IsBinaryModuleInstalled(toload) then
 end
 
 local noerror, pcerr = pcall(function() require(toload) end)
-if noerror then
+if !noerror then
 	pcerr = pcerr or "NONE"
 	ErrorNoHalt(string.format(
 		"===========================================================\n\n" ..
