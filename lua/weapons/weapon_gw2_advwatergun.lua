@@ -82,26 +82,30 @@ function SWEP:PrimaryAttack()
 		(gwater2.parameters.fluid_rest_distance or 0.55)
 	)
 	if mode == 1 then
+        local owneraddvel = owner:GetVelocity():Dot(owner:EyeAngles():Forward())
+                            * owner:EyeAngles():Forward() / 25.4
 		gwater2.AddCylinder(
 			gwater2.quick_matrix(
 				pos,
 				owner:EyeAngles() + Angle(90, 0, 0),
 				owner:GetInfoNum("gwater2_gun_density", 1)),
 			Vector(4 * owner:GetInfoNum("gwater2_gun_density", 1), 4 * owner:GetInfoNum("gwater2_gun_density", 1), 1),
-			{vel = forward * owner:GetInfoNum("gwater2_gun_velocity", 10)}
+			{vel = forward * owner:GetInfoNum("gwater2_gun_velocity", 10) + owneraddvel}
 		)
 	end
 	if mode == 2 then
 		local size = 4 * owner:GetInfoNum("gwater2_gun_density", 1)
 		pos = pos + owner:GetAimVector() * (gwater2.parameters.radius or 10) * (size+1)
 		pos = pos + owner:GetAimVector() * -(gwater2.parameters.radius or 10) * 5
+        local owneraddvel = owner:GetVelocity():Dot(owner:EyeAngles():Forward())
+                            * owner:EyeAngles():Forward() / 25.4
 		gwater2.AddCube(
 			gwater2.quick_matrix(
 				pos,
 				owner:EyeAngles() + Angle(90, 0, 0),
 				owner:GetInfoNum("gwater2_gun_density", 1)),
 				Vector(size, size, size),
-				{vel = forward * owner:GetInfoNum("gwater2_gun_velocity", 10)}
+				{vel = forward * owner:GetInfoNum("gwater2_gun_velocity", 10) + owneraddvel}
 		)
 	end
 end
