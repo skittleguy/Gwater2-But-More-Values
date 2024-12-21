@@ -118,7 +118,7 @@ if file.Exists("lua/includes/modules/require.lua", "GAME")
 end
 
 local noerror, pcerr = pcall(function() require(toload) end)
-if true or not noerror then
+if not noerror then
 	pcerr = pcerr or "<no error message>"
 	error_message("GWater 2 failed to load!\n\n"..
 				  "This may happen because GWater could not find FleX binaries.\n"..
