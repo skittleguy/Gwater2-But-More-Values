@@ -218,6 +218,7 @@ gwater2 = {
 	cloth_pos = Vector(),
 	parameters = {},
 	defaults = {},
+	error = error_message, -- in case we may want to use it
 	update_colliders = function(index, id, rep)
 		if id == 0 then return end	-- skip, entity is world
 
@@ -311,7 +312,7 @@ gwater2["solid_rest_distance"] = gwater2.solver:GetParameter("solid_rest_distanc
 gwater2["collision_distance"] = gwater2.solver:GetParameter("collision_distance") / gwater2.solver:GetParameter("radius")
 gwater2["cohesion"] = gwater2.solver:GetParameter("cohesion") * gwater2.solver:GetParameter("radius") * 0.1	-- cohesion scales by radius, for some reason..
 gwater2["blur_passes"] = 3
--- reaction force specific
+-- water interaction specific
 gwater2["force_multiplier"] = 0.01
 gwater2["force_buoyancy"] = 0
 gwater2["force_dampening"] = 0
@@ -322,15 +323,17 @@ include("gwater2_shaders.lua")
 include("gwater2_menu.lua")
 include("gwater2_net.lua")
 
-local limit_fps = 1 / 60
+local last_tick = 0
 local function gwater_tick2()
+	local took_tick = CurTime() - last_tick
+	last_tick = CurTime()
 	local lp = LocalPlayer()
 	if !IsValid(lp) then return end
 
 	if gwater2.solver:GetActiveParticles() <= 0 then 
 		no_lerp = true
 	else
-		gwater2.solver:ApplyContacts(limit_fps * gwater2["force_multiplier"], 3, gwater2["force_buoyancy"], gwater2["force_dampening"])
+		gwater2.solver:ApplyContacts(took_tick * gwater2["force_multiplier"], 3, gwater2["force_buoyancy"], gwater2["force_dampening"])
 		gwater2.solver:IterateColliders(gwater2.update_colliders)
 
 		if no_lerp then 
@@ -359,9 +362,9 @@ local function gwater_tick2()
 	pcall(function() hook.Run("gwater2_tick_particles") end)
 	pcall(function() hook.Run("gwater2_tick_drains") end)
 
-	gwater2.solver:Tick(limit_fps, 0)
+	gwater2.solver:Tick(took_tick, 0)
 end
 
-timer.Create("gwater2_tick", limit_fps, 0, gwater_tick2)
+timer.Create("gwater2_tick", 0, 0, gwater_tick2)
 hook.Add("InitPostEntity", "gwater2_addprop", gwater2.reset_solver)
 hook.Add("OnEntityCreated", "gwater2_addprop", function(ent) timer.Simple(0, function() add_prop(ent) end) end)	// timer.0 so data values are setup correctly

@@ -106,6 +106,10 @@ function SWEP:PrimaryAttack()
 				{vel = forward * owner:GetInfoNum("gwater2_gun_velocity", 10) + owneraddvel}
 		)
 	end
+    if CurTime() - (self.GWATER2_LastEmitSound or 0) > 0.1 then
+        self:EmitSound("Water.ImpactSoft")
+        self.GWATER2_LastEmitSound = CurTime()
+    end
 end
 
 function SWEP:Reload()
