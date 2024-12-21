@@ -406,7 +406,7 @@ local interaction = {
 			},
 			["004-SwimFriction"] = {
 				type="scratch",
-				min=0.75,
+				min=0.25,
 				max=1,
 				decimals=3,
 				func=function(val) return true end,

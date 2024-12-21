@@ -202,6 +202,7 @@ gwater2["force_multiplier"] = 0.01
 gwater2["force_buoyancy"] = 0
 gwater2["force_dampening"] = 0
 gwater2["player_interaction"] = true
+gwater2["touch_damage"] = 0
 
 include("gwater2_shaders.lua")
 include("gwater2_menu.lua")

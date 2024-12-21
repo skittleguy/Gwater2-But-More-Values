@@ -29,7 +29,7 @@ local function is_hovered_any(panel)
 	return false
 end
 
-local function set_gwater_parameter(option, val) --, raw, dont_set)
+local function set_gwater_parameter(option, val)
 	-- print(option, val)
 	local param = gwater2.options.initialised[option]
 
