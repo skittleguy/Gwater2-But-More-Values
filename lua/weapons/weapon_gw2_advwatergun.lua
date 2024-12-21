@@ -1,8 +1,6 @@
--- dont remove mee
-
 SWEP.PrintName = "Advanced Water Gun"
     
-SWEP.Author = "Mee / Neatro / googer_" 
+SWEP.Author = "googer_" 
 SWEP.Purpose = "shoots water"
 SWEP.Instructions = "you'll figure it out"
 SWEP.Category = "GWater2" 
@@ -166,7 +164,7 @@ function SWEP:PostDrawViewModel(vm, weapon, ply)
 	
 	cam.Start3D2D(pos, ang, 0.03)
 		local text = "Water Particles: " .. format_int(gwater2.solver:GetActiveParticles()) .. "/" .. format_int(gwater2.solver:GetMaxParticles())
-		local text2 = "Foam Particles: " .. format_int(gwater2.solver:GetActiveDiffuse()) .. "/" .. format_int(gwater2.solver:GetMaxDiffuseParticles())
+		local text2 = "Foam Particles: " .. format_int(gwater2.solver:GetActiveDiffuseParticles()) .. "/" .. format_int(gwater2.solver:GetMaxDiffuseParticles())
 		draw.DrawText(text, "CloseCaption_Normal", 4, -24, Color(0, 0, 0, 255), TEXT_ALIGN_CENTER)
 		draw.DrawText(text, "CloseCaption_Normal", 2, -26, color_white, TEXT_ALIGN_CENTER)
 

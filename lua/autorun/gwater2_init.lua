@@ -319,17 +319,15 @@ include("gwater2_shaders.lua")
 include("gwater2_menu.lua")
 include("gwater2_net.lua")
 
-local last_tick = 0
+local limit_fps = 1 / 60
 local function gwater_tick2()
-	local took_tick = CurTime() - last_tick
-	last_tick = CurTime()
 	local lp = LocalPlayer()
 	if !IsValid(lp) then return end
 
 	if gwater2.solver:GetActiveParticles() <= 0 then 
 		no_lerp = true
 	else
-		gwater2.solver:ApplyContacts(took_tick * gwater2["force_multiplier"], 3, gwater2["force_buoyancy"], gwater2["force_dampening"])
+		gwater2.solver:ApplyContacts(limit_fps * gwater2["force_multiplier"], 3, gwater2["force_buoyancy"], gwater2["force_dampening"])
 		gwater2.solver:IterateColliders(gwater2.update_colliders)
 
 		if no_lerp then 
@@ -359,12 +357,10 @@ local function gwater_tick2()
 		to be honest I do not have enough time or patience to figure out the underlying issue.. so for now we're
 		gonna have to deal with some mee++
 	]]
-		
-	-- TODO: rename to more gmod styled names, like `GWater2TickParticles`?
 	pcall(function() hook.Run("gwater2_tick_particles") end)
 	pcall(function() hook.Run("gwater2_tick_drains") end)
 
-	gwater2.solver:Tick(took_tick, 0)
+	gwater2.solver:Tick(limit_fps, 0)
 end
 
 timer.Create("gwater2_tick", 0, 0, gwater_tick2)

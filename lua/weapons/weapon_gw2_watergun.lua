@@ -14,12 +14,12 @@ SWEP.AdminOnly = false
 SWEP.AutoSwitchTo = false
 SWEP.AutoSwitchFrom = false
 SWEP.Weight = 1
-SWEP.WepSelectIcon = CLIENT and surface.GetTextureID("Entities/weapon_gw2_watergun")
+SWEP.WepSelectIcon = CLIENT and surface.GetTextureID("entities/weapon_gw2_watergun")
 
 SWEP.Primary.ClipSize      = -1
 SWEP.Primary.DefaultClip   = 0
 SWEP.Primary.Automatic     = true
-SWEP.Primary.Ammo          = "Pistol"	-- needs to be something
+SWEP.Primary.Ammo          = "Pistol"	-- needs to be something to show ammo
 SWEP.Primary.Delay = 0
 
 SWEP.Base = "weapon_base"
@@ -80,26 +80,20 @@ local function trace_extrude(ply, size, extrude)
 		if !trace.StartSolid and trace.Hit then
 			end_pos = end_pos - (0.999 - trace.Fraction) * direction * scale
 		end
-
-		--local col = Color(direction.x * 127 + 128, direction.y * 127 + 128, direction.z * 127 + 128, 0)
-		--debugoverlay.Box(trace.HitPos, trace_data.mins, trace_data.maxs, 1, col)
 	end
 
-	--debugoverlay.Sphere(initial_trace.HitPos, 5, 1, Color(255, 0, 0, 10))
-	--debugoverlay.Sphere(end_pos, 5, 1, Color(0, 255, 0, 10))
 	return end_pos
 end
 
 function SWEP:PrimaryAttack()
 	if CLIENT then return end
 	
-	self:SetNextPrimaryFire(CurTime() + 1 / 10)
-
 	local owner = self:GetOwner()
 	local radius = gwater2.parameters.radius or 10
 	local pos = trace_extrude(owner, 4)
 
 	gwater2.AddSphere(gwater2.quick_matrix(pos), 4, {vel = owner:EyeAngles():Forward() * math.max(radius, 5) + owner:GetVelocity() * FrameTime()})
+	self:SetNextPrimaryFire(CurTime() + 1 / 10)
 	self:EmitSound("Water.ImpactSoft")
 end
 
@@ -112,14 +106,13 @@ end
 function SWEP:SecondaryAttack()
 	if CLIENT then return end
 
-	self:SetNextSecondaryFire(CurTime() + 1 / 4)
-
 	local owner = self:GetOwner()
 	local radius = gwater2.parameters.radius or 10
 	local pos = trace_extrude(owner, 20, 2.5 * radius)
 
 	gwater2.AddSphere(gwater2.quick_matrix(pos), 20, {vel = owner:EyeAngles():Forward() * math.Clamp(gwater2.parameters.radius or 10, 5, 10)})
 	self:EmitSound("NPC_CombineGunship.CannonStartSound")
+	self:SetNextSecondaryFire(CurTime() + 1 / 4)
 end
 
 if SERVER then return end
