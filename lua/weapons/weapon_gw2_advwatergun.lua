@@ -68,26 +68,26 @@ function SWEP:PrimaryAttack()
 	self:SetNextPrimaryFire(CurTime() + 1/60) -- gwater runs at fixed 60 fps
 
 	local owner = self:GetOwner()
-	local forward = owner:EyeAngles():Forward()
+	local forward = owner:GetAimVector()
 	
 	local pos = util.QuickTrace(owner:EyePos(),
-								owner:GetAimVector() * owner:GetInfoNum("gwater2_gun_distance", 250),
+								forward * owner:GetInfoNum("gwater2_gun_distance", 250),
 								owner).HitPos
 
 	local mode = math.floor(owner:GetInfoNum("gwater2_gun_spawnmode", 1))
 
-	pos = pos + owner:GetAimVector() * -(gwater2.parameters.radius or 10)
+	pos = pos + forward * -(gwater2.parameters.radius or 10)
 	pos = owner:EyePos() + (
 		(pos - owner:EyePos()) *
 		(gwater2.parameters.fluid_rest_distance or 0.55)
 	)
+    local eyeangles = owner:EyeAngles()
+    local owneraddvel = owner:GetVelocity():Dot(forward) * forward / 25.4
 	if mode == 1 then
-        local owneraddvel = owner:GetVelocity():Dot(owner:EyeAngles():Forward())
-                            * owner:EyeAngles():Forward() / 25.4
 		gwater2.AddCylinder(
 			gwater2.quick_matrix(
 				pos,
-				owner:EyeAngles() + Angle(90, 0, 0),
+				eyeangles + Angle(90, 0, 0),
 				owner:GetInfoNum("gwater2_gun_density", 1)),
 			Vector(4 * owner:GetInfoNum("gwater2_gun_density", 1), 4 * owner:GetInfoNum("gwater2_gun_density", 1), 1),
 			{vel = forward * owner:GetInfoNum("gwater2_gun_velocity", 10) + owneraddvel}
@@ -97,12 +97,10 @@ function SWEP:PrimaryAttack()
 		local size = 4 * owner:GetInfoNum("gwater2_gun_density", 1)
 		pos = pos + owner:GetAimVector() * (gwater2.parameters.radius or 10) * (size+1)
 		pos = pos + owner:GetAimVector() * -(gwater2.parameters.radius or 10) * 5
-        local owneraddvel = owner:GetVelocity():Dot(owner:EyeAngles():Forward())
-                            * owner:EyeAngles():Forward() / 25.4
 		gwater2.AddCube(
 			gwater2.quick_matrix(
 				pos,
-				owner:EyeAngles() + Angle(90, 0, 0),
+				eyeangles + Angle(90, 0, 0),
 				owner:GetInfoNum("gwater2_gun_density", 1)),
 				Vector(size, size, size),
 				{vel = forward * owner:GetInfoNum("gwater2_gun_velocity", 10) + owneraddvel}
