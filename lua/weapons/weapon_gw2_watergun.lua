@@ -119,7 +119,7 @@ function SWEP:SecondaryAttack()
 	local radius = gwater2.parameters.radius or 10
 	local pos = trace_extrude(owner, 20, 2.5 * radius)
 
-	gwater2.AddSphere(gwater2.quick_matrix(pos), 20, {vel = owner:EyeAngles():Forward() * math.min(gwater2.parameters.radius, 10)})
+	gwater2.AddSphere(gwater2.quick_matrix(pos), 20, {vel = owner:EyeAngles():Forward() * math.min(gwater2.parameters.radius or 10, 10)})
 	owner:EmitSound("NPC_CombineGunship.CannonStartSound")
 end
 
