@@ -1,9 +1,8 @@
 {
-    "gwater2.error.systemnotsupported": "GWater 2 is not supported!\n\nGwater 2 is not supported on your system (%s).\nPlease, use Proton or play on Windows instead.",
-    "gwater2.error.modulenotinstalled": "GWater 2 is not installed!\n\nGWater 2 failed to locate it's binary modules (%s)\nPlease make sure that you have installed GWater 2 correctly and that your branch and architecture is supported.\nBRANCH=%s    jit.arch=%s",
-    "gwater2.error.modulefailedtoload.1": "GWater 2 failed to load!\n\nThis may happen because GWater could not find FleX binaries.\nPlease check your install and restart the game.",
-    "gwater2.error.modulefailedtoload.2": "If you are sure that your install is correct and you still get that error,\nthis can be a result of garry being a Very Unique Person With Weird Coding Styles :)\n",
-    "gwater2.error.modulefailedtoload.3": "The only solution is to restart your game until it works (can be any amount of restarts, usually 5-10)\nand report bug if issue persists.\n\npcall error: %s\nBRANCH=%s    jit.arch=%s",
+    "gwater2.error.modulenotinstalled": "\n\n!!!PLEASE READ ME!!! GWATER2 FAILED TO FIND MODULE!\nThis likely means you did not install the GWater2 dll files.\nPlease install the binaries and ensure the gwater2 dlls are in GarrysMod/garrysmod/lua/bin.\nNote that GWater2 does NOT natively work on Linux or Mac systems.\n",
+    "gwater2.error.modulefailedtoload.1": "\n\n!!!PLEASE READ ME!!! GWATER2 FAILED TO LOAD MODULE!\nThis likely means you did not install the FleX binaries correctly into GarrysMod/\nPlease check your installation and restart the game.",
+    "gwater2.error.modulefailedtoload.2": "If you are 100%% sure you have installed it correctly, restart the game a few times. This is a problem with Garry's code and I cannot fix it\n",
+    "gwater2.error.modulefailedtoload.3": "Feel free to ask for help if the issue persists. PLEASE Provide the upcoming 3 lines when asking for help:\nError: %s\nBRANCH: %s\njit.arch: %s\n\n",
     "gwater2.menu.title": "GWater2 (%s)",
     "gwater2.menu.About Tab.title": "About",
     "gwater2.menu.About Tab.titletext": "Welcome to GWater2 (v%s)",

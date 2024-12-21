@@ -5,7 +5,7 @@ local GWATER2_PARTICLES_TO_SWIM = 30
 -- swim code provided by kodya (with permission)
 local gravity_convar = GetConVar("sv_gravity")
 local function in_water(ply) 
-	if gwater2.parameters["player_interaction"] == false then return end
+	if gwater2.parameters.player_interaction == false then return end
 	if ply:OnGround() then return false end
 	return ply.GWATER2_CONTACTS and ply.GWATER2_CONTACTS >= GWATER2_PARTICLES_TO_SWIM
 end
@@ -72,7 +72,7 @@ local function do_damage(ply)
 end
 
 hook.Add("Move", "gwater2_swimming", function(ply, move)
-	if gwater2.parameters["player_interaction"] == false then return end
+	if gwater2.parameters.player_interaction == false then return end
 
 	do_swim(ply, move)
 	do_multiply(ply)

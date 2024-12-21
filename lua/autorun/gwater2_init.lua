@@ -13,114 +13,35 @@ if SERVER then
 	return
 end
 
-local function error_message(text)
-	local _, frame = pcall(function() return vgui.Create("DFrame") end)
-	if not frame then
-		timer.Simple(0, function()
-			error_message(text)
-		end)
-		return
-	end
-	surface.PlaySound("gwater2/menu/toggle.wav")
-	frame:SetTitle("GWater 2 Error")
-	frame:SetDraggable(false)
-	frame:ShowCloseButton(false)
-	frame:SetBackgroundBlur(true)
-	frame:SetSize(600, 200)
-
-	local label = frame:Add("DLabel")
-	label:SetText(text)
-	label:SetContentAlignment(8)
-	label:SetWrap(true)
-	label:SetFont("Trebuchet16")
-	label:SetTextColor(color_white)
-
-	local button = frame:Add("DButton")
-	button:SetText("OK")
-	function button:DoClick()
-		surface.PlaySound("gwater2/menu/select_deny.wav")
-		frame:Close()
-	end
-
-	label:Dock(TOP)
-	label:SetTall((#(label:GetText():Split("\n")))*16+8)
-	button:Dock(TOP)
-
-	frame:MakePopup()
-	frame:SetTall(36 + label:GetTall() + button:GetTall())
-	frame:Center()
-	frame.label = label
-	frame.button = button
-
-	function frame:Paint(w, h)
-		if self:GetBackgroundBlur() then
-			Derma_DrawBackgroundBlur(self, self.m_fCreateTime)
-		end
-
-		surface.SetDrawColor(0, 0, 0, 190)
-		surface.DrawRect(0, 0, w, h)
-
-		surface.SetDrawColor(255, 255, 255)
-		surface.DrawOutlinedRect(0, 0, w, h)
-
-		surface.SetDrawColor(0, 0, 0, 190)
-		surface.DrawRect(0, 0, w, 24)
-
-		surface.SetDrawColor(255, 255, 255)
-		surface.DrawOutlinedRect(0, 0, w, 24)
-	end
-
-	local washovered = false
-	button:SetTextColor(Color(255, 255, 255))
-	function button:Paint(w, h)
-		if self:IsHovered() ~= washovered then
-			washovered = self:IsHovered()
-			if not self:IsHovered() then
-				self:SetTextColor(Color(255, 255, 255))
-			else
-				surface.PlaySound("gwater2/menu/rollover.wav")
-				self:SetTextColor(Color(0,  127, 255))
-			end
-		end
-		surface.SetDrawColor(0, 0, 0, 190)
-		surface.DrawRect(0, 0, w, h)
-
-		surface.SetDrawColor(255, 255, 255)
-		surface.DrawOutlinedRect(0, 0, w, h)
-	end
-
-	return frame
+-- multi language support
+local lang = GetConVar("cl_language"):GetString()
+local strings = file.Read("data_static/gwater2/locale/gwater2_".. lang .. ".json", "THIRDPARTY")
+if !strings then 
+	print("[GWater2]: Unsupported language: " .. lang .. ", defaulting to english")
+	lang = "english"
+	strings = file.Read("data_static/gwater2/locale/gwater2_english.json", "THIRDPARTY") or "{}" 
 end
 
-if system.IsLinux() or system.IsOSX() then
-	error_message(string.format(
-		language.GetPhrase("gwater2.error.systemnotsupported"),
-		system.IsLinux() and "Linux" or "OSX"
+for k,v in pairs(util.JSONToTable(strings)) do 
+	language.Add(k, v) 
+end
+
+print("[GWater2]: Loaded language: " .. lang)
+
+local toload = (BRANCH == "x86-64" or BRANCH == "chromium") and "gwater2" or "gwater2_main" -- carrying
+if !util.IsBinaryModuleInstalled(toload) then
+	error(string.format(
+		language.GetPhrase("gwater2.error.modulenotinstalled") .. "\n" ..
+		language.GetPhrase("gwater2.error.modulefailedtoload.3"),
+		"NONE", BRANCH, jit.arch
 	))
 	return
-end
-
-local toload = (BRANCH == "x86-64" or BRANCH == "chromium" ) and "gwater2" or "gwater2_main" -- carrying
-
-if not util.IsBinaryModuleInstalled(toload) then
-	error_message(string.format(
-		language.GetPhrase("gwater2.error.modulenotinstalled"),
-		toload, BRANCH, jit.arch
-	))
-	return
-end
-
--- load gmod_require if we can, just to get some useful information about failures
-if file.Exists("lua/includes/modules/require.lua", "GAME") 
-   and util.IsBinaryModuleInstalled("require.core") then
-	print("[GWater 2] trying to load gmod_require")
-	require("require")
 end
 
 local noerror, pcerr = pcall(function() require(toload) end)
-if not noerror then
-	pcerr = pcerr or "<no error message>"
-	error_message(string.format(
+if !noerror then
+	pcerr = pcerr or "NONE"
+	error(string.format(
 		language.GetPhrase("gwater2.error.modulefailedtoload.1").."\n"..
 		language.GetPhrase("gwater2.error.modulefailedtoload.2").."\n"..
 		language.GetPhrase("gwater2.error.modulefailedtoload.3"),

@@ -611,21 +611,6 @@ hook.Add("HUDPaint", "GWATER2_InitializeMenu", function()
 	gwater2.options.read_config().sounds = sounds
 end)
 
--- multi language support
-local lang = GetConVar("cl_language"):GetString()
-local strings = file.Read("data_static/gwater2/locale/gwater2_".. lang .. ".json", "THIRDPARTY")
-if !strings then 
-	print("[GWater2]: Unsupported language: " .. lang .. ", defaulting to english")
-	lang = "english"
-	strings = file.Read("data_static/gwater2/locale/gwater2_english.json", "THIRDPARTY") or "{}" 
-end
-
-for k,v in pairs(util.JSONToTable(strings)) do 
-	language.Add(k, v) 
-end
-
-print("[GWater2]: Loaded language: " .. lang)
-
 -- shit breaks in singleplayer due to predicted hooks
 function OpenGW2Menu(ply, key)
 	if key != gwater2.options.menu_key:GetInt() or just_closed == true then return end
