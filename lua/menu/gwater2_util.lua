@@ -6,11 +6,11 @@ gwater2.cursor_busy = nil
 
 local localed_cache = {}
 -- TODO: this is horrible.
-local function get_localised(loc, a,b,c,d,e,f,g,h)
-	a,b,c,d,e,f,g,h = a or "", b or "", c or "", d or "", e or "", f or "", g or "", h or ""
-	if localed_cache[loc..a..b..c..d..e..f..g..h] then return localed_cache[loc..a..b..c..d..e..f..g..h] end
-	localed_cache[loc..a..b..c..d..e..f..g..h] = language.GetPhrase("gwater2.menu."..loc):gsub("^%s+", ""):format(a,b,c,d,e,f,g,h)
-	return localed_cache[loc..a..b..c..d..e..f..g..h]
+local function get_localised(loc, a,b,c,d,e)
+	a,b,c,d,e = a or "", b or "", c or "", d or "", e or ""
+	if localed_cache[loc..a..b..c..d..e] then return localed_cache[loc..a..b..c..d..e] end
+	localed_cache[loc..a..b..c..d..e] = language.GetPhrase("gwater2.menu."..loc):gsub("^%s+", ""):format(a,b,c,d,e)
+	return localed_cache[loc..a..b..c..d..e]
 end
 
 local function is_hovered_any(panel)

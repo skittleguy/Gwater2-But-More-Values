@@ -103,7 +103,7 @@
     "gwater2.menu.Performance.Depth Fix.desc": "Makes particles appear spherical instead of flat, creating a cleaner and smoother water surface.\n\nCauses shader overdraw.\n\nMedium-High performance impact.",
     "gwater2.menu.Performance.Particle Limit": "Particle Limit",
     "gwater2.menu.Performance.Particle Limit.desc": "USE THIS PARAMETER AT YOUR OWN RISK.\n\nChanges the limit of particles.\n\nThis parameter does not save.\n\nNote that a higher limit will negatively impact performance even with the same number of particles spawned.",
-    "gwater2.menu.Performance.Particle Limit.title": "You are about to change the fluid limit to %d particles (%s)\nAre you sure?",
+    "gwater2.menu.Performance.Particle Limit.title": "You are about to change the fluid limit to %d particles\nAre you sure?",
     "gwater2.menu.Performance.Particle Limit.warning": "This can be dangerous, because all particles must be allocated on the GPU.\nDO NOT set the limit to a number higher then you think your computer can handle.\nI DO NOT take responsiblity for any hardware damage this may cause",
     "gwater2.menu.Performance.Iterations": "Iterations",
     "gwater2.menu.Performance.Iterations.desc": "Controls how many times the physics solver attempts to converge to a solution per substep.\n\nThis parameter does not save.\n\nMedium performance impact.",
