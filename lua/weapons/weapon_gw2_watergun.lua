@@ -1,12 +1,12 @@
 SWEP.PrintName = "Water Gun"
     
-SWEP.Author = "Mee / Neatro / googer_" 
-SWEP.Purpose = "shoots water"
-SWEP.Instructions = "you'll figure it out"
+SWEP.Author = "Meetric" 
+SWEP.Purpose = "Water Gun"
+SWEP.Instructions = "Right Click to spawn water. Left click to spawn BIG water. Reload to reset"
 SWEP.Category = "GWater2" 
-SWEP.DrawAmmo       = false
+SWEP.DrawAmmo       = true
 SWEP.DrawCrosshair	= true
-SWEP.DrawWeaponInfoBox = false
+SWEP.DrawWeaponInfoBox = true
 
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -14,19 +14,20 @@ SWEP.AdminOnly = false
 SWEP.AutoSwitchTo = false
 SWEP.AutoSwitchFrom = false
 SWEP.Weight = 1
+SWEP.WepSelectIcon = CLIENT and surface.GetTextureID("Entities/weapon_gw2_watergun")
 
 SWEP.Primary.ClipSize      = -1
-SWEP.Primary.DefaultClip   = -1
+SWEP.Primary.DefaultClip   = 0
 SWEP.Primary.Automatic     = true
-SWEP.Primary.Ammo          = "none"
+SWEP.Primary.Ammo          = "Pistol"	-- needs to be something
 SWEP.Primary.Delay = 0
 
 SWEP.Base = "weapon_base"
 
-SWEP.Secondary.ClipSize		= -1
-SWEP.Secondary.DefaultClip	= -1
-SWEP.Secondary.Automatic	= false
-SWEP.Secondary.Ammo		= "none"
+SWEP.Secondary.ClipSize      = -1
+SWEP.Secondary.DefaultClip   = 0
+SWEP.Secondary.Automatic     = false
+SWEP.Secondary.Ammo          = "none"
 SWEP.Secondary.Delay = 0
 
 SWEP.ViewModelFlip		= false
@@ -35,31 +36,76 @@ SWEP.ViewModel			= "models/gwater2/water_gun.mdl"
 SWEP.WorldModel			= "models/weapons/w_pistol.mdl"
 SWEP.UseHands           = true
 
-function SWEP:Initialize()
+local cardinal = {
+	Vector(1, 0, 0),
+	Vector(-1, 0, 0),
+	Vector(0, 1, 0),
+	Vector(0, -1, 0),
+	Vector(0, 0, 1),
+	Vector(0, 0, -1)
+}
 
-end 
+local function vector_abs(v)
+	local abs = math.abs
+	return Vector(abs(v[1]), abs(v[2]), abs(v[3]))
+end
+
+-- extrudes position from ground
+local function trace_extrude(ply, size, extrude)
+
+	local radius = gwater2.parameters.radius or 10
+	local scale = radius * size * (gwater2.parameters.fluid_rest_distance or 0.65)
+	local initial_trace = util.TraceLine({
+		start = ply:EyePos(),
+		endpos = ply:EyePos() + ply:EyeAngles():Right() * 20 - ply:EyeAngles():Up() * 8 + ply:GetAimVector() * 5 * math.max(extrude or size, 10),
+		filter = ply,
+	})
+	
+	local end_pos = initial_trace.HitPos + initial_trace.HitNormal
+	
+	for i = 1, 6 do
+		local direction = cardinal[i]--Vector(0, 0, -1)
+		local area = (Vector(1, 1, 1) - vector_abs(direction)) * scale
+		local trace_data = {
+			start = end_pos,
+			endpos = end_pos + direction * scale,
+			mins = -area,
+			maxs = area,
+			filter = ply
+		}
+
+		local trace = util.TraceHull(trace_data)
+		if trace.StartSolid then trace = util.TraceLine(trace_data) end
+
+		if !trace.StartSolid and trace.Hit then
+			end_pos = end_pos - (0.999 - trace.Fraction) * direction * scale
+		end
+
+		--local col = Color(direction.x * 127 + 128, direction.y * 127 + 128, direction.z * 127 + 128, 0)
+		--debugoverlay.Box(trace.HitPos, trace_data.mins, trace_data.maxs, 1, col)
+	end
+
+	--debugoverlay.Sphere(initial_trace.HitPos, 5, 1, Color(255, 0, 0, 10))
+	--debugoverlay.Sphere(end_pos, 5, 1, Color(0, 255, 0, 10))
+	return end_pos
+end
 
 function SWEP:PrimaryAttack()
 	if CLIENT then return end
 	
-	self:SetNextPrimaryFire(CurTime() + 1/10) -- gwater runs at fixed 60 fps
+	self:SetNextPrimaryFire(CurTime() + 1 / 10)
 
 	local owner = self:GetOwner()
-	local forward = owner:EyeAngles():Forward() * (gwater2.parameters.radius or 10) * 2
-	
-	local start_pos = owner:EyePos() + owner:EyeAngles():Right() * 10 - owner:EyeAngles():Up() * 10
-	local pos = util.QuickTrace(start_pos, owner:GetAimVector() * 50, owner).HitPos
+	local radius = gwater2.parameters.radius or 10
+	local forward = owner:EyeAngles():Forward() * radius * 2
+	local pos = trace_extrude(owner, 4)
 
-	gwater2.AddCube(gwater2.quick_matrix(pos, Angle()), Vector(5, 5, 5),{vel = forward})
+	gwater2.AddSphere(gwater2.quick_matrix(pos), 4, {vel = forward + owner:GetVelocity() * FrameTime()})
 	owner:EmitSound("Water.ImpactSoft")
 end
 
 function SWEP:Reload()
 	if CLIENT then return end
-
-	--local owner = self:GetOwner()
-	--local forward = owner:EyeAngles():Forward()
-	--gwater2.AddSphere(gwater2.quick_matrix(owner:EyePos() + forward * 250), 20, {vel = forward * 10})
 
 	gwater2.ResetSolver()
 end
@@ -67,23 +113,18 @@ end
 function SWEP:SecondaryAttack()
 	if CLIENT then return end
 
+	self:SetNextSecondaryFire(CurTime() + 1 / 4)
+
 	local owner = self:GetOwner()
-	local forward = owner:EyeAngles():Forward()
-	gwater2.AddSphere(gwater2.quick_matrix(owner:EyePos() + forward * 25 * (gwater2.parameters.radius or 10)), 20, {vel = forward * 10})
+	local radius = gwater2.parameters.radius or 10
+	local forward = owner:EyeAngles():Forward() * radius * 2
+	local pos = trace_extrude(owner, 20, 50)
+
+	gwater2.AddSphere(gwater2.quick_matrix(pos), 20, {vel = forward})
+	owner:EmitSound("NPC_CombineGunship.CannonStartSound")
 end
 
 if SERVER then return end
-
-function SWEP:DrawHUD()
-	if !gwater2 then
-		local a = 255 * (math.sin(CurTime() * 2) + 1) / 2
-		draw.DrawText("Failed to load GWater2!", "Trebuchet24", ScrW() / 2, ScrH() / 2 - 36, Color(255, 50, 50, a), TEXT_ALIGN_CENTER)
-	else
-		draw.DrawText("Left-Click to Spawn Particles", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.75, color_white, TEXT_ALIGN_RIGHT)
-		draw.DrawText("Right-Click to Open Gun Menu", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.78, color_white, TEXT_ALIGN_RIGHT)
-		draw.DrawText("Reload to Remove All", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.81, color_white, TEXT_ALIGN_RIGHT)
-	end
-end
 
 local function format_int(i)
 	return tostring(i):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
@@ -91,7 +132,14 @@ end
 
 -- visual counter on gun
 function SWEP:PostDrawViewModel(vm, weapon, ply)
-	if !gwater2 then return end
+	if !gwater2 then 
+		cam.Start2D()
+			local a = 255 * (math.sin(CurTime() * 2) + 1) / 2
+			draw.DrawText("Failed to load GWater2!", "Trebuchet24", ScrW() / 2, ScrH() / 2 - 36, Color(255, 50, 50, a), TEXT_ALIGN_CENTER)
+		cam.End2D()
+
+		return 
+	end
 
 	local owner = self:GetOwner() -- me!
 	local bone = owner:GetViewModel():LookupBone("ValveBiped.Bip01_R_Hand")
@@ -99,13 +147,5 @@ function SWEP:PostDrawViewModel(vm, weapon, ply)
 	pos = pos + ang:Forward() * 5 + ang:Up() * -11 + ang:Right() * 0
 	local _, ang = LocalToWorld(vector_origin, Angle(0, -90, 90), vector_origin, EyeAngles())
 
-	cam.Start3D2D(pos, ang, 0.03)
-		local text = "Water Particles: " .. format_int(gwater2.solver:GetActiveParticles()) .. "/" .. format_int(gwater2.solver:GetMaxParticles())
-		local text2 = "Foam Particles: " .. format_int(gwater2.solver:GetActiveDiffuseParticles()) .. "/" .. format_int(gwater2.solver:GetMaxDiffuseParticles())
-		draw.DrawText(text, "CloseCaption_Normal", 4, -24, Color(0, 0, 0, 255), TEXT_ALIGN_CENTER)
-		draw.DrawText(text, "CloseCaption_Normal", 2, -26, color_white, TEXT_ALIGN_CENTER)
-
-		draw.DrawText(text2, "CloseCaption_Normal", 2, 2, Color(0, 0, 0, 255), TEXT_ALIGN_CENTER)
-		draw.DrawText(text2, "CloseCaption_Normal", 0, 0, color_white, TEXT_ALIGN_CENTER)
-	cam.End3D2D()
+	self.Weapon:SetClip1(gwater2.solver:GetMaxParticles() - gwater2.solver:GetActiveParticles())
 end

@@ -146,14 +146,14 @@ else	-- CLIENT
 	-- HUDPaint gets called only AFTER player is ready to receive data
 	hook.Add("HUDPaint", "GWATER2_REQUESTPARAMETERSSNAPSHOT", function()
 		hook.Remove("HUDPaint", "GWATER2_REQUESTPARAMETERSSNAPSHOT")
-		print("GWater2: Requesting parameters")
+		print("[GWater2]: Requesting parameters")
 		net.Start("GWATER2_REQUESTPARAMETERSSNAPSHOT")
 		net.SendToServer()
 	end)
 
 	net.Receive("GWATER2_REQUESTPARAMETERSSNAPSHOT", function(len, ply)
 		local tbl = net.ReadTable()
-		print("GWater2: Received a total of "..(#table.GetKeys(tbl)).." changed parameters")
+		print("[GWater2]: Received a total of "..(#table.GetKeys(tbl)).." changed parameters")
 		for k,v in pairs(tbl) do
 			_util.set_gwater_parameter(k, v)
 		end
