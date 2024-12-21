@@ -118,10 +118,15 @@ if file.Exists("lua/includes/modules/require.lua", "GAME")
 end
 
 local noerror, pcerr = pcall(function() require(toload) end)
-if not noerror then
+if true or not noerror then
+	pcerr = pcerr or "<no error message>"
 	error_message("GWater 2 failed to load!\n\n"..
-				  "This may happen because GARRY IS RETARTED.\n".. -- todo: put something more normal
-				  "Please, restart your game (can be any amount of restarts, usually 5-10 works) "..
+				  "This may happen because GWater could not find FleX binaries.\n"..
+				  "Please check your install and restart the game.\n"..
+				  "If you are sure that your install is correct and you still get that error,\n"..
+				  "this can be a result of garry being a Very Unique Person With Weird Coding Styles :)\n"..
+				  "The only solution is to restart your game until it works"..
+				  " (can be any amount of restarts, usually 5-10)\n"..
 				  "and report bug if issue persists.\n\n"..
 				  "pcall error: "..pcerr.."\n"..
 				  "BRANCH="..BRANCH.."\njit.arch="..jit.arch)

@@ -58,18 +58,33 @@ local function make_scratch(frame, locale_parameter_name, default, min, max, dec
     return panel
 end
 
+local function make_explanation(frame, locale_string)
+    local label = frame:Add("DLabel")
+	label:SetText(_util.get_localised(locale_string))
+	label:SetColor(Color(160, 200, 255))
+	label:SetFont("GWater2Param")
+    label:Dock(TOP)
+    label:SetWide(frame:GetWide())
+    --label:SetWrap(true)
+    label:SizeToContents()
+    return label
+end
+
 return function(self)
     local frame
     -- gwater 2 main menu: steal his look!!!
     do -- so that we can collapse it
         frame = vgui.Create("DFrame")
-        frame:SetSize(ScrW()/3, ScrH()/3)
+        frame:SetSize(420, 260)
         frame:Center()
         frame:MakePopup()
         frame:SetTitle("GWater 2 " .. gwater2.VERSION .. ": Water Gun Menu")
 
         frame:SetScreenLock(true)
         function frame:Paint(w, h)
+            -- darker background
+            styling.draw_main_background(0, 0, w, h)
+            styling.draw_main_background(0, 0, w, h)
             styling.draw_main_background(0, 0, w, h)
         end
 
@@ -103,9 +118,13 @@ return function(self)
 
     -- TODO: parameter explanations
     make_scratch(frame, "WaterGun.Velocity", 10, 0, 100, 2, "gwater2_gun_velocity")
+    make_explanation(frame, "WaterGun.Velocity.Explanation")
     make_scratch(frame, "WaterGun.Distance", 250, 100, 1000, 2, "gwater2_gun_distance")
-    make_scratch(frame, "WaterGun.Density", 1, 0.1, 10, 2, "gwater2_gun_density")
+    make_explanation(frame, "WaterGun.Distance.Explanation")
+    make_scratch(frame, "WaterGun.Spread", 1, 0.1, 10, 2, "gwater2_gun_spread")
+    make_explanation(frame, "WaterGun.Spread.Explanation")
     make_scratch(frame, "WaterGun.SpawnMode", 1, 1, 2, 0, "gwater2_gun_spawnmode")
+    make_explanation(frame, "WaterGun.SpawnMode.Explanation")
 
     return frame
 end

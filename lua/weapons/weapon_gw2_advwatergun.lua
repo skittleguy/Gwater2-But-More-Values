@@ -40,7 +40,7 @@ SWEP.UseHands           = true
 if CLIENT then
 	SWEP.ParticleVelocity = CreateClientConVar("gwater2_gun_velocity",  10, true, true, "",   0,  100)
 	SWEP.ParticleDistance = CreateClientConVar("gwater2_gun_distance", 250, true, true, "", 100, 1000)
-	SWEP.ParticleDensity  = CreateClientConVar("gwater2_gun_density",    1, true, true, "", 0.1,   10)
+	SWEP.ParticleSpread  = CreateClientConVar("gwater2_gun_spread",    1, true, true, "", 0.1,   10)
 
 	-- 1 is cylinder (default) (introduced in 0.5b iirc)
 	-- 2 is box (introduced in 0.1b)
@@ -88,20 +88,20 @@ function SWEP:PrimaryAttack()
 			gwater2.quick_matrix(
 				pos,
 				eyeangles + Angle(90, 0, 0),
-				owner:GetInfoNum("gwater2_gun_density", 1)),
-			Vector(4 * owner:GetInfoNum("gwater2_gun_density", 1), 4 * owner:GetInfoNum("gwater2_gun_density", 1), 1),
+				owner:GetInfoNum("gwater2_gun_spread", 1)),
+			Vector(4 * owner:GetInfoNum("gwater2_gun_spread", 1), 4 * owner:GetInfoNum("gwater2_gun_spread", 1), 1),
 			{vel = forward * owner:GetInfoNum("gwater2_gun_velocity", 10) + owneraddvel}
 		)
 	end
 	if mode == 2 then
-		local size = 4 * owner:GetInfoNum("gwater2_gun_density", 1)
+		local size = 4 * owner:GetInfoNum("gwater2_gun_spread", 1)
 		pos = pos + owner:GetAimVector() * (gwater2.parameters.radius or 10) * (size+1)
 		pos = pos + owner:GetAimVector() * -(gwater2.parameters.radius or 10) * 5
 		gwater2.AddCube(
 			gwater2.quick_matrix(
 				pos,
 				eyeangles + Angle(90, 0, 0),
-				owner:GetInfoNum("gwater2_gun_density", 1)),
+				owner:GetInfoNum("gwater2_gun_spread", 1)),
 				Vector(size, size, size),
 				{vel = forward * owner:GetInfoNum("gwater2_gun_velocity", 10) + owneraddvel}
 		)
@@ -177,11 +177,11 @@ function SWEP:PostDrawViewModel(vm, weapon, ply)
 	angles:RotateAroundAxis(angles:Right(), 90)
 	if self.SpawnMode:GetInt() == 1 then
 		cam.Start3D2D(pos, angles, 0.03)
-			--surface.DrawCircle(0, 0, 160 * 5 * self.ParticleDensity:GetFloat(), 255, 255, 255, 255)
+			--surface.DrawCircle(0, 0, 160 * 5 * self.ParticleSpread:GetFloat(), 255, 255, 255, 255)
 			for i=0,5,1 do
 				local factor = math.ease.OutCubic(self.ParticleVelocity:GetFloat()/100*(i/5))
-				surface.DrawCircle(0, 0, 160 * 5 * self.ParticleDensity:GetFloat() - 160*3*
-										factor * self.ParticleDensity:GetFloat(),
+				surface.DrawCircle(0, 0, 160 * 5 * self.ParticleSpread:GetFloat() - 160*3*
+										factor * self.ParticleSpread:GetFloat(),
 										-- (((100-self.ParticleVelocity:GetFloat())*(math.log(i)+1)/2.6)/100),
 										255, 255, 255, 255 * (1-factor))
 			end
@@ -190,12 +190,12 @@ function SWEP:PostDrawViewModel(vm, weapon, ply)
 	if self.SpawnMode:GetInt() == 2 then
 		pos = pos + ply:GetAimVector() * -(gwater2.parameters.radius or 10) * 5
 		cam.Start3D2D(pos, angles, 0.03)
-		local edge = Vector(4, 4, 4) * self.ParticleDensity:GetFloat()^2 * 2
+		local edge = Vector(4, 4, 4) * self.ParticleSpread:GetFloat()^2 * 2
 		for i=0,5,1 do
 			local factor = math.ease.OutCubic(self.ParticleVelocity:GetFloat()/100*(i/5))
 			surface.SetDrawColor(255, 255, 255, 255 * (1-factor))
-			local size = 160 * 3 * self.ParticleDensity:GetFloat() - 160*2*
-						 factor * self.ParticleDensity:GetFloat()
+			local size = 160 * 3 * self.ParticleSpread:GetFloat() - 160*2*
+						 factor * self.ParticleSpread:GetFloat()
 			surface.DrawOutlinedRect(-size/2, -size/2, size, size, 2)
 		end
 		cam.End3D2D()

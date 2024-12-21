@@ -181,7 +181,11 @@
     "gwater2.menu.Fluid Preview.title": "Fluid Preview",
     "gwater2.menu.Explanation Area.title": "Explanation Area",
     "gwater2.menu.WaterGun.Velocity": "Particle Velocity",
+    "gwater2.menu.WaterGun.Velocity.Explanation": "How fast particles should go out of the gun.",
     "gwater2.menu.WaterGun.Distance": "Max Distance",
-    "gwater2.menu.WaterGun.Density": "Particle Density",
-    "gwater2.menu.WaterGun.SpawnMode": "Shoot Mode"
+    "gwater2.menu.WaterGun.Distance.Explanation": "How far should we try to trace starting position",
+    "gwater2.menu.WaterGun.Spread": "Particle Spread",
+    "gwater2.menu.WaterGun.Spread.Explanation": "How spread out particles are",
+    "gwater2.menu.WaterGun.SpawnMode": "Shoot Mode",
+    "gwater2.menu.WaterGun.SpawnMode.Explanation": "1 = Circle, 2 = Box\nPlease note that same parameters with different\nmodes behave differently."
 }

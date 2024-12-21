@@ -105,6 +105,9 @@ local function create_menu()
 	frame:MakePopup()
 	frame:SetScreenLock(true)
 	function frame:Paint(w, h)
+		-- darker background
+		styling.draw_main_background(0, 0, w, h)
+		styling.draw_main_background(0, 0, w, h)
 		styling.draw_main_background(0, 0, w, h)
 	end
 
