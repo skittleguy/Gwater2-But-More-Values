@@ -317,7 +317,7 @@ gwater2["force_multiplier"] = 0.01
 gwater2["force_buoyancy"] = 0
 gwater2["force_dampening"] = 0
 gwater2["player_interaction"] = true
-gwater2["touch_damage"] = 0
+gwater2["touchdamage"] = 0
 
 include("gwater2_shaders.lua")
 include("gwater2_menu.lua")
@@ -342,10 +342,16 @@ local function gwater_tick2()
 	end
 	
 	local particles_in_radius = gwater2.solver:GetParticlesInRadius(lp:GetPos() + lp:OBBCenter(), gwater2.solver:GetParameter("fluid_rest_distance") * 3)
-	GWATER2_QuickHackRemoveMeASAP(	-- TODO: REMOVE THIS HACKY SHIT!!!!!!!!!!!!!
-		lp:EntIndex(), 
-		particles_in_radius
-	)
+	-- "-- TODO: REMOVE THIS HACKY SHIT!!!!!!!!!!!!!"
+	-- little did he know, it will stay...
+	if lp:IsListenServerHost() then
+		for _, ply in player.Iterator() do
+			GWATER2_QuickHackRemoveMeASAP(
+				ply:EntIndex(), 
+				gwater2.solver:GetParticlesInRadius(ply:GetPos() + ply:OBBCenter(), gwater2.solver:GetParameter("fluid_rest_distance") * 3)
+			)
+		end
+	end
 
 	lp.GWATER2_CONTACTS = particles_in_radius
 

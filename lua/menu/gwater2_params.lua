@@ -258,6 +258,9 @@ local performance = {
 				function confirm:DoClick() 
 					gwater2.solver:Destroy()
 					gwater2.solver = FlexSolver(slider:GetValue())
+					for name, value in gwater2.parameters do
+						_util.set_gwater_parameter(name, value)
+					end
 					gwater2.reset_solver(true)
 					frame:Close()
 					surface.PlaySound("gwater2/menu/select_ok.wav")
@@ -402,7 +405,7 @@ local interaction = {
 				max=100,
 				decimals=0,
 				func=function(val) return true end,
-				setup=function(scratch) end
+				setup=function(scratch) scratch:SetValue(gwater2.parameters['swimspeed'] or scratch:GetValue()) end
 			},
 			["004-SwimFriction"] = {
 				type="scratch",
@@ -410,7 +413,7 @@ local interaction = {
 				max=1,
 				decimals=3,
 				func=function(val) return true end,
-				setup=function(scratch) end
+				setup=function(scratch) scratch:SetValue(gwater2.parameters['swimfriction'] or scratch:GetValue()) end
 			},
 			["005-SwimBuoyancy"] = {
 				type="scratch",
@@ -418,7 +421,7 @@ local interaction = {
 				max=2,
 				decimals=2,
 				func=function(val) return true end,
-				setup=function(scratch) end
+				setup=function(scratch) scratch:SetValue(gwater2.parameters['swimbuoyancy'] or scratch:GetValue()) end
 			},
 			["002-MultiplyParticles"] = {
 				type="scratch",
@@ -426,7 +429,7 @@ local interaction = {
 				max=200,
 				decimals=0,
 				func=function(val) return true end,
-				setup=function(scratch) end
+				setup=function(scratch) scratch:SetValue(gwater2.parameters['multiplyparticles'] or scratch:GetValue()) end
 			},
 			["008-MultiplyWalk"] = {
 				type="scratch",
@@ -434,7 +437,7 @@ local interaction = {
 				max=2,
 				decimals=2,
 				func=function(val) return true end,
-				setup=function(scratch) end
+				setup=function(scratch) scratch:SetValue(gwater2.parameters['multiplywalk'] or scratch:GetValue()) end
 			},
 			["009-MultiplyJump"] = {
 				type="scratch",
@@ -442,7 +445,7 @@ local interaction = {
 				max=2,
 				decimals=2,
 				func=function(val) return true end,
-				setup=function(scratch) end
+				setup=function(scratch) scratch:SetValue(gwater2.parameters['multiplyjump'] or scratch:GetValue()) end
 			},
 			["010-TouchDamage"] = {
 				type="scratch",
@@ -450,7 +453,7 @@ local interaction = {
 				max=10,
 				decimals=0,
 				func=function(val) return true end,
-				setup=function(scratch) end
+				setup=function(scratch) scratch:SetValue(gwater2.parameters['touchdamage'] or scratch:GetValue()) end
 			},
 		}
 	}
