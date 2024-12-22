@@ -37,8 +37,11 @@ local function set_gwater_parameter(option, val)
 
 	gwater2.parameters[option] = val
 
+	local out = false
 	if param[1].func then
-		if param[1].func(val) then return end
+		out = param[1].func(val, param)
+
+		if out == true then return end
 	end
 
 	if IsValid(param[2]) and not param[2].editing then
@@ -51,6 +54,8 @@ local function set_gwater_parameter(option, val)
 		param[2].block = false
 		param[2].editing = false -- editing gets set to true, reset it back
 	end
+
+	if out == false then return end
 
 	if gwater2[option] then
 		gwater2[option] = val

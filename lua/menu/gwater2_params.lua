@@ -126,7 +126,7 @@ local visuals = {
 				col.b * val, 
 				col.a
 			)
-			return true
+			return false
 		end
 	},
 	["008-Reflectance"] = {
@@ -137,7 +137,7 @@ local visuals = {
 		func=function(val)
 			local finalpass = Material("gwater2/finalpass")
 			finalpass:SetFloat("$ior", val)
-			return true
+			return false
 		end,
 		setup=function(slider)
 			local finalpass = Material("gwater2/finalpass")
