@@ -136,7 +136,7 @@ public:
 	int get_max_diffuse_particles();
 	int get_max_contacts();
 
-	void add_particle(Particle particle);
+	bool add_particle(Particle particle);	// true = success, false otherwise
 	void add_cloth(VMatrix translation, Vector2D size, Particle particle);
 	void add_force_field(NvFlexExtForceField force_field);
 	

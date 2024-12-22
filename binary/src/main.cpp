@@ -153,7 +153,7 @@ LUA_FUNCTION(FLEXSOLVER_AddCube) {
 				data.pos.x = pos.x;
 				data.pos.y = pos.y;
 				data.pos.z = pos.z;
-				flex->add_particle(data);
+				if (!flex->add_particle(data)) return 0;
 			}
 		}
 	}
@@ -186,7 +186,7 @@ LUA_FUNCTION(FLEXSOLVER_AddSphere) {
 				data.pos.x = pos.x;
 				data.pos.y = pos.y;
 				data.pos.z = pos.z;
-				flex->add_particle(data);
+				if (!flex->add_particle(data)) return 0;
 			}
 		}
 	}
@@ -219,7 +219,7 @@ LUA_FUNCTION(FLEXSOLVER_AddCylinder) {
 				data.pos.x = pos.x;
 				data.pos.y = pos.y;
 				data.pos.z = pos.z;
-				flex->add_particle(data);
+				if (!flex->add_particle(data)) return 0;
 			}
 		}
 	}
