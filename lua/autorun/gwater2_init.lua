@@ -282,7 +282,7 @@ timer.Create("gwater2_calcdiffusesound", 0.1, 0, function()
 		local sound_pos = gwater2.solver:GetActiveDiffuseParticlesPos(10)
 		local dist = math.max(EyePos():DistToSqr(sound_pos) / 500000, 1)
 
-		local volume = percent^0.6 / dist * radius * 2	-- 0-1
+		local volume = percent^0.6 / dist * radius	-- 0-1
 		local pitch = math.Clamp(((200 - math.min(percent, 1 / 4) * 4 * 100) - dist * 5) / radius, 10, 250)	-- 10-250
 		pitch = pitch - gwater2.solver:GetParameter("viscosity") * 5
 		soundpatch:PlayEx(volume, pitch)
@@ -291,13 +291,13 @@ timer.Create("gwater2_calcdiffusesound", 0.1, 0, function()
 	end
 
 		
-	local particles_in_radius = gwater2.solver:GetParticlesInRadius(lp:GetPos(), gwater2.solver:GetParameter("fluid_rest_distance") * 3)
+	local particles_in_radius = gwater2.solver:GetParticlesInRadius(lp:GetPos() + lp:OBBCenter(), gwater2.solver:GetParameter("fluid_rest_distance") * 3)
 
 	-- multiplayer water-player interactions
 	if lp:IsListenServerHost() then
 		for _, ply in player.Iterator() do
-			local particles = ply != lp and gwater2.solver:GetParticlesInRadius(ply:GetPos(), gwater2.solver:GetParameter("fluid_rest_distance") * 3)
-			
+			local particles = ply != lp and gwater2.solver:GetParticlesInRadius(ply:GetPos()+ ply:OBBCenter(), gwater2.solver:GetParameter("fluid_rest_distance") * 3)
+
 			GWATER2_SET_CONTACTS(
 				ply:EntIndex(), 
 				particles or particles_in_radius

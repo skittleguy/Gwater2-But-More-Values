@@ -100,12 +100,12 @@ local visuals = {
 		type="color",
 		func=function(col)
 			local finalpass = Material("gwater2/finalpass")
-			local col = Color(col:Unpack())
-			col.r = col.r * gwater2.parameters.color_value_multiplier
-			col.g = col.g * gwater2.parameters.color_value_multiplier
-			col.b = col.b * gwater2.parameters.color_value_multiplier
-			--col.a = col.a * gwater2.parameters.color_value_multiplier
-			finalpass:SetVector4D("$color2", col:Unpack())
+			finalpass:SetVector4D("$color2", 
+				col.r * gwater2.parameters.color_value_multiplier,
+				col.g * gwater2.parameters.color_value_multiplier,
+				col.b * gwater2.parameters.color_value_multiplier,
+				col.a
+			)
 			return true
 		end
 	},
@@ -120,12 +120,12 @@ local visuals = {
 		func=function(val)
 			local col = gwater2.parameters.color
 			local finalpass = Material("gwater2/finalpass")
-			-- don't really modify the color, but also don't create new Color object
-			local r, g, b = col.r, col.g, col.b
-			col.r, col.g, col.b = r * val, g * val, b * val
-			--col.a = col.a * val
-			finalpass:SetVector4D("$color2", col:Unpack())
-			col.r, col.g, col.b = r, g, b
+			finalpass:SetVector4D("$color2", 
+				col.r * val, 
+				col.g * val, 
+				col.b * val, 
+				col.a
+			)
 			return true
 		end
 	},
