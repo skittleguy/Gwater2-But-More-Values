@@ -37,7 +37,7 @@ local function set_gwater_parameter(option, val)
 
 	gwater2.parameters[option] = val
 
-	local out = false
+	local out = nil
 	if param[1].func then
 		out = param[1].func(val, param)
 
