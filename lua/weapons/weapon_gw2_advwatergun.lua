@@ -38,7 +38,7 @@ SWEP.UseHands           = true
 if CLIENT then
 	SWEP.ParticleVelocity = CreateClientConVar("gwater2_gun_velocity",  10, true, true, "",   0,  100)
 	SWEP.ParticleDistance = CreateClientConVar("gwater2_gun_distance", 250, true, true, "", 100, 1000)
-	SWEP.ParticleSpread  = CreateClientConVar("gwater2_gun_spread",    1, true, true, "", 0.1,   10)
+	SWEP.ParticleSpread   = CreateClientConVar("gwater2_gun_spread",     1, true, true, "", 0.1,   10)
 
 	-- 1 is cylinder (default) (introduced in 0.5b iirc)
 	-- 2 is box (introduced in 0.1b)
@@ -63,7 +63,6 @@ function SWEP:PrimaryAttack()
 	if not gwater2 then return end
 	if CLIENT then return end
 	if not self:GetOwner():IsPlayer() then return end -- someone gave weapon to a non-player!!
-	self:SetNextPrimaryFire(CurTime() + 1/60) -- gwater runs at fixed 60 fps
 
 	local owner = self:GetOwner()
 	local forward = owner:GetAimVector()
@@ -90,6 +89,7 @@ function SWEP:PrimaryAttack()
 			Vector(4 * owner:GetInfoNum("gwater2_gun_spread", 1), 4 * owner:GetInfoNum("gwater2_gun_spread", 1), 1),
 			{vel = forward * owner:GetInfoNum("gwater2_gun_velocity", 10) + owneraddvel}
 		)
+		self:SetNextPrimaryFire(CurTime() + 1/60*2)
 	end
 	if mode == 2 then
 		local size = 4 * owner:GetInfoNum("gwater2_gun_spread", 1)
@@ -103,6 +103,7 @@ function SWEP:PrimaryAttack()
 				Vector(size, size, size),
 				{vel = forward * owner:GetInfoNum("gwater2_gun_velocity", 10) + owneraddvel}
 		)
+		self:SetNextPrimaryFire(CurTime() + 1/60*size*2)
 	end
     if CurTime() - (self.GWATER2_LastEmitSound or 0) > 0.1 then
         self:EmitSound("Water.ImpactSoft")
@@ -139,14 +140,14 @@ if SERVER then return end
 function SWEP:DrawHUD()
 	if not gwater2 then
 		local a = 255*(math.sin(CurTime()*2)+1)/2
-		draw.DrawText("GWater 2 failed to load!", "Trebuchet24", ScrW() / 2 + 1, ScrH() / 2 - 36 + 1, Color(0, 0, 0, a), TEXT_ALIGN_CENTER)
-		draw.DrawText("GWater 2 failed to load!", "Trebuchet24", ScrW() / 2, ScrH() / 2 - 36, Color(255, 0, 0, a), TEXT_ALIGN_CENTER)
+		draw.DrawText(language.GetPhrase("gwater2.gun.adv.notloaded"), "Trebuchet24", ScrW() / 2 + 1, ScrH() / 2 - 36 + 1, Color(0, 0, 0, a), TEXT_ALIGN_CENTER)
+		draw.DrawText(language.GetPhrase("gwater2.gun.adv.notloaded"), "Trebuchet24", ScrW() / 2, ScrH() / 2 - 36, Color(255, 0, 0, a), TEXT_ALIGN_CENTER)
 		return
 	end
 	--surface.DrawCircle(ScrW() / 2, ScrH() / 2, gwater2["size"] * gwater2["density"] * 4 * 10, 255, 255, 255, 255)
-	draw.DrawText("Left-Click to Spawn Particles", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.75, color_white, TEXT_ALIGN_RIGHT)
-	draw.DrawText("Right-Click to Open Gun Menu", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.78, color_white, TEXT_ALIGN_RIGHT)
-	draw.DrawText("Reload to Remove All", "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.81, color_white, TEXT_ALIGN_RIGHT)
+	draw.DrawText(language.GetPhrase("gwater2.gun.adv.controls.lclk"), "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.75, color_white, TEXT_ALIGN_RIGHT)
+	draw.DrawText(language.GetPhrase("gwater2.gun.adv.controls.rclk"), "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.78, color_white, TEXT_ALIGN_RIGHT)
+	draw.DrawText(language.GetPhrase("gwater2.gun.adv.controls.reload"), "CloseCaption_Normal", ScrW() * 0.99, ScrH() * 0.81, color_white, TEXT_ALIGN_RIGHT)
 end
 
 local function format_int(i)
@@ -182,8 +183,8 @@ function SWEP:PostDrawViewModel(vm, weapon, ply)
 			--surface.DrawCircle(0, 0, 160 * 5 * self.ParticleSpread:GetFloat(), 255, 255, 255, 255)
 			for i=0,5,1 do
 				local factor = math.ease.OutCubic(self.ParticleVelocity:GetFloat()/100*(i/5))
-				surface.DrawCircle(0, 0, 160 * 5 * self.ParticleSpread:GetFloat() - 160*3*
-										factor * self.ParticleSpread:GetFloat(),
+				surface.DrawCircle(0, 0, 160 * 5 * self.ParticleSpread:GetFloat() * (gwater2.parameters.radius or 10)/10
+										- 160*3*(gwater2.parameters.radius or 10)/10*factor * self.ParticleSpread:GetFloat(),
 										-- (((100-self.ParticleVelocity:GetFloat())*(math.log(i)+1)/2.6)/100),
 										255, 255, 255, 255 * (1-factor))
 			end
@@ -196,8 +197,8 @@ function SWEP:PostDrawViewModel(vm, weapon, ply)
 		for i=0,5,1 do
 			local factor = math.ease.OutCubic(self.ParticleVelocity:GetFloat()/100*(i/5))
 			surface.SetDrawColor(255, 255, 255, 255 * (1-factor))
-			local size = 160 * 3 * self.ParticleSpread:GetFloat() - 160*2*
-						 factor * self.ParticleSpread:GetFloat()
+			local size = 160 * 3 * self.ParticleSpread:GetFloat()*(gwater2.parameters.radius or 10)/10
+						 - 160*2*factor * self.ParticleSpread:GetFloat()*(gwater2.parameters.radius or 10)/10
 			surface.DrawOutlinedRect(-size/2, -size/2, size, size, 2)
 		end
 		cam.End3D2D()
