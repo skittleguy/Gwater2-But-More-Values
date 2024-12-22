@@ -137,7 +137,7 @@ local visuals = {
 		func=function(val)
 			local finalpass = Material("gwater2/finalpass")
 			finalpass:SetFloat("$ior", val)
-			--return true
+			return true
 		end,
 		setup=function(slider)
 			local finalpass = Material("gwater2/finalpass")
