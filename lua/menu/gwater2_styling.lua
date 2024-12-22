@@ -4,7 +4,7 @@ AddCSLuaFile()
 if SERVER or not gwater2 then return end
 
 local function draw_main_background(x, y, w, h)
-	surface.SetDrawColor(0, 0, 0, 100)
+	surface.SetDrawColor(0, 0, 0, 60)
 	surface.DrawRect(x, y, w, h)
 
 	surface.SetDrawColor(255, 255, 255)
@@ -53,7 +53,7 @@ local function create_blocking_frame(mainFrame)
 		render.SetRenderTarget(rt)	-- blurrendertarget doesnt restore the rt
 		render.DrawScreenQuad()
 
-		surface.SetDrawColor(0, 0, 0, 200)
+		surface.SetDrawColor(0, 0, 0, 120)
 		surface.DrawRect(0, 0, w, h)
 	
 		draw_main_background_outline(0, 0, w, h)
