@@ -612,17 +612,21 @@ hook.Add("HUDPaint", "GWATER2_InitializeMenu", function()
 end)
 
 -- shit breaks in singleplayer due to predicted hooks
-function OpenGW2Menu(ply, key)
+function gwater2.open_menu(ply, key)
+	if !game.SinglePlayer() and !IsFirstTimePredicted() then return end
+
 	if key != gwater2.options.menu_key:GetInt() or just_closed == true then return end
 	RunConsoleCommand("gwater2_menu")
 end
 
-function CloseGW2Menu(ply, key)
+function gwater2.close_menu(ply, key)
+	if !game.SinglePlayer() and !IsFirstTimePredicted() then return end
+
 	if key != gwater2.options.menu_key:GetInt() then return end
 	just_closed = false
 end
 
-if game.SinglePlayer() then return end
-
-hook.Add("PlayerButtonDown", "gwater2_menu", OpenGW2Menu)
-hook.Add("PlayerButtonUp", "gwater2_menu", CloseGW2Menu)
+if !game.SinglePlayer() then
+	hook.Add("PlayerButtonDown", "gwater2_menu", gwater2.open_menu)
+	hook.Add("PlayerButtonUp", "gwater2_menu", gwater2.close_menu)
+end

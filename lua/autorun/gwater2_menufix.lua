@@ -2,8 +2,8 @@
 if !game.SinglePlayer() or CLIENT then return end
 
 hook.Add("PlayerButtonDown", "gwater2_menu", function(ply, key)
-	ply:SendLua("if OpenGW2Menu then OpenGW2Menu(LocalPlayer(), " .. key .. ") end")
+	ply:SendLua("pcall(function() gwater2.open_menu(LocalPlayer(), " .. key .. ") end)")
 end)
 hook.Add("PlayerButtonUp", "gwater2_menu", function(ply, key)
-	ply:SendLua("if CloseGW2Menu then CloseGW2Menu(LocalPlayer(), " .. key .. ") end")
+	ply:SendLua("pcall(function() gwater2.close_menu(LocalPlayer(), " .. key .. ") end)")
 end)

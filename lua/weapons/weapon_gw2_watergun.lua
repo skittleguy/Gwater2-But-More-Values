@@ -94,7 +94,7 @@ function SWEP:PrimaryAttack()
 
 	gwater2.AddSphere(gwater2.quick_matrix(pos), 4, {vel = owner:EyeAngles():Forward() * math.max(radius, 5) + owner:GetVelocity() * FrameTime()})
 	self:SetNextPrimaryFire(CurTime() + 1 / 13)
-	self:EmitSound("Water.ImpactSoft")
+	owner:EmitSound("Water.ImpactSoft")
 end
 
 function SWEP:Reload()
@@ -111,7 +111,7 @@ function SWEP:SecondaryAttack()
 	local pos = trace_extrude(owner, 20, 2.5 * radius)
 
 	gwater2.AddSphere(gwater2.quick_matrix(pos), 20, {vel = owner:EyeAngles():Forward() * math.Clamp(gwater2.parameters.radius or 10, 5, 10)})
-	self:EmitSound("NPC_CombineGunship.CannonStartSound")
+	owner:EmitSound("NPC_CombineGunship.CannonStartSound")
 	self:SetNextSecondaryFire(CurTime() + 1 / 4)
 end
 
