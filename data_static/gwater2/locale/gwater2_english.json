@@ -114,7 +114,7 @@
     "gwater2.menu.Performance.Player Collision" : "Player Collision",
     "gwater2.menu.Performance.Player Collision.desc" : "Enables / disables collision with the player (you).\n\nThis doesn't actually impact performance that much, but I put it in this tab anyways because presets cannot set this value",
     "gwater2.menu.Performance.Diffuse Enabled" : "Diffuse Enabled",
-    "gwater2.menu.Performance.Diffuse Enabled.desc" : "Enables / disables diffuse particles\n(foam/bubbles)\n\nBecause this setting is in the performance tab, it CANNOT be set via presets. If you desire to disable diffuse particles for a custom preset, go to the Visuals tab and set Diffuse Lifetime to 0.\n\nMedium performance impact.",
+    "gwater2.menu.Performance.Diffuse Enabled.desc" : "Enables / disables diffuse particles\n(foam/bubbles)\n\nBecause this setting is in the performance tab, it CANNOT be set via presets. If you desire to disable diffuse particles for a custom preset, go to the Visuals tab and set Diffuse Lifetime to 0.\n\nNOTE THAT THIS WILL ALSO DISABLE SOUND, AS SOUND IS CALCULATED FROM DIFFUSE PARTICLES\n\nMedium performance impact.",
     "gwater2.menu.Interactions.SwimSpeed": "Swim Speed",
     "gwater2.menu.Interactions.SwimSpeed.desc": "Controls how fast you swim when underwater",
     "gwater2.menu.Interactions.SwimFriction": "Swim Friction",

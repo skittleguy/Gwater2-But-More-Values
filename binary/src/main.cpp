@@ -1021,7 +1021,7 @@ LUA_FUNCTION(NewFlexRenderer) {
 }
 
 // TODO: REMOVE!!!
-LUA_FUNCTION(GWATER2_QuickHackRemoveMeASAP) {
+LUA_FUNCTION(GWATER2_SET_CONTACTS) {
 	LUA->CheckNumber(1);	// index
 	LUA->CheckNumber(2);	// contacts
 
@@ -1196,7 +1196,7 @@ GMOD_MODULE_OPEN() {
 	LUA->PushSpecial(SPECIAL_GLOB);
 		ADD_FUNCTION(LUA, NewFlexSolver, "FlexSolver");
 		ADD_FUNCTION(LUA, NewFlexRenderer, "FlexRenderer");
-		ADD_FUNCTION(LUA, GWATER2_QuickHackRemoveMeASAP, "GWATER2_QuickHackRemoveMeASAP");
+		ADD_FUNCTION(LUA, GWATER2_SET_CONTACTS, "GWATER2_SET_CONTACTS");
 
 		// gwater2_hdr_fix = ConVar("gwater2_hdr_fix", hdr_on, FCVAR_NONE);
 		char hdr_on[2] = { 
