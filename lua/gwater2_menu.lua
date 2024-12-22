@@ -72,6 +72,7 @@ local styling = include("menu/gwater2_styling.lua")
 local _util = include("menu/gwater2_util.lua")
 if not file.Exists("gwater2", "DATA") then file.CreateDir("gwater2") end
 local presets = include("menu/gwater2_presets.lua")
+local admin_only
 
 -- garry, sincerely... fuck you
 timer.Simple(0, function() 
@@ -87,6 +88,8 @@ timer.Simple(0, function()
 	if gwater2.solver.EnableDiffuse then
 		gwater2.solver:EnableDiffuse(gwater2.options.diffuse_enabled:GetBool())
 	end
+
+	admin_only = GetConVar("gwater2_adminonly")
 end)
 
 gwater2.options.solver:SetParameter("gravity", 15.24)	-- flip gravity because y axis positive is down
@@ -95,7 +98,6 @@ gwater2.options.solver:SetParameter("dynamic_friction", 0)	-- ^
 gwater2.options.solver:SetParameter("diffuse_threshold", math.huge)	-- no diffuse particles allowed in preview
 --_util.set_gwater_parameter("radius", 10, true)	-- regen radius defaults, as they are scaled in the preview
 
-local admin_only = GetConVar("gwater2_adminonly")
 local function create_menu()
 	local frame = vgui.Create("DFrame")
 	frame:SetTitle("GWater 2 " .. gwater2.VERSION .. ": Main Menu")

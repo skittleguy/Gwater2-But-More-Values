@@ -878,10 +878,17 @@ LUA_FUNCTION(FLEXSOLVER_GetActiveDiffuseParticlesPos) {
 	int iterator = LUA->GetNumber(2);
 
 	Vector average_pos = Vector();
+	int divider = 0;
 	for (int i = 0; i < flex->get_active_diffuse(); i += iterator) {
 		average_pos += flex->hosts.diffuse_pos[i].AsVector3D();
+		divider++;
 	}
-	average_pos /= flex->get_active_diffuse();
+
+	if (divider == 0) {
+		average_pos = Vector();
+	} else {
+		average_pos /= divider;
+	}
 
 	LUA->PushVector(average_pos);
 	return 1;
