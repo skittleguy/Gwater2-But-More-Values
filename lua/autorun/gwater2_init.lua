@@ -1,5 +1,7 @@
 AddCSLuaFile()
 
+-- do return end
+
 gwater2 = nil
 
 if SERVER then 
@@ -220,9 +222,20 @@ gwater2 = {
 	end
 }
 
+local function format_int(i)
+	return tostring(i):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
+end
+
+hook.Add("HUDPaint", "gwater2_status", function()
+	local text = format_int(gwater2.solver:GetActiveParticles()) .. " / " .. format_int(gwater2.solver:GetMaxParticles())
+	draw.DrawText(text, "CloseCaption_Normal", ScrW()/2+2, 18, Color(0, 0, 0, 255), TEXT_ALIGN_CENTER)
+	draw.DrawText(text, "CloseCaption_Normal", ScrW()/2, 16, color_white, TEXT_ALIGN_CENTER)
+end)
+
 -- setup external default values
 gwater2.parameters.color = Color(209, 237, 255, 25)
 gwater2.parameters.color_value_multiplier = 1
+
 gwater2.defaults = table.Copy(gwater2.parameters)
 
 -- setup percentage values (used in menu)
@@ -236,7 +249,17 @@ gwater2["blur_passes"] = 3
 gwater2["force_multiplier"] = 0.01
 gwater2["force_buoyancy"] = 0
 gwater2["force_dampening"] = 0
+
 gwater2["player_interaction"] = true
+
+gwater2['swimspeed'] = 2
+gwater2['swimbuoyancy'] = 0.49
+gwater2['swimfriction'] = 1
+
+gwater2["multiplyparticles"] = 60
+gwater2["multiplywalk"] = 1
+gwater2["multiplyjump"] = 1
+
 gwater2["touchdamage"] = 0
 
 include("gwater2_shaders.lua")
