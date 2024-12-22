@@ -267,7 +267,10 @@ include("gwater2_menu.lua")
 include("gwater2_net.lua")
 
 local limit_fps = 1 / 60
+local last_tick = SysTime()
 local function gwater_tick2()
+	-- for some reason makes fluid flow "slower"? investigate, pretty sure it shouldn't do that
+	--if SysTime() - last_tick < limit_fps then return end
 	local lp = LocalPlayer()
 	if !IsValid(lp) then return end
 
@@ -286,6 +289,7 @@ local function gwater_tick2()
 	-- "-- TODO: REMOVE THIS HACKY SHIT!!!!!!!!!!!!!"
 	-- little did he know, it will stay...
 	if lp:IsListenServerHost() then
+		-- multiplayer water-player interactions
 		for _, ply in player.Iterator() do
 			GWATER2_QuickHackRemoveMeASAP(
 				ply:EntIndex(), 
@@ -307,7 +311,14 @@ local function gwater_tick2()
 	pcall(function() hook.Run("gwater2_tick_particles") end)
 	pcall(function() hook.Run("gwater2_tick_drains") end)
 
-	gwater2.solver:Tick(limit_fps, 0)
+	local ticks = math.floor((SysTime() - last_tick) / limit_fps)
+	last_tick = last_tick + limit_fps * ticks
+	-- tick multiple times to compensate for lost ticks
+	ticks = 1 -- REMOVE THIS LINE TO ENABLE LAG COMPENSATION THING
+	last_tick = SysTime() -- ^
+	for i=1,ticks do
+		gwater2.solver:Tick(limit_fps, 0)
+	end
 end
 
 timer.Create("gwater2_tick", 0, 0, gwater_tick2)
