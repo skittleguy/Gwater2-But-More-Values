@@ -1,0 +1,4 @@
+UnlitGeneric {
+	$basetexture "entities/weapon_gw2_watergun_icon"
+	$translucent 1
+}

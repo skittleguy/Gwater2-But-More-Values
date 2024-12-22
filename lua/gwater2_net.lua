@@ -1,8 +1,9 @@
 AddCSLuaFile()
 
-local admin_only = CreateConVar("gwater2_adminonly", "0", FCVAR_REPLICATED)
+local admin_only = CreateConVar("gwater2_adminonly", "0", FCVAR_REPLICATED + FCVAR_ARCHIVE)
 
 if SERVER then
+	-- TODO: too many network strings...
 	util.AddNetworkString("GWATER2_ADDCLOTH")
 	util.AddNetworkString("GWATER2_ADDPARTICLE")
 	util.AddNetworkString("GWATER2_ADDCUBE")
@@ -81,17 +82,13 @@ if SERVER then
 			net.Broadcast()
 		end,
 
-		ChangeParameter = function(name, value, omit)
+		ChangeParameter = function(name, value, final, sender)
 			if gwater2.parameters[name] == value then return end
-			net.Start("GWATER2_CHANGEPARAMETER")
+			net.Start("GWATER2_CHANGEPARAMETER", final)
 				net.WriteString(name)
 				net.WriteType(value)
+			net.Broadcast()
 			gwater2.parameters[name] = value
-			if not omit then
-				net.Broadcast()
-			else
-				net.SendOmit(omit)
-			end
 		end,
 
 		ResetSolver = function()
@@ -108,40 +105,33 @@ if SERVER then
 		end
 	}
 
-	cvars.AddChangeCallback("gwater2_adminonly", function(name, old, new)
-		if tonumber(new or 0) != 0 then
-
-			-- reopen menus of all players. we need to make sure they're admins
-			for k, v in ipairs(player.GetAll()) do
-				v:ConCommand("gwater2_menu")
-			end
-		end
-	end)
-
 	net.Receive("GWATER2_CHANGEPARAMETER", function(len, ply)
-		if admin_only:GetBool() and !ply:IsAdmin() then return end	-- admin only :P
+		if admin_only:GetBool() and not ply:IsAdmin() then return end	-- admin only :P
 
-		gwater2.ChangeParameter(net.ReadString(), net.ReadType(), ply)
+		gwater2.ChangeParameter(net.ReadString(), net.ReadType(), net.ReadBool(), ply)
 	end)
 
 	net.Receive("GWATER2_RESETSOLVER", function(len, ply)
-		if admin_only:GetBool() and !ply:IsAdmin() then return end
+		if admin_only:GetBool() and not ply:IsAdmin() then return end
 
 		gwater2.ResetSolver()
 	end)
 
 	net.Receive("GWATER2_REQUESTPARAMETERSSNAPSHOT", function(len, ply)
-		-- TODO
+		net.Start("GWATER2_REQUESTPARAMETERSSNAPSHOT")
+			net.WriteTable(gwater2.parameters)
+		net.Send(ply)
 	end)
 
 	net.Receive("GWATER2_REQUESTCOLLISION", function(len, ply)
 		ply:SetNW2Bool("GWATER2_COLLISION", net.ReadBool())
 	end)
 else	-- CLIENT
-	gwater2.ChangeParameter = function(name, value)
-		net.Start("GWATER2_CHANGEPARAMETER")
+	gwater2.ChangeParameter = function(name, value, final)
+		net.Start("GWATER2_CHANGEPARAMETER", not final)
 			net.WriteString(name)
 			net.WriteType(value)
+			net.WriteBool(final)
 		net.SendToServer()
 	end
 
@@ -150,9 +140,25 @@ else	-- CLIENT
 		net.SendToServer()
 	end
 
-	local util = include("menu/gwater2_util.lua")
+	local _util = include("menu/gwater2_util.lua")
+
+	-- HUDPaint gets called only AFTER player is ready to receive data
+	hook.Add("HUDPaint", "GWATER2_REQUESTPARAMETERSSNAPSHOT", function()
+		hook.Remove("HUDPaint", "GWATER2_REQUESTPARAMETERSSNAPSHOT")
+		print("[GWater2]: Requesting parameters")
+		net.Start("GWATER2_REQUESTPARAMETERSSNAPSHOT")
+		net.SendToServer()
+	end)
+
+	net.Receive("GWATER2_REQUESTPARAMETERSSNAPSHOT", function(len, ply)
+		local tbl = net.ReadTable()
+		print("[GWater2]: Received a total of "..(#table.GetKeys(tbl)).." changed parameters")
+		for k,v in pairs(tbl) do
+			_util.set_gwater_parameter(k, v)
+		end
+	end)
 	net.Receive("GWATER2_CHANGEPARAMETER", function(len)
-		util.set_gwater_parameter(net.ReadString(), net.ReadType())
+		_util.set_gwater_parameter(net.ReadString(), net.ReadType())
 	end)
 
 	net.Receive("GWATER2_RESETSOLVER", function(len)

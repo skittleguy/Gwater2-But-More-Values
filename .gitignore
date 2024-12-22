@@ -3,5 +3,30 @@
 /binary/x86_64
 *.vcxproj*
 *.sln
-/binary/premake5.exe
 /binary/openssl
+
+# premake stuff (WINDOWS)
+/binary/premake5.exe
+/binary/premake5.pdb
+/binary/luasocket.dll
+/binary/luasocket.lib
+/binary/luasocket.exp
+/binary/luasocket.pdb
+/binary/example.dll
+/binary/example.lib
+/binary/example.exp
+/binary/example.pdb
+
+# premake stuff (LINUX)
+/binary/Makefile
+/binary/premake5
+/binary/gmcl_gwater2.make
+/binary/garrysmod_common/projects/linux/gmake/helpers.make
+/binary/garrysmod_common/projects/linux/gmake/lua_shared.make
+/binary/garrysmod_common/scanning/projects/linux/gmake/Makefile
+/binary/garrysmod_common/sourcesdk-minimal/projects/linux/gmake/tier1.make
+/binary/garrysmod_common/sourcesdk-minimal/projects/linux/gmake/LZMA.make
+/binary/garrysmod_common/sourcesdk-minimal/projects/linux/gmake/mathlib.make
+
+# gmod_require require module
+/lua/includes/modules/require.lua

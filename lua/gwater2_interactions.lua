@@ -2,19 +2,10 @@
 
 local GWATER2_PARTICLES_TO_SWIM = 30
 
-local function param_unfucked(name) -- dammit googer
-	if CLIENT then
-		local option = gwater2.options.parameters[name]
-		return option and option.val
-	else
-		return gwater2.parameters[name]
-	end
-end
-
 -- swim code provided by kodya (with permission)
 local gravity_convar = GetConVar("sv_gravity")
 local function in_water(ply) 
-	if param_unfucked("player_interaction") == false then return end
+	if gwater2.parameters.player_interaction == false then return end
 	if ply:OnGround() then return false end
 	return ply.GWATER2_CONTACTS and ply.GWATER2_CONTACTS >= GWATER2_PARTICLES_TO_SWIM
 end
@@ -37,7 +28,7 @@ local function do_swim(ply, move)
 
 	local aceldir = acel:GetNormalized()
 	local acelspeed = math.min(acel:Length(), ply:GetMaxSpeed())
-	acel = aceldir * acelspeed * (param_unfucked("swimspeed") or 2)
+	acel = aceldir * acelspeed * (gwater2.parameters["swimspeed"] or 2)
 
 	if bit.band(move:GetButtons(), IN_JUMP) ~= 0 then
 		acel.z = acel.z + ply:GetMaxSpeed()
@@ -47,14 +38,14 @@ local function do_swim(ply, move)
 	vel = vel * (1 - FrameTime() * 2)
 
 	local pgrav = ply:GetGravity() == 0 and 1 or ply:GetGravity()
-	local gravity = pgrav * gravity_convar:GetFloat() * (param_unfucked("swimbuoyancy") or 0.49)
+	local gravity = pgrav * gravity_convar:GetFloat() * (gwater2.parameters["swimbuoyancy"] or 0.49)
 	vel.z = vel.z + FrameTime() * gravity
 
-	move:SetVelocity(vel * (param_unfucked("swimfriction") or 1))
+	move:SetVelocity(vel * (gwater2.parameters["swimfriction"] or 1))
 end
 
 local function do_multiply(ply)
-	if not ply.GWATER2_CONTACTS or ply.GWATER2_CONTACTS < (param_unfucked("multiplyparticles") or 60) then
+	if not ply.GWATER2_CONTACTS or ply.GWATER2_CONTACTS < (gwater2.parameters["multiplyparticles"] or 60) then
 		if not ply.GWATER2_MULTIPLIED then return end
 		ply:SetWalkSpeed(ply.GWATER2_MULTIPLIED[1])
 		ply:SetRunSpeed(ply.GWATER2_MULTIPLIED[2])
@@ -64,9 +55,9 @@ local function do_multiply(ply)
 	end
 	if ply.GWATER2_MULTIPLIED then return end
 	ply.GWATER2_MULTIPLIED = {ply:GetWalkSpeed(), ply:GetRunSpeed(), ply:GetJumpPower()}
-	ply:SetWalkSpeed(ply.GWATER2_MULTIPLIED[1] * (param_unfucked("multiplywalk") or 1))
-	ply:SetRunSpeed(ply.GWATER2_MULTIPLIED[2] * (param_unfucked("multiplywalk") or 1))
-	ply:SetJumpPower(ply.GWATER2_MULTIPLIED[3] * (param_unfucked("multiplyjump") or 1))
+	ply:SetWalkSpeed(ply.GWATER2_MULTIPLIED[1] * (gwater2.parameters["multiplywalk"] or 1))
+	ply:SetRunSpeed(ply.GWATER2_MULTIPLIED[2] * (gwater2.parameters["multiplywalk"] or 1))
+	ply:SetJumpPower(ply.GWATER2_MULTIPLIED[3] * (gwater2.parameters["multiplyjump"] or 1))
 end
 
 -- serverside ONLY
@@ -76,12 +67,12 @@ local function do_damage(ply)
 	if gwater2.parameters.touchdamage > 0 then
 		ply:TakeDamage(gwater2.parameters.touchdamage, Entity(1), Entity(1))
 	else
-		ply:SetHealth(math.min(ply:GetMaxHealth(), ply:Health() + -param_unfucked("touchdamage")))
+		ply:SetHealth(math.min(ply:GetMaxHealth(), ply:Health() + -gwater2.parameters["touchdamage"]))
 	end
 end
 
 hook.Add("Move", "gwater2_swimming", function(ply, move)
-	if param_unfucked("player_interaction") == false then return end
+	if gwater2.parameters.player_interaction == false then return end
 
 	do_swim(ply, move)
 	do_multiply(ply)

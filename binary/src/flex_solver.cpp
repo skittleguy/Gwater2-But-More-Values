@@ -110,12 +110,14 @@ void FlexSolver::set_particle(int particle_index, int active_index, Particle par
 	hosts.particle_active[active_index] = particle_index;
 }
 
-void FlexSolver::add_particle(Particle particle) {
-	if (get_active_particles() >= get_max_particles()) return;
+bool FlexSolver::add_particle(Particle particle) {
+	if (get_active_particles() >= get_max_particles()) return false;
 	
 	next_particle();
 	set_particle(particle_queue_index, get_active_particles(), particle);
 	particle_queue[particle_queue_index] = particle;
+
+	return true;
 }
 
 inline int _grid(int x, int y, int x_size) { return y * x_size + x; }

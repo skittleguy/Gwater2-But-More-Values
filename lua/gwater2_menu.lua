@@ -33,6 +33,7 @@ gwater2.options = gwater2.options or {
 	end,
 
 	initialised = {},
+	--[[
 	parameters = {
 		color = {real=Color(209, 237, 255, 25), default=Color(209, 237, 255, 25)},
 		color_value_multiplier = {real=1, default=1, val=1, func=function()
@@ -54,6 +55,7 @@ gwater2.options = gwater2.options or {
 		multiplyjump = {real=1, default=1, val=1, defined=true, func=function() end},
 		touchdamage = {real=0, default=0, val=0, defined=true, func=function() end},
 	}
+	]]
 }
 
 if not file.Exists("gwater2/config.txt", "DATA") then
@@ -80,25 +82,32 @@ timer.Simple(0, function()
 	net.WriteBool(gwater2.options.player_collision:GetBool())
 	net.SendToServer()
 
-	gwater2.solver:EnableDiffuse(gwater2.options.diffuse_enabled:GetBool())
+	-- TODO: remove me!!
+	-- sometimes 0.6b binaries break when i'm changing stuff, so i swap them for 0.5b ones
+	if gwater2.solver.EnableDiffuse then
+		gwater2.solver:EnableDiffuse(gwater2.options.diffuse_enabled:GetBool())
+	end
 end)
 
 gwater2.options.solver:SetParameter("gravity", 15.24)	-- flip gravity because y axis positive is down
 gwater2.options.solver:SetParameter("static_friction", 0)	-- stop adhesion sticking to front and back walls
 gwater2.options.solver:SetParameter("dynamic_friction", 0)	-- ^
 gwater2.options.solver:SetParameter("diffuse_threshold", math.huge)	-- no diffuse particles allowed in preview
-_util.set_gwater_parameter("radius", 10, true)	-- regen radius defaults, as they are scaled in the preview
+--_util.set_gwater_parameter("radius", 10, true)	-- regen radius defaults, as they are scaled in the preview
 
 local admin_only = GetConVar("gwater2_adminonly")
 local function create_menu()
 	local frame = vgui.Create("DFrame")
-	frame:SetTitle("GWater 2 " .. gwater2.VERSION)
+	frame:SetTitle("GWater 2 " .. gwater2.VERSION .. ": Main Menu")
 	--frame:SetSize(ScrW() * 0.8, ScrH() * 0.6)
 	frame:SetSize(1000, 600)
 	frame:Center()
 	frame:MakePopup()
 	frame:SetScreenLock(true)
 	function frame:Paint(w, h)
+		-- darker background
+		styling.draw_main_background(0, 0, w, h)
+		styling.draw_main_background(0, 0, w, h)
 		styling.draw_main_background(0, 0, w, h)
 	end
 
@@ -180,7 +189,7 @@ local function create_menu()
 		styling.draw_main_background(0, 0, w, h)
 		local x, y = sim_preview:LocalToScreen(0, 0)
 		local function exp(v) return Vector(math.exp(v[1]), math.exp(v[2]), math.exp(v[3])) end
-		local is_translucent = gwater2.options.parameters.color.real.a < 255
+		local is_translucent = gwater2.parameters.color.a < 255
 		local radius = gwater2.options.solver:GetParameter("radius")
 		local collision_distance = gwater2.options.solver:GetParameter("collision_distance")
 
@@ -202,31 +211,26 @@ local function create_menu()
 
 		surface.SetMaterial(particle_material)
 
-		if gwater2.options.read_config().pixelate_preview then
-			local alpha = is_translucent and 50 or 255
-			gwater2.options.solver:RenderParticles(function(pos)
-				local depth = math.max((pos[3] - y) / 584, 0) * 20	-- ranges from 0 to 20 down
-				local absorption = is_translucent and exp((gwater2.options.parameters.color.real:ToVector() * gwater2.options.parameters.color_value_multiplier.real - Vector(1, 1, 1)) * gwater2.options.parameters.color.real.a / 255 * depth) or (gwater2.options.parameters.color.real:ToVector() * gwater2.options.parameters.color_value_multiplier.real)
-				surface.SetDrawColor(absorption[1] * 255, absorption[2] * 255, absorption[3] * 255, alpha)
-				local px = pos[1] - x
-				local py = pos[3] - y
+		local pixelate = gwater2.options.read_config().pixelate_preview 
+
+		local alpha = is_translucent and (pixelate and 50 or 150) or 255
+		gwater2.options.solver:RenderParticles(function(pos)
+			local depth = math.max((pos[3] - y) / 584, 0) * 20	-- ranges from 0 to 20 down
+			local absorption = is_translucent and exp(
+				(gwater2.parameters.color:ToVector() * gwater2.parameters.color_value_multiplier - Vector(1, 1, 1)) *
+					gwater2.parameters.color.a / 255 * depth) or
+				(gwater2.parameters.color:ToVector() * gwater2.parameters.color_value_multiplier)
+			surface.SetDrawColor(absorption[1] * 255, absorption[2] * 255, absorption[3] * 255, alpha)
+			local px = pos[1] - x
+			local py = pos[3] - y
+			if pixelate then
 				px = math.Round(px / radius) * radius
 				py = math.Round(py / radius) * radius
+			end
 
-				surface.DrawTexturedRect(px, py, radius, radius)
-			end)
-		else
-			local alpha = is_translucent and 150 or 255
-			gwater2.options.solver:RenderParticles(function(pos)
-				local depth = math.max((pos[3] - y) / 584, 0) * 20	-- ranges from 0 to 20 down
-				local absorption = is_translucent and exp((gwater2.options.parameters.color.real:ToVector() * gwater2.options.parameters.color_value_multiplier.real - Vector(1, 1, 1)) * gwater2.options.parameters.color.real.a / 255 * depth) or (gwater2.options.parameters.color.real:ToVector() * gwater2.options.parameters.color_value_multiplier.real)
-				surface.SetDrawColor(absorption[1] * 255, absorption[2] * 255, absorption[3] * 255, alpha)
-				local px = pos[1] - x
-				local py = pos[3] - y
-				
-				surface.DrawTexturedRect(px, py, radius, radius)
-			end)
-		end
+			surface.DrawTexturedRect(px, py, radius, radius)
+		end)
+
 
 		styling.draw_main_background_outline(0, 0, w, h)
 
@@ -339,8 +343,12 @@ local function create_menu()
 		label:SetContentAlignment(7)
 		label:SetFont("GWater2Param")
 
-		local supporters = file.Read("data_static/gwater2/patrons.txt", "THIRDPARTY") or "<Failed to load patron data!>"
-		local supporters_table = string.Split(supporters, "\n")
+		local supporters_table = {"<Failed to load patron data!>"}
+		
+		file.AsyncRead("data_static/gwater2/patrons.txt", "THIRDPARTY", function(name, path, status, data)
+			if status != FSASYNC_OK then return end
+			supporters_table = string.Split(data, "\n")
+		end)
 
 		-- Hi - Xenthio
 		-- DONT FORGET TO ADD 'Xenthio' & 'NecrosVideos'
@@ -435,9 +443,7 @@ local function create_menu()
 	        	return true
 	        end
     	})
-
-		-- TODO: does IsListenServerHost() work for this?
-		if LocalPlayer():IsSuperAdmin() then	-- must be host to change this value
+		if LocalPlayer():IsListenServerHost() then
 			_util.make_parameter_check(tab, "Menu.admin_only", "Admin Only", {
 				func=function(val)
 					RunConsoleCommand("gwater2_adminonly", val and "1" or "0")
@@ -490,18 +496,17 @@ local function create_menu()
 					surface.SetDrawColor(255, 255, 255, 255*delta)
 					surface.DrawOutlinedRect(0, 0, w - 4, self:IsActive() and h - 4 or h)
 				end
-				if gwater2.options.read_config().animations then
-					local children = {}
-					local function _(p)
-						for __,child in pairs(p:GetChildren()) do
-							children[#children+1] = child
-							_(child)
-						end
+				if not gwater2.options.read_config().animations then return end
+				local children = {}
+				local function _(p)
+					for __,child in pairs(p:GetChildren()) do
+						children[#children+1] = child
+						_(child)
 					end
-					_(rt.Panel:GetChildren()[1])
-					for i,v in pairs(children) do
-						v:SetAlpha((1-delta-i/500)*255*4)
-					end
+				end
+				_(rt.Panel:GetChildren()[1])
+				for i,v in pairs(children) do
+					v:SetAlpha((1-delta-i/500)*255*4)
 				end
 			end
 			surface.SetDrawColor(255, 255, 255, 255)
@@ -516,10 +521,9 @@ local function create_menu()
 	function tabs:OnActiveTabChanged(_, new)
 		help_text:SetText(_util.get_localised(new.realname..".help"))
 		for k, v in ipairs(self.Items) do
-			if v.Tab == new then
-				gwater2.options.menu_tab:SetInt(k)
-				break
-			end
+			if v.Tab ~= new then continue end
+			gwater2.options.menu_tab:SetInt(k)
+			break
 		end
 		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/select.wav") end
 		new.lastpush = RealTime()
@@ -591,40 +595,38 @@ hook.Add("GUIMousePressed", "gwater2_menuclose", function(mouse_code, aim_vector
 end)
 
 hook.Add("PopulateToolMenu", "gwater2_menu", function()
-    spawnmenu.AddToolMenuOption("Utilities", "gwater2", "gwater2_menu", "Menu Rewrite Options", "", "", function(panel)
+    spawnmenu.AddToolMenuOption("Utilities", "gwater2", "gwater2_menu", "Menu Options", "", "", function(panel)
 		panel:ClearControls()
 		panel:Button("Open Menu", "gwater2_menu")
         panel:KeyBinder("Menu Key", "gwater2_menukey")
 	end)
 end)
 
--- multi language support
-local lang = GetConVar("cl_language"):GetString()
-local strings = file.Read("data_static/gwater2/locale/gwater2_".. lang .. ".json", "THIRDPARTY")
-if !strings then 
-	print("[GWater2]: Unsupported language: " .. lang .. ", defaulting to english")
-	lang = "english"
-	strings = file.Read("data_static/gwater2/locale/gwater2_english.json", "THIRDPARTY") or "{}" 
-end
-
-for k,v in pairs(util.JSONToTable(strings)) do 
-	language.Add(k, v) 
-end
-
-print("[GWater2]: Loaded language: " .. lang)
+-- we need to initialse menu to make sure that our tables are set up
+hook.Add("HUDPaint", "GWATER2_InitializeMenu", function()
+	hook.Remove("HUDPaint", "GWATER2_InitializeMenu")
+	local sounds = gwater2.options.read_config().sounds
+	gwater2.options.read_config().sounds = false
+	create_menu():Close()
+	gwater2.options.read_config().sounds = sounds
+end)
 
 -- shit breaks in singleplayer due to predicted hooks
-function OpenGW2Menu(ply, key)
+function gwater2.open_menu(ply, key)
+	if !game.SinglePlayer() and !IsFirstTimePredicted() then return end
+
 	if key != gwater2.options.menu_key:GetInt() or just_closed == true then return end
 	RunConsoleCommand("gwater2_menu")
 end
 
-function CloseGW2Menu(ply, key)
+function gwater2.close_menu(ply, key)
+	if !game.SinglePlayer() and !IsFirstTimePredicted() then return end
+
 	if key != gwater2.options.menu_key:GetInt() then return end
 	just_closed = false
 end
 
-if game.SinglePlayer() then return end
-
-hook.Add("PlayerButtonDown", "gwater2_menu", OpenGW2Menu)
-hook.Add("PlayerButtonUp", "gwater2_menu", CloseGW2Menu)
+if !game.SinglePlayer() then
+	hook.Add("PlayerButtonDown", "gwater2_menu", gwater2.open_menu)
+	hook.Add("PlayerButtonUp", "gwater2_menu", gwater2.close_menu)
+end

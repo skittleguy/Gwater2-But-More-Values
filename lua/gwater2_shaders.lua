@@ -192,7 +192,7 @@ end)]]
 
 -- gwater2 shader pipeline
 hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky3d)	--PreDrawViewModels
-	if sky3d or render.GetRenderTarget() then return end
+	if !gwater2 or sky3d or render.GetRenderTarget() then return end
 
 	if gwater2.solver:GetActiveParticles() < 1 then return end
 	

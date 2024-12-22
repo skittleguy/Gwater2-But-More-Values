@@ -101,10 +101,10 @@ local visuals = {
 		func=function(col)
 			local finalpass = Material("gwater2/finalpass")
 			local col = Color(col:Unpack())
-			col.r = col.r * gwater2.options.parameters.color_value_multiplier.real
-			col.g = col.g * gwater2.options.parameters.color_value_multiplier.real
-			col.b = col.b * gwater2.options.parameters.color_value_multiplier.real
-			--col.a = col.a * gwater2.options.parameters.color_value_multiplier.real
+			col.r = col.r * gwater2.parameters.color_value_multiplier
+			col.g = col.g * gwater2.parameters.color_value_multiplier
+			col.b = col.b * gwater2.parameters.color_value_multiplier
+			--col.a = col.a * gwater2.parameters.color_value_multiplier
 			finalpass:SetVector4D("$color2", col:Unpack())
 			return true
 		end
@@ -115,7 +115,18 @@ local visuals = {
 		max=3,
 		decimals=2,
 		setup=function(scratch)
-			scratch:SetValue(gwater2.options.parameters.color_value_multiplier.real)
+			scratch:SetValue(gwater2.parameters.color_value_multiplier)
+		end,
+		func=function(val)
+			local col = gwater2.parameters.color
+			local finalpass = Material("gwater2/finalpass")
+			-- don't really modify the color, but also don't create new Color object
+			local r, g, b = col.r, col.g, col.b
+			col.r, col.g, col.b = r * val, g * val, b * val
+			--col.a = col.a * val
+			finalpass:SetVector4D("$color2", col:Unpack())
+			col.r, col.g, col.b = r, g, b
+			return true
 		end
 	},
 	["008-Reflectance"] = {
@@ -131,6 +142,7 @@ local visuals = {
 		setup=function(slider)
 			local finalpass = Material("gwater2/finalpass")
 			slider:SetValue(finalpass:GetFloat("$ior"))
+			return true
 		end
 	}
 }
@@ -202,31 +214,16 @@ local performance = {
 				local frame = styling.create_blocking_frame()
 				frame:SetSize(600, 300)
 				frame:Center()
-				--function frame:Paint(w, h)
-				--	styling.draw_main_background(0, 0, w, h)
-				--end
-
-				-- from testing it seems each particle is around 0.8kb so you could probably do some math to figure out the memory required and show it here
-				local size_fmt = 0.8*slider:GetValue() * 1024
-			    local u = ""
-			    for _,unit in pairs({"", "K", "M", "G", "T", "P", "E", "Z"}) do
-			    	u = unit
-			    	if math.abs(size_fmt) < 1024.0 then
-			    		break
-			    	end
-			    	size_fmt = size_fmt / 1024.0
-			    end
-			    size_fmt = math.Round(size_fmt)
-			    size_fmt = size_fmt..u.."B"
+				frame:SetScreenLock(false)
 
 				local label = frame:Add("DLabel")
 				label:Dock(TOP)
-				label:SetText(_util.get_localised("Performance.Particle Limit.title", math.floor(slider:GetValue()), size_fmt))
+				label:SetText(_util.get_localised("Performance.Particle Limit.title", math.floor(slider:GetValue())))
 				label:SetFont("GWater2Title")
 				label:SizeToContentsY()
 				label.text = label:GetText()
 				label:SetText("")
-				function label:Paint() draw.DrawText(self.text, self:GetFont(), self:GetWide() / 2, 0, color_white, TEXT_ALIGN_CENTER) end
+				function label:Paint(w, h) draw.DrawText(self.text, self:GetFont(), w / 2, 0, color_white, TEXT_ALIGN_CENTER) end
 
 				local label2 = frame:Add("DLabel")
 				label2:Dock(TOP)
@@ -235,25 +232,30 @@ local performance = {
 				label2:SizeToContentsY()
 				label2.text = label2:GetText()
 				label2:SetText("")
-				function label2:Paint() draw.DrawText(self.text, self:GetFont(), self:GetWide() / 2, 0, color_white, TEXT_ALIGN_CENTER) end
+				function label2:Paint(w, h) draw.DrawText(self.text, self:GetFont(), w / 2, 0, color_white, TEXT_ALIGN_CENTER) end
 
-				local confirm = vgui.Create("DButton", frame)
-				confirm:SetPos(600 * (3/4) - 10, 170)
-				confirm:SetText("")
+				local buttons = frame:Add("DPanel")
+				function buttons:Paint() end
+				buttons:Dock(BOTTOM)
+
+				local confirm = vgui.Create("DImageButton", buttons)
+				confirm:SetPos(600 * (3/4) - 10, 0)
 				confirm:SetSize(20, 20)
 				confirm:SetImage("icon16/accept.png")
 				confirm.Paint = nil
 				function confirm:DoClick() 
 					gwater2.solver:Destroy()
 					gwater2.solver = FlexSolver(slider:GetValue())
+					for name, value in gwater2.parameters do
+						_util.set_gwater_parameter(name, value)
+					end
 					gwater2.reset_solver(true)
 					frame:Close()
 					surface.PlaySound("gwater2/menu/select_ok.wav")
 				end
 
-				local deny = vgui.Create("DButton", frame)
-				deny:SetPos(600 * (1/4) - 10, 170)
-				deny:SetText("")
+				local deny = vgui.Create("DImageButton", buttons)
+				deny:SetPos(600 * (1/4) - 10, 0)
 				deny:SetSize(20, 20)
 				deny:SetImage("icon16/cross.png")
 				deny.Paint = nil
@@ -342,7 +344,7 @@ local interaction = {
 			["001-Reaction Forces"] = {
 				type="check",
 				func = function(val)
-					gwater2.solver:SetParameter("reaction_forces", val and 1 or 0)
+					--gwater2.solver:SetParameter("reaction_forces", val and 1 or 0)
 					gwater2.ChangeParameter("reaction_forces", val and 1 or 0)
 					return true
 				end,
@@ -383,61 +385,62 @@ local interaction = {
 					check:SetValue(gwater2["player_interaction"])
 				end
 			},
+			-- all of these parameters are server-side only. let's tell our code that we handled them already
 			["003-SwimSpeed"] = {
 				type="scratch",
 				min=-20,
 				max=100,
 				decimals=0,
-				func=function(val) end,
-				setup=function(scratch) end
+				func=function(val) return true end,
+				setup=function(scratch) scratch:SetValue(gwater2.parameters['swimspeed'] or scratch:GetValue()) end
 			},
 			["004-SwimFriction"] = {
 				type="scratch",
-				min=0.75,
+				min=0.25,
 				max=1,
 				decimals=3,
-				func=function(val) end,
-				setup=function(scratch) end
+				func=function(val) return true end,
+				setup=function(scratch) scratch:SetValue(gwater2.parameters['swimfriction'] or scratch:GetValue()) end
 			},
 			["005-SwimBuoyancy"] = {
 				type="scratch",
 				min=-2,
 				max=2,
 				decimals=2,
-				func=function(val) end,
-				setup=function(scratch) end
+				func=function(val) return true end,
+				setup=function(scratch) scratch:SetValue(gwater2.parameters['swimbuoyancy'] or scratch:GetValue()) end
 			},
 			["002-MultiplyParticles"] = {
 				type="scratch",
 				min=0,
 				max=200,
 				decimals=0,
-				func=function(val) end,
-				setup=function(scratch) end
+				func=function(val) return true end,
+				setup=function(scratch) scratch:SetValue(gwater2.parameters['multiplyparticles'] or scratch:GetValue()) end
 			},
 			["008-MultiplyWalk"] = {
 				type="scratch",
 				min=0,
 				max=2,
 				decimals=2,
-				func=function(val) end,
-				setup=function(scratch) end
+				func=function(val) return true end,
+				setup=function(scratch) scratch:SetValue(gwater2.parameters['multiplywalk'] or scratch:GetValue()) end
 			},
 			["009-MultiplyJump"] = {
 				type="scratch",
 				min=0,
 				max=2,
 				decimals=2,
-				func=function(val) end,
-				setup=function(scratch) end
+				func=function(val) return true end,
+				setup=function(scratch) scratch:SetValue(gwater2.parameters['multiplyjump'] or scratch:GetValue()) end
 			},
 			["010-TouchDamage"] = {
 				type="scratch",
 				min=-10,
 				max=10,
 				decimals=0,
-				func=function(val) end,
-				setup=function(scratch) end
+				func=function(val) return true end,
+				setup=function(scratch) scratch:SetValue(gwater2.parameters['touchdamage'] or scratch:GetValue()) end
 			},
 		}
 	}

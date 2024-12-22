@@ -1,5 +1,9 @@
 AddCSLuaFile()
 
+-- do return end
+
+gwater2 = nil
+
 if SERVER then 
 	include("gwater2_net.lua")
 	include("gwater2_interactions.lua")
@@ -11,7 +15,45 @@ if SERVER then
 	return
 end
 
-require((BRANCH == "x86-64" or BRANCH == "chromium" ) and "gwater2" or "gwater2_main")	-- carrying
+-- multi language support
+local lang = GetConVar("cl_language"):GetString()
+local strings = file.Read("data_static/gwater2/locale/gwater2_".. lang .. ".json", "THIRDPARTY")
+if !strings then 
+	lang = "english"
+	strings = file.Read("data_static/gwater2/locale/gwater2_english.json", "THIRDPARTY") or "{}" 
+end
+
+for k,v in pairs(util.JSONToTable(strings)) do 
+	language.Add(k, v) 
+end
+
+local toload = (BRANCH == "x86-64" or BRANCH == "chromium") and "gwater2" or "gwater2_main" -- carrying
+if !util.IsBinaryModuleInstalled(toload) then
+	ErrorNoHalt(string.format(
+		"===========================================================\n\n" ..
+		language.GetPhrase("gwater2.error.modulenotinstalled") .."\n\n" ..
+		language.GetPhrase("gwater2.error.modulefailedtoload.3") .."\n\n" ..
+		"===========================================================\n",
+		"NONE", BRANCH, jit.arch
+	))
+	return
+end
+
+local noerror, pcerr = pcall(function() require(toload) end)
+if !noerror then
+	pcerr = pcerr or "NONE"
+	ErrorNoHalt(string.format(
+		"===========================================================\n\n" ..
+		language.GetPhrase("gwater2.error.modulefailedtoload.1").."\n"..
+		language.GetPhrase("gwater2.error.modulefailedtoload.2").."\n\n"..
+		language.GetPhrase("gwater2.error.modulefailedtoload.3") .."\n\n" ..
+		"===========================================================\n",
+		pcerr, BRANCH, jit.arch
+	))
+	return
+end
+
+print("[GWater2]: Loaded with language: " .. lang)
 local in_water = include("gwater2_interactions.lua")
 
 -- GetMeshConvexes but for client
@@ -96,6 +138,9 @@ gwater2 = {
 	solver = FlexSolver(100000),
 	renderer = FlexRenderer(),
 	cloth_pos = Vector(),
+	parameters = {},
+	defaults = {},
+	error = error_message, -- in case we may want to use it
 	update_colliders = function(index, id, rep)
 		if id == 0 then return end	-- skip, entity is world
 
@@ -177,6 +222,22 @@ gwater2 = {
 	end
 }
 
+local function format_int(i)
+	return tostring(i):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
+end
+
+hook.Add("HUDPaint", "gwater2_status", function()
+	local text = format_int(gwater2.solver:GetActiveParticles()) .. " / " .. format_int(gwater2.solver:GetMaxParticles())
+	draw.DrawText(text, "CloseCaption_Normal", ScrW()/2+2, 18, Color(0, 0, 0, 255), TEXT_ALIGN_CENTER)
+	draw.DrawText(text, "CloseCaption_Normal", ScrW()/2, 16, color_white, TEXT_ALIGN_CENTER)
+end)
+
+-- setup external default values
+gwater2.parameters.color = Color(209, 237, 255, 25)
+gwater2.parameters.color_value_multiplier = 1
+
+gwater2.defaults = table.Copy(gwater2.parameters)
+
 -- setup percentage values (used in menu)
 gwater2["surface_tension"] = gwater2.solver:GetParameter("surface_tension") * gwater2.solver:GetParameter("radius")^4	-- dont ask me why its a power of 4
 gwater2["fluid_rest_distance"] = gwater2.solver:GetParameter("fluid_rest_distance") / gwater2.solver:GetParameter("radius")
@@ -184,15 +245,26 @@ gwater2["solid_rest_distance"] = gwater2.solver:GetParameter("solid_rest_distanc
 gwater2["collision_distance"] = gwater2.solver:GetParameter("collision_distance") / gwater2.solver:GetParameter("radius")
 gwater2["cohesion"] = gwater2.solver:GetParameter("cohesion") * gwater2.solver:GetParameter("radius") * 0.1	-- cohesion scales by radius, for some reason..
 gwater2["blur_passes"] = 3
--- reaction force specific
+-- water interaction specific
 gwater2["force_multiplier"] = 0.01
 gwater2["force_buoyancy"] = 0
 gwater2["force_dampening"] = 0
+
 gwater2["player_interaction"] = true
 
+gwater2['swimspeed'] = 2
+gwater2['swimbuoyancy'] = 0.49
+gwater2['swimfriction'] = 1
+
+gwater2["multiplyparticles"] = 60
+gwater2["multiplywalk"] = 1
+gwater2["multiplyjump"] = 1
+
+gwater2["touchdamage"] = 0
+
 include("gwater2_shaders.lua")
-include("gwater2_net.lua")
 include("gwater2_menu.lua")
+include("gwater2_net.lua")
 
 local limit_fps = 1 / 60
 local soundpatch
@@ -235,10 +307,17 @@ local function gwater_tick2()
 	end
 	
 	local particles_in_radius = gwater2.solver:GetParticlesInRadius(lp:GetPos() + lp:OBBCenter(), gwater2.solver:GetParameter("fluid_rest_distance") * 3)
-	GWATER2_QuickHackRemoveMeASAP(	-- TODO: REMOVE THIS HACKY SHIT!!!!!!!!!!!!!
-		lp:EntIndex(), 
-		particles_in_radius
-	)
+	-- "-- TODO: REMOVE THIS HACKY SHIT!!!!!!!!!!!!!"
+	-- little did he know, it will stay...
+	if lp:IsListenServerHost() then
+		-- multiplayer water-player interactions
+		for _, ply in player.Iterator() do
+			GWATER2_QuickHackRemoveMeASAP(
+				ply:EntIndex(), 
+				gwater2.solver:GetParticlesInRadius(ply:GetPos() + ply:OBBCenter(), gwater2.solver:GetParameter("fluid_rest_distance") * 3)
+			)
+		end
+	end
 
 	lp.GWATER2_CONTACTS = particles_in_radius
 
@@ -250,9 +329,8 @@ local function gwater_tick2()
 		to be honest I do not have enough time or patience to figure out the underlying issue.. so for now we're
 		gonna have to deal with some mee++
 	]]
-		
-	hook.Run("gwater2_tick_particles")
-	hook.Run("gwater2_tick_drains")
+	pcall(function() hook.Run("gwater2_tick_particles") end)
+	pcall(function() hook.Run("gwater2_tick_drains") end)
 
 	gwater2.solver:Tick(limit_fps, 0)
 end

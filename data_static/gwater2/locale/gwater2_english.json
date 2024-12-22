@@ -1,4 +1,12 @@
 {
+    "gwater2.error.modulenotinstalled": "!!!PLEASE READ ME!!!\n\nGWATER2 FAILED TO FIND MODULE!\nThis likely means you did not install the GWater2 dll files.\nPlease install the binaries and ensure the gwater2 dlls are in GarrysMod/garrysmod/lua/bin.\nNote that GWater2 does NOT natively work on Linux or Mac systems.",
+    "gwater2.error.modulefailedtoload.1": "!!!PLEASE READ ME!!!\n\nGWATER2 FAILED TO LOAD MODULE!\nThis likely means you did not install the FleX binaries correctly into GarrysMod/\nPlease check your installation and restart the game.",
+    "gwater2.error.modulefailedtoload.2": "If you are 100%% sure you have installed it correctly, restart the game a few times. This is a problem with Garry's code and I cannot fix it",
+    "gwater2.error.modulefailedtoload.3": "Feel free to ask for help if the issue persists. PLEASE Provide the upcoming 3 lines when asking for help:\nError: %s\nBRANCH: %s\njit.arch: %s",
+    "gwater2.gun.adv.notloaded": "GWater 2 failed to load!\n\nCheck console for errors",
+    "gwater2.gun.adv.controls.lclk": "Left-Click to Spawn Particles",
+    "gwater2.gun.adv.controls.rclk": "Right-Click to Open Gun Menu",
+    "gwater2.gun.adv.controls.reload": "Reload to Remove All",
     "gwater2.menu.title": "GWater2 (%s)",
     "gwater2.menu.About Tab.title": "About",
     "gwater2.menu.About Tab.titletext": "Welcome to GWater2 (v%s)",
@@ -99,7 +107,7 @@
     "gwater2.menu.Performance.Depth Fix.desc": "Makes particles appear spherical instead of flat, creating a cleaner and smoother water surface.\n\nCauses shader overdraw.\n\nMedium-High performance impact.",
     "gwater2.menu.Performance.Particle Limit": "Particle Limit",
     "gwater2.menu.Performance.Particle Limit.desc": "USE THIS PARAMETER AT YOUR OWN RISK.\n\nChanges the limit of particles.\n\nThis parameter does not save.\n\nNote that a higher limit will negatively impact performance even with the same number of particles spawned.",
-    "gwater2.menu.Performance.Particle Limit.title": "You are about to change the fluid limit to %d particles (%s)\nAre you sure?",
+    "gwater2.menu.Performance.Particle Limit.title": "You are about to change the fluid limit to %d particles\nAre you sure?",
     "gwater2.menu.Performance.Particle Limit.warning": "This can be dangerous, because all particles must be allocated on the GPU.\nDO NOT set the limit to a number higher then you think your computer can handle.\nI DO NOT take responsiblity for any hardware damage this may cause",
     "gwater2.menu.Performance.Iterations": "Iterations",
     "gwater2.menu.Performance.Iterations.desc": "Controls how many times the physics solver attempts to converge to a solution per substep.\n\nThis parameter does not save.\n\nMedium performance impact.",
@@ -179,5 +187,13 @@
     "gwater2.menu.Menu.admin_only": "Admin only menu",
     "gwater2.menu.Menu.admin_only.desc": "Enable/disables the menu only being accessable to admins.\n\nThis will force close the menu on all players when enabled.\n\nNOTE THAT ONLY THE SERVER HOST CAN CHANGE THIS VALUE. IF THIS SETTING DOESN'T WORK, RUN THE COMMAND:\ngwater2_adminonly (0-1)\nIN CONSOLE",
     "gwater2.menu.Fluid Preview.title": "Fluid Preview",
-    "gwater2.menu.Explanation Area.title": "Explanation Area"
+    "gwater2.menu.Explanation Area.title": "Explanation Area",
+    "gwater2.menu.WaterGun.Velocity": "Particle Velocity",
+    "gwater2.menu.WaterGun.Velocity.Explanation": "How fast particles should go out of the gun.",
+    "gwater2.menu.WaterGun.Distance": "Max Distance",
+    "gwater2.menu.WaterGun.Distance.Explanation": "How far should we try to trace starting position",
+    "gwater2.menu.WaterGun.Spread": "Particle Spread",
+    "gwater2.menu.WaterGun.Spread.Explanation": "How spread out particles are",
+    "gwater2.menu.WaterGun.SpawnMode": "Shoot Mode",
+    "gwater2.menu.WaterGun.SpawnMode.Explanation": "1 = Circle, 2 = Box\nPlease note that same parameters with different\nmodes behave differently."
 }
