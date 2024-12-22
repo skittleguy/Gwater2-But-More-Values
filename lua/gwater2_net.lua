@@ -1,5 +1,7 @@
 AddCSLuaFile()
 
+local admin_only = CreateConVar("gwater2_adminonly", "0", FCVAR_REPLICATED + FCVAR_ARCHIVE)
+
 if SERVER then
 	-- TODO: too many network strings...
 	util.AddNetworkString("GWATER2_ADDCLOTH")
@@ -8,6 +10,7 @@ if SERVER then
 	util.AddNetworkString("GWATER2_ADDCYLINDER")
 	util.AddNetworkString("GWATER2_ADDSPHERE")
 	util.AddNetworkString("GWATER2_ADDMODEL")
+	util.AddNetworkString("GWATER2_ADDFORCEFIELD")
 	util.AddNetworkString("GWATER2_RESETSOLVER")
 
 	util.AddNetworkString("GWATER2_CHANGEPARAMETER")
@@ -69,6 +72,16 @@ if SERVER then
 			net.Broadcast()
 		end,
 
+		AddForceField = function(pos, radius, strength, mode, linear)
+			net.Start("GWATER2_ADDFORCEFIELD")
+				net.WriteVector(pos)
+				net.WriteFloat(radius)
+				net.WriteFloat(strength)
+				net.WriteUInt(mode, 2)	-- 0-2 inclusive
+				net.WriteBool(linear)
+			net.Broadcast()
+		end,
+
 		ChangeParameter = function(name, value, final, sender)
 			if gwater2.parameters[name] == value then return end
 			net.Start("GWATER2_CHANGEPARAMETER", final)
@@ -91,20 +104,6 @@ if SERVER then
 			return mat
 		end
 	}
-
-	-- googer_: i think you also want to store this!!!
-	local admin_only = CreateConVar("gwater2_adminonly", "0", FCVAR_REPLICATED + FCVAR_ARCHIVE)
-	cvars.AddChangeCallback("gwater2_adminonly", function(name, old, new)
-		if tonumber(new or 0) != 0 then
-
-			-- meetric: reopen menus of all players. we need to make sure they're admins
-			-- googer_: just skip players that are admins?
-			for k, v in ipairs(player.GetAll()) do
-				if v:IsSuperAdmin() then continue end
-				v:ConCommand("gwater2_menu")
-			end
-		end
-	end)
 
 	net.Receive("GWATER2_CHANGEPARAMETER", function(len, ply)
 		if admin_only:GetBool() and not ply:IsAdmin() then return end	-- admin only :P
@@ -173,6 +172,12 @@ else	-- CLIENT
 		local extra = net.ReadTable()	-- the one time this function is actually useful
 		gwater2.solver:AddCloth(translation, Vector(size_x, size_y), extra)
 		gwater2.cloth_pos = translation:GetTranslation()
+	end)
+
+	net.Receive("GWATER2_ADDPARTICLE", function(len)
+		local pos = net.ReadVector()
+		local extra = net.ReadTable()
+		gwater2.solver:AddParticle(pos, extra)
 	end)
 
 	net.Receive("GWATER2_ADDCYLINDER", function(len)
@@ -273,9 +278,12 @@ else	-- CLIENT
 		cs_ent:Remove()
 	end)
 
-	net.Receive("GWATER2_ADDPARTICLE", function(len)
+	net.Receive("GWATER2_ADDFORCEFIELD", function(len)
 		local pos = net.ReadVector()
-		local extra = net.ReadTable()
-		gwater2.solver:AddParticle(pos, extra)
+		local radius = net.ReadFloat()
+		local strength = net.ReadFloat()
+		local mode = net.ReadUInt(2)	-- 0-2 inclusive
+		local linear = net.ReadBool()
+		gwater2.solver:AddForceField(pos, radius, strength, mode, linear)
 	end)
 end

@@ -55,7 +55,6 @@ CreateWorkspace({name = "gwater2", abi_compatible = true, path = ""})
 
 			links { 
 				"NvFlexReleaseD3D_x86",
-				"NvFlexDeviceRelease_x86",
 				"NvFlexExtReleaseD3D_x86",
 			}
 
@@ -68,7 +67,6 @@ CreateWorkspace({name = "gwater2", abi_compatible = true, path = ""})
 
 			links { 
 				"NvFlexReleaseD3D_x64",
-				"NvFlexDeviceRelease_x64",
 				"NvFlexExtReleaseD3D_x64",
 			}
 			
@@ -88,7 +86,6 @@ CreateWorkspace({name = "gwater2", abi_compatible = true, path = ""})
 			
 			links { 
 				":NvFlexReleaseCUDA_x64.a",
-				":NvFlexDeviceRelease_x64.a",
 				":NvFlexExtReleaseCUDA_x64.a",
 				--":NvFlexDebugCUDA_x64.a",
 				--":NvFlexDeviceDebug_x64.a",

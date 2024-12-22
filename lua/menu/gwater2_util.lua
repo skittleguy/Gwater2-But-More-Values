@@ -40,8 +40,10 @@ local function set_gwater_parameter(option, val)
 	end
 	if IsValid(param[2]) and not param[2].editing then
 		param[2].block = true
-		if param[1].type ~= "color" then param[2]:SetValue(val)
-		else param[2]:SetColor(val)
+		if param[1].type ~= "color" then 
+      param[2]:SetValue(val)
+		else 
+      param[2]:SetColor(val)
 		end
 		param[2].block = false
 		param[2].editing = false -- editing gets set to true, reset it back
