@@ -226,10 +226,28 @@ local function format_int(i)
 	return tostring(i):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
 end
 
+local show_time, hide_time, last_second_was, cur_second_parts, last_second = nil, nil, 0, 0, 0
 hook.Add("HUDPaint", "gwater2_status", function()
+	if CurTime() - last_second > 1 then
+		last_second = CurTime()
+		cur_second_parts = gwater2.solver:GetActiveParticles() - last_second_was
+		last_second_was = gwater2.solver:GetActiveParticles()
+	end
+	local frac
+	if gwater2.solver:GetActiveParticles() <= 0 then
+		show_time = nil
+		hide_time = hide_time or CurTime()
+		frac = 1-math.ease.OutCirc(math.min(1, CurTime()-hide_time))
+	else
+		show_time = show_time or CurTime()
+		hide_time = nil
+		frac = math.ease.OutCirc(math.min(1, CurTime()-show_time))
+	end
+	if gwater2.solver:GetActiveParticles() <= 0 and frac >= 1 then return end
 	local text = format_int(gwater2.solver:GetActiveParticles()) .. " / " .. format_int(gwater2.solver:GetMaxParticles())
-	draw.DrawText(text, "CloseCaption_Normal", ScrW()/2+2, 18, Color(0, 0, 0, 255), TEXT_ALIGN_CENTER)
-	draw.DrawText(text, "CloseCaption_Normal", ScrW()/2, 16, color_white, TEXT_ALIGN_CENTER)
+	text = text .. " ("..cur_second_parts..")"
+	draw.DrawText(text, "CloseCaption_Normal", ScrW()/2+2, 18-18*(1-frac), Color(0, 0, 0, 255*frac), TEXT_ALIGN_CENTER)
+	draw.DrawText(text, "CloseCaption_Normal", ScrW()/2, 16-18*(1-frac), ColorAlpha(color_white, 255*frac), TEXT_ALIGN_CENTER)
 end)
 
 -- setup external default values
