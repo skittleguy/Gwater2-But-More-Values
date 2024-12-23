@@ -23,29 +23,44 @@ function ENT:SetupDataTables()
 	end)
 end
 
-if SERVER then
-	function ENT:Initialize()
-		if CLIENT then return end
-		self:SetModel("models/xqm/button3.mdl")
-		self:SetMaterial("phoenix_storms/dome")
-		
-		self:PhysicsInit(SOLID_VPHYSICS)
-		self:SetMoveType(MOVETYPE_VPHYSICS)
-		self:SetSolid(SOLID_VPHYSICS)
+function ENT:Initialize()
+	if CLIENT then return end
+	self:SetModel("models/xqm/button3.mdl")
+	self:SetMaterial("phoenix_storms/dome")
+	
+	self:PhysicsInit(SOLID_VPHYSICS)
+	self:SetMoveType(MOVETYPE_VPHYSICS)
+	self:SetSolid(SOLID_VPHYSICS)
+
+	-- wiremod integration
+	if WireLib ~= nil then
+		WireLib.CreateInputs(self, {
+			"Radius",
+			"Strength"})
 	end
+end
 
-	function ENT:SpawnFunction(ply, tr, class)
-		if not tr.Hit then return end
-		local ent = ents.Create(class)
-		ent:SetPos(tr.HitPos)
-		ent:Spawn()
-		ent:Activate()
-
-		ent:SetRadius(20)
-		ent:SetStrength(100)
-		-- why?
-		--ent:SetCollisionGroup(COLLISION_GROUP_WORLD)
-
-		return ent
+-- wiremod integration
+function ENT:TriggerInput(name, val)
+	if name == "Radius" then
+		return self:SetRadius(math.max(0, math.min(100, val)))
 	end
+	if name == "Strength" then
+		return self:SetStrength(math.max(0, math.min(200, val)))
+	end
+end
+
+function ENT:SpawnFunction(ply, tr, class)
+	if not tr.Hit then return end
+	local ent = ents.Create(class)
+	ent:SetPos(tr.HitPos)
+	ent:Spawn()
+	ent:Activate()
+
+	ent:SetRadius(20)
+	ent:SetStrength(100)
+	-- why?
+	--ent:SetCollisionGroup(COLLISION_GROUP_WORLD)
+
+	return ent
 end

@@ -19,6 +19,38 @@ function ENT:Initialize()
 	self:SetMoveType(MOVETYPE_VPHYSICS)
 	self:SetSolid(SOLID_VPHYSICS)
 	self:SetUseType(SIMPLE_USE)
+
+	-- wiremod integration
+	if WireLib ~= nil then
+		WireLib.CreateInputs(self, {
+			"Active",
+			"RadiusX", "RadiusY",
+			"Strength",
+			"Spread",
+			"Lifetime"})
+	end
+end
+
+-- wiremod integration
+function ENT:TriggerInput(name, val)
+	if name == "Active" then
+		return self:SetOn(val > 0)
+	end
+	if name == "RadiusX" then
+		return self:SetRadiusX(math.max(1, math.min(20, val)))
+	end
+	if name == "RadiusY" then
+		return self:SetRadiusY(math.max(1, math.min(20, val)))
+	end
+	if name == "Strength" then
+		return self:SetStrength(math.max(1, math.min(100, val)))
+	end
+	if name == "Spread" then
+		return self:SetSpread(math.max(1, math.min(2, val)))
+	end
+	if name == "Lifetime" then
+		return self:SetLifetime(math.max(1, math.min(100, val)))
+	end
 end
 
 function ENT:SpawnFunction(ply, tr, class)

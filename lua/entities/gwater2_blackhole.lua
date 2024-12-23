@@ -4,7 +4,7 @@ ENT.Type = "anim"
 ENT.Base = "base_anim"
 
 ENT.Category     = "GWater2"
-ENT.PrintName    = "Blackhole"
+ENT.PrintName    = "Black hole"
 ENT.Author       = "Meetric"
 ENT.Purpose      = ""
 ENT.Instructions = ""
@@ -20,7 +20,7 @@ function ENT:SetupDataTables()
 	if SERVER then return end
 
 	self.PARTICLE_EMITTER = ParticleEmitter(self:GetPos(), false)
-	hook.Add("gwater2_tick_drains", self, function()	-- auto-removed internally
+	hook.Add("gwater2_tick_drains", self, function()
 		gwater2.solver:AddForceField(self:GetPos(), self:GetRadius(), -self:GetStrength(), self:GetMode(), self:GetLinear())
 	end)
 end
@@ -34,6 +34,8 @@ if SERVER then
 		self:PhysicsInit(SOLID_VPHYSICS)
 		self:SetMoveType(MOVETYPE_VPHYSICS)
 		self:SetSolid(SOLID_VPHYSICS)
+
+		-- celestial body, no wiremod integration >:(
 	end
 
 	function ENT:SpawnFunction(ply, tr, class)

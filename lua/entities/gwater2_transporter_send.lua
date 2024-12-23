@@ -35,4 +35,21 @@ function ENT:Initialize()
 	self:PhysicsInit(SOLID_VPHYSICS)
 	self:SetMoveType(MOVETYPE_VPHYSICS)
 	self:SetSolid(SOLID_VPHYSICS)
+	
+	-- wiremod integration
+	if WireLib ~= nil then
+		WireLib.CreateInputs(self, {
+			"Radius",
+			"Strength"})
+	end
+end
+
+-- wiremod integration
+function ENT:TriggerInput(name, val)
+	if name == "Radius" then
+		return self:SetRadius(math.max(0, math.min(100, val)))
+	end
+	if name == "Strength" then
+		return self:SetStrength(math.max(0, math.min(200, val)))
+	end
 end
