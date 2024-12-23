@@ -253,7 +253,7 @@ local performance = {
 				function confirm:DoClick() 
 					gwater2.solver:Destroy()
 					gwater2.solver = FlexSolver(slider:GetValue())
-					for name, value in ipairs(gwater2.parameters) do
+					for name, value in pairs(gwater2.parameters) do
 						_util.set_gwater_parameter(name, value)
 					end
 					gwater2.reset_solver(true)
