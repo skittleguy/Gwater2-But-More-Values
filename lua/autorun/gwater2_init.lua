@@ -237,7 +237,7 @@ hook.Add("HUDPaint", "gwater2_status", function()
 	if gwater2.solver:GetActiveParticles() <= 0 then
 		show_time = nil
 		hide_time = hide_time or CurTime()
-		frac = 1-math.ease.OutCirc(math.min(1, CurTime()-hide_time))
+		frac = 1-math.ease.InCirc(math.min(1, CurTime()-hide_time))
 	else
 		show_time = show_time or CurTime()
 		hide_time = nil
