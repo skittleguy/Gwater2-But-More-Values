@@ -20,10 +20,11 @@ void FlexBuffers::destroy() {
 }
 
 void FlexSolver::reset_diffuse() {
-	hosts.diffuse_count = (int*)NvFlexMap(buffers.diffuse_count, eNvFlexMapWait);
+	//hosts.diffuse_count = (int*)NvFlexMap(buffers.diffuse_count, eNvFlexMapWait);
+	//hosts.diffuse_count[0] = 0;
+	//NvFlexUnmap(buffers.diffuse_count);
 	hosts.diffuse_count[0] = 0;
-	NvFlexUnmap(buffers.diffuse_count);
-	NvFlexSetDiffuseParticles(solver, NULL, NULL, 0);
+	NvFlexSetDiffuseParticles(solver, buffers.diffuse_pos, buffers.diffuse_vel, 0);
 }
 
 //int diff = Max(n - copy_description->elementCount, 0);
@@ -33,17 +34,14 @@ void FlexSolver::reset_diffuse() {
 // clears all particles
 void FlexSolver::reset() {
 	reset_cloth();
+	reset_diffuse();
 
 	copy_active.elementCount = 0;
 	particle_queue.clear();
 	particle_queue_index = 0;
 
-	reset_diffuse();
-
 	memset(hosts.particle_lifetime, 0, sizeof(float) * get_max_particles());
 }
-
-
 
 void FlexSolver::reset_cloth() {
 	copy_triangles.elementCount = 0;
