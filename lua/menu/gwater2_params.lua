@@ -234,7 +234,7 @@ local performance = {
 
 				local label2 = frame:Add("DLabel")
 				label2:Dock(TOP)
-				label2:SetText(_util.get_localised("Performance.Particle Limit.warning"))
+				label2:SetText("\n" .. _util.get_localised("Performance.Particle Limit.warning"))
 				label2:SetFont("DermaDefault")
 				label2:SizeToContentsY()
 				label2.text = label2:GetText()
