@@ -877,17 +877,18 @@ LUA_FUNCTION(FLEXSOLVER_GetActiveDiffuseParticlesPos) {
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 	int iterator = LUA->GetNumber(2);
 
-	Vector average_pos = Vector();
+	Vector average_pos = Vector(0, 0, 0);
 	int divider = 0;
 	for (int i = 0; i < flex->get_active_diffuse(); i += iterator) {
-		average_pos += flex->hosts.diffuse_pos[i].AsVector3D();
+		Vector4D pos = flex->hosts.diffuse_pos[i];
+		average_pos += Vector(pos.x, pos.y, pos.z);
 		divider++;
 	}
 
 	if (divider == 0) {
-		average_pos = Vector();
+		average_pos = Vector(0, 0, 0);
 	} else {
-		average_pos /= divider;
+		average_pos /= (float)divider;
 	}
 
 	LUA->PushVector(average_pos);
@@ -1042,11 +1043,11 @@ LUA_FUNCTION(GWATER2_SET_CONTACTS) {
 			LUA_SERVER->PushNumber(LUA->GetNumber(1));
 			if (!LUA_SERVER->PCall(1, 1, 0)) {
 				if (LUA_SERVER->IsType(-1, Type::Entity)) {
-					if (LUA_SERVER->GetMetaTable(-1)) {
+					//if (LUA_SERVER->GetMetaTable(-1)) {
 						LUA_SERVER->PushNumber(LUA->GetNumber(2));
 						LUA_SERVER->SetField(-2, "GWATER2_CONTACTS");
-						LUA_SERVER->Pop();	// Pop metatable
-					}
+						//LUA_SERVER->Pop();	// Pop metatable
+					//}
 				}
 				else {
 					Warning("[GWater2 Internal Error]: _G.Entity() Is returning a non-entity! (%i)\n", LUA_SERVER->GetType(-1));

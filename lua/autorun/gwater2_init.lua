@@ -320,21 +320,21 @@ timer.Create("gwater2_calcdiffusesound", 0.1, 0, function()
 	end
 
 		
-	local particles_in_radius = gwater2.solver:GetParticlesInRadius(lp:GetPos() + lp:OBBCenter(), gwater2.solver:GetParameter("fluid_rest_distance") * 3)
+	local particles_in_radius = gwater2.solver:GetParticlesInRadius(lp:GetPos() + lp:OBBCenter() / 2, gwater2.solver:GetParameter("fluid_rest_distance") * 3)
 
 	-- multiplayer water-player interactions
 	if lp:IsListenServerHost() then
 		for _, ply in player.Iterator() do
-			local particles = ply != lp and gwater2.solver:GetParticlesInRadius(ply:GetPos()+ ply:OBBCenter(), gwater2.solver:GetParameter("fluid_rest_distance") * 3)
+			local particles = ply != lp and gwater2.solver:GetParticlesInRadius(ply:GetPos() + ply:OBBCenter() / 2, gwater2.solver:GetParameter("fluid_rest_distance") * 3)
 
-			GWATER2_SET_CONTACTS(
+			GWATER2_SET_CONTACTS(	-- defined by C++ module
 				ply:EntIndex(), 
 				particles or particles_in_radius
 			)
 		end
 	end
 
-	lp.GWATER2_CONTACTS = particles_in_radius
+	--lp.GWATER2_CONTACTS = particles_in_radius
 end)
 
 local function gwater_tick2()
