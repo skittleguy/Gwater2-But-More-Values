@@ -65,7 +65,7 @@ local function do_damage(ply)
 	if (gwater2.parameters.touchdamage or 0) == 0 then return end
 	if not ply.GWATER2_CONTACTS or ply.GWATER2_CONTACTS < 30 then return end
 	if gwater2.parameters.touchdamage > 0 then
-		ply:TakeDamage(gwater2.parameters.touchdamage, Entity(1), Entity(1))
+		ply:TakeDamage(gwater2.parameters.touchdamage)
 	else
 		ply:SetHealth(math.min(ply:GetMaxHealth(), ply:Health() + -gwater2.parameters["touchdamage"]))
 	end

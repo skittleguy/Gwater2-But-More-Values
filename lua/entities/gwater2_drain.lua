@@ -59,8 +59,7 @@ function ENT:SpawnFunction(ply, tr, class)
 
 	ent:SetRadius(20)
 	ent:SetStrength(100)
-	-- why?
-	--ent:SetCollisionGroup(COLLISION_GROUP_WORLD)
+	ent:SetCollisionGroup(COLLISION_GROUP_WORLD)
 
 	return ent
 end

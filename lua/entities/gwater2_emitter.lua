@@ -64,7 +64,7 @@ function ENT:SpawnFunction(ply, tr, class)
 	ent:SetRadiusY(6)
 	ent:SetStrength(10)
 	ent:SetSpread(1)
-	ent:SetLifetime(10)
+	ent:SetLifetime(0)
 	ent:SetOn(true)
 	--ent:SetCollisionGroup(COLLISION_GROUP_WORLD)
 	ent:SetMaterial("phoenix_storms/gear")
@@ -80,7 +80,7 @@ function ENT:SetupDataTables()
 	self:NetworkVar("Int", 0, "RadiusX", {KeyName = "RadiusX", Edit = {type = "Int", order = 0, min = 1, max = 20}})
 	self:NetworkVar("Int", 1, "RadiusY", {KeyName = "RadiusY", Edit = {type = "Int", order = 1, min = 1, max = 20}})
 	self:NetworkVar("Float", 0, "Spread", {KeyName = "Spread", Edit = {type = "Float", order = 2, min = 1, max = 2}})
-	self:NetworkVar("Float", 1, "Lifetime", {KeyName = "Lifetime", Edit = {type = "Float", order = 3, min = 1, max = 100}})
+	self:NetworkVar("Float", 1, "Lifetime", {KeyName = "Lifetime", Edit = {type = "Float", order = 3, min = 0, max = 100}})
 	self:NetworkVar("Float", 2, "Strength", {KeyName = "Strength", Edit = {type = "Float", order = 4, min = 1, max = 100}})
 	self:NetworkVar("Bool", 0, "On", {KeyName = "On", Edit = {type = "Bool", order = 5}})
 
@@ -103,6 +103,9 @@ function ENT:SetupDataTables()
 		--mat:SetAngles(self:LocalToWorldAngles(Angle(0, CurTime() * 200, 0)))
 		mat:SetTranslation(self:GetPos() + self:GetUp() * (6 + particle_radius) * math.Rand(0.999, 1))
 	 
-		gwater2.solver:AddCylinder(mat, Vector(radiusx, radiusy, 1), {vel = self:GetUp() * strength, lifetime = self:GetLifetime()})
+		local lifetime = self:GetLifetime()
+		if lifetime <= 0 then lifetime = nil end
+
+		gwater2.solver:AddCylinder(mat, Vector(radiusx, radiusy, 1), {vel = self:GetUp() * strength, lifetime = lifetime})
 	end)
 end
