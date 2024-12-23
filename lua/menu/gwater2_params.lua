@@ -98,6 +98,9 @@ local visuals = {
 	},
 	["006-Color"] = {
 		type="color",
+		setup=function(mixer)
+			mixer:SetColor(gwater2.parameters.color)
+		end,
 		func=function(col)
 			local finalpass = Material("gwater2/finalpass")
 			finalpass:SetVector4D("$color2", 
@@ -126,7 +129,7 @@ local visuals = {
 				col.b * val, 
 				col.a
 			)
-			return false
+			return true
 		end
 	},
 	["008-Reflectance"] = {
@@ -153,6 +156,7 @@ local performance = {
 		max=10,
 		decimals=0,
 		type="scratch",
+		nosync=true,
 		setup = function(slider)
 			local label = slider:GetParent().label
 			label.fancycolor = Color(250, 250, 0)
@@ -165,6 +169,7 @@ local performance = {
 		max=10,
 		decimals=0,
 		type="scratch",
+		nosync=true,
 		setup = function(slider)
 			local label = slider:GetParent().label
 			label.fancycolor = Color(255, 127, 0)
@@ -177,6 +182,7 @@ local performance = {
 		max=4,
 		decimals=0,
 		type="scratch",
+		nosync=true,
 		func=function(n)
 			gwater2.options.blur_passes:SetInt(n)
 		end,
@@ -194,6 +200,7 @@ local performance = {
 		max=1000000,
 		decimals=0,
 		type="scratch",
+		nosync=true,
 		func=function(_) return true end,
 		setup=function(slider)
 			local label = slider:GetParent().label
@@ -270,6 +277,7 @@ local performance = {
 	},
 	["006-Absorption"] = {
 		type="check",
+		nosync=true,
 		func=function(val)
 			local water_volumetric = Material("gwater2/volumetric")
 			gwater2.options.absorption:SetBool(val)
@@ -287,6 +295,7 @@ local performance = {
 	},
 	["007-Depth Fix"] = {
 		type="check",
+		nosync=true,
 		func=function(val)
 			local water_normals = Material("gwater2/normals")
 			gwater2.options.depth_fix:SetBool(val)
@@ -304,6 +313,7 @@ local performance = {
 	},
 	["008-Player Collision"] = {
 		type="check",
+		nosync=true,
 		func=function(val)
 			gwater2.options.player_collision:SetBool(val)
 			net.Start("GWATER2_REQUESTCOLLISION")
@@ -322,6 +332,7 @@ local performance = {
 	},
 	["009-Diffuse Enabled"] = {
 		type="check",
+		nosync=true,
 		func=function(val)
 			gwater2.solver:EnableDiffuse(val)
 			gwater2.solver:ResetDiffuse()

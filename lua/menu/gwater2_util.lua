@@ -173,8 +173,11 @@ local function make_parameter_scratch(tab, locale_parameter_name, parameter_name
 		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/reset.wav", 75, 100, 1, CHAN_STATIC) end
 	end
 	function slider.Slider.Knob:DoClick()
-		gwater2.ChangeParameter(parameter_id, math.Round(slider:GetValue(), parameter.decimals), true)
 		slider.editing = false
+		if parameter.nosync then
+			return set_gwater_parameter(parameter_id, val)
+		end
+		gwater2.ChangeParameter(parameter_id, math.Round(slider:GetValue(), parameter.decimals), true)
 	end
 	function slider:OnValueChanged(val)
 		slider.editing = true
@@ -185,6 +188,9 @@ local function make_parameter_scratch(tab, locale_parameter_name, parameter_name
 		end
 
 		gwater2.parameters[parameter_id] = val
+		if parameter.nosync then
+			return set_gwater_parameter(parameter_id, val)
+		end
 		gwater2.ChangeParameter(parameter_id, val, false)
 		--set_gwater_parameter(parameter_id, val, nil, true)
 	end
@@ -263,6 +269,9 @@ local function make_parameter_color(tab, locale_parameter_name, parameter_name, 
 		val = Color(val.r, val.g, val.b, val.a)
 
 		gwater2.parameters[parameter_id] = val
+		if parameter.nosync then
+			return set_gwater_parameter(parameter_id, val)
+		end
 		gwater2.ChangeParameter(parameter_id, val, true) -- TODO: ^
 	end
 
@@ -332,6 +341,9 @@ local function make_parameter_check(tab, locale_parameter_name, parameter_name, 
 		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/toggle.wav", 75, 100, 1, CHAN_STATIC) end
 
 		gwater2.parameters[parameter_id] = val
+		if parameter.nosync then
+			return set_gwater_parameter(parameter_id, val)
+		end
 		gwater2.ChangeParameter(parameter_id, val, true) -- all checkbox edits are final
 		--if parameter.func then if parameter.func(val) then return end end
 		--set_gwater_parameter(parameter_id, val)

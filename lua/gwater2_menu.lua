@@ -386,6 +386,7 @@ local function create_menu()
 		end
 
 		_util.make_parameter_check(tab, "Menu.sounds", "Sounds", {
+			nosync=true,
 	        func=function(val)
 	        	gwater2.options.write_config({["sounds"]=val})
 	        	return true
@@ -398,6 +399,7 @@ local function create_menu()
     	})
 
     	_util.make_parameter_check(tab, "Menu.animations", "Animations", {
+			nosync=true,
 	        func=function(val)
 	        	gwater2.options.write_config({["animations"]=val})
 	        	return true
@@ -410,6 +412,7 @@ local function create_menu()
     	})
 
     	_util.make_parameter_check(tab, "Menu.preview", "Preview", {
+			nosync=true,
 	        func=function(val)
 	        	gwater2.options.write_config({["preview"]=val})
 	        	sim_preview:SetVisible(val)
@@ -435,6 +438,7 @@ local function create_menu()
     	})
 
     	_util.make_parameter_check(tab, "Menu.pixelate_preview", "Pixelate Preview", {
+			nosync=true,
 	        func=function(val)
 	        	gwater2.options.write_config({["pixelate_preview"]=val})
 	        	return true
@@ -447,6 +451,7 @@ local function create_menu()
     	})
 		if LocalPlayer():IsListenServerHost() then
 			_util.make_parameter_check(tab, "Menu.admin_only", "Admin Only", {
+				nosync=true,
 				func=function(val)
 					RunConsoleCommand("gwater2_adminonly", val and "1" or "0")
 					return true
