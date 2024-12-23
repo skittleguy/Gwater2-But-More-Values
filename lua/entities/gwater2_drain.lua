@@ -17,7 +17,6 @@ function ENT:SetupDataTables()
 
 	if SERVER then return end
 
-	self.PARTICLE_EMITTER = ParticleEmitter(self:GetPos(), false)
 	hook.Add("gwater2_tick_drains", self, function()
 		gwater2.solver:RemoveSphere(gwater2.quick_matrix(self:GetPos(), nil, self:GetRadius()))
 		gwater2.solver:AddForceField(self:GetPos(), self:GetRadius(), -self:GetStrength(), 0, true)
@@ -44,7 +43,8 @@ if SERVER then
 
 		ent:SetRadius(20)
 		ent:SetStrength(100)
-		ent:SetCollisionGroup(COLLISION_GROUP_WORLD)
+		-- why?
+		--ent:SetCollisionGroup(COLLISION_GROUP_WORLD)
 
 		return ent
 	end

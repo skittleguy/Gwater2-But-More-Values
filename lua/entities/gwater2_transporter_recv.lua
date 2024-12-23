@@ -70,7 +70,7 @@ function ENT:SpawnFunction(ply, tr, class)
 	ent2:Activate()
 	ent2:SetRadius(20)
 	ent2:SetStrength(100)
-	ent2:SetCollisionGroup(COLLISION_GROUP_WORLD)
+	-- ent2:SetCollisionGroup(COLLISION_GROUP_WORLD)
 	ent.link = ent2
 	ent:SetNWEntity("GWATER2_Link", ent2)
 

@@ -17,7 +17,7 @@ function ENT:SetupDataTables()
 
 	if SERVER then return end
 
-	self.PARTICLE_EMITTER = ParticleEmitter(self:GetPos(), false)
+	-- TODO: figure out why forcefield doesn't work
 	hook.Add("gwater2_tick_drains", self, function()
 		gwater2.solver:AddForceField(self:GetPos(), self:GetRadius(), -self:GetStrength(), 0, true)
 		self.GWATER2_particles_drained = math.max(0, 
