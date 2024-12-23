@@ -28,25 +28,19 @@ for k,v in pairs(util.JSONToTable(strings)) do
 end
 
 local function gw2_error(text)
-	-- bigass logo to stand out
-	text = [[   _____ __          __     _                ___  
-  / ____|\ \        / /    | |              |__ \ 
- | |  __  \ \  /\  / /__ _ | |_  ___  _ __     ) |
- | | |_ |  \ \/  \/ // _` || __|/ _ \| '__|   / / 
- | |__| |   \  /\  /| (_| || |_|  __/| |     / /_ 
-  \_____|    \/  \/  \__,_| \__|\___||_|    |____|
-]]..text
 	ErrorNoHalt(text) -- log to problem menu
-	-- let's send our error later so that user has a higher chance of seeing it if it occured during loading
-	timer.Simple(0, function()
-		print("\n\n\n\n") -- a ton of spacing
-		MsgC(Color(255, 0, 0), text, "\n") -- stand out in console even more
-		print("\n\n\n\n") -- a ton of spacing
-	end)
+	chat.AddText(
+		Color(0, 0, 0), "[", 
+		Color(50, 255, 50), "G", 
+		Color(255, 255, 255), "Water", 
+		Color(50, 150, 255), "2",
+		Color(0, 0, 0), "]: ", 
+		Color(250, 230, 20), language.GetPhrase("gwater2.error.chatlog")
+	)
 end
 
 local toload = (BRANCH == "x86-64" or BRANCH == "chromium") and "gwater2" or "gwater2_main" -- carrying
-if not util.IsBinaryModuleInstalled(toload) then
+if !util.IsBinaryModuleInstalled(toload) then
 	gw2_error(string.format(
 		"===========================================================\n\n" ..
 		language.GetPhrase("gwater2.error.modulenotinstalled") .."\n\n" ..
@@ -218,7 +212,7 @@ gwater2 = {
 		end, function(e)
 			gwater2.solver:AddConcaveCollider(0, get_map_vertices(), Vector(), Angle(0))
 			if !err then
-				ErrorNoHaltWithStack("[GWater2]: Map BSP structure is unsupported. Reverting to brushes. Collision WILL have holes!")
+				ErrorNoHalt("[GWater2]: Map BSP structure is unsupported. Reverting to brushes. Collision WILL have holes!")
 			end
 		end)
 
