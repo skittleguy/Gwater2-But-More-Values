@@ -301,7 +301,7 @@ timer.Create("gwater2_calcdiffusesound", 0.1, 0, function()
 
 	local percent = gwater2.solver:GetActiveDiffuseParticles() / gwater2.solver:GetMaxDiffuseParticles()
 	if percent > 0.001 then
-		local radius = (gwater2.solver:GetParameter("radius") / 10) ^ 0.75
+		local radius = (gwater2.solver:GetParameter("radius") / 10) ^ 0.6
 		local sound_pos = gwater2.solver:GetActiveDiffuseParticlesPos(10)
 		local dist = math.max(EyePos():DistToSqr(sound_pos) / 500000, 1)
 
