@@ -27,9 +27,27 @@ for k,v in pairs(util.JSONToTable(strings)) do
 	language.Add(k, v) 
 end
 
+local function gw2_error(text)
+	-- bigass logo to stand out
+	text = [[   _____ __          __     _                ___  
+  / ____|\ \        / /    | |              |__ \ 
+ | |  __  \ \  /\  / /__ _ | |_  ___  _ __     ) |
+ | | |_ |  \ \/  \/ // _` || __|/ _ \| '__|   / / 
+ | |__| |   \  /\  /| (_| || |_|  __/| |     / /_ 
+  \_____|    \/  \/  \__,_| \__|\___||_|    |____|
+]]..text
+	ErrorNoHalt(text) -- log to problem menu
+	-- let's send our error later so that user has a higher chance of seeing it if it occured during loading
+	timer.Simple(0, function()
+		print("\n\n\n\n") -- a ton of spacing
+		MsgC(Color(255, 0, 0), text, "\n") -- stand out in console even more
+		print("\n\n\n\n") -- a ton of spacing
+	end)
+end
+
 local toload = (BRANCH == "x86-64" or BRANCH == "chromium") and "gwater2" or "gwater2_main" -- carrying
-if !util.IsBinaryModuleInstalled(toload) then
-	ErrorNoHalt(string.format(
+if not util.IsBinaryModuleInstalled(toload) then
+	gw2_error(string.format(
 		"===========================================================\n\n" ..
 		language.GetPhrase("gwater2.error.modulenotinstalled") .."\n\n" ..
 		language.GetPhrase("gwater2.error.modulefailedtoload.3") .."\n\n" ..
@@ -40,15 +58,14 @@ if !util.IsBinaryModuleInstalled(toload) then
 end
 
 local noerror, pcerr = pcall(function() require(toload) end)
-if !noerror then
-	pcerr = pcerr or "NONE"
-	ErrorNoHalt(string.format(
+if not noerror then
+	gw2_error(string.format(
 		"===========================================================\n\n" ..
 		language.GetPhrase("gwater2.error.modulefailedtoload.1").."\n"..
 		language.GetPhrase("gwater2.error.modulefailedtoload.2").."\n\n"..
 		language.GetPhrase("gwater2.error.modulefailedtoload.3") .."\n\n" ..
 		"===========================================================\n",
-		pcerr, BRANCH, jit.arch
+		pcerr or "NONE", BRANCH, jit.arch
 	))
 	return
 end
