@@ -48,8 +48,4 @@ if SERVER then
 
 		return ent
 	end
-elseif CLIENT then
-	function ENT:OnRemove()
-		hook.Remove("gwater2_posttick", self)
-	end
 end

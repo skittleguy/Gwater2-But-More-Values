@@ -50,7 +50,7 @@ function ENT:SetupDataTables()
 	self:NetworkVar("Float", 0, "Spread", {KeyName = "Spread", Edit = {type = "Float", order = 2, min = 1, max = 2}})
 	self:NetworkVar("Float", 1, "Lifetime", {KeyName = "Lifetime", Edit = {type = "Float", order = 3, min = 1, max = 100}})
 	self:NetworkVar("Float", 2, "Strength", {KeyName = "Strength", Edit = {type = "Float", order = 4, min = 1, max = 100}})
-	self:NetworkVar("Bool", 0, "On", {KeyName = "On", Edit = {type = "Bool", order = 4}})
+	self:NetworkVar("Bool", 0, "On", {KeyName = "On", Edit = {type = "Bool", order = 5}})
 
 	if SERVER then return end
 
@@ -73,9 +73,4 @@ function ENT:SetupDataTables()
 	 
 		gwater2.solver:AddCylinder(mat, Vector(radiusx, radiusy, 1), {vel = self:GetUp() * strength, lifetime = self:GetLifetime()})
 	end)
-end
-
-function ENT:OnRemove()
-	-- ???
-	hook.Remove("gwater2_posttick", self)
 end
