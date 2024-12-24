@@ -282,11 +282,13 @@ local performance = {
 		type="scratch",
 		nosync=true,
 		func=function(n)
-			gwater2.options.fps:SetInt(n)
+			gwater2.options.simulation_fps:SetInt(n)
 			timer.Adjust("gwater2_tick", 1 / n)
+
+			return true
 		end,
 		setup=function(slider)
-			slider:SetValue(gwater2.options.fps:GetInt())
+			slider:SetValue(gwater2.options.simulation_fps:GetInt())
 
 			local label = slider:GetParent().label
 			label.fancycolor = Color(255, 127, 0)
