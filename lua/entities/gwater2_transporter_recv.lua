@@ -25,18 +25,22 @@ function ENT:SetupDataTables()
 		if not self.link then return end
 
 		local particle_radius = gwater2.solver:GetParameter("radius")
+		local half_particle_radius = particle_radius / 2
 		local radiusx, radiusy = self:GetRadiusX(), self:GetRadiusY()
 		local strength = self:GetStrength()
-	 
-		for i=1,(self.link.GWATER2_particles_drained or 0) do
-			gwater2.solver:AddParticle(
-				self:GetPos() + self:GetUp() * (6 + particle_radius) * math.Rand(0.75, 1) +
-								self:GetRight() * math.Rand(-1, 1) * radiusx +
-								self:GetForward() * math.Rand(-1, 1) * radiusy,
-				{vel = self:GetUp()*strength}
-			)
+
+		local offset
+		local center = self:GetPos() + self:GetUp() * (6 + particle_radius)
+		for y=-radiusy,radiusy do
+			if not self.link.GWATER2_particles_drained or self.link.GWATER2_particles_drained <= 0 then break end
+			for x=-radiusx,radiusx do
+				if (x * x) + (y * y) >= (radiusx * radiusy) then continue end
+				offset = self:GetForward() * x * half_particle_radius + self:GetRight() * y * half_particle_radius
+				gwater2.solver:AddParticle(center + offset, {vel=self:GetUp() * strength})
+				self.link.GWATER2_particles_drained = self.link.GWATER2_particles_drained - 1
+				if self.link.GWATER2_particles_drained <= 0 then break end
+			end
 		end
-		self.link.GWATER2_particles_drained = 0
 	end)
 end
 
@@ -94,9 +98,10 @@ function ENT:SpawnFunction(ply, tr, class)
 	ent2:Activate()
 	ent2:SetRadius(20)
 	ent2:SetStrength(100)
+	ent2:SetCollisionGroup(COLLISION_GROUP_WORLD)
+	hook.Run("PlayerSpawnedSENT", ply, ent2)
 	ent.link = ent2
 	ent2.link = ent
-	-- ent2:SetCollisionGroup(COLLISION_GROUP_WORLD)
 	ent:SetNWEntity("GWATER2_Link", ent2)
 	ent2:SetNWEntity("GWATER2_Link", ent)
 
@@ -105,6 +110,7 @@ end
 
 function ENT:OnRemove()
 	if not SERVER then return end
+	if not IsValid(self.link) then return end
 	self.link:Remove()
 end
 
@@ -132,6 +138,15 @@ function ENT:Draw()
 		if IsValid(self.link) then
 			draw.DrawText(string.format(language.GetPhrase("gwater2.ent.transporter.link"), "["..self.link:EntIndex().."]"),
 						  "DermaDefault", 0, 48, Color(255, 255, 255), TEXT_ALIGN_CENTER)
+
+			draw.DrawText(string.format(language.GetPhrase("gwater2.ent.transporter.queue"), self.link.GWATER2_particles_drained),
+						  "DermaDefault", 0, 72, Color(255, 255, 255), TEXT_ALIGN_CENTER)
 		end
+
+		draw.DrawText(string.format(
+			language.GetPhrase("gwater2.ent."..(self:GetOn() and "on" or "off")).."  "..
+			language.GetPhrase("gwater2.ent.strength").."  "..
+			language.GetPhrase("gwater2.ent.radius2"), self:GetStrength() or "?", self:GetRadiusX() or "?", self:GetRadiusY() or "?"
+		), "DermaDefault", 0, 96, Color(255, 255, 255), TEXT_ALIGN_CENTER)
 	cam.End3D2D()
 end

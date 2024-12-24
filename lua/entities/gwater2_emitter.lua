@@ -121,5 +121,14 @@ function ENT:Draw()
 		draw.DrawText(language.GetPhrase("gwater2.ent.emitter.name"), "DermaDefault", 0, -72, Color(255, 255, 255), TEXT_ALIGN_CENTER)
 
 		draw.DrawText(language.GetPhrase("gwater2.ent.emitter.side"), "DermaLarge", 0, -24, Color(255, 255, 255), TEXT_ALIGN_CENTER)
+
+		draw.DrawText(string.format(
+			language.GetPhrase("gwater2.ent."..(self:GetOn() and "on" or "off")).."  "..
+			language.GetPhrase("gwater2.ent.strength").."  "..
+			language.GetPhrase("gwater2.ent.radius2").."  "..
+			language.GetPhrase("gwater2.ent.spread").."  "..
+			language.GetPhrase("gwater2.ent.lifetime"),
+			self:GetStrength() or "?", self:GetRadiusX() or "?", self:GetRadiusY() or "?", self:GetSpread() or "?", self:GetLifetime() or "?"
+		), "DermaDefault", 0, 96, Color(255, 255, 255), TEXT_ALIGN_CENTER)
 	cam.End3D2D()
 end

@@ -44,6 +44,12 @@ function ENT:Initialize()
 	end
 end
 
+function ENT:OnRemove()
+	if not SERVER then return end
+	if not IsValid(self.link) then return end
+	self.link:Remove()
+end
+
 -- wiremod integration
 function ENT:TriggerInput(name, val)
 	if name == "Radius" then
@@ -75,6 +81,14 @@ function ENT:Draw()
 		if IsValid(self.link) then
 			draw.DrawText(string.format(language.GetPhrase("gwater2.ent.transporter.link"), "["..self.link:EntIndex().."]"),
 						  "DermaDefault", 0, 48, Color(255, 255, 255), TEXT_ALIGN_CENTER)
+
+			draw.DrawText(string.format(language.GetPhrase("gwater2.ent.transporter.queue"), self.GWATER2_particles_drained),
+						  "DermaDefault", 0, 72, Color(255, 255, 255), TEXT_ALIGN_CENTER)
 		end
+
+		draw.DrawText(string.format(
+			language.GetPhrase("gwater2.ent.strength").."  "..
+			language.GetPhrase("gwater2.ent.radius"), self:GetStrength() or "?", self:GetRadius() or "?"
+		), "DermaDefault", 0, 96, Color(255, 255, 255), TEXT_ALIGN_CENTER)
 	cam.End3D2D()
 end
