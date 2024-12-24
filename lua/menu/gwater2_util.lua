@@ -216,9 +216,10 @@ local function make_parameter_scratch(tab, locale_parameter_name, parameter_name
 	end
 	if not gwater2.parameters[parameter_id] then
 		gwater2.parameters[parameter_id] = slider:GetValue()
-		gwater2.defaults[parameter_id] = slider:GetValue()
+		gwater2.defaults[parameter_id] = gwater2[parameter_id] or slider:GetValue()
 	end
 	panel:SetTall(panel:GetTall()+2)
+
 	return panel
 end
 
@@ -300,11 +301,12 @@ local function make_parameter_color(tab, locale_parameter_name, parameter_name, 
 			label:SetColor(Color(255, 255, 255))
 		end
 	end
-	panel:SetTall(panel:GetTall()+5)
-	if not gwater2.parameters[parameter_id] then
 
+	panel:SetTall(panel:GetTall()+5)
+
+	if not gwater2.parameters[parameter_id] then
 		gwater2.parameters[parameter_id] = mixer:GetValue()
-		gwater2.defaults[parameter_id] = mixer:GetValue()
+		gwater2.defaults[parameter_id] = gwater2[parameter_id] or mixer:GetValue()
 	end
 	return panel
 end
@@ -380,7 +382,7 @@ local function make_parameter_check(tab, locale_parameter_name, parameter_name, 
 	panel:SetTall(panel:GetTall()+5)
 	if not gwater2.parameters[parameter_id] then
 		gwater2.parameters[parameter_id] = check:GetChecked()
-		gwater2.defaults[parameter_id] = check:GetChecked()
+		gwater2.defaults[parameter_id] = gwater2[parameter_id] or check:GetChecked()
 	end
 	return panel
 end

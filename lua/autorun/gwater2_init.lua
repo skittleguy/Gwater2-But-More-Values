@@ -289,12 +289,12 @@ gwater2["absorption"] = true
 gwater2["depth_fix"] = true
 gwater2["player_collision"] = true
 gwater2["diffuse_enabled"] = true
+gwater2["simulation_fps"] = 60
 
 include("gwater2_shaders.lua")
-include("gwater2_menu.lua")
 include("gwater2_net.lua")
+include("gwater2_menu.lua")
 
-local limit_fps = 1 / 60
 local soundpatch
 
 -- no need to calculate sound every frame
@@ -335,6 +335,8 @@ local function gwater_tick2()
 	local lp = LocalPlayer()
 	if !IsValid(lp) then return end
 
+	local limit_fps = 1 / gwater2.options.fps:GetInt()
+
 	if gwater2.solver:GetActiveParticles() <= 0 then 
 		no_lerp = true
 	else
@@ -360,6 +362,6 @@ local function gwater_tick2()
 	gwater2.solver:Tick(limit_fps, 0)
 end
 
-timer.Create("gwater2_tick", limit_fps, 0, gwater_tick2)
+timer.Create("gwater2_tick", 1 / gwater2.options.fps:GetInt(), 0, gwater_tick2)
 hook.Add("InitPostEntity", "gwater2_addprop", gwater2.reset_solver)
 hook.Add("OnEntityCreated", "gwater2_addprop", function(ent) timer.Simple(0, function() add_prop(ent) end) end)	// timer.0 so data values are setup correctly

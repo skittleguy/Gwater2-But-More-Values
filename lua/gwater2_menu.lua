@@ -11,6 +11,7 @@ gwater2.options = gwater2.options or {
 	blur_passes = CreateClientConVar("gwater2_blur_passes", "3", true),
 	absorption = CreateClientConVar("gwater2_absorption", "1", true),
 	depth_fix = CreateClientConVar("gwater2_depth_fix", "0", true),
+	fps = CreateClientConVar("gwater2_fps", "60", true),
 	menu_key = CreateClientConVar("gwater2_menukey", tostring(KEY_G), true),
 	menu_tab = CreateClientConVar("gwater2_menutab", "1", true),
 	player_collision = CreateClientConVar("gwater2_player_collision", "1", true),
@@ -33,29 +34,6 @@ gwater2.options = gwater2.options or {
 	end,
 
 	initialised = {},
-	--[[
-	parameters = {
-		color = {real=Color(209, 237, 255, 25), default=Color(209, 237, 255, 25)},
-		color_value_multiplier = {real=1, default=1, val=1, func=function()
-			local col = gwater2.options.parameters.color.real
-			local finalpass = Material("gwater2/finalpass")
-			col = Color(col.r, col.g, col.b, col.a)
-			gwater2.options.parameters.color_value_multiplier.real = gwater2.options.parameters.color_value_multiplier.val
-			col.r = col.r * gwater2.options.parameters.color_value_multiplier.real
-			col.g = col.g * gwater2.options.parameters.color_value_multiplier.real
-			col.b = col.b * gwater2.options.parameters.color_value_multiplier.real
-			--col.a = col.a * gwater2.options.parameters.color_value_multiplier.real
-			finalpass:SetVector4D("$color2", col:Unpack())
-		end, defined=true},
-		swimfriction = {real=1, default=1, val=1, defined=true, func=function() end},
-		swimspeed = {real=2, default=2, val=2, defined=true, func=function() end},
-		swimbuoyancy = {real=0.49, default=0.49, val=0.49, defined=true, func=function() end},
-		multiplyparticles = {real=4, default=4, val=4, defined=true, func=function() end},
-		multiplywalk = {real=1, default=1, val=1, defined=true, func=function() end},
-		multiplyjump = {real=1, default=1, val=1, defined=true, func=function() end},
-		touchdamage = {real=0, default=0, val=0, defined=true, func=function() end},
-	}
-	]]
 }
 
 if not file.Exists("gwater2/config.txt", "DATA") then
@@ -72,7 +50,7 @@ local styling = include("menu/gwater2_styling.lua")
 local _util = include("menu/gwater2_util.lua")
 if not file.Exists("gwater2", "DATA") then file.CreateDir("gwater2") end
 local presets = include("menu/gwater2_presets.lua")
-local admin_only
+local admin_only = GetConVar("gwater2_adminonly")
 
 -- garry, sincerely... fuck you
 timer.Simple(0, function() 
@@ -82,8 +60,6 @@ timer.Simple(0, function()
 	net.Start("GWATER2_REQUESTCOLLISION")
 	net.WriteBool(gwater2.options.player_collision:GetBool())
 	net.SendToServer()
-
-	admin_only = GetConVar("gwater2_adminonly")
 end)
 
 gwater2.options.solver:SetParameter("gravity", 15.24)	-- flip gravity because y axis positive is down

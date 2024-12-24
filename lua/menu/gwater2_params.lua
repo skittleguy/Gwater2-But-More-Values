@@ -275,6 +275,25 @@ local performance = {
 			end
 		end
 	},
+	["005-Simulation FPS"] = {
+		min=30,
+		max=120,
+		decimals=0,
+		type="scratch",
+		nosync=true,
+		func=function(n)
+			gwater2.options.fps:SetInt(n)
+			timer.Adjust("gwater2_tick", 1 / n)
+		end,
+		setup=function(slider)
+			slider:SetValue(gwater2.options.fps:GetInt())
+
+			local label = slider:GetParent().label
+			label.fancycolor = Color(255, 127, 0)
+			label.fancycolor_hovered = Color(255, 200, 127)
+			label:SetColor(label.fancycolor)
+		end
+	},
 	["006-Absorption"] = {
 		type="check",
 		nosync=true,
