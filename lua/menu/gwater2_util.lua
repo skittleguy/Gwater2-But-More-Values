@@ -39,11 +39,8 @@ local function set_gwater_parameter(option, val)
 
 	gwater2.parameters[option] = val
 
-	local out = nil
 	if param[1].func then
-		out = param[1].func(val, param)
-
-		if out == true then return end
+		if param[1].func(val, param) then return end
 	end
 
 	if IsValid(param[2]) and not param[2].editing then
@@ -56,8 +53,6 @@ local function set_gwater_parameter(option, val)
 		param[2].block = false
 		param[2].editing = false -- editing gets set to true, reset it back
 	end
-
-	if out == false then return end
 
 	if gwater2[option] then
 		gwater2[option] = val
@@ -133,8 +128,7 @@ local function make_parameter_scratch(tab, locale_parameter_name, parameter_name
 	local parameter_id = string.lower(parameter_name):gsub(" ", "_")
 
 	pcall(function()
-		local parameter_name = parameter_id
-		slider:SetValue(gwater2[parameter_name] or gwater2.solver:GetParameter(parameter_name))
+		slider:SetValue(gwater2[parameter_id] or gwater2.solver:GetParameter(parameter_id))
 	end) -- if we can't get parameter, let's hope .setup() does that for us
 	slider:SetDecimals(parameter.decimals)
 	local button = panel:Add("DButton")
@@ -218,7 +212,7 @@ local function make_parameter_scratch(tab, locale_parameter_name, parameter_name
 	end
 	if not gwater2.parameters[parameter_id] then
 		gwater2.parameters[parameter_id] = slider:GetValue()
-		gwater2.defaults[parameter_id] = gwater2[parameter_id] or slider:GetValue()
+		gwater2.defaults[parameter_id] = slider:GetValue()
 	end
 	panel:SetTall(panel:GetTall()+2)
 
@@ -308,7 +302,7 @@ local function make_parameter_color(tab, locale_parameter_name, parameter_name, 
 
 	if not gwater2.parameters[parameter_id] then
 		gwater2.parameters[parameter_id] = mixer:GetValue()
-		gwater2.defaults[parameter_id] = gwater2[parameter_id] or mixer:GetValue()
+		gwater2.defaults[parameter_id] = mixer:GetValue()
 	end
 	return panel
 end
@@ -384,7 +378,7 @@ local function make_parameter_check(tab, locale_parameter_name, parameter_name, 
 	panel:SetTall(panel:GetTall()+5)
 	if not gwater2.parameters[parameter_id] then
 		gwater2.parameters[parameter_id] = check:GetChecked()
-		gwater2.defaults[parameter_id] = gwater2[parameter_id] or check:GetChecked()
+		gwater2.defaults[parameter_id] = check:GetChecked()
 	end
 	return panel
 end

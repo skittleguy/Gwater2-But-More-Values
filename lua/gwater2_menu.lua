@@ -70,7 +70,7 @@ gwater2.options.solver:SetParameter("diffuse_threshold", math.huge)	-- no diffus
 
 local function create_menu()
 	local frame = vgui.Create("DFrame")
-	frame:SetTitle("GWater 2 " .. gwater2.VERSION .. ": Main Menu")
+	frame:SetTitle("GWater2 " .. gwater2.VERSION .. ": Main Menu")
 	--frame:SetSize(ScrW() * 0.8, ScrH() * 0.6)
 	frame:SetSize(1000, 600)
 	frame:Center()
@@ -579,6 +579,7 @@ hook.Add("PopulateToolMenu", "gwater2_menu", function()
 	end)
 end)
 
+--[[
 -- we need to initialse menu to make sure that our tables are set up
 hook.Add("HUDPaint", "GWATER2_InitializeMenu", function()
 	if not admin_only then return end -- wait until we have the convar
@@ -587,7 +588,7 @@ hook.Add("HUDPaint", "GWATER2_InitializeMenu", function()
 	gwater2.options.read_config().sounds = false
 	create_menu():Close()
 	gwater2.options.read_config().sounds = sounds
-end)
+end)]]
 
 -- shit breaks in singleplayer due to predicted hooks
 function gwater2.open_menu(ply, key)

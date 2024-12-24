@@ -81,6 +81,34 @@ local parameters = {
 				type="scratch"
 			}
 		}
+	},
+	["003-Sound Parameters"] = {
+		["list"] = {
+			["001-Sound Pitch"] = {
+				min=0,
+				max=2,
+				decimals=2,
+				type="scratch",
+				setup = function(slider)
+					slider:SetValue(gwater2.parameters.sound_pitch)
+				end,
+				func = function(val)
+					return true
+				end
+			},
+			["002-Sound Volume"] = {
+				min=0,
+				max=2,
+				decimals=2,
+				type="scratch",
+				setup = function(slider)
+					slider:SetValue(gwater2.parameters.sound_volume)
+				end,
+				func = function(val)
+					return true
+				end
+			},
+		}
 	}
 }
 local visuals = {
@@ -140,7 +168,7 @@ local visuals = {
 		func=function(val)
 			local finalpass = Material("gwater2/finalpass")
 			finalpass:SetFloat("$ior", val)
-			return false
+			return true
 		end,
 		setup=function(slider)
 			local finalpass = Material("gwater2/finalpass")
@@ -185,6 +213,7 @@ local performance = {
 		nosync=true,
 		func=function(n)
 			gwater2.options.blur_passes:SetInt(n)
+			return true
 		end,
 		setup=function(slider)
 			slider:SetValue(gwater2.options.blur_passes:GetInt())
@@ -375,32 +404,37 @@ local interaction = {
 		["list"] = {
 			["001-Reaction Forces"] = {
 				type="check",
-				func = function(val)
-					--gwater2.solver:SetParameter("reaction_forces", val and 1 or 0)
-					gwater2.ChangeParameter("reaction_forces", val and 1 or 0)
-					return true
+				func = function(val) 
+					gwater2.solver:SetParameter("reaction_forces", val and 1 or 0)
+					return true 
 				end,
-				setup=function(check)
-					check:SetValue(gwater2.solver:GetParameter("reaction_forces") != 0)
+				setup=function(check) 
+					check:SetChecked(gwater2.solver:GetParameter("reaction_forces") != 0) 
 				end
 			},
 			["002-Force Multiplier"] = {
 				min=0.001,
 				max=0.025,
 				decimals=3,
-				type="scratch"
+				type="scratch",
+				func = function(val) return true end,
+				setup = function(scratch) scratch:SetValue(gwater2.parameters.force_multiplier) end
 			},
 			["003-Force Buoyancy"] = {
 				min=0,
 				max=500,
 				decimals=1,
-				type="scratch"
+				type="scratch",
+				func = function(val) return true end,
+				setup = function(scratch) scratch:SetValue(gwater2.parameters.force_buoyancy) end
 			},
 			["004-Force Dampening"] = {
 				min=0,
 				max=1,
 				decimals=2,
-				type="scratch"
+				type="scratch",
+				func = function(val) return true end,
+				setup = function(scratch) scratch:SetValue(gwater2.parameters.force_dampening) end
 			}
 		}
 	},
@@ -408,14 +442,8 @@ local interaction = {
 		["list"] = {
 			["001-Player Interaction"] = {
 				type="check",
-				func = function(val)
-					gwater2["player_interaction"] = val
-					gwater2.ChangeParameter("player_interaction", val)
-					return true
-				end,
-				setup = function(check)
-					check:SetValue(gwater2["player_interaction"])
-				end
+				func = function(val) return true end,
+				setup = function(check) check:SetValue(gwater2.parameters.player_interaction) end
 			},
 			-- all of these parameters are server-side only. let's tell our code that we handled them already
 			["003-SwimSpeed"] = {
