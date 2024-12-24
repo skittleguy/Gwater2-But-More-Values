@@ -109,3 +109,17 @@ function ENT:SetupDataTables()
 		gwater2.solver:AddCylinder(mat, Vector(radiusx, radiusy, 1), {vel = self:GetUp() * strength, lifetime = lifetime})
 	end)
 end
+
+function ENT:Draw()
+	self:DrawModel()
+
+	local pos, ang = self:GetPos(), self:GetAngles()
+	ang:RotateAroundAxis(ang:Up(), 180)
+	pos = pos + ang:Up()*7
+
+	cam.Start3D2D(pos, ang, 0.1)
+		draw.DrawText(language.GetPhrase("gwater2.ent.emitter.name"), "DermaDefault", 0, -72, Color(255, 255, 255), TEXT_ALIGN_CENTER)
+
+		draw.DrawText(language.GetPhrase("gwater2.ent.emitter.side"), "DermaLarge", 0, -24, Color(255, 255, 255), TEXT_ALIGN_CENTER)
+	cam.End3D2D()
+end

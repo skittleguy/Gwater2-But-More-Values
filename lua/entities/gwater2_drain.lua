@@ -4,7 +4,7 @@ ENT.Type = "anim"
 ENT.Base = "base_anim"
 
 ENT.Category     = "GWater2"
-ENT.PrintName    = "Drain"
+ENT.PrintName    = "#gwater2.ent.drain.name"
 ENT.Author       = "Meetric"
 ENT.Purpose      = ""
 ENT.Instructions = ""
@@ -62,4 +62,18 @@ function ENT:SpawnFunction(ply, tr, class)
 	ent:SetCollisionGroup(COLLISION_GROUP_WORLD)
 
 	return ent
+end
+
+function ENT:Draw()
+	self:DrawModel()
+
+	local pos, ang = self:GetPos(), self:GetAngles()
+	ang:RotateAroundAxis(ang:Right(), 180)
+	pos = pos + ang:Up()*0.25
+
+	cam.Start3D2D(pos, ang, 0.05)
+		draw.DrawText(language.GetPhrase("gwater2.ent.drain.name"), "DermaDefault", 0, -72, Color(255, 255, 255), TEXT_ALIGN_CENTER)
+
+		draw.DrawText(language.GetPhrase("gwater2.ent.drain.side"), "DermaLarge", 0, -24, Color(255, 255, 255), TEXT_ALIGN_CENTER)
+	cam.End3D2D()
 end

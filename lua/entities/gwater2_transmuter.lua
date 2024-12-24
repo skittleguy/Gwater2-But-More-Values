@@ -2,7 +2,7 @@ ENT.Type = "anim"
 ENT.Base = "base_anim"
 
 ENT.Category     	= "GWater2"
-ENT.PrintName    	= "Transmuter"
+ENT.PrintName    	= "#gwater2.ent.transmuter.name"
 ENT.Author       	= "Meetric"
 ENT.Purpose      	= "Turns objects into water"
 ENT.Instructions 	= "Touch it"

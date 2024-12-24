@@ -1,3 +1,5 @@
+-- subject for removal? maybe add a bool in forcefield to make it look like a black hole?
+
 AddCSLuaFile()
 
 ENT.Type = "anim"

@@ -4,7 +4,7 @@ ENT.Type = "anim"
 ENT.Base = "base_anim"
 
 ENT.Category     = "GWater2"
-ENT.PrintName    = "Transporter Sender"
+ENT.PrintName    = "#gwater2.ent.transporter.send.name"
 ENT.Author       = "googer_"
 ENT.Purpose      = ""
 ENT.Instructions = ""
@@ -52,4 +52,29 @@ function ENT:TriggerInput(name, val)
 	if name == "Strength" then
 		return self:SetStrength(math.max(0, math.min(200, val)))
 	end
+end
+
+function ENT:Draw()
+	self:DrawModel()
+
+	self.link = self.link or IsValid(self:GetNWEntity("GWATER2_Link")) and self:GetNWEntity("GWATER2_Link")
+
+	local pos, ang = self:GetPos(), self:GetAngles()
+	ang:RotateAroundAxis(ang:Right(), 180)
+	pos = pos + ang:Up()*0.25
+
+	cam.Start3D2D(pos, ang, 0.05)
+		draw.DrawText(language.GetPhrase("gwater2.ent.transporter.send.name"), "DermaDefault", 0, -72, Color(255, 255, 255), TEXT_ALIGN_CENTER)
+
+
+		draw.DrawText("["..self:EntIndex().."]", "DermaDefault", 0, -48, Color(255, 255, 255), TEXT_ALIGN_CENTER)
+
+		--draw.RoundedBox(0, -150, -150, 300, 300, Color(0, 0, 0))
+		draw.DrawText(language.GetPhrase("gwater2.ent.drain.side"), "DermaLarge", 0, -24, Color(255, 255, 255), TEXT_ALIGN_CENTER)
+
+		if IsValid(self.link) then
+			draw.DrawText(string.format(language.GetPhrase("gwater2.ent.transporter.link"), "["..self.link:EntIndex().."]"),
+						  "DermaDefault", 0, 48, Color(255, 255, 255), TEXT_ALIGN_CENTER)
+		end
+	cam.End3D2D()
 end

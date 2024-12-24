@@ -3,7 +3,7 @@ AddCSLuaFile()
 DEFINE_BASECLASS("gwater2_sphere_5")
 
 ENT.Category = "GWater2"
-ENT.PrintName = "Sphere (10)"
+ENT.PrintName = "#gwater2.ent.sphere10.name"
 ENT.Author = "Meetric"
 ENT.Purpose = ""
 ENT.Instructions = ""

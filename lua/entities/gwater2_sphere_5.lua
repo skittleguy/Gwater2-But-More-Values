@@ -4,7 +4,7 @@ ENT.Type = "anim"
 ENT.Base = "base_gmodentity"
 
 ENT.Category = "GWater2"
-ENT.PrintName = "Sphere (5)"
+ENT.PrintName = "gwater2.ent.sphere5.name"
 ENT.Author = "Meetric"
 ENT.Purpose = ""
 ENT.Instructions = ""
