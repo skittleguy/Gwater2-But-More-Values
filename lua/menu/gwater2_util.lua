@@ -236,6 +236,11 @@ local function make_parameter_color(tab, locale_parameter_name, parameter_name, 
 
 	local parameter_id = string.lower(parameter_name):gsub(" ", "_")
 
+	pcall(function()
+		local parameter_name = parameter_id
+		mixer:SetColor(gwater2.parameters[parameter_id] or gwater2[parameter_name])
+	end) -- if we can't get parameter, let's hope .setup() does that for us
+
 	local mixer = panel:Add("DColorMixer")
 	mixer:Dock(FILL)
 	mixer:DockPadding(5, 0, 5, 0)
@@ -325,6 +330,10 @@ local function make_parameter_check(tab, locale_parameter_name, parameter_name, 
 	button:SetWide(button:GetTall())
 
 	local parameter_id = string.lower(parameter_name):gsub(" ", "_")
+	pcall(function()
+		local parameter_name = parameter_id
+		check:SetValue(gwater2.parameters[parameter_id] or gwater2[parameter_name])
+	end) -- if we can't get parameter, let's hope .setup() does that for us
 
 	button.Paint = nil
 	panel.label = label

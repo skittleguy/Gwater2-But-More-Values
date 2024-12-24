@@ -151,7 +151,6 @@ gwater2 = {
 	cloth_pos = Vector(),
 	parameters = {},
 	defaults = {},
-	error = error_message, -- in case we may want to use it
 	update_colliders = function(index, id, rep)
 		if id == 0 then return end	-- skip, entity is world
 
@@ -237,7 +236,7 @@ local function format_int(i)
 	return tostring(i):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
 end
 
-local show_time, hide_time = nil, nil
+local show_time, hide_time = nil, CurTime() - 1
 hook.Add("HUDPaint", "gwater2_status", function()
 	local frac
 	if gwater2.solver:GetActiveParticles() <= 0 then

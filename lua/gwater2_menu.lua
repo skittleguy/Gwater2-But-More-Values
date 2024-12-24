@@ -83,12 +83,6 @@ timer.Simple(0, function()
 	net.WriteBool(gwater2.options.player_collision:GetBool())
 	net.SendToServer()
 
-	-- TODO: remove me!!
-	-- sometimes 0.6b binaries break when i'm changing stuff, so i swap them for 0.5b ones
-	if gwater2.solver.EnableDiffuse then
-		gwater2.solver:EnableDiffuse(gwater2.options.diffuse_enabled:GetBool())
-	end
-
 	admin_only = GetConVar("gwater2_adminonly")
 end)
 
@@ -471,7 +465,7 @@ local function create_menu()
 	
 	about_tab(tabs)
 
-	local tabs_enabled = !admin_only:GetBool() or LocalPlayer():IsAdmin()
+	local tabs_enabled = not admin_only:GetBool() or LocalPlayer():IsAdmin()
 	
 	if tabs_enabled then
 		frame.params = {}	-- need to pass by reference into presets
@@ -611,6 +605,7 @@ end)
 
 -- we need to initialse menu to make sure that our tables are set up
 hook.Add("HUDPaint", "GWATER2_InitializeMenu", function()
+	if not admin_only then return end -- wait until we have the convar
 	hook.Remove("HUDPaint", "GWATER2_InitializeMenu")
 	local sounds = gwater2.options.read_config().sounds
 	gwater2.options.read_config().sounds = false
