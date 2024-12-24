@@ -19,12 +19,16 @@ void FlexBuffers::destroy() {
 	for (NvFlexBuffer* buffer : buffers) NvFlexFreeBuffer(buffer);
 }
 
+// don't ask
 void FlexSolver::reset_diffuse() {
-	//hosts.diffuse_count = (int*)NvFlexMap(buffers.diffuse_count, eNvFlexMapWait);
-	//hosts.diffuse_count[0] = 0;
-	//NvFlexUnmap(buffers.diffuse_count);
-	hosts.diffuse_count[0] = 0;
+	hosts.diffuse_count = (int*)NvFlexMap(buffers.diffuse_count, eNvFlexMapWait);
+	NvFlexUnmap(buffers.diffuse_count);
+
 	NvFlexSetDiffuseParticles(solver, buffers.diffuse_pos, buffers.diffuse_vel, 0);
+	
+	hosts.diffuse_count = (int*)NvFlexMap(buffers.diffuse_count, eNvFlexMapWait);
+	hosts.diffuse_count[0] = 0;
+	NvFlexUnmap(buffers.diffuse_count);
 }
 
 //int diff = Max(n - copy_description->elementCount, 0);
