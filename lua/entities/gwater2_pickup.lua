@@ -77,8 +77,13 @@ hook.Add("KeyPress", "gwater2_gravgun", function(ply, key)
 		force_field:DrawShadow(false)
 		force_field:Spawn()
 	end
+end)
 
-	if is_valid_pickup(ply, IN_ATTACK) and ply:GetActiveWeapon():GetNextPrimaryFire() < CurTime() then
-		gwater2.AddForceField(ply:EyePos(), 320, 200, 1, false)
+hook.Add("Tick", "gwater2_gravgun", function()
+	for _, ply in player.Iterator() do
+		if is_valid_pickup(ply, IN_ATTACK) and (ply.GWATER2_PUNT or 0) < ply:GetActiveWeapon():GetNextPrimaryFire() then
+			ply.GWATER2_PUNT = ply:GetActiveWeapon():GetNextPrimaryFire()
+			gwater2.AddForceField(ply:EyePos(), 320, 200, 1, false)
+		end
 	end
 end)

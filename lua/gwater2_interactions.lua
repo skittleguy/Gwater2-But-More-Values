@@ -1,11 +1,11 @@
 --if CLIENT then return end
 
-local GWATER2_PARTICLES_TO_SWIM = 30
+local GWATER2_PARTICLES_TO_SWIM = 40
 
 -- swim code provided by kodya (with permission)
 local gravity_convar = GetConVar("sv_gravity")
 local function in_water(ply) 
-	if gwater2.parameters.player_interaction == false then return end
+	if gwater2.parameters.player_interaction == false then return false end
 	if ply:OnGround() then return false end
 	return ply:GetNW2Int("GWATER2_CONTACTS", 0) >= GWATER2_PARTICLES_TO_SWIM
 end
@@ -16,8 +16,6 @@ hook.Add("CalcMainActivity", "gwater2_swimming", function(ply)
 end)
 
 local function do_swim(ply, move)
-	ply:SetNW2Int("GWATER2_CONTACTS", ply.GWATER2_CONTACTS or 0)
-
 	if not in_water(ply) then return end
 
 	local vel = move:GetVelocity()
@@ -76,6 +74,10 @@ end
 
 hook.Add("Move", "gwater2_swimming", function(ply, move)
 	if gwater2.parameters.player_interaction == false then return end
+
+	if SERVER then
+		ply:SetNW2Int("GWATER2_CONTACTS", ply.GWATER2_CONTACTS or 0)
+	end
 
 	do_swim(ply, move)
 	do_multiply(ply)
