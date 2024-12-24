@@ -254,7 +254,6 @@ create_frame = function(self)
         end
     end
 
-    -- TODO: parameter explanations
     make_scratch(frame, "WaterGun.Velocity", 10, 0, 100, 2, "gwater2_gun_velocity")
     make_explanation(frame, "WaterGun.Velocity.Explanation")
     make_scratch(frame, "WaterGun.Distance", 250, 100, 1000, 2, "gwater2_gun_distance")

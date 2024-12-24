@@ -267,7 +267,6 @@ gwater2["fluid_rest_distance"] = gwater2.solver:GetParameter("fluid_rest_distanc
 gwater2["solid_rest_distance"] = gwater2.solver:GetParameter("solid_rest_distance") / gwater2.solver:GetParameter("radius")
 gwater2["collision_distance"] = gwater2.solver:GetParameter("collision_distance") / gwater2.solver:GetParameter("radius")
 gwater2["cohesion"] = gwater2.solver:GetParameter("cohesion") * gwater2.solver:GetParameter("radius") * 0.1	-- cohesion scales by radius, for some reason..
-gwater2["blur_passes"] = 3
 -- water interaction specific
 gwater2["force_multiplier"] = 0.01
 gwater2["force_buoyancy"] = 0
@@ -284,6 +283,13 @@ gwater2["multiplywalk"] = 1
 gwater2["multiplyjump"] = 1
 
 gwater2["touchdamage"] = 0
+
+-- perf tab defaults
+gwater2["blur_passes"] = 3
+gwater2["absorption"] = true
+gwater2["depth_fix"] = true
+gwater2["player_collision"] = true
+gwater2["diffuse_enabled"] = true
 
 include("gwater2_shaders.lua")
 include("gwater2_menu.lua")
