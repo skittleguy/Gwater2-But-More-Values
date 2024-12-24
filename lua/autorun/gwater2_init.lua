@@ -304,7 +304,7 @@ timer.Create("gwater2_calcdiffusesound", 0.1, 0, function()
 
 	if gwater2.parameters.sound_volume <= 0 or gwater2.parameters.sound_pitch <= 0 then return end
 
-	soundpatch = soundpatch or CreateSound(lp, "PaintBlob.ImpactLoop")--"gwater2/water_loop.wav")
+	soundpatch = soundpatch or CreateSound(lp, "gwater2/water_loop.wav")
 
 	local percent = gwater2.solver:GetActiveDiffuseParticles() / gwater2.solver:GetMaxDiffuseParticles()
 	if percent > 0.001 then
@@ -316,8 +316,10 @@ timer.Create("gwater2_calcdiffusesound", 0.1, 0, function()
 		local pitch = math.Clamp(((200 - math.min(percent, 1 / 4) * 4 * 100) - dist * 5) / radius, 10, 250)	-- 10-250
 		--pitch = pitch - gwater2.solver:GetParameter("viscosity") * 5
 		soundpatch:PlayEx(volume * gwater2.parameters.sound_volume, pitch * gwater2.parameters.sound_pitch)
+	else
+		soundpatch:Stop()
 	end
-	
+
 	-- multiplayer water-player interactions
 	if lp:IsListenServerHost() then
 		for _, ply in player.Iterator() do
