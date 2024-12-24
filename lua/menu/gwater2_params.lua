@@ -234,7 +234,7 @@ local performance = {
 
 				local label2 = frame:Add("DLabel")
 				label2:Dock(TOP)
-				label2:SetText(_util.get_localised("Performance.Particle Limit.warning"))
+				label2:SetText("\n" .. _util.get_localised("Performance.Particle Limit.warning"))
 				label2:SetFont("DermaDefault")
 				label2:SizeToContentsY()
 				label2.text = label2:GetText()
@@ -253,7 +253,7 @@ local performance = {
 				function confirm:DoClick() 
 					gwater2.solver:Destroy()
 					gwater2.solver = FlexSolver(slider:GetValue())
-					for name, value in gwater2.parameters do
+					for name, value in pairs(gwater2.parameters) do
 						_util.set_gwater_parameter(name, value)
 					end
 					gwater2.reset_solver(true)

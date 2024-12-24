@@ -28,25 +28,19 @@ for k,v in pairs(util.JSONToTable(strings)) do
 end
 
 local function gw2_error(text)
-	-- bigass logo to stand out
-	text = [[   _____ __          __     _                ___  
-  / ____|\ \        / /    | |              |__ \ 
- | |  __  \ \  /\  / /__ _ | |_  ___  _ __     ) |
- | | |_ |  \ \/  \/ // _` || __|/ _ \| '__|   / / 
- | |__| |   \  /\  /| (_| || |_|  __/| |     / /_ 
-  \_____|    \/  \/  \__,_| \__|\___||_|    |____|
-]]..text
 	ErrorNoHalt(text) -- log to problem menu
-	-- let's send our error later so that user has a higher chance of seeing it if it occured during loading
-	timer.Simple(0, function()
-		print("\n\n\n\n") -- a ton of spacing
-		MsgC(Color(255, 0, 0), text, "\n") -- stand out in console even more
-		print("\n\n\n\n") -- a ton of spacing
-	end)
+	chat.AddText(
+		Color(0, 0, 0), "[", 
+		Color(50, 255, 50), "G", 
+		Color(255, 255, 255), "Water", 
+		Color(50, 150, 255), "2",
+		Color(0, 0, 0), "]: ", 
+		Color(250, 230, 20), language.GetPhrase("gwater2.error.chatlog")
+	)
 end
 
 local toload = (BRANCH == "x86-64" or BRANCH == "chromium") and "gwater2" or "gwater2_main" -- carrying
-if not util.IsBinaryModuleInstalled(toload) then
+if !util.IsBinaryModuleInstalled(toload) then
 	gw2_error(string.format(
 		"===========================================================\n\n" ..
 		language.GetPhrase("gwater2.error.modulenotinstalled") .."\n\n" ..
@@ -218,7 +212,7 @@ gwater2 = {
 		end, function(e)
 			gwater2.solver:AddConcaveCollider(0, get_map_vertices(), Vector(), Angle(0))
 			if !err then
-				ErrorNoHaltWithStack("[GWater2]: Map BSP structure is unsupported. Reverting to brushes. Collision WILL have holes!")
+				ErrorNoHalt("[GWater2]: Map BSP structure is unsupported. Reverting to brushes. Collision WILL have holes!")
 			end
 		end)
 
@@ -243,13 +237,8 @@ local function format_int(i)
 	return tostring(i):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
 end
 
-local show_time, hide_time, last_second_was, cur_second_parts, last_second = nil, nil, 0, 0, 0
+local show_time, hide_time = nil, nil
 hook.Add("HUDPaint", "gwater2_status", function()
-	if CurTime() - last_second > 1 then
-		last_second = CurTime()
-		cur_second_parts = gwater2.solver:GetActiveParticles() - last_second_was
-		last_second_was = gwater2.solver:GetActiveParticles()
-	end
 	local frac
 	if gwater2.solver:GetActiveParticles() <= 0 then
 		show_time = nil
@@ -262,7 +251,6 @@ hook.Add("HUDPaint", "gwater2_status", function()
 	end
 	if gwater2.solver:GetActiveParticles() <= 0 and frac >= 1 then return end
 	local text = format_int(gwater2.solver:GetActiveParticles()) .. " / " .. format_int(gwater2.solver:GetMaxParticles())
-	text = text .. " ("..cur_second_parts..")"
 	draw.DrawText(text, "CloseCaption_Normal", ScrW()/2+2, 18-18*(1-frac), Color(0, 0, 0, 255*frac), TEXT_ALIGN_CENTER)
 	draw.DrawText(text, "CloseCaption_Normal", ScrW()/2, 16-18*(1-frac), ColorAlpha(color_white, 255*frac), TEXT_ALIGN_CENTER)
 end)
@@ -313,7 +301,7 @@ timer.Create("gwater2_calcdiffusesound", 0.1, 0, function()
 
 	local percent = gwater2.solver:GetActiveDiffuseParticles() / gwater2.solver:GetMaxDiffuseParticles()
 	if percent > 0.001 then
-		local radius = (gwater2.solver:GetParameter("radius") / 10) ^ 0.75
+		local radius = (gwater2.solver:GetParameter("radius") / 10) ^ 0.6
 		local sound_pos = gwater2.solver:GetActiveDiffuseParticlesPos(10)
 		local dist = math.max(EyePos():DistToSqr(sound_pos) / 500000, 1)
 
@@ -325,22 +313,17 @@ timer.Create("gwater2_calcdiffusesound", 0.1, 0, function()
 		soundpatch:Stop()
 	end
 
-		
-	local particles_in_radius = gwater2.solver:GetParticlesInRadius(lp:GetPos() + lp:OBBCenter(), gwater2.solver:GetParameter("fluid_rest_distance") * 3)
-
 	-- multiplayer water-player interactions
 	if lp:IsListenServerHost() then
 		for _, ply in player.Iterator() do
-			local particles = ply != lp and gwater2.solver:GetParticlesInRadius(ply:GetPos()+ ply:OBBCenter(), gwater2.solver:GetParameter("fluid_rest_distance") * 3)
+			local particles_in_radius = gwater2.solver:GetParticlesInRadius(ply:GetPos() + ply:OBBCenter() / 2, gwater2.solver:GetParameter("fluid_rest_distance") * 3)
 
-			GWATER2_SET_CONTACTS(
+			GWATER2_SET_CONTACTS(	-- defined by C++ module
 				ply:EntIndex(), 
-				particles or particles_in_radius
+				particles_in_radius
 			)
 		end
 	end
-
-	lp.GWATER2_CONTACTS = particles_in_radius
 end)
 
 local function gwater_tick2()

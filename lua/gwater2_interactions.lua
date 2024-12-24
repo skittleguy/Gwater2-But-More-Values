@@ -7,7 +7,7 @@ local gravity_convar = GetConVar("sv_gravity")
 local function in_water(ply) 
 	if gwater2.parameters.player_interaction == false then return end
 	if ply:OnGround() then return false end
-	return ply.GWATER2_CONTACTS and ply.GWATER2_CONTACTS >= GWATER2_PARTICLES_TO_SWIM
+	return ply:GetNW2Int("GWATER2_CONTACTS", 0) >= GWATER2_PARTICLES_TO_SWIM
 end
 
 hook.Add("CalcMainActivity", "gwater2_swimming", function(ply)
@@ -16,6 +16,8 @@ hook.Add("CalcMainActivity", "gwater2_swimming", function(ply)
 end)
 
 local function do_swim(ply, move)
+	ply:SetNW2Int("GWATER2_CONTACTS", ply.GWATER2_CONTACTS or 0)
+
 	if not in_water(ply) then return end
 
 	local vel = move:GetVelocity()
@@ -45,7 +47,7 @@ local function do_swim(ply, move)
 end
 
 local function do_multiply(ply)
-	if not ply.GWATER2_CONTACTS or ply.GWATER2_CONTACTS < (gwater2.parameters["multiplyparticles"] or 60) then
+	if ply:GetNW2Int("GWATER2_CONTACTS", 0) < (gwater2.parameters["multiplyparticles"] or 60) then
 		if not ply.GWATER2_MULTIPLIED then return end
 		ply:SetWalkSpeed(ply.GWATER2_MULTIPLIED[1])
 		ply:SetRunSpeed(ply.GWATER2_MULTIPLIED[2])
@@ -63,7 +65,8 @@ end
 -- serverside ONLY
 local function do_damage(ply)	
 	if (gwater2.parameters.touchdamage or 0) == 0 then return end
-	if not ply.GWATER2_CONTACTS or ply.GWATER2_CONTACTS < 30 then return end
+	if ply:GetNW2Int("GWATER2_CONTACTS", 0) < (gwater2.parameters["multiplyparticles"] or 60) then return end
+
 	if gwater2.parameters.touchdamage > 0 then
 		ply:TakeDamage(gwater2.parameters.touchdamage)
 	else
@@ -94,7 +97,7 @@ end)
 
 -- cancel fall damage when in water
 hook.Add("GetFallDamage", "gwater2_swimming", function(ply, speed)
-	if not ply.GWATER2_CONTACTS or ply.GWATER2_CONTACTS < GWATER2_PARTICLES_TO_SWIM then return end
+	if ply:GetNW2Int("GWATER2_CONTACTS", 0) < GWATER2_PARTICLES_TO_SWIM then return end
 
 	ply:EmitSound("Physics.WaterSplash")
 	return 0
