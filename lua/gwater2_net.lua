@@ -87,6 +87,7 @@ if SERVER then
 			net.Start("GWATER2_CHANGEPARAMETER", final)
 				net.WriteString(name)
 				net.WriteType(value)
+				net.WriteEntity(sender)
 			net.Broadcast()
 			gwater2.parameters[name] = value
 		end,
@@ -152,11 +153,11 @@ else	-- CLIENT
 	net.Receive("GWATER2_REQUESTPARAMETERSSNAPSHOT", function(len, ply)
 		local tbl = net.ReadTable()
 		for k,v in pairs(tbl) do
-			_util.set_gwater_parameter(k, v)
+			_util.set_gwater_parameter(k, v, ply)
 		end
 	end)
 	net.Receive("GWATER2_CHANGEPARAMETER", function(len)
-		_util.set_gwater_parameter(net.ReadString(), net.ReadType())
+		_util.set_gwater_parameter(net.ReadString(), net.ReadType(), net.ReadEntity())
 	end)
 
 	net.Receive("GWATER2_RESETSOLVER", function(len)

@@ -29,7 +29,7 @@ local function is_hovered_any(panel)
 	return false
 end
 
-local function set_gwater_parameter(option, val)
+local function set_gwater_parameter(option, val, ply)
 	if val == nil then return end -- wtf
 
 	-- print(option, val)
@@ -39,19 +39,16 @@ local function set_gwater_parameter(option, val)
 
 	gwater2.parameters[option] = val
 
-	if param[1].func then
-		if param[1].func(val, param) then return end
-	end
-
-	if IsValid(param[2]) and not param[2].editing then
+	if IsValid(param[2]) and ply != LocalPlayer() then
 		param[2].block = true
-		if param[1].type ~= "color" then 
+		if param[1].type != "color" then 
       		param[2]:SetValue(val)
-		else 
-      		param[2]:SetColor(val)
 		end
 		param[2].block = false
-		param[2].editing = false -- editing gets set to true, reset it back
+	end
+	
+	if param[1].func then
+		if param[1].func(val, param) then return end
 	end
 
 	if gwater2[option] then
@@ -169,14 +166,12 @@ local function make_parameter_scratch(tab, locale_parameter_name, parameter_name
 		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/reset.wav", 75, 100, 1, CHAN_STATIC) end
 	end
 	function slider.Slider.Knob:DoClick()
-		slider.editing = false
 		if parameter.nosync then
 			return set_gwater_parameter(parameter_id, val)
 		end
 		gwater2.ChangeParameter(parameter_id, math.Round(slider:GetValue(), parameter.decimals), true)
 	end
 	function slider:OnValueChanged(val)
-		slider.editing = true
 		if slider.block then return end
 		if val ~= math.Round(val, parameter.decimals) then
 			self:SetValue(math.Round(val, parameter.decimals))

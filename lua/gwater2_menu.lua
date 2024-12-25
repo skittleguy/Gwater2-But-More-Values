@@ -579,8 +579,9 @@ hook.Add("PopulateToolMenu", "gwater2_menu", function()
 	end)
 end)
 
---[[
+
 -- we need to initialse menu to make sure that our tables are set up
+-- genuinely awful hack
 hook.Add("HUDPaint", "GWATER2_InitializeMenu", function()
 	if not admin_only then return end -- wait until we have the convar
 	hook.Remove("HUDPaint", "GWATER2_InitializeMenu")
@@ -588,7 +589,7 @@ hook.Add("HUDPaint", "GWATER2_InitializeMenu", function()
 	gwater2.options.read_config().sounds = false
 	create_menu():Close()
 	gwater2.options.read_config().sounds = sounds
-end)]]
+end)
 
 -- shit breaks in singleplayer due to predicted hooks
 function gwater2.open_menu(ply, key)
