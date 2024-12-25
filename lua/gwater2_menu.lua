@@ -75,7 +75,7 @@ gwater2.options.solver:SetParameter("solid_rest_distance", 13 * gwater2["solid_r
 gwater2.options.solver:SetParameter("collision_distance", 13 * gwater2["collision_distance"])
 gwater2.options.solver:SetParameter("cohesion", math.min(gwater2["cohesion"] / 13 * 10, 1))
 
-local function create_menu()
+local function create_menu(init)
 	local frame = vgui.Create("DFrame")
 	frame:SetTitle("GWater2 " .. gwater2.VERSION .. ": Main Menu")
 	--frame:SetSize(ScrW() * 0.8, ScrH() * 0.6)
@@ -553,9 +553,18 @@ local function create_menu()
 		help_text:SetWide(help_text:GetWide()*2)
 	end
 
+	local cfg, sounds
+	if init then
+		cfg = gwater2.options.read_config()
+		sounds = cfg.sounds
+		cfg.sounds = false
+	end
 	pcall(function()	-- tab can invalidate itself if you are non-admin
 		tabs:SetActiveTab(tabs.Items[gwater2.options.menu_tab:GetInt()].Tab)
 	end)
+	if init then
+		cfg.sounds = sounds
+	end
 
 	return frame
 end
@@ -638,11 +647,8 @@ end)
 hook.Add("HUDPaint", "GWATER2_InitializeMenu", function()
 	if not admin_only then return end -- wait until we have the convar
 	hook.Remove("HUDPaint", "GWATER2_InitializeMenu")
-	local sounds = gwater2.options.read_config().sounds
-	gwater2.options.read_config().sounds = false
-	gwater2.options.frame = create_menu()
+	gwater2.options.frame = create_menu(true)
 	gwater2.options.frame:SetVisible(false)
-	gwater2.options.read_config().sounds = sounds
 end)
 
 -- shit breaks in singleplayer due to predicted hooks
