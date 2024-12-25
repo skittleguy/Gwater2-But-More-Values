@@ -582,7 +582,7 @@ hook.Add("GUIMousePressed", "gwater2_menuclose", function(mouse_code, aim_vector
 	local x, y = gui.MouseX(), gui.MouseY()
 	local frame_x, frame_y = gwater2.options.frame:GetPos()
 	if x < frame_x or x > frame_x + gwater2.options.frame:GetWide() or y < frame_y or y > frame_y + gwater2.options.frame:GetTall() then
-		gwater2.options.frame:Remove()
+		gwater2.options.frame:SetVisible(false)
 	end
 end)
 
