@@ -113,13 +113,9 @@ local function make_parameter_scratch(tab, locale_parameter_name, parameter_name
 	local panel = tab:Add("DPanel")
 	function panel:Paint() end
 	panel:Dock(TOP)
-	local label = panel:Add("DLabel")
-	label:SetText(get_localised(locale_parameter_name))
-	label:SetColor(Color(255, 255, 255))
-	label:SetFont("GWater2Param")
-	label:SetMouseInputEnabled(true)
-	label:SizeToContents()
+	
 	local slider = panel:Add("DNumSlider")
+	local label = slider.Label
 	slider:SetMinMax(parameter.min, parameter.max)
 
 	local parameter_id = string.lower(parameter_name):gsub(" ", "_")
@@ -136,28 +132,22 @@ local function make_parameter_scratch(tab, locale_parameter_name, parameter_name
 	panel.label = label
 	panel.slider = slider
 	panel.button = button
-	label:Dock(LEFT)
 	button:Dock(RIGHT)
 
-	slider:SetText("")
 	slider:Dock(FILL)
+	slider:DockMargin(0, 0, 0, 0)
 
-	-- HACKHACKHACK!!! Docking information is not set properly until after all elements are loaded
-	-- I want the weird arrow editor on the text part of the slider, so we need to move and resize the slider after
-	-- ..all of the docking information is loaded
-	slider.Paint = function(w, h)
-		local pos_x, pos_y = slider:GetPos()
-		local size_x, size_y = slider:GetSize()
+	-- not sure why this is required. for some reason just makes it work
+	slider.PerformLayout = function(self, w, h)
 		
-		slider:Dock(NODOCK)
-		slider:SetPos(pos_x - size_x / 1.45, pos_y)	-- magic numbers. blame DNumSlider for this shit
-		slider:SetSize(size_x * 1.7, size_y)
-
-		slider.Paint = nil
 	end
 	
-	--slider.Label:Hide()
-
+	slider:SetText(get_localised(locale_parameter_name))
+	label:SetFont("GWater2Param")
+	label:SizeToContents()
+	label:SetWidth(label:GetSize() * 1.1)
+	label:SetColor(Color(255, 255, 255))
+	
 	slider.TextArea:SizeToContents()
 	if parameter.setup then parameter.setup(slider) end
 	gwater2.options.initialised[parameter_id] = {parameter, slider}
