@@ -97,6 +97,128 @@ local function set_gwater_parameter(option, val, ply)
 	end
 end
 
+local function empty() end
+
+local function panel_paint(self, w, h)
+	if gwater2.cursor_busy ~= self and gwater2.cursor_busy ~= nil and IsValid(gwater2.cursor_busy) then return end
+	local hovered = is_hovered_any(self)
+	local tab = self.tab
+	local label = self.label
+	if hovered and not self.washovered then
+		self.default_help_text = tab.help_text:GetText()
+		self.washovered = true
+		gwater2.cursor_busy = self
+		tab.help_text:SetText(get_localised(self.parameter_locale_name..".desc"))
+		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/rollover.wav", 75, 100, 1, CHAN_STATIC) end
+		label:SetColor(label.fancycolor_hovered or Color(187, 245, 255))
+	elseif not hovered and self.washovered then
+		self.washovered = false
+		gwater2.cursor_busy = nil
+		if tab.help_text:GetText() == get_localised(self.parameter_locale_name..".desc") then
+			tab.help_text:SetText(self.default_help_text)
+		end
+		label:SetColor(label.fancycolor or Color(255, 255, 255))
+	end
+end
+local slider_functions = {
+	init_setvalue = function(panel)
+		local parameter_id = panel.parameter
+		local slider = panel.slider
+		slider:SetValue(gwater2.parameters[parameter_id] or gwater2.defaults[parameter_id] or gwater2.solver:GetParameter(parameter_id))
+	end,
+	reset = function(self)
+		local parent = self:GetParent()
+		local parameter_id = parent.parameter
+		parent.slider:SetValue(gwater2.defaults[parameter_id])
+		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/reset.wav", 75, 100, 1, CHAN_STATIC) end
+	end,
+	onvaluechanged = function(self, val)
+		if self.block then return end
+
+		local parent = self:GetParent()
+		local decimals = self:GetDecimals()
+		if val ~= math.Round(val, decimals) then
+			self:SetValue(math.Round(val, decimals))
+			return
+		end
+		local parameter = parent.parameter_table
+		local parameter_id = parent.parameter
+
+		gwater2.parameters[parameter_id] = val
+		if parameter.nosync then
+			return set_gwater_parameter(parameter_id, val)
+		end
+		gwater2.ChangeParameter(parameter_id, val, false)
+	end,
+	onvaluechanged_final = function(self)
+		--             knob->Slider--->slider
+		local slider = self:GetParent():GetParent()
+		local parent = slider:GetParent()
+		local parameter_id = parent.parameter
+		local parameter = parent.parameter_table
+		local slider = parent.slider
+		local val = math.Round(slider:GetValue(), slider:GetDecimals())
+		if parameter.nosync then
+			return set_gwater_parameter(parameter_id, val)
+		end
+		gwater2.ChangeParameter(parameter_id, val, true)
+	end
+}
+local color_functions = {
+	init_setvalue = function(panel)
+		local parameter_id = panel.parameter
+		panel.mixer:SetColor(gwater2.parameters[parameter_id] or gwater2.defaults[parameter_id])
+	end,
+	reset = function(self)
+		local parent = self:GetParent()
+		local parameter_id = parent.parameter
+		parent.mixer:SetColor(Color(gwater2.defaults[parameter_id]:Unpack()))
+		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/reset.wav", 75, 100, 1, CHAN_STATIC) end
+	end,
+	onvaluechanged = function(self, val)
+		--mixer.editing = true
+		-- TODO: find something to reset editing to false when user stops editing color
+		if self.block then return end
+		-- "color" doesn't even have color metatable
+		val = Color(val.r, val.g, val.b, val.a)
+
+		local parent = self:GetParent()
+		local parameter_id = parent.parameter
+
+		gwater2.parameters[parameter_id] = val
+		if parent.parameter_table.nosync then
+			return set_gwater_parameter(parameter_id, val)
+		end
+		gwater2.ChangeParameter(parameter_id, val, true) -- TODO: ^
+	end,
+	onvaluechanged_final = empty
+}
+local check_functions = {
+	init_setvalue = function(panel)
+		local parameter_id = panel.parameter
+		panel.check:SetValue(gwater2.parameters[parameter_id] or gwater2.defaults[parameter_id])
+	end,
+	reset = function(self)
+		local parent = self:GetParent()
+		local parameter_id = parent.parameter
+		parent.check:SetValue(gwater2.defaults[parameter_id])
+		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/reset.wav", 75, 100, 1, CHAN_STATIC) end
+	end,
+	onvaluechanged = function(self, val) -- all checkbox edits are final
+		if self.block then return end
+		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/toggle.wav", 75, 100, 1, CHAN_STATIC) end
+
+		local parent = self:GetParent()
+		local parameter_id = parent.parameter
+
+		gwater2.parameters[parameter_id] = val
+		if parent.parameter_table.nosync then
+			return set_gwater_parameter(parameter_id, val)
+		end
+		gwater2.ChangeParameter(parameter_id, val, true)
+	end
+}
+
 local function make_title_label(tab, txt)
 	local label = tab:Add("DLabel")
 	label:SetText(txt)
@@ -111,104 +233,78 @@ local function make_title_label(tab, txt)
 end
 local function make_parameter_scratch(tab, locale_parameter_name, parameter_name, parameter)
 	local panel = tab:Add("DPanel")
-	function panel:Paint() end
+	panel.tab = tab
+	panel.Paint = nil
 	panel:Dock(TOP)
 	
 	local slider = panel:Add("DNumSlider")
-	local label = slider.Label
+	panel.slider = slider
 	slider:SetMinMax(parameter.min, parameter.max)
+	slider:SetText(get_localised(locale_parameter_name))
+
+	local label = slider.Label
+	panel.label = label
+	label:SetFont("GWater2Param")
+	label:SizeToContents()
+	label:SetWidth(label:GetSize() * 1.1)
+	label:SetColor(Color(255, 255, 255))
 
 	local parameter_id = string.lower(parameter_name):gsub(" ", "_")
+	panel.parameter = parameter_id
+	panel.parameter_table = parameter
+	panel.parameter_locale_name = locale_parameter_name
 
-	pcall(function()
-		slider:SetValue(gwater2[parameter_id] or gwater2.solver:GetParameter(parameter_id))
-	end) -- if we can't get parameter, let's hope .setup() does that for us
+	pcall(slider_functions.init_setvalue, panel)
+	-- if we can't get parameter, let's hope .setup() does that for us
 	slider:SetDecimals(parameter.decimals)
+
 	local button = panel:Add("DButton")
+	panel.button = button
 	button:SetText("")
 	button:SetImage("icon16/arrow_refresh.png")
 	button:SetWide(button:GetTall())
-	button.Paint = nil
-	panel.label = label
-	panel.slider = slider
-	panel.button = button
 	button:Dock(RIGHT)
+	button.Paint = nil
+	button.DoClick = slider_functions.reset
 
 	slider:Dock(FILL)
 	slider:DockMargin(0, 0, 0, 0)
 
 	-- not sure why this is required. for some reason just makes it work
-	slider.PerformLayout = function(self, w, h)
-		
-	end
-	
-	slider:SetText(get_localised(locale_parameter_name))
-	label:SetFont("GWater2Param")
-	label:SizeToContents()
-	label:SetWidth(label:GetSize() * 1.1)
-	label:SetColor(Color(255, 255, 255))
+	slider.PerformLayout = empty
 	
 	slider.TextArea:SizeToContents()
-	if parameter.setup then parameter.setup(slider) end
-	gwater2.options.initialised[parameter_id] = {parameter, slider}
-	function button:DoClick()
-		slider:SetValue(gwater2.defaults[parameter_id])
-		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/reset.wav", 75, 100, 1, CHAN_STATIC) end
-	end
-	function slider.Slider.Knob:DoClick()
-		if parameter.nosync then
-			return set_gwater_parameter(parameter_id, val)
-		end
-		gwater2.ChangeParameter(parameter_id, math.Round(slider:GetValue(), parameter.decimals), true)
-	end
-	function slider:OnValueChanged(val)
-		if slider.block then return end
-		if val ~= math.Round(val, parameter.decimals) then
-			self:SetValue(math.Round(val, parameter.decimals))
-			return
-		end
 
-		gwater2.parameters[parameter_id] = val
-		if parameter.nosync then
-			return set_gwater_parameter(parameter_id, val)
-		end
-		gwater2.ChangeParameter(parameter_id, val, false)
-		--set_gwater_parameter(parameter_id, val, nil, true)
-	end
-	local defhelptext = nil
-	function panel:Paint()
-		if gwater2.cursor_busy ~= panel and gwater2.cursor_busy ~= nil and IsValid(gwater2.cursor_busy) then return end
-		local hovered = is_hovered_any(panel)
-		if hovered and not panel.washovered then
-			defhelptext = tab.help_text:GetText()
-			panel.washovered = true
-			gwater2.cursor_busy = panel
-			tab.help_text:SetText(get_localised(locale_parameter_name..".desc"))
-			if gwater2.options.read_config().sounds then  surface.PlaySound("gwater2/menu/rollover.wav", 75, 100, 1, CHAN_STATIC) end
-			label:SetColor(label.fancycolor_hovered or Color(187, 245, 255))
-		elseif not hovered and panel.washovered then
-			panel.washovered = false
-			gwater2.cursor_busy = nil
-			if tab.help_text:GetText() == get_localised(locale_parameter_name..".desc") then
-				tab.help_text:SetText(defhelptext)
-			end
-			label:SetColor(label.fancycolor or Color(255, 255, 255))
-		end
-	end
+	-- call custom setup function
+	if parameter.setup then parameter.setup(slider) end
+
+	gwater2.options.initialised[parameter_id] = {parameter, slider}
+
+	button.DoClick = slider_functions.reset
+	slider.Slider.Knob.DoClick = slider_functions.onvaluechanged_final
+	slider.OnValueChanged = slider_functions.onvaluechanged
+	panel.Paint = panel_paint
+
 	if not gwater2.parameters[parameter_id] then
 		gwater2.parameters[parameter_id] = slider:GetValue()
+	end
+	if not gwater2.defaults[parameter_id] then
 		gwater2.defaults[parameter_id] = slider:GetValue()
 	end
+
 	panel:SetTall(panel:GetTall()+2)
 
 	return panel
 end
-
 local function make_parameter_color(tab, locale_parameter_name, parameter_name, parameter)
 	local panel = tab:Add("DPanel")
-	function panel:Paint() end
+	panel.tab = tab
+	panel.Paint = nil
 	panel:Dock(TOP)
+	panel:SetTall(150)
+
 	local label = panel:Add("DLabel")
+	panel.label = label
 	label:SetText(get_localised(locale_parameter_name))
 	label:SetColor(Color(255, 255, 255))
 	label:SetFont("GWater2Param")
@@ -217,154 +313,102 @@ local function make_parameter_color(tab, locale_parameter_name, parameter_name, 
 	label:SizeToContents()
 
 	local parameter_id = string.lower(parameter_name):gsub(" ", "_")
+	panel.parameter = parameter_id
+	panel.parameter_table = parameter
+	panel.parameter_locale_name = locale_parameter_name
 
-	pcall(function()
-		local parameter_name = parameter_id
-		mixer:SetColor(gwater2.parameters[parameter_id] or gwater2[parameter_name])
-	end) -- if we can't get parameter, let's hope .setup() does that for us
+	pcall(color_functions.init_setvalue, panel)
+	-- if we can't get parameter, let's hope .setup() does that for us
 
 	local mixer = panel:Add("DColorMixer")
+	panel.mixer = mixer
 	mixer:Dock(FILL)
 	mixer:DockPadding(5, 0, 5, 0)
-	panel:SetTall(150)
 	mixer:SetPalette(false)
 	mixer:SetLabel()
 	mixer:SetAlphaBar(true)
 	mixer:SetWangs(true)
-	mixer:SetColor(gwater2.parameters[parameter_id]) 
+	-- mixer:SetColor(gwater2.parameters[parameter_id]) 
+
 	local button = panel:Add("DButton")
+	panel.button = button
 	button:Dock(RIGHT)
 	button:SetText("")
 	button:SetImage("icon16/arrow_refresh.png")
 	button:SetWide(button:GetTall())
 	button.Paint = nil
+
 	panel:SizeToContents()
-	panel.button = button
-	panel.mixer = mixer
-	panel.label = label
 
 	if parameter.setup then parameter.setup(mixer) end
 	gwater2.options.initialised[parameter_id] = {parameter, mixer}
-	function button:DoClick()
-		mixer:SetColor(Color(gwater2.defaults[parameter_id]:Unpack()))
-		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/reset.wav", 75, 100, 1, CHAN_STATIC) end
-	end
-	function mixer:ValueChanged(val)
-		--mixer.editing = true
-		-- TODO: find something to reset editing to false when user stops editing color
-		if mixer.block then return end
-		val = Color(val.r, val.g, val.b, val.a)
 
-		gwater2.parameters[parameter_id] = val
-		if parameter.nosync then
-			return set_gwater_parameter(parameter_id, val)
-		end
-		gwater2.ChangeParameter(parameter_id, val, true) -- TODO: ^
-	end
+	-- TODO: find something to reset editing to false when user stops editing color
+	button.DoClick = color_functions.reset
+	mixer.ValueChanged = color_functions.onvaluechanged
+	panel.Paint = panel_paint
 
-	local defhelptext = nil
-	function panel:Paint()
-		if gwater2.cursor_busy ~= panel and gwater2.cursor_busy ~= nil and IsValid(gwater2.cursor_busy) then return end
-		local hovered = is_hovered_any(panel)
-		if hovered and not panel.washovered then
-			defhelptext = tab.help_text:GetText()
-			panel.washovered = true
-			gwater2.cursor_busy = panel
-			tab.help_text:SetText(get_localised(locale_parameter_name..".desc"))
-			if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/rollover.wav", 75, 100, 1, CHAN_STATIC) end
-			label:SetColor(Color(187, 245, 255))
-		elseif not hovered and panel.washovered then
-			panel.washovered = false
-			gwater2.cursor_busy = nil
-			if tab.help_text:GetText() == get_localised(locale_parameter_name..".desc") then
-				tab.help_text:SetText(defhelptext)
-			end
-			label:SetColor(Color(255, 255, 255))
-		end
+	if not gwater2.parameters[parameter_id] then
+		gwater2.parameters[parameter_id] = mixer:GetColor()
+	end
+	if not gwater2.defaults[parameter_id] then
+		gwater2.defaults[parameter_id] = mixer:GetColor()
 	end
 
 	panel:SetTall(panel:GetTall()+5)
 
-	if not gwater2.parameters[parameter_id] then
-		gwater2.parameters[parameter_id] = mixer:GetValue()
-		gwater2.defaults[parameter_id] = mixer:GetValue()
-	end
 	return panel
 end
 local function make_parameter_check(tab, locale_parameter_name, parameter_name, parameter)
 	local panel = tab:Add("DPanel")
-	function panel:Paint() end
+	panel.tab = tab
+	panel.Paint = nil
 	panel:Dock(TOP)
 	local label = panel:Add("DLabel")
+	panel.label = label
 	label:SetText(get_localised(locale_parameter_name))
 	label:SetColor(Color(255, 255, 255))
 	label:SetFont("GWater2Param")
 	label:Dock(LEFT)
 	label:SetMouseInputEnabled(true)
 	label:SizeToContents()
+
 	local check = panel:Add("DCheckBoxLabel")
-	local button = panel:Add("DButton")
-	button:Dock(RIGHT)
+	panel.check = check
 	check:Dock(FILL)
 	check:DockMargin(5, 0, 5, 0)
 	check:SetText("")
+	local button = panel:Add("DButton")
+	panel.button = button
+	button:Dock(RIGHT)
 	button:SetText("")
 	button:SetImage("icon16/arrow_refresh.png")
 	button:SetWide(button:GetTall())
+	button.Paint = nil
 
 	local parameter_id = string.lower(parameter_name):gsub(" ", "_")
-	pcall(function()
-		local parameter_name = parameter_id
-		check:SetValue(gwater2.parameters[parameter_id] or gwater2[parameter_name])
-	end) -- if we can't get parameter, let's hope .setup() does that for us
+	panel.parameter = parameter_id
+	panel.parameter_table = parameter
+	panel.parameter_locale_name = locale_parameter_name
 
-	button.Paint = nil
-	panel.label = label
-	panel.check = check
-	panel.button = button
+	pcall(check_functions.init_setvalue, panel)
+	-- if we can't get parameter, let's hope .setup() does that for us
 	if parameter.setup then parameter.setup(check) end
 	gwater2.options.initialised[parameter_id] = {parameter, check}
-	function button:DoClick()
-		check:SetValue(gwater2.defaults[parameter_id])
-		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/reset.wav", 75, 100, 1, CHAN_STATIC) end
-	end
-	function check:OnChange(val)
-		if check.block then return end
-		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/toggle.wav", 75, 100, 1, CHAN_STATIC) end
 
-		gwater2.parameters[parameter_id] = val
-		if parameter.nosync then
-			return set_gwater_parameter(parameter_id, val)
-		end
-		gwater2.ChangeParameter(parameter_id, val, true) -- all checkbox edits are final
-		--if parameter.func then if parameter.func(val) then return end end
-		--set_gwater_parameter(parameter_id, val)
-	end
-	local defhelptext = nil
-	function panel:Paint()
-		if gwater2.cursor_busy ~= panel and gwater2.cursor_busy ~= nil and IsValid(gwater2.cursor_busy) then return end
-		local hovered = is_hovered_any(panel)
-		if hovered and not panel.washovered then
-			defhelptext = tab.help_text:GetText()
-			panel.washovered = true
-			gwater2.cursor_busy = panel
-			tab.help_text:SetText(get_localised(locale_parameter_name..".desc"))
-			if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/rollover.wav", 75, 100, 1, CHAN_STATIC) end
-			label:SetColor(label.fancycolor_hovered or Color(187, 245, 255))
-		elseif not hovered and panel.washovered then
-			panel.washovered = false
-			gwater2.cursor_busy = nil
-			if tab.help_text:GetText() == get_localised(locale_parameter_name..".desc") then
-				tab.help_text:SetText(defhelptext)
-			end
-			label:SetColor(label.fancycolor or Color(255, 255, 255))
-		end
-	end
-	panel:SetTall(panel:GetTall()+5)
+	button.DoClick = check_functions.reset
+	check.OnChange = check_functions.onvaluechanged
+	panel.Paint = panel_paint
+
 	if not gwater2.parameters[parameter_id] then
-		gwater2.parameters[parameter_id] = check:GetChecked()
-		gwater2.defaults[parameter_id] = check:GetChecked()
+		gwater2.parameters[parameter_id] = check:GetValue()
 	end
+	if not gwater2.defaults[parameter_id] then
+		gwater2.defaults[parameter_id] = check:GetValue()
+	end
+
+	panel:SetTall(panel:GetTall()+5)
+
 	return panel
 end
 

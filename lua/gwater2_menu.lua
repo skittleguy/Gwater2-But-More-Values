@@ -561,7 +561,10 @@ surface.CreateFont("GWater2Title", {
 
 concommand.Add("gwater2_menu", function()
 	if gwater2.options.frame == nil or not IsValid(gwater2.options.frame) then
+		local start_time = SysTime()
 		gwater2.options.frame = create_menu()
+		local end_time = SysTime()
+		print("[gw2 debug] opening menu took "..math.Round((end_time-start_time)*1000, 2).."ms")
 		return
 	end
 	gwater2.options.frame:Close()
@@ -589,6 +592,7 @@ end)
 
 -- we need to initialse menu to make sure that our tables are set up
 -- genuinely awful hack
+-- TODO: kill that with fire and do it properly before release!!!
 hook.Add("HUDPaint", "GWATER2_InitializeMenu", function()
 	if not admin_only then return end -- wait until we have the convar
 	hook.Remove("HUDPaint", "GWATER2_InitializeMenu")
