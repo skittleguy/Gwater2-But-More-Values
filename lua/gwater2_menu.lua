@@ -163,6 +163,24 @@ local function create_menu()
 
 	local particle_material = nil
 	local pixelated = "hell"
+
+	local function get_weighted_pixels(x, y)
+		local floor_x = math.floor(x)
+		local floor_y = math.floor(y)
+		local ceil_x = math.ceil(x)
+		local ceil_y = math.ceil(y)
+	  
+		local frac_x = x - floor_x
+		local frac_y = y - floor_y
+	  
+		local w1 = (1 - frac_x) * (1 - frac_y)
+		local w2 = (frac_x) * (1 - frac_y)
+		local w3 = (1 - frac_x) * (frac_y)
+		local w4 = (frac_x) * (frac_y) 
+	  
+		return floor_x, floor_y, w1, ceil_x, floor_y, w2, floor_x, ceil_y, w3, ceil_x, ceil_y, w4
+	end
+
 	function sim_preview:Paint(w, h)
 		styling.draw_main_background(0, 0, w, h)
 		local x, y = sim_preview:LocalToScreen(0, 0)
@@ -198,14 +216,35 @@ local function create_menu()
 				(gwater2.parameters.color:ToVector() * gwater2.parameters.color_value_multiplier - Vector(1, 1, 1)) *
 					gwater2.parameters.color.a / 255 * depth) or
 				(gwater2.parameters.color:ToVector() * gwater2.parameters.color_value_multiplier)
-			surface.SetDrawColor(absorption[1] * 255, absorption[2] * 255, absorption[3] * 255, alpha)
 			local px = pos[1] - x
 			local py = pos[3] - y
 			if pixelate then
-				px = math.Round(px / radius) * radius
-				py = math.Round(py / radius) * radius
+				px, py = px / radius, py / radius
+				local bx1, by1, w1, bx2, by2, w2, bx3, by3, w3, bx4, by4, w4 = get_weighted_pixels(px, py)
+				bx1, by1 = bx1 * radius, by1 * radius
+				bx2, by2 = bx2 * radius, by2 * radius
+				bx3, by3 = bx3 * radius, by3 * radius
+				bx4, by4 = bx4 * radius, by4 * radius
+				local r, g, b = absorption[1] * 255, absorption[2] * 255, absorption[3] * 255
+
+				surface.SetDrawColor(r, g, b, alpha*w1)
+				surface.DrawTexturedRect(bx1, by1, radius, radius)
+
+				surface.SetDrawColor(r, g, b, alpha*w2)
+				surface.DrawTexturedRect(bx2, by2, radius, radius)
+
+				surface.SetDrawColor(r, g, b, alpha*w3)
+				surface.DrawTexturedRect(bx3, by3, radius, radius)
+
+				surface.SetDrawColor(r, g, b, alpha*w4)
+				surface.DrawTexturedRect(bx4, by4, radius, radius)
+
+				--px = math.Round(px / radius) * radius
+				--py = math.Round(py / radius) * radius
+				return
 			end
 
+			surface.SetDrawColor(absorption[1] * 255, absorption[2] * 255, absorption[3] * 255, alpha)
 			surface.DrawTexturedRect(px, py, radius, radius)
 		end)
 
