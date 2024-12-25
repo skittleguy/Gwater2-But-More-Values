@@ -22,10 +22,6 @@ jobs:
         curl https://github.com/premake/premake-core/releases/download/v5.0.0-beta2/premake-5.0.0-beta2-windows.zip -O -J -L   
         7z x premake-5.0.0-beta2-windows.zip
         dir
-        git clone https://github.com/keganpowers34/garrysmod_common.git --recursive -b x86-64-support-sourcesdk
-        git clone https://github.com/NVIDIAGameWorks/FleX.git
-        git clone https://github.com/Derpius/BSPParser.git
-        git clone https://github.com/Derpius/GMFS.git
         ./premake5.exe vs2019
         
     - name: Add msbuild to PATH 
