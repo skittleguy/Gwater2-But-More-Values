@@ -66,7 +66,14 @@ gwater2.options.solver:SetParameter("gravity", 15.24)	-- flip gravity because y 
 gwater2.options.solver:SetParameter("static_friction", 0)	-- stop adhesion sticking to front and back walls
 gwater2.options.solver:SetParameter("dynamic_friction", 0)	-- ^
 gwater2.options.solver:SetParameter("diffuse_threshold", math.huge)	-- no diffuse particles allowed in preview
---_util.set_gwater_parameter("radius", 10, true)	-- regen radius defaults, as they are scaled in the preview
+
+-- regen radius defaults, as it is scaled in the preview
+gwater2.options.solver:SetParameter("radius", 13)
+gwater2.options.solver:SetParameter("surface_tension", gwater2["surface_tension"] / 13^4)
+gwater2.options.solver:SetParameter("fluid_rest_distance", 13 * gwater2["fluid_rest_distance"])
+gwater2.options.solver:SetParameter("solid_rest_distance", 13 * gwater2["solid_rest_distance"])
+gwater2.options.solver:SetParameter("collision_distance", 13 * gwater2["collision_distance"])
+gwater2.options.solver:SetParameter("cohesion", math.min(gwater2["cohesion"] / 13 * 10, 1))
 
 local function create_menu()
 	local frame = vgui.Create("DFrame")
