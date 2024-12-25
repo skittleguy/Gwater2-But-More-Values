@@ -103,7 +103,7 @@ local function create_menu()
 	new_close_btn:SetText("")
 
 	function new_close_btn:DoClick()
-		frame:Close()
+		frame:SetVisible(false)
 		just_closed = false
 	end
 
@@ -164,7 +164,6 @@ local function create_menu()
 	local particle_material = nil
 	local pixelated = "hell"
 	function sim_preview:Paint(w, h)
-	
 		styling.draw_main_background(0, 0, w, h)
 		local x, y = sim_preview:LocalToScreen(0, 0)
 		local function exp(v) return Vector(math.exp(v[1]), math.exp(v[2]), math.exp(v[3])) end
@@ -255,10 +254,9 @@ local function create_menu()
 	function tabs:Paint(w, h) styling.draw_main_background(0, 23, w, h-23) end
 
 	function frame:OnKeyCodePressed(key)
-		if key == gwater2.options.menu_key:GetInt() then
-			frame:Close()
-			just_closed = true
-		end
+		if key ~= gwater2.options.menu_key:GetInt() then return end
+		frame:SetVisible(false)
+		just_closed = true
 	end
 
 	frame.tabs = tabs
@@ -560,15 +558,22 @@ surface.CreateFont("GWater2Title", {
 })
 
 concommand.Add("gwater2_menu", function()
-	if gwater2.options.frame == nil or not IsValid(gwater2.options.frame) then
-		local start_time = SysTime()
-		gwater2.options.frame = create_menu()
-		local end_time = SysTime()
-		print("[gw2 debug] opening menu took "..math.Round((end_time-start_time)*1000, 2).."ms")
+	if IsValid(gwater2.options.frame) then
+		print("[gw2 debug] reusing frame")
+		gwater2.options.frame:SetVisible(not gwater2.options.frame:IsVisible())
+		local tabs = gwater2.options.frame.tabs
+
+		-- play sound and animate properly
+		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/select.wav") end
+		tabs:GetActiveTab().lastpush = RealTime()
+
 		return
 	end
-	gwater2.options.frame:Close()
-	gwater2.options.frame = nil
+	local start_time = SysTime()
+	gwater2.options.frame = create_menu()
+	local end_time = SysTime()
+	print("[gw2 debug] opening menu took "..math.Round((end_time-start_time)*1000, 2).."ms")
+	print("[gw2 debug] this should NEVER happen")
 end)
 
 hook.Add("GUIMousePressed", "gwater2_menuclose", function(mouse_code, aim_vector)
@@ -590,15 +595,14 @@ hook.Add("PopulateToolMenu", "gwater2_menu", function()
 end)
 
 
--- we need to initialse menu to make sure that our tables are set up
--- genuinely awful hack
--- TODO: kill that with fire and do it properly before release!!!
+-- initialse menu at loading time
 hook.Add("HUDPaint", "GWATER2_InitializeMenu", function()
 	if not admin_only then return end -- wait until we have the convar
 	hook.Remove("HUDPaint", "GWATER2_InitializeMenu")
 	local sounds = gwater2.options.read_config().sounds
 	gwater2.options.read_config().sounds = false
-	create_menu():Close()
+	gwater2.options.frame = create_menu()
+	gwater2.options.frame:SetVisible(false)
 	gwater2.options.read_config().sounds = sounds
 end)
 

@@ -84,7 +84,7 @@ if SERVER then
 
 		ChangeParameter = function(name, value, final, sender)
 			if gwater2.parameters[name] == value then return end
-			net.Start("GWATER2_CHANGEPARAMETER", final)
+			net.Start("GWATER2_CHANGEPARAMETER", not final)
 				net.WriteString(name)
 				net.WriteType(value)
 				net.WriteEntity(sender)
