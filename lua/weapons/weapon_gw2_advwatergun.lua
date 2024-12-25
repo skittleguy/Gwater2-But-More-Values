@@ -141,9 +141,24 @@ if SERVER then return end
 local _util = include("menu/gwater2_util.lua")
 local styling = include("menu/gwater2_styling.lua")
 
+local hovered = nil
+
 local function make_scratch(frame, locale_parameter_name, default, min, max, decimals, convar)
     local panel = frame:Add("DPanel")
-	function panel:Paint() end
+	function panel:Paint()
+		if IsValid(hovered) and hovered ~= self then return end
+
+		if self.hovered and not _util.is_hovered_any(self) then
+			hovered = nil
+			self.hovered = false
+			self.label:SetColor(Color(255, 255, 255))
+		elseif not self.hovered and _util.is_hovered_any(self) then
+			hovered = self
+			self.hovered = true
+			self.label:SetColor(Color(187, 245, 255))
+			_util.emit_sound("rollover")
+		end
+	end
 	panel:Dock(TOP)
 	local label = panel:Add("DLabel")
 	label:SetText(_util.get_localised(locale_parameter_name))
@@ -188,7 +203,7 @@ local function make_scratch(frame, locale_parameter_name, default, min, max, dec
 	slider.TextArea:SizeToContents()
 	function button:DoClick()
 		slider:SetValue(default)
-		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/reset.wav", 75, 100, 1, CHAN_STATIC) end
+		_util.emit_sound("reset")
 	end
 
 
@@ -210,6 +225,7 @@ end
 
 create_frame = function(self)
     local frame
+	_util.emit_sound("select")
     -- gwater 2 main menu: steal his look!!!
     do -- so that we can collapse it
         frame = vgui.Create("DFrame")
@@ -254,14 +270,35 @@ create_frame = function(self)
         end
     end
 
-    make_scratch(frame, "WaterGun.Velocity", 10, 0, 100, 2, "gwater2_gun_velocity")
-    make_explanation(frame, "WaterGun.Velocity.Explanation")
-    make_scratch(frame, "WaterGun.Distance", 250, 100, 1000, 2, "gwater2_gun_distance")
-    make_explanation(frame, "WaterGun.Distance.Explanation")
-    make_scratch(frame, "WaterGun.Spread", 1, 0.1, 10, 2, "gwater2_gun_spread")
-    make_explanation(frame, "WaterGun.Spread.Explanation")
-    make_scratch(frame, "WaterGun.SpawnMode", 1, 1, 2, 0, "gwater2_gun_spawnmode")
-    make_explanation(frame, "WaterGun.SpawnMode.Explanation")
+	local create = RealTime()
+	local panel = frame:Add("DPanel")
+	function panel:Paint()
+		if not gwater2.options.read_config().animations then return end
+
+		local delta = 1 - (RealTime() - create)
+
+		local children = {}
+		local function _(p)
+			for __,child in pairs(p:GetChildren()) do
+				children[#children+1] = child
+				_(child)
+			end
+		end
+		_(self)
+		for i,v in pairs(children) do
+			v:SetAlpha((1-delta-i/500)*255*4)
+		end
+	end
+	panel:Dock(FILL)
+
+    make_scratch(panel, "WaterGun.Velocity", 10, 0, 100, 2, "gwater2_gun_velocity")
+    make_explanation(panel, "WaterGun.Velocity.Explanation")
+    make_scratch(panel, "WaterGun.Distance", 250, 100, 1000, 2, "gwater2_gun_distance")
+    make_explanation(panel, "WaterGun.Distance.Explanation")
+    make_scratch(panel, "WaterGun.Spread", 1, 0.1, 10, 2, "gwater2_gun_spread")
+    make_explanation(panel, "WaterGun.Spread.Explanation")
+    make_scratch(panel, "WaterGun.SpawnMode", 1, 1, 2, 0, "gwater2_gun_spawnmode")
+    make_explanation(panel, "WaterGun.SpawnMode.Explanation")
 
     return frame
 end

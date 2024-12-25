@@ -287,7 +287,7 @@ local performance = {
 					end
 					gwater2.reset_solver(true)
 					frame:Close()
-					surface.PlaySound("gwater2/menu/select_ok.wav")
+					_util.emit_sound("select_ok")
 				end
 
 				local deny = vgui.Create("DImageButton", buttons)
@@ -297,10 +297,10 @@ local performance = {
 				deny.Paint = nil
 				function deny:DoClick() 
 					frame:Close()
-					surface.PlaySound("gwater2/menu/select_deny.wav")
+					_util.emit_sound("select_deny")
 				end
 
-				surface.PlaySound("gwater2/menu/confirm.wav")
+				_util.emit_sound("confirm")
 			end
 		end
 	},

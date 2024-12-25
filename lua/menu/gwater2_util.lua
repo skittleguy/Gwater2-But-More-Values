@@ -29,6 +29,11 @@ local function is_hovered_any(panel)
 	return false
 end
 
+local function emit_sound(type)
+	if not gwater2.options.read_config().sounds then return end
+	surface.PlaySound("gwater2/menu/"..type..".wav")
+end
+
 local function set_gwater_parameter(option, val, ply)
 	if val == nil then return end -- wtf
 
@@ -109,7 +114,7 @@ local function panel_paint(self, w, h)
 		self.washovered = true
 		gwater2.cursor_busy = self
 		tab.help_text:SetText(get_localised(self.parameter_locale_name..".desc"))
-		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/rollover.wav", 75, 100, 1, CHAN_STATIC) end
+		emit_sound("rollover")
 		label:SetColor(label.fancycolor_hovered or Color(187, 245, 255))
 	elseif not hovered and self.washovered then
 		self.washovered = false
@@ -129,8 +134,8 @@ local slider_functions = {
 	reset = function(self)
 		local parent = self:GetParent()
 		local parameter_id = parent.parameter
-		parent.slider:SetValue(gwater2.defaults[parameter_id])
-		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/reset.wav", 75, 100, 1, CHAN_STATIC) end
+		parent.slider:SetValue(gwater2.defaults[parameter_id])	
+		emit_sound("reset")
 	end,
 	onvaluechanged = function(self, val)
 		if self.block then return end
@@ -173,7 +178,7 @@ local color_functions = {
 		local parent = self:GetParent()
 		local parameter_id = parent.parameter
 		parent.mixer:SetColor(Color(gwater2.defaults[parameter_id]:Unpack()))
-		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/reset.wav", 75, 100, 1, CHAN_STATIC) end
+		emit_sound("reset")
 	end,
 	onvaluechanged = function(self, val)
 		--mixer.editing = true
@@ -202,11 +207,11 @@ local check_functions = {
 		local parent = self:GetParent()
 		local parameter_id = parent.parameter
 		parent.check:SetValue(gwater2.defaults[parameter_id])
-		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/reset.wav", 75, 100, 1, CHAN_STATIC) end
+		emit_sound("reset")
 	end,
 	onvaluechanged = function(self, val) -- all checkbox edits are final
 		if self.block then return end
-		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/toggle.wav", 75, 100, 1, CHAN_STATIC) end
+		emit_sound("toggle")
 
 		local parent = self:GetParent()
 		local parameter_id = parent.parameter
@@ -418,5 +423,7 @@ return {
 	make_parameter_color=make_parameter_color,
 	make_parameter_scratch=make_parameter_scratch,
 	set_gwater_parameter=set_gwater_parameter,
-	get_localised=get_localised
+	get_localised=get_localised,
+	emit_sound=emit_sound,
+	is_hovered_any=is_hovered_any
 }

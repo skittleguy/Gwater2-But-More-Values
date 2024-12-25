@@ -149,7 +149,7 @@ local function create_menu(init)
 	function qreset:DoClick()
 		gwater2.options.solver:Reset()
 		gwater2.ResetSolver()
-		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/reset.wav") end
+		_util.emit_sound("reset")
 	end
 
 	local qgun = q_access:Add("DImageButton")
@@ -263,7 +263,7 @@ local function create_menu(init)
 	reset:SetPos(5, 5)
 	function reset:DoClick()
 		gwater2.options.solver:Reset()
-		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/reset.wav") end
+		_util.emit_sound("reset")
 	end
 
 	if not gwater2.options.read_config().preview then
@@ -546,7 +546,7 @@ local function create_menu(init)
 			gwater2.options.menu_tab:SetInt(k)
 			break
 		end
-		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/select.wav") end
+		_util.emit_sound("select")
 		new.lastpush = RealTime()
 		help_text:GetParent():SetParent(new:GetPanel())
 		help_text:GetParent():Dock(RIGHT)
@@ -612,7 +612,7 @@ concommand.Add("gwater2_menu", function()
 		local tabs = gwater2.options.frame.tabs
 
 		-- play sound and animate properly
-		if gwater2.options.read_config().sounds then surface.PlaySound("gwater2/menu/select.wav") end
+		_util.emit_sound("select")
 		tabs:GetActiveTab().lastpush = RealTime()
 
 		return
