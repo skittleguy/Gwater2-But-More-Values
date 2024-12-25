@@ -141,6 +141,16 @@ if SERVER then return end
 local _util = include("menu/gwater2_util.lua")
 local styling = include("menu/gwater2_styling.lua")
 
+hook.Add("GUIMousePressed", "gwater2_gunmenuclose", function(mouse_code, aim_vector)
+	if not IsValid(frame) then return end
+
+	local x, y = gui.MouseX(), gui.MouseY()
+	local frame_x, frame_y = frame:GetPos()
+	if x < frame_x or x > frame_x + frame:GetWide() or y < frame_y or y > frame_y + frame:GetTall() then
+		frame:Close()
+	end
+end)
+
 local hovered = nil
 
 local function make_scratch(frame, locale_parameter_name, default, min, max, decimals, convar)

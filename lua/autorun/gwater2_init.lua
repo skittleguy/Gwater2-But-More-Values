@@ -236,7 +236,7 @@ local function format_int(i)
 	return tostring(i):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
 end
 
-local show_time, hide_time = nil, CurTime() - 1
+local show_time, hide_time, last = nil, CurTime() - 1, 0
 hook.Add("HUDPaint", "gwater2_status", function()
 	local frac
 	if gwater2.solver:GetActiveParticles() <= 0 then
@@ -252,6 +252,12 @@ hook.Add("HUDPaint", "gwater2_status", function()
 	local text = format_int(gwater2.solver:GetActiveParticles()) .. " / " .. format_int(gwater2.solver:GetMaxParticles())
 	draw.DrawText(text, "CloseCaption_Normal", ScrW()/2+2, 18-18*(1-frac), Color(0, 0, 0, 255*frac), TEXT_ALIGN_CENTER)
 	draw.DrawText(text, "CloseCaption_Normal", ScrW()/2, 16-18*(1-frac), ColorAlpha(color_white, 255*frac), TEXT_ALIGN_CENTER)
+
+	last = math.Approach(last, gwater2.solver:GetActiveParticles(), FrameTime()*100000)
+	local part_frac = last / gwater2.solver:GetMaxParticles()
+	local w,_ = surface.GetTextSize(
+		format_int(gwater2.solver:GetMaxParticles()).." / "..format_int(gwater2.solver:GetMaxParticles()))
+	draw.RoundedBox(8, ScrW()/2-w/2, 8-18*(1-frac), part_frac*w, 8, Color(255, 255, 255, 255*frac))
 end)
 
 -- setup external default values
