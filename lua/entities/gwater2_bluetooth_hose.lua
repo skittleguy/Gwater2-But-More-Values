@@ -22,7 +22,7 @@ function ENT:Initialize()
 	self:SetMoveType(MOVETYPE_VPHYSICS)
 	self:SetSolid(SOLID_VPHYSICS)
 	self:SetUseType(SIMPLE_USE)
-	self:PhysWake()
+	self:SetCollisionGroup(COLLISION_GROUP_WORLD)
 end
 
 function ENT:Use()
