@@ -128,7 +128,9 @@ local slider_functions = {
 	init_setvalue = function(panel)
 		local parameter_id = panel.parameter
 		local slider = panel.slider
-		slider:SetValue(gwater2.parameters[parameter_id] or gwater2.defaults[parameter_id] or gwater2.solver:GetParameter(parameter_id))
+		slider:SetValue(gwater2[parameter_id] or
+					    gwater2.parameters[parameter_id] or gwater2.defaults[parameter_id] or
+						gwater2.solver:GetParameter(parameter_id))
 	end,
 	reset = function(self)
 		local parent = self:GetParent()
