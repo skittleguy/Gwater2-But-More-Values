@@ -339,11 +339,15 @@ timer.Create("gwater2_calcdiffusesound", 0.1, 0, function()
 	end
 end)
 
+local last_tick = -1
 local function gwater_tick2()
 	local lp = LocalPlayer()
 	if !IsValid(lp) then return end
 
 	local limit_fps = 1 / gwater2.options.simulation_fps:GetInt()
+
+	if CurTime() - last_tick < limit_fps/2 then return end
+	last_tick = CurTime()
 
 	if gwater2.solver:GetActiveParticles() <= 0 then 
 		no_lerp = true
