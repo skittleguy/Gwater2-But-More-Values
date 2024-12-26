@@ -449,7 +449,8 @@ local function create_menu()
 	        	return true
 	        end
     	})
-		if LocalPlayer():IsListenServerHost() then
+
+		if LocalPlayer():IsSuperAdmin() then
 			_util.make_parameter_check(tab, "Menu.admin_only", "Admin Only", {
 				nosync=true,
 				func=function(val)
