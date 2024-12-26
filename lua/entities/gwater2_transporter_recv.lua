@@ -4,7 +4,7 @@ ENT.Type = "anim"
 ENT.Base = "base_anim"
 
 ENT.Category     = "GWater2"
-ENT.PrintName    = "Transporter Exit"
+ENT.PrintName    = "Transporter"
 ENT.Author       = "googer_"
 ENT.Purpose      = ""
 ENT.Instructions = ""
@@ -128,7 +128,7 @@ function ENT:Draw()
 	pos = pos + ang:Up()*7
 
 	cam.Start3D2D(pos, ang, 0.1)
-		draw.DrawText(language.GetPhrase("gwater2.ent.transporter.recv.name"), "DermaDefault", 0, -72, Color(255, 255, 255), TEXT_ALIGN_CENTER)
+		draw.DrawText("Transporter Exit", "DermaDefault", 0, -72, Color(255, 255, 255), TEXT_ALIGN_CENTER)
 
 		draw.DrawText("["..self:EntIndex().."]", "DermaDefault", 0, -48, Color(255, 255, 255), TEXT_ALIGN_CENTER)
 

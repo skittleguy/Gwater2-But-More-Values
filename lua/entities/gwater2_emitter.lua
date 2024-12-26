@@ -118,7 +118,7 @@ function ENT:Draw()
 	pos = pos + ang:Up()*7
 
 	cam.Start3D2D(pos, ang, 0.1)
-		draw.DrawText(language.GetPhrase("gwater2.ent.emitter.name"), "DermaDefault", 0, -72, Color(255, 255, 255), TEXT_ALIGN_CENTER)
+		draw.DrawText("Emitter", "DermaDefault", 0, -72, Color(255, 255, 255), TEXT_ALIGN_CENTER)
 
 		draw.DrawText(language.GetPhrase("gwater2.ent.emitter.side"), "DermaLarge", 0, -24, Color(255, 255, 255), TEXT_ALIGN_CENTER)
 

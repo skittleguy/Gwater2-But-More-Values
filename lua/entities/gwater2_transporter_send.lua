@@ -4,7 +4,7 @@ ENT.Type = "anim"
 ENT.Base = "base_anim"
 
 ENT.Category     = "GWater2"
-ENT.PrintName    = "Transporter Entry"
+ENT.PrintName    = "Transporter"
 ENT.Author       = "googer_"
 ENT.Purpose      = ""
 ENT.Instructions = ""
@@ -12,12 +12,11 @@ ENT.Spawnable    = false
 ENT.Editable	 = true
 
 function ENT:SetupDataTables()
-    self:NetworkVar("Float", 0, "Radius", {KeyName = "Radius", Edit = {type = "Float", order = 0, min = 0, max = 100}})
+	self:NetworkVar("Float", 0, "Radius", {KeyName = "Radius", Edit = {type = "Float", order = 0, min = 0, max = 100}})
 	self:NetworkVar("Float", 1, "Strength", {KeyName = "Strength", Edit = {type = "Float", order = 1, min = 0, max = 200}})
 
 	if SERVER then return end
 
-	-- TODO: figure out why forcefield doesn't work
 	hook.Add("gwater2_tick_drains", self, function()
 		gwater2.solver:AddForceField(self:GetPos(), self:GetRadius(), -self:GetStrength(), 0, true)
 		self.GWATER2_particles_drained = math.max(0, 
@@ -70,7 +69,7 @@ function ENT:Draw()
 	pos = pos + ang:Up()*0.25
 
 	cam.Start3D2D(pos, ang, 0.05)
-		draw.DrawText(language.GetPhrase("gwater2.ent.transporter.send.name"), "DermaDefault", 0, -72, Color(255, 255, 255), TEXT_ALIGN_CENTER)
+		draw.DrawText("Transporter Entry", "DermaDefault", 0, -72, Color(255, 255, 255), TEXT_ALIGN_CENTER)
 
 
 		draw.DrawText("["..self:EntIndex().."]", "DermaDefault", 0, -48, Color(255, 255, 255), TEXT_ALIGN_CENTER)

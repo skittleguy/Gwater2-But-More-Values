@@ -72,7 +72,7 @@ function ENT:Draw()
 	pos = pos + ang:Up()*0.25
 
 	cam.Start3D2D(pos, ang, 0.05)
-		draw.DrawText(language.GetPhrase("gwater2.ent.drain.name"), "DermaDefault", 0, -72, Color(255, 255, 255), TEXT_ALIGN_CENTER)
+		draw.DrawText("Drain", "DermaDefault", 0, -72, Color(255, 255, 255), TEXT_ALIGN_CENTER)
 
 		draw.DrawText(language.GetPhrase("gwater2.ent.drain.side"), "DermaLarge", 0, -24, Color(255, 255, 255), TEXT_ALIGN_CENTER)
 
