@@ -144,8 +144,8 @@ else	-- CLIENT
 	local _util = include("menu/gwater2_util.lua")
 
 	-- HUDPaint gets called only AFTER player is ready to receive data
-	hook.Add("HUDPaint", "GWATER2_REQUESTPARAMETERSSNAPSHOT", function()
-		hook.Remove("HUDPaint", "GWATER2_REQUESTPARAMETERSSNAPSHOT")
+	hook.Add("Think", "GWATER2_REQUESTPARAMETERSSNAPSHOT", function()
+		hook.Remove("Think", "GWATER2_REQUESTPARAMETERSSNAPSHOT")
 		net.Start("GWATER2_REQUESTPARAMETERSSNAPSHOT")
 		net.SendToServer()
 	end)

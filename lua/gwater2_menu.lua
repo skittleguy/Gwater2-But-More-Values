@@ -638,9 +638,9 @@ end)
 
 
 -- initialse menu at loading time
-hook.Add("HUDPaint", "GWATER2_InitializeMenu", function()
+hook.Add("Think", "GWATER2_InitializeMenu", function()
 	if not admin_only then return end -- wait until we have the convar
-	hook.Remove("HUDPaint", "GWATER2_InitializeMenu")
+	hook.Remove("Think", "GWATER2_InitializeMenu")
 	gwater2.options.frame = create_menu(true)
 	gwater2.options.frame:SetVisible(false)
 end)
