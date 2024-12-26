@@ -182,8 +182,7 @@ local color_functions = {
 		emit_sound("reset")
 	end,
 	onvaluechanged = function(self, val)
-		--mixer.editing = true
-		-- TODO: find something to reset editing to false when user stops editing color
+		self.editing = true
 		if self.block then return end
 		-- "color" doesn't even have color metatable
 		val = Color(val.r, val.g, val.b, val.a)
@@ -195,9 +194,22 @@ local color_functions = {
 		if parent.parameter_table.nosync then
 			return set_gwater_parameter(parameter_id, val)
 		end
-		gwater2.ChangeParameter(parameter_id, val, true) -- TODO: ^
+		gwater2.ChangeParameter(parameter_id, val, false)
 	end,
-	onvaluechanged_final = empty
+	onvaluechanged_final = function(self)
+		--            Knob->Cube------>Mixer
+		local mixer = self:GetParent():GetParent()
+		local parent = mixer:GetParent()
+		local parameter_id = parent.parameter
+		local parameter = parent.parameter_table
+		local val = mixer:GetColor()
+		-- "color" doesn't even have color metatable
+		val = Color(val.r, val.g, val.b, val.a)
+		if parameter.nosync then
+			return set_gwater_parameter(parameter_id, val)
+		end
+		gwater2.ChangeParameter(parameter_id, val, true)
+	end
 }
 local check_functions = {
 	init_setvalue = function(panel)
@@ -349,9 +361,50 @@ local function make_parameter_color(tab, locale_parameter_name, parameter_name, 
 	if parameter.setup then parameter.setup(mixer) end
 	gwater2.options.initialised[parameter_id] = {parameter, mixer}
 
-	-- TODO: find something to reset editing to false when user stops editing color
 	button.DoClick = color_functions.reset
 	mixer.ValueChanged = color_functions.onvaluechanged
+	-- final edit stuff. honestly, what the fuck???
+	-- final edit when using color cube
+	mixer.HSV.Knob.OnReleased = color_functions.onvaluechanged_final
+	function mixer.HSV:OnMouseReleased()
+		color_functions.onvaluechanged_final(self.Knob)
+		self.Knob.Hovered = vgui.GetHoveredPanel() == self.Knob
+		self:SetDragging(false)
+		self:MouseCapture(false)
+	end
+	-- final edit when using rgb picker / alpha bar
+	function mixer.RGB:OnMouseReleased()
+		color_functions.onvaluechanged_final(self:GetParent().HSV.Knob)
+		self:MouseCapture(false)
+		self:OnCursorMoved(self:CursorPos())
+	end
+	function mixer.Alpha:OnMouseReleased()
+		color_functions.onvaluechanged_final(self:GetParent().HSV.Knob)
+		self:MouseCapture(false)
+		self:OnCursorMoved(self:CursorPos())
+	end
+	-- final edit when using number wangs (horrible!)
+	mixer.txtR.Up.DoClick_Old = mixer.txtR.Up.DoClick
+	mixer.txtR.Down.DoClick_Old = mixer.txtR.Down.DoClick
+	function mixer.txtR:OnLoseFocus() color_functions.onvaluechanged_final(self:GetParent():GetParent().HSV.Knob) end
+	function mixer.txtR.Up:DoClick(...) self.DoClick_Old(self, ...) color_functions.onvaluechanged_final(self:GetParent():GetParent():GetParent().HSV.Knob) end
+	function mixer.txtR.Down:DoClick(...) self.DoClick_Old(self, ...) color_functions.onvaluechanged_final(self:GetParent():GetParent():GetParent().HSV.Knob) end
+	mixer.txtG.Up.DoClick_Old = mixer.txtG.Up.DoClick
+	mixer.txtG.Down.DoClick_Old = mixer.txtG.Down.DoClick
+	function mixer.txtG:OnLoseFocus() color_functions.onvaluechanged_final(self:GetParent():GetParent().HSV.Knob) end
+	function mixer.txtG.Up:DoClick(...) self.DoClick_Old(self, ...) color_functions.onvaluechanged_final(self:GetParent():GetParent():GetParent().HSV.Knob) end
+	function mixer.txtG.Down:DoClick(...) self.DoClick_Old(self, ...) color_functions.onvaluechanged_final(self:GetParent():GetParent():GetParent().HSV.Knob) end
+	mixer.txtB.Up.DoClick_Old = mixer.txtB.Up.DoClick
+	mixer.txtB.Down.DoClick_Old = mixer.txtB.Down.DoClick
+	function mixer.txtB:OnLoseFocus() color_functions.onvaluechanged_final(self:GetParent():GetParent().HSV.Knob) end
+	function mixer.txtB.Up:DoClick(...) self.DoClick_Old(self, ...) color_functions.onvaluechanged_final(self:GetParent():GetParent():GetParent().HSV.Knob) end
+	function mixer.txtB.Down:DoClick(...) self.DoClick_Old(self, ...) color_functions.onvaluechanged_final(self:GetParent():GetParent():GetParent().HSV.Knob) end
+	mixer.txtA.Up.DoClick_Old = mixer.txtA.Up.DoClick
+	mixer.txtA.Down.DoClick_Old = mixer.txtA.Down.DoClick
+	function mixer.txtA:OnLoseFocus() color_functions.onvaluechanged_final(self:GetParent():GetParent().HSV.Knob) end
+	function mixer.txtA.Up:DoClick(...) self.DoClick_Old(self, ...) color_functions.onvaluechanged_final(self:GetParent():GetParent():GetParent().HSV.Knob) end
+	function mixer.txtA.Down:DoClick(...) self.DoClick_Old(self, ...) color_functions.onvaluechanged_final(self:GetParent():GetParent():GetParent().HSV.Knob) end
+
 	panel.Paint = panel_paint
 
 	if not gwater2.parameters[parameter_id] then
