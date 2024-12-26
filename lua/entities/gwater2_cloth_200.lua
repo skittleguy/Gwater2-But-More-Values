@@ -4,7 +4,7 @@ ENT.Type = "anim"
 ENT.Base = "base_gmodentity"
 
 ENT.Category		= "GWater2"
-ENT.PrintName		= "#gwater2.ent.cloth200.name"
+ENT.PrintName		= "Cloth (200)"
 ENT.Author			= "Meetric"
 ENT.Purpose			= ""
 ENT.Instructions	= ""

@@ -4,7 +4,7 @@ ENT.Type = "anim"
 ENT.Base = "base_anim"
 
 ENT.Category     = "GWater2"
-ENT.PrintName    = "#gwater2.ent.transporter.send.name"
+ENT.PrintName    = "Transporter Entry"
 ENT.Author       = "googer_"
 ENT.Purpose      = ""
 ENT.Instructions = ""

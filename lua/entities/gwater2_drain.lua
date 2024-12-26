@@ -4,7 +4,7 @@ ENT.Type = "anim"
 ENT.Base = "base_anim"
 
 ENT.Category     = "GWater2"
-ENT.PrintName    = "#gwater2.ent.drain.name"
+ENT.PrintName    = "Drain"
 ENT.Author       = "Meetric"
 ENT.Purpose      = ""
 ENT.Instructions = ""

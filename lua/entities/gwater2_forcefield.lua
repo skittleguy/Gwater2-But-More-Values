@@ -4,7 +4,7 @@ ENT.Type = "anim"
 ENT.Base = "base_gmodentity"
 
 ENT.Category		= "GWater2"
-ENT.PrintName		= "#gwater2.ent.forcefield.name"
+ENT.PrintName		= "Forcefield"
 ENT.Author			= "Mee / Jn"
 ENT.Purpose			= ""
 ENT.Instructions	= ""
