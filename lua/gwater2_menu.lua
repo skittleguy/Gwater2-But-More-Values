@@ -86,8 +86,6 @@ local function create_menu(init)
 	function frame:Paint(w, h)
 		-- darker background
 		styling.draw_main_background(0, 0, w, h)
-		styling.draw_main_background(0, 0, w, h)
-		styling.draw_main_background(0, 0, w, h)
 	end
 
 	local minimize_btn = frame:GetChildren()[3]
@@ -607,7 +605,6 @@ surface.CreateFont("GWater2Title", {
 
 concommand.Add("gwater2_menu", function()
 	if IsValid(gwater2.options.frame) then
-		print("[gw2 debug] reusing frame")
 		gwater2.options.frame:SetVisible(not gwater2.options.frame:IsVisible())
 		local tabs = gwater2.options.frame.tabs
 
@@ -617,11 +614,8 @@ concommand.Add("gwater2_menu", function()
 
 		return
 	end
-	local start_time = SysTime()
+
 	gwater2.options.frame = create_menu()
-	local end_time = SysTime()
-	print("[gw2 debug] opening menu took "..math.Round((end_time-start_time)*1000, 2).."ms")
-	print("[gw2 debug] this should NEVER happen")
 end)
 
 hook.Add("GUIMousePressed", "gwater2_menuclose", function(mouse_code, aim_vector)

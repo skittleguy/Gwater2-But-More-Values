@@ -37,7 +37,6 @@ end
 local function set_gwater_parameter(option, val, ply)
 	if val == nil then return end -- wtf
 
-	-- print(option, val)
 	local param = gwater2.options.initialised[option]
 
 	assert(param, "Parameter does not exist: "..option)
