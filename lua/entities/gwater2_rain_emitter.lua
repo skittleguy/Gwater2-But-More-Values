@@ -67,6 +67,7 @@ function ENT:SpawnFunction(ply, tr, class)
 end
 
 function ENT:Use(_, _, type)
+	self:EmitSound("buttons/lever1.wav")
 	self:SetOn(not self:GetOn())
 end
 
