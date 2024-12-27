@@ -1,3 +1,5 @@
+AddCSLuaFile()
+
 ENT.Type = "anim"
 ENT.Base = "base_anim"
 
@@ -14,6 +16,19 @@ ENT.GWATER2_TOUCHED = true
 if CLIENT then return end
 function ENT:SetupDataTables()
 	self:NetworkVar("Bool", 0, "On", {KeyName = "On", Edit = {type = "Bool", order = 0}})
+	if CLIENT then return end
+	-- wiremod integration
+	if WireLib ~= nil then
+		WireLib.CreateInputs(self, {
+			"Active"})
+	end
+end
+
+-- wiremod integration
+function ENT:TriggerInput(name, val)
+	if name == "Active" then
+		return self:SetOn(val > 0)
+	end
 end
 
 function ENT:UpdateMaterial()

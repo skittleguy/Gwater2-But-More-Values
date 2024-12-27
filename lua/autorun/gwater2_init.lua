@@ -364,8 +364,10 @@ local function gwater_tick2()
 		to be honest I do not have enough time or patience to figure out the underlying issue.. so for now we're
 		gonna have to deal with some mee++
 	]]
-	pcall(function() hook.Run("gwater2_tick_particles") end)
-	pcall(function() hook.Run("gwater2_tick_drains") end)
+	local ok, err = pcall(function() hook.Run("gwater2_tick_particles") end)
+	if not ok then ErrorNoHalt(err) end
+	ok, err = pcall(function() hook.Run("gwater2_tick_drains") end)
+	if not ok then ErrorNoHalt(err) end
 
 	gwater2.solver:Tick(limit_fps, 0)
 end

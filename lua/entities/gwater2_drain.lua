@@ -17,39 +17,54 @@ function ENT:SetupDataTables()
 
 	if SERVER then return end
 
-	self.PARTICLE_EMITTER = ParticleEmitter(self:GetPos(), false)
 	hook.Add("gwater2_tick_drains", self, function()
-		gwater2.solver:RemoveSphere(gwater2.quick_matrix(self:GetPos(), nil, self:GetRadius()))
 		gwater2.solver:AddForceField(self:GetPos(), self:GetRadius(), -self:GetStrength(), 0, true)
+
+		local removed = gwater2.solver:RemoveSphere(gwater2.quick_matrix(self:GetPos(), nil, self:GetRadius()))
+		if removed > 0 then
+			self:EmitSound("player/footsteps/slosh" .. math.random(1,4) .. ".wav", 60)
+		end
 	end)
 end
 
-if SERVER then
-	function ENT:Initialize()
-		if CLIENT then return end
-		self:SetModel("models/xqm/button3.mdl")
-		self:SetMaterial("phoenix_storms/dome")
-		
-		self:PhysicsInit(SOLID_VPHYSICS)
-		self:SetMoveType(MOVETYPE_VPHYSICS)
-		self:SetSolid(SOLID_VPHYSICS)
-	end
+function ENT:Initialize()
+	if CLIENT then return end
+	self:SetModel("models/xqm/button3.mdl")
+	self:SetMaterial("phoenix_storms/dome")
+	
+	self:PhysicsInit(SOLID_VPHYSICS)
+	self:SetMoveType(MOVETYPE_VPHYSICS)
+	self:SetSolid(SOLID_VPHYSICS)
 
-	function ENT:SpawnFunction(ply, tr, class)
-		if not tr.Hit then return end
-		local ent = ents.Create(class)
-		ent:SetPos(tr.HitPos)
-		ent:Spawn()
-		ent:Activate()
-
-		ent:SetRadius(20)
-		ent:SetStrength(100)
-		ent:SetCollisionGroup(COLLISION_GROUP_WORLD)
-
-		return ent
+	-- wiremod integration
+	if WireLib ~= nil then
+		WireLib.CreateInputs(self, {
+			"Radius",
+			"Strength"
+		})
 	end
-elseif CLIENT then
-	function ENT:OnRemove()
-		hook.Remove("gwater2_posttick", self)
+end
+
+-- wiremod integration
+function ENT:TriggerInput(name, val)
+	if name == "Radius" then
+		return self:SetRadius(math.max(0, math.min(100, val)))
 	end
+	if name == "Strength" then
+		return self:SetStrength(math.max(0, math.min(200, val)))
+	end
+end
+
+function ENT:SpawnFunction(ply, tr, class)
+	if not tr.Hit then return end
+	local ent = ents.Create(class)
+	ent:SetPos(tr.HitPos)
+	ent:Spawn()
+	ent:Activate()
+
+	ent:SetRadius(20)
+	ent:SetStrength(100)
+	ent:SetCollisionGroup(COLLISION_GROUP_WORLD)
+
+	return ent
 end
