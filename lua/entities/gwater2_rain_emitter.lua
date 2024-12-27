@@ -44,7 +44,7 @@ function ENT:TriggerInput(name, val)
 		return self:SetStrength(math.max(1, math.min(100, val)))
 	end
 	if name == "Lifetime" then
-		return self:SetLifetime(math.max(1, math.min(100, val)))
+		return self:SetLifetime(math.max(0, math.min(100, val)))
 	end
 end
 

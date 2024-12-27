@@ -5,7 +5,7 @@ ENT.Base = "base_gmodentity"
 
 ENT.Category		= "GWater2"
 ENT.PrintName		= "Forcefield"
-ENT.Author			= "Mee / Jn"
+ENT.Author			= "Meetric / Jn"
 ENT.Purpose			= ""
 ENT.Instructions	= ""
 ENT.Spawnable   	= true

@@ -5,7 +5,7 @@ ENT.Base = "base_gmodentity"
 
 ENT.Category		= "GWater2"
 ENT.PrintName		= "Emitter"
-ENT.Author			= "Mee"
+ENT.Author			= "Meetric"
 ENT.Purpose			= ""
 ENT.Instructions	= ""
 ENT.Spawnable   	= true
