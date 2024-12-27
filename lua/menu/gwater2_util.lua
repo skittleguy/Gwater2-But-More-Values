@@ -403,8 +403,8 @@ local function make_parameter_check(tab, locale_parameter_name, parameter_name, 
 	panel.Paint = panel_paint
 
 	if not gwater2.parameters[parameter_id] then
-		gwater2.parameters[parameter_id] = check:GetValue()
-		gwater2.defaults[parameter_id] = check:GetValue()
+		gwater2.parameters[parameter_id] = check:GetChecked()
+		gwater2.defaults[parameter_id] = check:GetChecked()
 	end
 
 	panel:SetTall(panel:GetTall()+5)
