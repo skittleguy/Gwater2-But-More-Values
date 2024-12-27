@@ -27,7 +27,8 @@ function ENT:Initialize()
 			"RadiusX", "RadiusY",
 			"Strength",
 			"Spread",
-			"Lifetime"})
+			"Lifetime"
+		})
 	end
 end
 
@@ -49,7 +50,7 @@ function ENT:TriggerInput(name, val)
 		return self:SetSpread(math.max(1, math.min(2, val)))
 	end
 	if name == "Lifetime" then
-		return self:SetLifetime(math.max(1, math.min(100, val)))
+		return self:SetLifetime(math.max(0, math.min(100, val)))
 	end
 end
 
