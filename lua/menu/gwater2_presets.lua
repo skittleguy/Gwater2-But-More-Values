@@ -536,8 +536,10 @@ local function presets_tab(tabs, params)
 						end
 					end
 				end
-			end
 
+				check:SetValue(true)
+			end
+			
 			local btn2panel = frame:Add("DPanel")
 			btn2panel:Dock(TOP)
 			function btn2panel:Paint() end
