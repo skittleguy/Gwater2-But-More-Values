@@ -303,14 +303,16 @@ include("gwater2_net.lua")
 include("gwater2_menu.lua")
 
 -- no need to calculate sound every frame
-local soundpatch
+local soundpatch_water
+local soundpatch_goop
 timer.Create("gwater2_calcdiffusesound", 0.1, 0, function()
 	local lp = LocalPlayer()
 	if !IsValid(lp) then return end
 
 	if gwater2.parameters.sound_volume <= 0 or gwater2.parameters.sound_pitch <= 0 then return end
 
-	soundpatch = soundpatch or CreateSound(lp, "gwater2/water_loop.wav")
+	soundpatch_water = soundpatch_water or CreateSound(lp, "gwater2/water_loop.wav")
+	soundpatch_goop = soundpatch_goop or CreateSound(lp, "gwater2/paint_loop.wav")
 
 	local percent = gwater2.solver:GetActiveDiffuseParticles() / gwater2.solver:GetMaxDiffuseParticles()
 	if percent > 0.001 then
@@ -320,10 +322,16 @@ timer.Create("gwater2_calcdiffusesound", 0.1, 0, function()
 
 		local volume = percent^0.6 / dist * radius	-- 0-1
 		local pitch = math.Clamp(((200 - math.min(percent, 1 / 4) * 4 * 100) - dist * 5) / radius, 10, 250)	-- 10-250
-		--pitch = pitch - gwater2.solver:GetParameter("viscosity") * 5
-		soundpatch:PlayEx(volume * gwater2.parameters.sound_volume, pitch * gwater2.parameters.sound_pitch)
+
+		volume = volume * gwater2.parameters.sound_volume
+		pitch = pitch * gwater2.parameters.sound_pitch
+
+		local viscosity_percent = math.Clamp(0, 1, gwater2.solver:GetParameter("viscosity") - 1)
+		soundpatch_water:PlayEx(volume * (1 - viscosity_percent), pitch)
+		soundpatch_goop:PlayEx(volume * viscosity_percent, pitch)
 	else
-		soundpatch:Stop()
+		soundpatch_water:Stop()
+		soundpatch_goop:Stop()
 	end
 
 	-- multiplayer water-player interactions
