@@ -9,15 +9,17 @@ ENT.Purpose			= "OH NO"
 ENT.AdminOnly		= false
 ENT.Instructions	= ""
 ENT.Spawnable 		= true
+ENT.Editable 		= true
 
 function ENT:SetupDataTables()
 	self:NetworkVar("Float", 0, "Strength",	{ KeyName = "Strength",	Edit = {type = "Float", order = 1, min = 0, max = 60}})
 	self:NetworkVar("Float", 1, "DieTime",	{ KeyName = "DieTime",	Edit = {type = "Float", order = 2, min = 1, max = 20}})
 end
 
-function ENT:Initialize()
-	if CLIENT then return end
+if CLIENT then return end
+-- SERVER
 
+function ENT:Initialize()
 	if WireLib then
 		WireLib.CreateOutputs(self, {"Active"})
 	end
@@ -47,12 +49,12 @@ function ENT:SpawnFunction(ply, tr, class)
 end
 
 function ENT:Use()
-	if self.ACTIVATED then return end
+	if self.ACTIVATED or self.START_TIME then return end
 
 	self.ACTIVATED = true
-	self:EmitSound("ambient/weather/rain_drip4.wav")
+	self:EmitSound("gwater2/soda_launch.wav")
 	
-	timer.Simple(2, function()
+	timer.Simple(1, function()
 		if !IsValid(self) then return end
 
 		self.START_TIME = CurTime()
@@ -68,17 +70,20 @@ function ENT:TriggerInput(name, value)
 	end
 end
 
+
 function ENT:OnRemove()
-	if CLIENT then return end
-	
 	self.FLOW_SOUND:Stop()
 end
 
 function ENT:Think()
 	self:NextThink(CurTime() + 0.03)
+
+	if !self.ACTIVATED or !self.START_TIME then return end
 	
-	if !self.START_TIME or CurTime() > self.START_TIME + self:GetDieTime() then
+	if self.START_TIME and CurTime() > self.START_TIME + self:GetDieTime() then
 		self.START_TIME = nil
+		self.ACTIVATED = false
+		self.FLOW_SOUND:Stop()
 		return true
 	end
 
@@ -93,14 +98,14 @@ function ENT:Think()
 	util.ScreenShake(self:GetPos(), percent, 20, 1, 1000)
 	phys:ApplyForceCenter(-self:GetUp() * percent * phys:GetMass() * 200 * self:GetStrength())
 
-	--for i = 0, 5 - dt do
-	--	gwater2.AddParticle(pos + VectorRand(-8, 8), {vel = VectorRand(-1, 1) * 25 * percent})
+	--for i = 0, 20 * percent do
+	--	gwater2.AddParticle(pos + VectorRand(-10, 10), {vel = VectorRand(-1, 1) * 25 * percent})
 	--end
 	
-	for i = 0, 20 * percent do
+	for i = 0, 10 * percent do
 		gwater2.AddParticle(
-			self:LocalToWorld(Vector(0, 0, math.random(7, 20))), 
-			{vel = ang * 200 * percent}
+			self:LocalToWorld(Vector(0, 0, math.random(7, 40))), 
+			{vel = ang * 10 * percent + VectorRand(-1, 1)}
 		)
 	end
 	
