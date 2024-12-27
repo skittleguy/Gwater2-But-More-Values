@@ -2,6 +2,8 @@ AddCSLuaFile()
 local checkluatype = SF.CheckLuaType
 local registerprivilege = SF.Permissions.registerPrivilege
 
+-- TODO: rewrite? not sure if that's compatible with 0.6b
+
 --- Library for using gwater2
 -- @name gwaterlib
 -- @class library
