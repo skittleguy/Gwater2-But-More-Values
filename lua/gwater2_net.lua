@@ -84,9 +84,10 @@ if SERVER then
 
 		ChangeParameter = function(name, value, final, sender)
 			if gwater2.parameters[name] == value then return end
-			net.Start("GWATER2_CHANGEPARAMETER", final)
+			net.Start("GWATER2_CHANGEPARAMETER", not final)
 				net.WriteString(name)
 				net.WriteType(value)
+				net.WriteEntity(sender)
 			net.Broadcast()
 			gwater2.parameters[name] = value
 		end,
@@ -143,8 +144,8 @@ else	-- CLIENT
 	local _util = include("menu/gwater2_util.lua")
 
 	-- HUDPaint gets called only AFTER player is ready to receive data
-	hook.Add("HUDPaint", "GWATER2_REQUESTPARAMETERSSNAPSHOT", function()
-		hook.Remove("HUDPaint", "GWATER2_REQUESTPARAMETERSSNAPSHOT")
+	hook.Add("Think", "GWATER2_REQUESTPARAMETERSSNAPSHOT", function()
+		hook.Remove("Think", "GWATER2_REQUESTPARAMETERSSNAPSHOT")
 		net.Start("GWATER2_REQUESTPARAMETERSSNAPSHOT")
 		net.SendToServer()
 	end)
@@ -152,11 +153,11 @@ else	-- CLIENT
 	net.Receive("GWATER2_REQUESTPARAMETERSSNAPSHOT", function(len, ply)
 		local tbl = net.ReadTable()
 		for k,v in pairs(tbl) do
-			_util.set_gwater_parameter(k, v)
+			_util.set_gwater_parameter(k, v, ply)
 		end
 	end)
 	net.Receive("GWATER2_CHANGEPARAMETER", function(len)
-		_util.set_gwater_parameter(net.ReadString(), net.ReadType())
+		_util.set_gwater_parameter(net.ReadString(), net.ReadType(), net.ReadEntity())
 	end)
 
 	net.Receive("GWATER2_RESETSOLVER", function(len)

@@ -151,7 +151,6 @@ gwater2 = {
 	cloth_pos = Vector(),
 	parameters = {},
 	defaults = {},
-	error = error_message, -- in case we may want to use it
 	update_colliders = function(index, id, rep)
 		if id == 0 then return end	-- skip, entity is world
 
@@ -237,7 +236,7 @@ local function format_int(i)
 	return tostring(i):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
 end
 
-local show_time, hide_time = nil, nil
+local show_time, hide_time, last = nil, CurTime() - 1, 0
 hook.Add("HUDPaint", "gwater2_status", function()
 	local frac
 	if gwater2.solver:GetActiveParticles() <= 0 then
@@ -253,11 +252,42 @@ hook.Add("HUDPaint", "gwater2_status", function()
 	local text = format_int(gwater2.solver:GetActiveParticles()) .. " / " .. format_int(gwater2.solver:GetMaxParticles())
 	draw.DrawText(text, "CloseCaption_Normal", ScrW()/2+2, 18-18*(1-frac), Color(0, 0, 0, 255*frac), TEXT_ALIGN_CENTER)
 	draw.DrawText(text, "CloseCaption_Normal", ScrW()/2, 16-18*(1-frac), ColorAlpha(color_white, 255*frac), TEXT_ALIGN_CENTER)
+
+	last = math.Approach(last, gwater2.solver:GetActiveParticles(), FrameTime()*100000)
+	local part_frac = last / gwater2.solver:GetMaxParticles()
+	local w,_ = surface.GetTextSize(
+		format_int(gwater2.solver:GetMaxParticles()).." / "..format_int(gwater2.solver:GetMaxParticles()))
+	draw.RoundedBox(8, ScrW()/2-w/2, 8-18*(1-frac), part_frac*w, 8, Color(255, 255, 255, 255*frac))
 end)
 
 -- setup external default values
 gwater2.parameters.color = Color(209, 237, 255, 25)
 gwater2.parameters.color_value_multiplier = 1
+
+-- water interaction specific
+gwater2.parameters.force_multiplier = 0.01
+gwater2.parameters.force_buoyancy = 0
+gwater2.parameters.force_dampening = 0
+
+gwater2.parameters.player_interaction = true
+gwater2.parameters.swimspeed = 2
+gwater2.parameters.swimbuoyancy = 0.49
+gwater2.parameters.swimfriction = 1
+gwater2.parameters.multiplyparticles = 60
+gwater2.parameters.multiplywalk = 1
+gwater2.parameters.multiplyjump = 1
+gwater2.parameters.touchdamage = 0
+
+gwater2.parameters.sound_pitch = 1
+gwater2.parameters.sound_volume = 1
+
+-- perf.parameters tab defaults
+gwater2.parameters.blur_passes = 3
+gwater2.parameters.absorption = true
+gwater2.parameters.depth_fix = true
+gwater2.parameters.player_collision = true
+gwater2.parameters.diffuse_enabled = true
+gwater2.parameters.simulation_fps = 60
 
 gwater2.defaults = table.Copy(gwater2.parameters)
 
@@ -267,35 +297,18 @@ gwater2["fluid_rest_distance"] = gwater2.solver:GetParameter("fluid_rest_distanc
 gwater2["solid_rest_distance"] = gwater2.solver:GetParameter("solid_rest_distance") / gwater2.solver:GetParameter("radius")
 gwater2["collision_distance"] = gwater2.solver:GetParameter("collision_distance") / gwater2.solver:GetParameter("radius")
 gwater2["cohesion"] = gwater2.solver:GetParameter("cohesion") * gwater2.solver:GetParameter("radius") * 0.1	-- cohesion scales by radius, for some reason..
-gwater2["blur_passes"] = 3
--- water interaction specific
-gwater2["force_multiplier"] = 0.01
-gwater2["force_buoyancy"] = 0
-gwater2["force_dampening"] = 0
-
-gwater2["player_interaction"] = true
-
-gwater2['swimspeed'] = 2
-gwater2['swimbuoyancy'] = 0.49
-gwater2['swimfriction'] = 1
-
-gwater2["multiplyparticles"] = 60
-gwater2["multiplywalk"] = 1
-gwater2["multiplyjump"] = 1
-
-gwater2["touchdamage"] = 0
 
 include("gwater2_shaders.lua")
-include("gwater2_menu.lua")
 include("gwater2_net.lua")
-
-local limit_fps = 1 / 60
-local soundpatch
+include("gwater2_menu.lua")
 
 -- no need to calculate sound every frame
+local soundpatch
 timer.Create("gwater2_calcdiffusesound", 0.1, 0, function()
 	local lp = LocalPlayer()
 	if !IsValid(lp) then return end
+
+	if gwater2.parameters.sound_volume <= 0 or gwater2.parameters.sound_pitch <= 0 then return end
 
 	soundpatch = soundpatch or CreateSound(lp, "gwater2/water_loop.wav")
 
@@ -307,8 +320,8 @@ timer.Create("gwater2_calcdiffusesound", 0.1, 0, function()
 
 		local volume = percent^0.6 / dist * radius	-- 0-1
 		local pitch = math.Clamp(((200 - math.min(percent, 1 / 4) * 4 * 100) - dist * 5) / radius, 10, 250)	-- 10-250
-		pitch = pitch - gwater2.solver:GetParameter("viscosity") * 5
-		soundpatch:PlayEx(volume, pitch)
+		--pitch = pitch - gwater2.solver:GetParameter("viscosity") * 5
+		soundpatch:PlayEx(volume * gwater2.parameters.sound_volume, pitch * gwater2.parameters.sound_pitch)
 	else
 		soundpatch:Stop()
 	end
@@ -330,10 +343,12 @@ local function gwater_tick2()
 	local lp = LocalPlayer()
 	if !IsValid(lp) then return end
 
+	local limit_fps = 1 / gwater2.options.simulation_fps:GetInt()
+
 	if gwater2.solver:GetActiveParticles() <= 0 then 
 		no_lerp = true
 	else
-		gwater2.solver:ApplyContacts(limit_fps * gwater2["force_multiplier"], 3, gwater2["force_buoyancy"], gwater2["force_dampening"])
+		gwater2.solver:ApplyContacts(limit_fps * gwater2.parameters.force_multiplier, 3, gwater2.parameters.force_buoyancy, gwater2.parameters.force_dampening)
 		gwater2.solver:IterateColliders(gwater2.update_colliders)
 
 		if no_lerp then 
@@ -357,6 +372,6 @@ local function gwater_tick2()
 	gwater2.solver:Tick(limit_fps, 0)
 end
 
-timer.Create("gwater2_tick", limit_fps, 0, gwater_tick2)
+timer.Create("gwater2_tick", 1 / gwater2.options.simulation_fps:GetInt(), 0, gwater_tick2)
 hook.Add("InitPostEntity", "gwater2_addprop", gwater2.reset_solver)
 hook.Add("OnEntityCreated", "gwater2_addprop", function(ent) timer.Simple(0, function() add_prop(ent) end) end)	// timer.0 so data values are setup correctly
