@@ -125,9 +125,9 @@ local function add_prop(ent)
 	else
 		gwater2.solver:AddConcaveCollider(ent_index, unfucked_get_mesh(ent, true), ent:GetPos(), ent:GetAngles())
 	end
-
 end
 
+-- fallback incase C++ bsp parser fails
 local function get_map_vertices()
 	local all_vertices = {}
 	for _, brush in ipairs(game.GetWorld():GetBrushSurfaces()) do
@@ -272,7 +272,7 @@ gwater2.parameters.force_dampening = 0
 gwater2.parameters.player_interaction = true
 gwater2.parameters.swimspeed = 2
 gwater2.parameters.swimbuoyancy = 0.49
-gwater2.parameters.swimfriction = 1
+gwater2.parameters.swimfriction = 0
 gwater2.parameters.multiplyparticles = 60
 gwater2.parameters.multiplywalk = 1
 gwater2.parameters.multiplyjump = 1

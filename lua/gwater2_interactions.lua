@@ -41,7 +41,7 @@ local function do_swim(ply, move)
 	local gravity = pgrav * gravity_convar:GetFloat() * (gwater2.parameters["swimbuoyancy"] or 0.49)
 	vel.z = vel.z + FrameTime() * gravity
 
-	move:SetVelocity(vel * (gwater2.parameters["swimfriction"] or 1))
+	move:SetVelocity(vel * (1 - (gwater2.parameters.swimfriction or 0)))
 end
 
 local function do_multiply(ply)

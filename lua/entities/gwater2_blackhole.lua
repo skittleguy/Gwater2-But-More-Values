@@ -6,7 +6,7 @@ ENT.Type = "anim"
 ENT.Base = "base_anim"
 
 ENT.Category     = "GWater2"
-ENT.PrintName    = "Black hole"
+ENT.PrintName    = "Black Hole"
 ENT.Author       = "Meetric"
 ENT.Purpose      = ""
 ENT.Instructions = ""
@@ -55,7 +55,9 @@ if SERVER then
 		return ent
 	end
 elseif CLIENT then
-	function ENT:Think()
+	function ENT:Draw()
+		if halo.RenderedEntity() == self then self:DrawModel() end
+		
 		-- VERY old code for blackhole visuals, reused from a script I made 3 years ago
 		if !self.PARTICLE_EMITTER then return end
 			
@@ -66,6 +68,8 @@ elseif CLIENT then
 		part:SetStartSize(50)
 		part:SetEndSize(50)
 		part:SetLighting(false)
+		part:SetStartAlpha(50)
+		part:SetEndAlpha(50)
 
 		-- particle/warp1_warp
 		local part 
@@ -81,9 +85,10 @@ elseif CLIENT then
 		part:SetDieTime(FrameTime() * 20)
 		part:SetStartSize(25 + (math.sin(CurTime() * 2) * 3))
 		part:SetEndSize(22)
-		self:SetNextClientThink(CurTime() + 0.001)
+		part:SetStartAlpha(255)
+		part:SetEndAlpha(255)
+		--self:SetNextClientThink(CurTime() + 0.001)
 		self:RemoveAllDecals()
-		return true
 	end
 
 	function ENT:OnRemove()

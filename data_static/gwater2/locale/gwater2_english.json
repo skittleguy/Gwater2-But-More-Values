@@ -41,7 +41,7 @@
     "gwater2.menu.Interactions.help": "A few parameters that control how water interacts with players and props.",
     "gwater2.menu.Developer.title": "Developer",
     "gwater2.menu.Developer.titletext": "Developer",
-    "gwater2.menu.Developer.help": "Various settings that are not intended to be used and can break your game.\n\nMost of these settings probably do not do anything or are not tuned properly (eg. have really small or big min/max values) and are only meant to be used by me.\n\nI added descriptions anyways so feel free to play around I guess",
+    "gwater2.menu.Developer.help": "Various settings that are not intended to be used and can break your game.\n\nMost of these settings probably do not do anything or are not tuned properly (eg. have really small or big min/max values) and are only meant to be used by me.\n\nI added descriptions anyways so feel free to play around I guess\n\nThis tab only appears when 'developer 1' is enabled in console",
     "gwater2.menu.Presets.title": "Presets",
     "gwater2.menu.Presets.titletext": "Presets",
     "gwater2.menu.Presets.help": "Preset tab, load, edit and save any fluids you make.\n\nRight clicking on a preset will let you delete or copy its information (to be sent to friends if desired)",

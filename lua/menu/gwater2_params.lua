@@ -456,8 +456,8 @@ local interaction = {
 			},
 			["004-SwimFriction"] = {
 				type="scratch",
-				min=0.25,
-				max=1,
+				min=0,
+				max=0.75,
 				decimals=3,
 				func=function(val) return true end,
 				setup=function(scratch) scratch:SetValue(gwater2.parameters['swimfriction'] or scratch:GetValue()) end
