@@ -679,21 +679,21 @@ This parameter does not save.
 Medium performance impact.
 ]]
 
-"gwater2.menu.Performance.Player Collision" =[[
+"gwater2.menu.Performance.Player Collision"=[[
 Player Collision
 ]]
 
-"gwater2.menu.Performance.Player Collision.desc" =[[
+"gwater2.menu.Performance.Player Collision.desc"=[[
 Enables / disables collision with the player (you).
 
 This doesn't actually impact performance that much, but I put it in this tab anyways because presets cannot set this value
 ]]
 
-"gwater2.menu.Performance.Diffuse Enabled" =[[
+"gwater2.menu.Performance.Diffuse Enabled"=[[
 Diffuse / Sound Enabled
 ]]
 
-"gwater2.menu.Performance.Diffuse Enabled.desc" =[[
+"gwater2.menu.Performance.Diffuse Enabled.desc"=[[
 Enables / disables diffuse particles
 (foam/bubbles)
 
@@ -704,11 +704,11 @@ NOTE THAT THIS WILL ALSO DISABLE SOUND, AS SOUND IS CALCULATED VIA DIFFUSE PARTI
 Medium performance impact.
 ]]
 
-"gwater2.menu.Performance.Simulation FPS" =[[
+"gwater2.menu.Performance.Simulation FPS"=[[
 Simulation FPS
 ]]
 
-"gwater2.menu.Performance.Simulation FPS.desc" =[[
+"gwater2.menu.Performance.Simulation FPS.desc"=[[
 Controls the framerate of the simulation (How fast it is updated).
 
 This setting may change the behavior of the liquid due to smaller or larger compute times.
