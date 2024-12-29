@@ -10,6 +10,7 @@ ENT.Purpose			= ""
 ENT.Instructions	= ""
 ENT.Spawnable   	= true
 ENT.Editable		= true
+ENT.RenderGroup 	= RENDERGROUP_TRANSLUCENT
 
 function ENT:Initialize()
 	if CLIENT then return end
@@ -51,7 +52,7 @@ end
 function ENT:SpawnFunction(ply, tr, class)
 	if not tr.Hit then return end
 	local ent = ents.Create(class)
-	ent:SetPos(tr.HitPos + tr.HitNormal * 100)
+	ent:SetPos(tr.HitPos + tr.HitNormal * 300)
 	ent:Spawn()
 	ent:Activate()
 
@@ -60,7 +61,6 @@ function ENT:SpawnFunction(ply, tr, class)
 	ent:SetLifetime(0)
 	ent:SetOn(true)
 	ent:SetCollisionGroup(COLLISION_GROUP_WORLD)
-	ent:SetMaterial("models/wireframe")
 	ent:DrawShadow(false)
 
 	return ent
@@ -96,4 +96,68 @@ function ENT:SetupDataTables()
 			)
 		end
 	end)
+end
+
+local function render_easyquad(pos, ang, sizex, sizey, winding)
+	local p0 = ang:Forward() *  sizex
+	local p1 = ang:Forward() * -sizex
+	local p2 = ang:Right() 	 *  sizey
+	local p3 = ang:Right() 	 * -sizey
+
+	if winding then
+		render.DrawQuad(
+			pos + p0 + p2,
+			pos + p0 + p3, 
+			pos + p1 + p3, 
+			pos + p1 + p2
+		)
+	else
+		render.DrawQuad(
+			pos + p1 + p3, 
+			pos + p0 + p3, 
+			pos + p0 + p2, 
+			pos + p1 + p2
+		)
+	end
+end
+
+-- 3d parallax effect
+local function unfuck_lighting(pos0, pos1)
+	render.OverrideColorWriteEnable(true, false)
+	render.OverrideDepthEnable(true, false)
+	render.Model({model = "models/shadertest/vertexlit.mdl",pos = pos0, angle = EyeAngles()}) 	-- lighting
+	render.OverrideDepthEnable(false, false)
+	render.OverrideColorWriteEnable(false, false)
+end
+
+local cloud = Material("gwater2/clouds")
+function ENT:Draw()
+	if halo.RenderedEntity() == self then 
+		self:DrawModel() 
+		return
+	end
+
+	unfuck_lighting(self:GetPos())
+	render.SetMaterial(cloud)
+
+	local color = self:GetColor()
+	cloud:SetVector4D("$color2", color.r / 255, color.g / 255, color.b / 255, 255)
+
+	local obb = self:OBBMaxs()
+	local width = obb[1]
+	local length = obb[2]
+	local height = obb[3]
+
+	-- top
+	for i = 0, 9 do
+		cloud:SetInt("$frame", i)	-- slice of volume texture
+		render_easyquad(self:GetPos() + self:GetUp() * i * height, self:GetAngles(), width, length)
+	end
+
+	-- bottom
+	
+	for i = 0, 9 do
+		cloud:SetInt("$frame",  9 - i)
+		render_easyquad(self:GetPos() + self:GetUp() * (9 - i) * height, self:GetAngles(), width, length, true)
+	end
 end

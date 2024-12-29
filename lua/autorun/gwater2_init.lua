@@ -211,7 +211,7 @@ gwater2 = {
 		end, function(e)
 			gwater2.solver:AddConcaveCollider(0, get_map_vertices(), Vector(), Angle(0))
 			if !err then
-				ErrorNoHalt("[GWater2]: Map BSP structure is unsupported. Reverting to brushes. Collision WILL have holes!")
+				ErrorNoHalt("[GWater2]: Map BSP structure is unsupported. Reverting to brushes. Collision WILL have holes!\n")
 			end
 		end)
 
