@@ -57,7 +57,7 @@ if SERVER then
 elseif CLIENT then
 	function ENT:Draw()
 		if halo.RenderedEntity() == self then self:DrawModel() end
-		
+
 		-- VERY old code for blackhole visuals, reused from a script I made 3 years ago
 		if !self.PARTICLE_EMITTER then return end
 			
@@ -82,7 +82,7 @@ elseif CLIENT then
 		end
 		part:SetVelocity(Vector())
 		part:SetGravity(Vector())
-		part:SetDieTime(FrameTime() * 20)
+		part:SetDieTime(FrameTime() * 15)
 		part:SetStartSize(25 + (math.sin(CurTime() * 2) * 3))
 		part:SetEndSize(22)
 		part:SetStartAlpha(255)

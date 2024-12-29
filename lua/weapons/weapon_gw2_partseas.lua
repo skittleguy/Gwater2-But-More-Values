@@ -16,9 +16,11 @@ SWEP.AutoSwitchFrom = false
 SWEP.Weight = 1
 
 SWEP.Primary.Ammo          = "none"	-- needs to be something to show ammo
+SWEP.Primary.Automatic     = false
 
 SWEP.Base = "weapon_base"
 SWEP.Secondary.Ammo          = "none"
+SWEP.Secondary.Automatic     = false
 
 SWEP.ViewModelFlip		= false
 SWEP.ViewModelFOV		= 70
@@ -26,26 +28,52 @@ SWEP.ViewModel			= "models/weapons/c_arms.mdl"
 SWEP.WorldModel			= ""
 SWEP.UseHands           = true
 
+function SWEP:Initialize()
+	self:SetHoldType("magic")
+end
+
 if CLIENT then return end
 
 function SWEP:create_black_holes(strength)
-	if self.BLACK_HOLES then return end
+	if self.BLACK_HOLES then 
+		self:destroy_black_holes()
+	end
+
+	local owner = self:GetOwner()
+	local start_pos = owner:GetPos() + owner:OBBCenter() / 2
+	local end_pos = util.QuickTrace(start_pos, (owner:GetAimVector() * Vector(1, 1, 0)):GetNormalized() * 10000, owner).HitPos
+	local max_points = math.floor(start_pos:Distance(end_pos) / 200)
 
 	self.BLACK_HOLES = {}
+	local points = 0
+	timer.Create("gwater2_partseas_create" .. self:EntIndex(), 0.1, max_points, function()
+		for i = 0, 1 do
+			local black_hole = ents.Create("gwater2_blackhole")
+			black_hole:SetPos(LerpVector(points / max_points, start_pos, end_pos) + Vector(0, 0, i * 400))
+			black_hole:SetRadius(300)
+			black_hole:SetStrength(strength)
+			black_hole:SetMode(1)
+			black_hole:SetLinear(1)
+			black_hole:Spawn()
+			black_hole:SetNotSolid(true)
+			black_hole:SetRenderMode(RENDERMODE_NONE)
+			black_hole:GetPhysicsObject():EnableMotion(false)
+			table.insert(self.BLACK_HOLES, black_hole)
+		end
+		points = points + 1
+	end)
 
-	local start_pos = self:GetOwner():EyePos()
-	local end_pos = self:GetOwner():GetEyeTrace().HitPos
-	timer.Create(self, 0.1, start_pos:Distance(end_pos) / 100, function()
-		local black_hole = ents.Create("gwater2_blackhole")
-		black_hole:SetPos(start_pos)
-		black_hole:SetNotSolid(true)
-		table.insert(black_hole)
+	timer.Create("gwater2_partseas_destroy" .. self:EntIndex(), 30, 1, function()
+		self:destroy_black_holes()
 	end)
 end
 
 function SWEP:destroy_black_holes()
 	if !self.BLACK_HOLES then return end
 	
+	timer.Remove("gwater2_partseas_create" .. self:EntIndex())
+	timer.Remove("gwater2_partseas_destroy" .. self:EntIndex())
+
 	for k, v in ipairs(self.BLACK_HOLES) do
 		SafeRemoveEntity(v)
 	end
@@ -54,45 +82,22 @@ function SWEP:destroy_black_holes()
 end
 
 function SWEP:PrimaryAttack()
-	self:make_black_holes(-100)
-	print("Hello World!")
+	self:create_black_holes(-100)
 end
 
 function SWEP:Reload()
-
+	self:destroy_black_holes()
 end
 
 function SWEP:SecondaryAttack()
-
-	print("Hello World")
+	self:create_black_holes(100)
 end
 
 function SWEP:OnDrop()
+	self:destroy_black_holes()
 	self:Remove() -- "You can't drop fists"
 end
 
-if SERVER then return end
-
-local function format_int(i)
-	return tostring(i):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
-end
-
--- visual counter on gun
-function SWEP:PostDrawViewModel(vm, weapon, ply)
-	if !gwater2 then 
-		cam.Start2D()
-			local a = 255 * (math.sin(CurTime() * 2) + 1) / 2
-			draw.DrawText("Failed to load GWater2!", "Trebuchet24", ScrW() / 2, ScrH() / 2 - 36, Color(255, 50, 50, a), TEXT_ALIGN_CENTER)
-		cam.End2D()
-
-		return 
-	end
-
-	local owner = self:GetOwner() -- me!
-	local bone = owner:GetViewModel():LookupBone("ValveBiped.Bip01_R_Hand")
-	local pos, ang = owner:GetHands():GetBonePosition(bone)
-	pos = pos + ang:Forward() * 5 + ang:Up() * -11 + ang:Right() * 0
-	local _, ang = LocalToWorld(vector_origin, Angle(0, -90, 90), vector_origin, EyeAngles())
-
-	self.Weapon:SetClip1(gwater2.solver:GetMaxParticles() - gwater2.solver:GetActiveParticles())
+function SWEP:OnRemove()
+	self:destroy_black_holes()
 end

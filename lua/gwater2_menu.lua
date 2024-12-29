@@ -139,24 +139,24 @@ local function create_menu(init)
 	q_access:DockMargin(0, 5, 0, 0)
 	function q_access:Paint(w, h) styling.draw_main_background(0, 0, w, h) end
 
+	local qgun = q_access:Add("DImageButton")
+	qgun:SetImage("icon16/gun.png")
+	qgun:SetSize(q_access:GetTall() - 4, q_access:GetTall() - 4)
+	qgun:SetPos(2, 2)
+	qgun:SetTooltip("Give yourself watergun swep")
+	function qgun:DoClick()
+		RunConsoleCommand("gm_giveswep", "weapon_gw2_watergun")
+	end
+
 	local qreset = q_access:Add("DImageButton")
 	qreset:SetImage("icon16/arrow_refresh.png")
 	qreset:SetSize(q_access:GetTall() - 4, q_access:GetTall() - 4)
-	qreset:SetPos(2, 2)
+	qreset:SetPos(2 * 4 + qreset:GetWide(), 2)
 	qreset:SetTooltip("Reset solvers (clean all water)")
 	function qreset:DoClick()
 		gwater2.options.solver:Reset()
 		gwater2.ResetSolver()
 		_util.emit_sound("reset")
-	end
-
-	local qgun = q_access:Add("DImageButton")
-	qgun:SetImage("icon16/gun.png")
-	qgun:SetSize(q_access:GetTall() - 4, q_access:GetTall() - 4)
-	qgun:SetPos(2*2+qreset:GetWide(), 2)
-	qgun:SetTooltip("Give yourself watergun swep")
-	function qgun:DoClick()
-		RunConsoleCommand("gm_giveswep", "weapon_gw2_watergun")
 	end
 
 	local particle_material = nil
@@ -607,6 +607,7 @@ surface.CreateFont("GWater2Title", {
 concommand.Add("gwater2_menu", function()
 	if IsValid(gwater2.options.frame) then
 		gwater2.options.frame:SetVisible(not gwater2.options.frame:IsVisible())
+		gwater2.options.frame:Center()
 		local tabs = gwater2.options.frame.tabs
 
 		-- play sound and animate properly
