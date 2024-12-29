@@ -17,13 +17,19 @@ end
 
 -- multi language support
 local lang = GetConVar("cl_language"):GetString()
-local strings = file.Read("data_static/gwater2/locale/gwater2_".. lang .. ".json", "THIRDPARTY")
+local strings = file.Read("data_static/gwater2/locale/gwater2_".. lang .. ".txt", "THIRDPARTY")
 if !strings then 
 	lang = "english"
-	strings = file.Read("data_static/gwater2/locale/gwater2_english.json", "THIRDPARTY") or "{}" 
+	strings = file.Read("data_static/gwater2/locale/gwater2_english.txt", "THIRDPARTY") or "{}" 
 end
 
-for k,v in pairs(util.JSONToTable(strings)) do 
+/* 
+matches strings like this:
+	"KEY"=[[
+	VALUE
+	]]
+*/
+for k, v in string.gmatch(strings, '"(.-)"=%[%[%s*(.-)%s*%]%]') do 
 	language.Add(k, v) 
 end
 
@@ -52,7 +58,7 @@ if !util.IsBinaryModuleInstalled(toload) then
 end
 
 local noerror, pcerr = pcall(function() require(toload) end)
-if not noerror then
+if !noerror then
 	gw2_error(string.format(
 		"===========================================================\n\n" ..
 		language.GetPhrase("gwater2.error.modulefailedtoload.1").."\n"..
