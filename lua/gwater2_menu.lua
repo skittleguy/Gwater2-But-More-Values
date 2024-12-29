@@ -60,6 +60,8 @@ timer.Simple(0, function()
 	net.Start("GWATER2_REQUESTCOLLISION")
 	net.WriteBool(gwater2.options.player_collision:GetBool())
 	net.SendToServer()
+
+	gwater2.solver:EnableDiffuse(gwater2.options.diffuse_enabled:GetBool())
 end)
 
 gwater2.options.solver:SetParameter("gravity", 15.24)	-- flip gravity because y axis positive is down

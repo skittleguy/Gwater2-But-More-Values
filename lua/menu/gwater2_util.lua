@@ -47,6 +47,8 @@ local function set_gwater_parameter(option, val, ply)
 		param[2].block = true
 		if param[1].type != "color" then 
       		param[2]:SetValue(val)
+		else
+			param[2]:SetColor(val)
 		end
 		param[2].block = false
 	end
