@@ -4,9 +4,9 @@ SWEP.Author = "Meetric"
 SWEP.Purpose = "roleplay as moses"
 SWEP.Instructions = "Left click to part the seas"
 SWEP.Category = "GWater2" 
-SWEP.DrawAmmo       = true
+SWEP.DrawAmmo       = false
 SWEP.DrawCrosshair	= true
-SWEP.DrawWeaponInfoBox = true
+SWEP.DrawWeaponInfoBox = false
 
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -15,12 +15,20 @@ SWEP.AutoSwitchTo = false
 SWEP.AutoSwitchFrom = false
 SWEP.Weight = 1
 
-SWEP.Primary.Ammo          = "none"	-- needs to be something to show ammo
+SWEP.Base = "weapon_base"
+
+SWEP.Primary.ClipSize      = -1
+SWEP.Primary.DefaultClip   = -1
 SWEP.Primary.Automatic     = false
+SWEP.Primary.Ammo          = "none"	-- needs to be something to show ammo
+SWEP.Primary.Delay = 0
 
 SWEP.Base = "weapon_base"
-SWEP.Secondary.Ammo          = "none"
+
+SWEP.Secondary.ClipSize      = -1
+SWEP.Secondary.DefaultClip   = -1
 SWEP.Secondary.Automatic     = false
+SWEP.Secondary.Ammo          = "none"
 
 SWEP.ViewModelFlip		= false
 SWEP.ViewModelFOV		= 70
@@ -32,7 +40,12 @@ function SWEP:Initialize()
 	self:SetHoldType("magic")
 end
 
-if CLIENT then return end
+if CLIENT then 
+	function SWEP:PrimaryAttack() end
+	function SWEP:SecondaryAttack() end
+	function SWEP:Reload() end
+	return 
+end
 
 function SWEP:create_black_holes(strength)
 	if self.BLACK_HOLES then 
@@ -56,6 +69,7 @@ function SWEP:create_black_holes(strength)
 			black_hole:SetLinear(1)
 			black_hole:Spawn()
 			black_hole:SetNotSolid(true)
+			black_hole:DrawShadow(false)
 			black_hole:SetRenderMode(RENDERMODE_NONE)
 			black_hole:GetPhysicsObject():EnableMotion(false)
 			table.insert(self.BLACK_HOLES, black_hole)
