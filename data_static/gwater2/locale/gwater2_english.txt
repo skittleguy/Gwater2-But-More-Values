@@ -120,6 +120,8 @@ Changelog (v0.6b):
 
 - Added lighting to diffuse particles
 
+- Added Water gun model
+
 - Added support to custom physobjs (prop resizer)
 
 - Added Multiplayer support.
@@ -130,6 +132,7 @@ Changelog (v0.6b):
 - Revamped menu. Includes:
 + multi-lanauge support
 + QOL settings like player collision toggle
++ Added presets tab
 + More menu options
 
 - Added internal linux support. (The module compiles, but Nvidia is really pissy and so far I havent been able to get gwater2 working ingame.)

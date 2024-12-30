@@ -335,8 +335,6 @@ local function create_menu(init)
 		local tab = vgui.Create("DPanel", tabs)
 		function tab:Paint() end
 
-		-- pretty sure you can also put people who helped meetric in development, that's why i renamed patrons_tab to supporters_tab :clueless:
-
 		tabs:AddSheet(_util.get_localised("Patrons.title"), tab, "icon16/award_star_gold_3.png").Tab.realname = "Patrons"
 		tab = tab:Add("DScrollPanel")
 		tab:Dock(FILL)
@@ -372,13 +370,15 @@ local function create_menu(init)
 		local supporter_color = Color(171, 255, 163)
 		
 		label:SetPos(0, 0)
-		label:SetTall(math.max(#supporters_table * 20, 1000) + 180)
 		function label:Paint(w, h)
+			label:SetTall(math.max(#supporters_table * 20, 1000) + 180)	-- fuck this shit hack
+
 			local top = math.max(math.floor((tab:GetVBar():GetScroll() - 200) / 20), 1)	-- only draw what we see
 			for i = top, math.min(top + 30, #supporters_table) do
 				draw.DrawText(supporters_table[i], "GWater2Param", 6, 150 + i * 20, supporter_color, TEXT_ALIGN_LEFT)
 			end
 		end
+
 		return tab
 	end
 
