@@ -55,14 +55,14 @@ function SWEP:create_black_holes(strength)
 	local owner = self:GetOwner()
 	local start_pos = owner:GetPos() + owner:OBBCenter() / 2
 	local end_pos = util.QuickTrace(start_pos, (owner:GetAimVector() * Vector(1, 1, 0)):GetNormalized() * 10000, owner).HitPos
-	local max_points = math.floor(start_pos:Distance(end_pos) / 200)
+	local max_points = math.floor(start_pos:Distance(end_pos) / 250)
 
 	self.BLACK_HOLES = {}
 	local points = 0
 	timer.Create("gwater2_partseas_create" .. self:EntIndex(), 0.1, max_points, function()
 		for i = 0, 1 do
 			local black_hole = ents.Create("gwater2_blackhole")
-			black_hole:SetPos(LerpVector(points / max_points, start_pos, end_pos) + Vector(0, 0, i * 400))
+			black_hole:SetPos(LerpVector(points / max_points, start_pos, end_pos) + Vector(0, 0, i * 500))
 			black_hole:SetRadius(300)
 			black_hole:SetStrength(strength)
 			black_hole:SetMode(1)
