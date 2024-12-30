@@ -610,6 +610,7 @@ concommand.Add("gwater2_menu", function()
 	if IsValid(gwater2.options.frame) then
 		gwater2.options.frame:SetVisible(not gwater2.options.frame:IsVisible())
 		gwater2.options.frame:Center()
+		gwater2.options.solver:Reset()
 		local tabs = gwater2.options.frame.tabs
 
 		-- play sound and animate properly
