@@ -486,24 +486,16 @@ local function create_menu(init)
 	
 	about_tab(tabs)
 
-	local tabs_enabled = not admin_only:GetBool() or LocalPlayer():IsAdmin()
-	
-	if tabs_enabled then
-		frame.params = {}	-- need to pass by reference into presets
-		frame.params._parameters = paramstabs.parameters_tab(tabs)
-		frame.params._visuals = paramstabs.visuals_tab(tabs)
-		frame.params._interactions = paramstabs.interaction_tab(tabs)
+	frame.params = {}	-- need to pass by reference into presets
+	frame.params._parameters = paramstabs.parameters_tab(tabs)
+	frame.params._visuals = paramstabs.visuals_tab(tabs)
+	frame.params._interactions = paramstabs.interaction_tab(tabs)
 
-		presets.presets_tab(tabs, frame.params)
-	end
-
+	presets.presets_tab(tabs, frame.params)
 	paramstabs.performance_tab(tabs)
 	menu_tab(tabs)
 	supporters_tab(tabs)
-	
-	if tabs_enabled and GetConVar("developer"):GetInt() != 0 then	-- developer tab for developer 1 only
-		local _tab = paramstabs.developer_tab(tabs)
-	end
+	paramstabs.developer_tab(tabs)
 
 	for _,tab in pairs(tabs:GetItems()) do
 		local rt = tab
@@ -616,6 +608,16 @@ concommand.Add("gwater2_menu", function()
 		-- play sound and animate properly
 		_util.emit_sound("select")
 		tabs:GetActiveTab().lastpush = RealTime()
+
+		-- should we show tabs?
+		local tabs_enabled = !admin_only:GetBool() or LocalPlayer():IsAdmin()
+		
+		local items = tabs:GetItems()
+		items[2].Tab:SetVisible(tabs_enabled) -- parameters
+		items[3].Tab:SetVisible(tabs_enabled) -- visuals
+		items[4].Tab:SetVisible(tabs_enabled) -- interactions
+		items[5].Tab:SetVisible(tabs_enabled) -- presets
+		items[9].Tab:SetVisible(tabs_enabled and GetConVar("developer"):GetInt() != 0) -- developer
 
 		return
 	end
