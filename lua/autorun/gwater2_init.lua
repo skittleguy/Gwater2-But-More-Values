@@ -23,20 +23,24 @@ end
 
 -- multi language support
 local lang = GetConVar("cl_language"):GetString()
-local strings = file.Read("data_static/gwater2/locale/gwater2_".. lang .. ".txt", "THIRDPARTY")
-if !strings then 
-	lang = "english"
-	strings = file.Read("data_static/gwater2/locale/gwater2_english.txt", "THIRDPARTY") or "{}" 
+local function load_language(lang)
+	local strings = file.Read("data_static/gwater2/locale/gwater2_".. lang .. ".txt", "THIRDPARTY")
+	if not strings then return false end
+	/* 
+	matches strings like this:
+		"KEY"=[[
+		VALUE
+		]]
+	*/
+	for k, v in string.gmatch(strings, '"(.-)"=%[%[%s*(.-)%s*%]%]') do 
+		language.Add(k, v) 
+	end
+	return true
 end
 
-/* 
-matches strings like this:
-	"KEY"=[[
-	VALUE
-	]]
-*/
-for k, v in string.gmatch(strings, '"(.-)"=%[%[%s*(.-)%s*%]%]') do 
-	language.Add(k, v) 
+load_language("english") -- fallback
+if not load_language(lang) then
+	print("[GWater2] Your language is unsupported. Falling back to 100% english.")
 end
 
 local function gw2_error(text)
