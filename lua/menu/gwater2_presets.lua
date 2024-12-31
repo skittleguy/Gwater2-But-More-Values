@@ -108,7 +108,7 @@ local default_presets = {
 
 local presets
 if file.Exists("DATA", "gwater2/presets.txt") then
-    presets = util.JSONToTable(file.Read("gwater2/presets.txt"))
+    presets = util.JSONToTable(file.Read("gwater2/presets.txt", "DATA"))
 else
     presets = default_presets
 end
@@ -300,6 +300,8 @@ button_functions = {
         select_itrc.Paint = button_functions.paint
         select_visl.section = "ITRC"
         select_itrc.DoClick = select_visl.DoClick
+
+        _util.emit_sound("confirm")
     end,
     import = function(self)
         local local_presets = self:GetParent():GetParent():GetParent().presets
