@@ -8,10 +8,16 @@ if SERVER then
 	include("gwater2_net.lua")
 	include("gwater2_interactions.lua")
 
+	AddCSLuaFile("menu/gwater2_params.lua")
+	AddCSLuaFile("menu/gwater2_paramstabs.lua")
+	AddCSLuaFile("menu/gwater2_presets.lua")
+	AddCSLuaFile("menu/gwater2_styling.lua")
+	AddCSLuaFile("menu/gwater2_util.lua")
+
 	AddCSLuaFile("gwater2_interactions.lua")
 	AddCSLuaFile("gwater2_net.lua")
 	AddCSLuaFile("gwater2_shaders.lua")
-	AddCSLuaFile("gwater2_net.lua")
+	AddCSLuaFile("gwater2_menu.lua")
 	return
 end
 
