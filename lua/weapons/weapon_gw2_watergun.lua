@@ -132,11 +132,5 @@ function SWEP:PostDrawViewModel(vm, weapon, ply)
 		return 
 	end
 
-	local owner = self:GetOwner() -- me!
-	local bone = owner:GetViewModel():LookupBone("ValveBiped.Bip01_R_Hand")
-	local pos, ang = owner:GetHands():GetBonePosition(bone)
-	pos = pos + ang:Forward() * 5 + ang:Up() * -11 + ang:Right() * 0
-	local _, ang = LocalToWorld(vector_origin, Angle(0, -90, 90), vector_origin, EyeAngles())
-
 	self.Weapon:SetClip1(gwater2.solver:GetMaxParticles() - gwater2.solver:GetActiveParticles())
 end
