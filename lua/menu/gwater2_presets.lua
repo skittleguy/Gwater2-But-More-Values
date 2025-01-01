@@ -146,6 +146,36 @@ function gwater2.options.detect_preset_type(preset)
 	return nil
 end
 
+local function recalculate_color_from_old(value, preset)
+    if value[1] >= 0 and value[1] <= 255 and
+       value[2] >= 0 and value[2] <= 255 and
+       value[3] >= 0 and value[3] <= 255 and
+       value[4] >= 0 and value[4] <= 255 then
+        return
+    end
+    notification.AddLegacy("This preset color has been converted from old format.\n"..
+                           "Please note that the conversion is not perfect and may result in wrong color.", NOTIFY_GENERIC, 5)
+    local max_deviation = 0
+    for i = 1, 4 do
+        local old_value = value[i]
+        local deviation_above = math.max(0, old_value - 255)
+        local deviation_below = math.max(0, 0 - old_value)
+        local deviation = math.max(deviation_above, deviation_below)
+        max_deviation = math.max(max_deviation, deviation)
+    end
+    local multiplier = 1
+    if max_deviation > 0 then
+        multiplier = 1 + (max_deviation / 255)
+    end
+    multiplier = math.max(0, math.min(3, multiplier))
+    value = {value[1] / multiplier,
+             value[2] / multiplier,
+             value[3] / multiplier,
+             value[4] / multiplier}
+    preset["VISL/Color Value Multiplier"] = multiplier
+    return value
+end
+
 function gwater2.options.read_preset(preset)
 	local type = gwater2.options.detect_preset_type(preset)
 	if type == "JSON" then
@@ -194,8 +224,15 @@ function gwater2.options.read_preset(preset)
 				value = (2^31-1)
 			end
 			if name == "Color" then
-				if value ~= (2^31-1) then value = value:Split(" ") end
+				if value ~= (2^31-1) then
+                    value = value:Split(" ")
+                    value = {tonumber(value[1]), tonumber(value[2]),
+                                  tonumber(value[3]), tonumber(value[4])}
+                end
 				name = "VISL/"..name
+                if value ~= (2^31-1) then
+                    value = recalculate_color_from_old(value, preset)
+                end
 			end
 			if name == "Cohesion" then
 				if value ~= (2^31-1) then value = tonumber(value) end
@@ -274,6 +311,7 @@ function gwater2.options.read_preset(preset)
 				if value ~= (2^31-1) then value = tonumber(value) end
 				name = "INTC/"..name
 			end
+
 			preset[name] = value
 		end
 		return {name, preset}
@@ -289,8 +327,15 @@ function gwater2.options.read_preset(preset)
 				value = (2^31-1)
 			end
 			if name == "Color" then
-				if value ~= (2^31-1) then value = value:Split(" ") end
+				if value ~= (2^31-1) then
+                    value = value:Split(" ")
+                    value = {tonumber(value[1]), tonumber(value[2]),
+                                  tonumber(value[3]), tonumber(value[4])}
+                end
 				name = "VISL/"..name
+                if value ~= (2^31-1) then
+                    value = recalculate_color_from_old(value, preset)
+                end
 			end
 			if name == "Cohesion" then
 				if value ~= (2^31-1) then value = tonumber(value) end
