@@ -328,6 +328,8 @@ function gwater2.options.read_preset(preset)
 	return {"", {}}
 end
 
+local _visuals, _parameters, _interactions
+
 local function get_parameter(param)
     local list_ = ({
         ["VISL"] = _visuals,
@@ -375,9 +377,9 @@ button_functions = {
         local params = self:GetParent():GetParent():GetParent().params
         local preset = self.preset
 
-        local _parameters = params._parameters
-        local _visuals = params._visuals
-        local _interactions = params._interactions
+        _parameters = params._parameters
+        _visuals = params._visuals
+        _interactions = params._interactions
 
         local paramlist = {}
         for name,_ in pairs(_parameters) do paramlist[#paramlist+1] = "PHYS/"..name end
@@ -452,9 +454,9 @@ button_functions = {
         local params = self:GetParent():GetParent():GetParent().params
         local local_presets = self:GetParent():GetParent():GetParent().presets
 
-        local _parameters = params._parameters
-        local _visuals = params._visuals
-        local _interactions = params._interactions
+        _parameters = params._parameters
+        _visuals = params._visuals
+        _interactions = params._interactions
 
         local preset = {
             ["CUST/Author"] = LocalPlayer():Name(),
@@ -548,9 +550,9 @@ button_functions = {
         end
         do_overwrite:SetValue(true)
 
-        local _parameters = params._parameters
-        local _visuals = params._visuals
-        local _interactions = params._interactions
+        _parameters = params._parameters
+        _visuals = params._visuals
+        _interactions = params._interactions
 
         local paramlist = {}
         for name,_ in pairs(_parameters) do paramlist[#paramlist+1] = "PHYS/"..name end
