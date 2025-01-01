@@ -286,24 +286,28 @@ Copy to clipboard
 Delete
 ]]
 
-"gwater2.menu.Patrons.title"=[[
-Patrons
+"gwater2.menu.Credits.title"=[[
+Credits
 ]]
 
-"gwater2.menu.Patrons.titletext"=[[
-Patrons
+"gwater2.menu.Credits.titletext"=[[
+Credits
 ]]
 
-"gwater2.menu.Patrons.help"=[[
-This tab has a list of all my patrons.
+"gwater2.menu.Credits.help"=[[
+This tab has a list of all people who helped in development of GWater 2 directly or indirectly.
 
-The list is sorted in alphabetical order.
-
-It will be updated routinely until release.
+The Patron list is sorted in alphabetical order and will be updated routinely until release.
 ]]
 
-"gwater2.menu.Patrons.text"=[[
-Thanks to everyone here who supported me throughout the development of GWater2!
+"gwater2.menu.Credits.text"=[[
+Thanks to everyone here who supported and helped me throughout the development of GWater2!
+
+Credits:
+Meetric (@meetric) - GWater 2 itself, water gun model.
+googer (@googer_)  - Whole menu, Advanced water gun.
+jn (@jn.3103.code) - Water-player interactions, Forcefield
+TODO: add everyone
 
 All revenue generated from this project goes directly to my college fund. Thanks so much guys :)
 

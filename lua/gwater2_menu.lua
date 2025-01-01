@@ -327,15 +327,19 @@ local function create_menu(init)
 		
 		label:SetPos(0, 0)
 		label:SetTall(800)
+		timer.Simple(0, function()
+			local _, height = label:GetContentSize()
+			label:SetTall(height)
+		end)
 
 		return tab
 	end
 
-	local function supporters_tab(tabs)
+	local function credits_tab(tabs)
 		local tab = vgui.Create("DPanel", tabs)
 		function tab:Paint() end
 
-		tabs:AddSheet(_util.get_localised("Patrons.title"), tab, "icon16/award_star_gold_3.png").Tab.realname = "Patrons"
+		tabs:AddSheet(_util.get_localised("Credits.title"), tab, "icon16/award_star_gold_3.png").Tab.realname = "Credits"
 		tab = tab:Add("DScrollPanel")
 		tab:Dock(FILL)
 
@@ -343,25 +347,25 @@ local function create_menu(init)
 
 		local _ = tab:Add("DLabel") _:SetText(" ") _:SetFont("GWater2Title") _:Dock(TOP) _:SizeToContents()
 		function _:Paint(w, h)
-			draw.DrawText(_util.get_localised("Patrons.titletext"), "GWater2Title", 6, 6, Color(0, 0, 0), TEXT_ALIGN_LEFT)
-			draw.DrawText(_util.get_localised("Patrons.titletext"), "GWater2Title", 5, 5, Color(187, 245, 255), TEXT_ALIGN_LEFT)
+			draw.DrawText(_util.get_localised("Credits.titletext"), "GWater2Title", 6, 6, Color(0, 0, 0), TEXT_ALIGN_LEFT)
+			draw.DrawText(_util.get_localised("Credits.titletext"), "GWater2Title", 5, 5, Color(187, 245, 255), TEXT_ALIGN_LEFT)
 		end
 
 		local label = tab:Add("DLabel")
 		label:Dock(TOP)
 		label:DockMargin(5, 5, 5, 5)
-		label:SetText(_util.get_localised("Patrons.text"))
+		label:SetText(_util.get_localised("Credits.text"))
 		label:SetColor(Color(255, 255, 255))
 		label:SetTextInset(5, 5)
 		label:SetWrap(true)
 		label:SetContentAlignment(7)
 		label:SetFont("GWater2Param")
 
-		local supporters_table = {"<Failed to load patron data!>"}
+		local patrons_table = {"<Failed to load patron data!>"}
 		
 		file.AsyncRead("data_static/gwater2/patrons.txt", "THIRDPARTY", function(name, path, status, data)
 			if status != FSASYNC_OK then return end
-			supporters_table = string.Split(data, "\n")
+			patrons_table = string.Split(data, "\n")
 		end)
 
 		-- Hi - Xenthio
@@ -371,11 +375,12 @@ local function create_menu(init)
 		
 		label:SetPos(0, 0)
 		function label:Paint(w, h)
-			label:SetTall(math.max(#supporters_table * 20, 1000) + 180)	-- fuck this shit hack
+			local _, height = self:GetContentSize()
+			label:SetTall(math.max(#patrons_table * 20, 1000) + 180)	-- fuck this shit hack
 
 			local top = math.max(math.floor((tab:GetVBar():GetScroll() - 200) / 20), 1)	-- only draw what we see
-			for i = top, math.min(top + 30, #supporters_table) do
-				draw.DrawText(supporters_table[i], "GWater2Param", 6, 150 + i * 20, supporter_color, TEXT_ALIGN_LEFT)
+			for i = top, math.min(top + 30, #patrons_table) do
+				draw.DrawText(patrons_table[i], "GWater2Param", 6, height + i * 20, supporter_color, TEXT_ALIGN_LEFT)
 			end
 		end
 
@@ -494,7 +499,7 @@ local function create_menu(init)
 	presets.presets_tab(tabs, frame.params)
 	paramstabs.performance_tab(tabs)
 	menu_tab(tabs)
-	supporters_tab(tabs)
+	credits_tab(tabs)
 	paramstabs.developer_tab(tabs)
 
 	for _,tab in pairs(tabs:GetItems()) do
