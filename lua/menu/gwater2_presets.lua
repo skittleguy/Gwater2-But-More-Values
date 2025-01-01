@@ -658,7 +658,7 @@ button_functions = {
         select_phys:Dock(LEFT)
         select_phys:SizeToContents()
         select_phys.Paint = button_functions.paint
-        select_visl.section = "PHYS"
+        select_phys.section = "PHYS"
         select_phys.DoClick = select_visl.DoClick
 
         local select_itrc = qpanel:Add("DButton")
@@ -666,7 +666,7 @@ button_functions = {
         select_itrc:Dock(LEFT)
         select_itrc:SizeToContents()
         select_itrc.Paint = button_functions.paint
-        select_visl.section = "ITRC"
+        select_itrc.section = "INTC"
         select_itrc.DoClick = select_visl.DoClick
         
         local btnpanel = frame:Add("DPanel")
