@@ -306,15 +306,18 @@ Thanks to everyone here who supported and helped me throughout the development o
 v-------------------- Credits --------------------v
 
 Meetric      | Creator of GWater2
-googer       | Menu rewrite, advanced water gun, wire support
-jn           | Water-player interactions, Forcefield
+googer       | Menu, adv water gun, wire support
+jn           | Water-player interactions, forcefield entity
 Xenthio      | Diffuse particle and lighting improvements
+MyUsername   | Linux help
+Mikey        | Starfallex API
+Spanky       | Particle stretching code
 AndrewEathan | GWater1 entities
 Nvidia       | FleX library
 
-All revenue generated from this project goes directly to my college fund. Thanks so much guys :)
-
 v-------------------- Patrons --------------------v
+
+All revenue generated from this project goes directly to my college fund. Thanks so much guys :)
 ]]
 
 "gwater2.menu.Parameters.Physics Parameters"=[[
