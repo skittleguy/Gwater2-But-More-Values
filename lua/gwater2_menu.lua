@@ -377,9 +377,9 @@ local function create_menu(init)
 		label:SetPos(0, 0)
 		function label:Paint(w, h)
 			local _, height = self:GetContentSize()
-			label:SetTall(math.max(#patrons_table * 20, 1000) + 180)	-- fuck this shit hack
+			label:SetTall(math.max(#patrons_table * 20, 1000) + 350)	-- fuck this shit hack
 
-			local top = math.max(math.floor((tab:GetVBar():GetScroll() - 200) / 20), 1)	-- only draw what we see
+			local top = math.max(math.floor((tab:GetVBar():GetScroll() - 350) / 20), 1)	-- only draw what we see
 			for i = top, math.min(top + 30, #patrons_table) do
 				draw.DrawText(patrons_table[i], "GWater2Param", 6, height + i * 20, supporter_color, TEXT_ALIGN_LEFT)
 			end

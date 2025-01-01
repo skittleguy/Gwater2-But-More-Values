@@ -303,15 +303,18 @@ The Patron list is sorted in alphabetical order and will be updated routinely un
 "gwater2.menu.Credits.text"=[[
 Thanks to everyone here who supported and helped me throughout the development of GWater2!
 
-Credits:
-Meetric (@meetric) - GWater 2 itself, water gun model.
-googer (@googer_)  - Whole menu, Advanced water gun.
-jn (@jn.3103.code) - Water-player interactions, Forcefield
-TODO: add everyone
+v-------------------- Credits --------------------v
+
+Meetric      | Creator of GWater2
+googer       | Menu rewrite, advanced water gun, wire support
+jn           | Water-player interactions, Forcefield
+Xenthio      | Diffuse particle and lighting improvements
+AndrewEathan | GWater1 entities
+Nvidia       | FleX library
 
 All revenue generated from this project goes directly to my college fund. Thanks so much guys :)
 
------------------------------------------
+v-------------------- Patrons --------------------v
 ]]
 
 "gwater2.menu.Parameters.Physics Parameters"=[[
