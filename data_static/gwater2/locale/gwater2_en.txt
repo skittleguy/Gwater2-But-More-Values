@@ -447,7 +447,7 @@ Sound Pitch
 ]]
 
 "gwater2.menu.Parameters.Sound Pitch.desc"=[[
-Controls the pitch the liquid makes. This value is a multiplier, meaning that a value of 2 will be 200%% higher pitch
+Controls the pitch of the liquid.
 ]]
 
 "gwater2.menu.Parameters.Sound Volume"=[[
@@ -455,7 +455,7 @@ Sound Volume
 ]]
 
 "gwater2.menu.Parameters.Sound Volume.desc"=[[
-Controls the volume of the liquid (how loud it is). This value is a multiplier, meaning that a value of 2 will be 200%% higher volume.
+Controls the volume of the liquid. 
 
 Setting this to 0 will disable water sounds
 ]]
