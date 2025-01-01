@@ -948,7 +948,7 @@ LUA_FUNCTION(FLEXRENDERER_BuildMeshes) {
 	LUA->CheckType(1, FLEXRENDERER_METATABLE);
 	LUA->CheckType(2, FLEXSOLVER_METATABLE);
 	LUA->CheckNumber(3);
-	GET_FLEXRENDERER(1)->build_meshes(GET_FLEXSOLVER(2), LUA->GetNumber(3));
+	GET_FLEXRENDERER(1)->build_meshes(GET_FLEXSOLVER(2), LUA->GetNumber(3), LUA->GetBool(4));
 
 	return 0;
 }
@@ -973,14 +973,6 @@ LUA_FUNCTION(FLEXRENDERER_DrawDiffuse) {
 LUA_FUNCTION(FLEXRENDERER_DrawCloth) {
 	LUA->CheckType(1, FLEXRENDERER_METATABLE);
 	GET_FLEXRENDERER(1)->draw_cloth();
-
-	return 0;
-}
-
-LUA_FUNCTION(FLEXRENDERER_SetHang) {
-	LUA->CheckType(1, FLEXRENDERER_METATABLE);
-	LUA->CheckType(2, Type::Bool);
-	GET_FLEXRENDERER(1)->hang = LUA->GetBool(2);
 
 	return 0;
 }
@@ -1197,7 +1189,6 @@ GMOD_MODULE_OPEN() {
 	ADD_FUNCTION(LUA, FLEXRENDERER_DrawWater, "DrawWater");
 	ADD_FUNCTION(LUA, FLEXRENDERER_DrawDiffuse, "DrawDiffuse");
 	ADD_FUNCTION(LUA, FLEXRENDERER_DrawCloth, "DrawCloth");
-	ADD_FUNCTION(LUA, FLEXRENDERER_SetHang, "SetHang");
 	LUA->SetField(-2, "__index");
 
 	// _G.FlexSolver = NewFlexSolver

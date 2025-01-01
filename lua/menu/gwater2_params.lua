@@ -304,7 +304,7 @@ local performance = {
 			end
 		end
 	},
-	["005-Simulation FPS"] = {
+	["006-Simulation FPS"] = {
 		min=30,
 		max=120,
 		decimals=0,
@@ -325,7 +325,26 @@ local performance = {
 			label:SetColor(label.fancycolor)
 		end
 	},
-	["006-Absorption"] = {
+	["005-Mirror Rendering"] = {
+		min=0,
+		max=2,
+		decimals=0,
+		type="scratch",
+		nosync=true,
+		func=function(n)
+			gwater2.options.render_mirrors:SetInt(n)
+			return true
+		end,
+		setup=function(slider)
+			slider:SetValue(gwater2.options.render_mirrors:GetInt())
+
+			local label = slider:GetParent().label
+			label.fancycolor = Color(255, 255, 0)
+			label.fancycolor_hovered = Color(255, 255, 200)
+			label:SetColor(label.fancycolor)
+		end
+	},
+	["007-Absorption"] = {
 		type="check",
 		nosync=true,
 		func=function(val)
@@ -343,7 +362,7 @@ local performance = {
 			check:SetValue(gwater2.options.absorption:GetBool())
 		end
 	},
-	["007-Depth Fix"] = {
+	["008-Depth Fix"] = {
 		type="check",
 		nosync=true,
 		func=function(val)
@@ -361,7 +380,7 @@ local performance = {
 			check:SetValue(gwater2.options.depth_fix:GetBool())
 		end
 	},
-	["008-Player Collision"] = {
+	["009-Player Collision"] = {
 		type="check",
 		nosync=true,
 		func=function(val)
@@ -380,7 +399,7 @@ local performance = {
 			check:SetValue(gwater2.options.player_collision:GetBool())
 		end
 	},
-	["009-Diffuse Enabled"] = {
+	["010-Diffuse Enabled"] = {
 		type="check",
 		nosync=true,
 		func=function(val)

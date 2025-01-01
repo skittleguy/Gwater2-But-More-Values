@@ -182,28 +182,38 @@ local function do_finalpass()
 	render.RenderFlashlights(function() gwater2.renderer:DrawDiffuse() end)
 end
 
---[[
 hook.Add("RenderScene", "gwater2_render", function(eye_pos, eye_angles, fov)
+	if gwater2.options.render_mirrors:GetInt() != 1 then return end
+
 	cam.Start3D(eye_pos, eye_angles, fov)
-		gwater2.renderer:SetHang(false)
-		gwater2.renderer:BuildMeshes(gwater2.solver, 0.25)
+		gwater2.renderer:BuildMeshes(gwater2.solver, 0.25, false)
 	cam.End3D()
-end)]]
+end)
+
+-- vrmod does not render to the main RT, force enable mirror rendering
+hook.Add("VRMod_Start", "gwater2_vrmodsupport", function(ply)
+	if ply != LocalPlayer() then return end
+
+	gwater2.options.render_mirrors:SetInt(1)
+end)
 
 -- gwater2 shader pipeline
 hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky3d)	--PreDrawViewModels
-	if !gwater2 or sky3d or render.GetRenderTarget() then return end
-
+	if sky3d then return end	-- dont render in skybox
 	if gwater2.solver:GetActiveParticles() < 1 then return end
+
+ 	-- dont render in mirrors unless specified
+	local mirrors = gwater2.options.render_mirrors:GetInt()
+	if mirrors != 1 then
+		if mirrors == 0 and render.GetRenderTarget() then return end
+		gwater2.renderer:BuildMeshes(gwater2.solver, 0.25, true)
+	end
 	
 	-- Clear render targets
 	render.ClearRenderTarget(cache_normals, Color(0, 0, 0, 0))
 	render.ClearRenderTarget(cache_mipmap, Color(0, 0, 0, 0))
 	render.ClearRenderTarget(cache_absorption, Color(0, 0, 0, 0))
 	render.ClearRenderTarget(cache_blur, Color(0, 0, 0, 0))
-
-	gwater2.renderer:SetHang(false)
-	gwater2.renderer:BuildMeshes(gwater2.solver, 0.25)
 
 	do_cloth()
 	do_absorption()

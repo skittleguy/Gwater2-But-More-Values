@@ -1,11 +1,12 @@
 #include "flex_renderer.h"
-#include "cdll_client_int.h"	//IVEngineClient
+#include "cdll_client_int.h"	//IVEngineClient (used in vvis culling)
+
+// lord have mercy brothers
 
 #ifdef GMOD_MAIN
 extern IMaterialSystem* materials = NULL;
 #endif
 extern IVEngineClient* engine = NULL;
-// lord have mercy brothers
 
 float water_u[3] = { 0.5 - SQRT3 / 2, 0.5, 0.5 + SQRT3 / 2 };
 float water_v[3] = { 1, -0.5, 1 };
@@ -17,7 +18,7 @@ IMesh* _build_water_anisotropy(int id, FlexRendererThreadData data) {
 
 	// We need to figure out how many and which particles are going to be rendered
 	int particle_indices[MAX_PRIMATIVES];
-	int particles_to_render = 0;	// Frustrum culling disabled for now, as mesh generation wont have a cam context
+	int particles_to_render = 0;
 	for (int i = start; i < end; ++i) {
 		int particle_index = data.particle_active[i];
 		if (data.particle_phases[particle_index] != FlexPhase::WATER) continue;	// not water, bail
@@ -30,7 +31,7 @@ IMesh* _build_water_anisotropy(int id, FlexRendererThreadData data) {
 		if (dst.z < data.radius || -dst.x - dst.w > data.radius || dst.x - dst.w > data.radius || -dst.y - dst.w > data.radius || dst.y - dst.w > data.radius) continue;
 
 		// PVS Culling
-		if (!engine->IsBoxVisible(particle_pos, particle_pos)) continue;
+		if (data.cull && !engine->IsBoxVisible(particle_pos, particle_pos)) continue;
 		
 		// Particle is good, render it
 		particle_indices[particles_to_render] = particle_index;
@@ -92,7 +93,7 @@ IMesh* _build_diffuse(int id, FlexRendererThreadData data) {
 
 	// We need to figure out how many and which particles are going to be rendered
 	int particle_indices[MAX_PRIMATIVES];
-	int particles_to_render = 0;	// Frustrum culling disabled for now, as mesh generation wont have a cam context
+	int particles_to_render = 0;
 	for (int particle_index = start; particle_index < end; ++particle_index) {
 		Vector particle_pos = data.particle_positions[particle_index].AsVector3D();
 
@@ -102,7 +103,7 @@ IMesh* _build_diffuse(int id, FlexRendererThreadData data) {
 		if (dst.z < 0 || -dst.x - dst.w > 0 || dst.x - dst.w > 0 || -dst.y - dst.w > 0 || dst.y - dst.w > 0) continue;
 
 		// PVS Culling
-		if (!engine->IsBoxVisible(particle_pos, particle_pos)) continue;
+		if (data.cull && !engine->IsBoxVisible(particle_pos, particle_pos)) continue;
 
 		// Particle is good, render it
 		particle_indices[particles_to_render] = particle_index;
@@ -174,6 +175,7 @@ IMesh* _build_cloth(int id, FlexRendererThreadData data) {
 			} else {
 				mesh_builder.TexCoord2f(0, cloth_u[i + 3], cloth_v[i + 3]);
 			}
+
 			mesh_builder.Position3f(particle_pos.x, particle_pos.y, particle_pos.z);
 			mesh_builder.Normal3f(particle_normal.x, particle_normal.y, particle_normal.z);
 			mesh_builder.UserData(userdata);
@@ -187,15 +189,9 @@ IMesh* _build_cloth(int id, FlexRendererThreadData data) {
 }
 
 // Launches 1 thread for each mesh. particles are split into meshes with MAX_PRIMATIVES number of primatives
-void FlexRenderer::build_meshes(FlexSolver* flex, float diffuse_radius) {
+void FlexRenderer::build_meshes(FlexSolver* flex, float diffuse_radius, bool cull) {
 	// Clear previous imeshes since they are being rebuilt
 	destroy_meshes();
-
-	if (hang) {
-		update_water();
-		update_cloth();
-		update_diffuse();
-	}
 
 	int active_particles = flex->get_active_particles();
 	if (active_particles == 0) return;
@@ -220,6 +216,7 @@ void FlexRenderer::build_meshes(FlexSolver* flex, float diffuse_radius) {
 	water_data.max_particles = active_particles;
 	water_data.radius = flex->get_parameter("radius");
 	water_data.eye_pos = eye_pos;
+	water_data.cull = cull;
 	if (flex->get_parameter("anisotropy_scale") != 0) {		// Should we do anisotropy calculations?
 		water_data.particle_ani0 = flex->hosts.particle_ani0;
 		water_data.particle_ani1 = flex->hosts.particle_ani1;
@@ -242,6 +239,7 @@ void FlexRenderer::build_meshes(FlexSolver* flex, float diffuse_radius) {
 		diffuse_data.max_particles = active_diffuse;
 		diffuse_data.radius = flex->get_parameter("radius") / flex->get_parameter("diffuse_lifetime") * diffuse_radius;
 		diffuse_data.particle_ani0 = flex->hosts.diffuse_vel;
+		diffuse_data.cull = cull;
 
 		for (int mesh_index = 0; mesh_index < ceil(active_diffuse / (float)MAX_PRIMATIVES); mesh_index++) {
 			diffuse_queue.push_back(threads->enqueue(_build_diffuse, mesh_index, diffuse_data));
@@ -293,19 +291,19 @@ void FlexRenderer::update_cloth() {
 
 // Renders water meshes
 void FlexRenderer::draw_water() {
-	if (!hang) update_water();
+	update_water();
 
 	for (IMesh* mesh : water_meshes) mesh->Draw();
 };
 
 void FlexRenderer::draw_diffuse() {
-	if (!hang) update_diffuse();
+	update_diffuse();
 
 	for (IMesh* mesh : diffuse_meshes) mesh->Draw();
 };
 
 void FlexRenderer::draw_cloth() {
-	if (!hang) update_cloth();
+	update_cloth();
 
 	for (IMesh* mesh : triangle_meshes) mesh->Draw();
 };

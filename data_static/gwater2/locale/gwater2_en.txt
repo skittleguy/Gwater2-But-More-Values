@@ -193,7 +193,7 @@ This tab has options which can help and alter your performance.
 
 Each option is colored between green and red to indicate its performance hit. All parameters directly impact the GPU.
 
-These options ARE NOT synced and CANNOT be edited by presets because they are strictly performance related.
+These options ARE NOT synced and CANNOT be edited by other players because they are strictly performance related.
 
 Hover over a parameter to reveal its functionality.
 ]]
@@ -723,6 +723,24 @@ This setting may change the behavior of the liquid due to smaller or larger comp
 Medium-High performance impact.
 ]]
 
+"gwater2.menu.Performance.Mirror Rendering"=[[
+Mirror Rendering
+]]
+
+"gwater2.menu.Performance.Mirror Rendering.desc"=[[
+Enables fluid rendering in reflections like source water and mirrors.
+
+When VRMod is enabled, this setting is set to 1
+
+0 = No reflections
+
+1 = Cheap reflections
+(Frustrum / screen space)
+(This will disable fluid PVS culling)
+
+2 = Expensive reflections 
+(Renders fluid more than once)
+]]
 
 "gwater2.menu.Interactions.SwimSpeed"=[[
 Swim Speed
