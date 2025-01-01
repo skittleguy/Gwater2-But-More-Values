@@ -179,6 +179,31 @@ function gwater2.options.read_preset(preset)
 	return {"", {}}
 end
 
+local function get_parameter(param)
+    local list_ = ({
+        ["VISL"] = _visuals,
+        ["PHYS"] = _parameters,
+        ["INTC"] = _interactions
+    })[param:sub(0, 4)]
+    if not list_ then return end
+    local param_panel = list_[param:sub(6)]
+    if param_panel.mixer then return param_panel.mixer:GetColor():ToTable() end
+    if param_panel.check then return param_panel.check:GetChecked() end
+    if param_panel.slider then return param_panel.slider:GetValue() end
+end
+local function set_parameter(param, value)
+    local list_ = ({
+        ["VISL"] = _visuals,
+        ["PHYS"] = _parameters,
+        ["INTC"] = _interactions
+    })[param:sub(0, 4)]
+    if not list_ then return end
+    local param_panel = list_[param:sub(6)]
+    if param_panel.mixer then return param_panel.mixer:SetColor(Color(value[1], value[2], value[3], value[4])) end
+    if param_panel.check then return param_panel.check:SetChecked(value) end
+    if param_panel.slider then return param_panel.slider:SetValue(value) end
+end
+
 local button_functions -- wtf lua
 button_functions = {
     paint = function(self, w, h)
@@ -198,10 +223,149 @@ button_functions = {
         styling.draw_main_background(0, 0, w, h)
     end,
     apply_preset = function(self)
+        local params = self:GetParent():GetParent():GetParent().params
+        local preset = self.preset
 
+        local _parameters = params._parameters
+        local _visuals = params._visuals
+        local _interactions = params._interactions
+
+        local paramlist = {}
+        for name,_ in pairs(_parameters) do paramlist[#paramlist+1] = "PHYS/"..name end
+        for name,_ in pairs(_visuals) do paramlist[#paramlist+1] = "VISL/"..name end
+        for name,_ in pairs(_interactions) do paramlist[#paramlist+1] = "INTC/"..name end
+
+        if preset["CUST/Master Reset"] then
+            for _,section in pairs(params) do
+                for name,control in pairs(section) do
+                    local default = gwater2.defaults[name:lower():gsub(" ", "_")]
+                    if control.slider then control.slider:SetValue(default) end
+                    if control.check then control.check:SetChecked(default) end
+                    if control.mixer then control.mixer:SetColor(default) end
+                end
+            end
+        end
+
+        for key,value in pairs(preset) do
+            if key:sub(0, 4) == "CUST" then continue end
+            set_parameter(key, value)
+        end
+        _util.emit_sound("confirm")
+    end,
+    selector_right_click = function(self)
+        local menu = DermaMenu()
+        local clip = menu:AddSubMenu(_util.get_localised("Presets.copy"))
+        clip:AddOption(_util.get_localised("Presets.copy.as_b64pi"), function()
+            local data = self.name .. "\0"
+            for k_,v_ in pairs(self.preset) do
+                local t_ = 'n'
+                if istable(v_) then v_ = util.TableToJSON(v_) t_ = 'j' end
+                if isbool(v_) then v_ = v_ and '1' or '0' t_ = 'b' end
+                data = data .. k_ .. "\1" .. v_ .. "\1" .. t_ .. "\2"
+            end
+            data = data:sub(0, -1)
+            SetClipboardText(util.Base64Encode(util.Compress(data)))
+            _util.emit_sound("confirm")
+        end)
+        clip:AddOption(_util.get_localised("Presets.copy.as_json"), function()
+            SetClipboardText(util.TableToJSON({[self.name]=self.preset}))
+            _util.emit_sound("confirm")
+        end)
+        menu:AddOption(_util.get_localised("Presets.delete"), function()
+            presets[self.id] = nil
+            file.Write("gwater2/presets.txt", util.TableToJSON(presets))
+            self:Remove()
+            _util.emit_sound("confirm")
+        end)
+        menu:Open()
+    end,
+    create_preset = function(local_presets, name, preset, write)
+        if write == nil then write = true end
+        local m = 0
+        for k,v in SortedPairs(presets) do m = tonumber(k:sub(1, 3)) end
+        local selector = local_presets:Add("DButton")
+        selector:SetText(name.." ("..(preset["CUST/Author"] or _util.get_localised("Presets.author_unknown"))..")")
+        selector:Dock(TOP)
+        selector.Paint = button_functions.paint
+        selector.name = name
+        selector.preset = preset
+        selector.id = string.format("%03d-%s", m+1, name)
+        selector.DoClick = button_functions.apply_preset
+        selector.DoRightClick = button_functions.selector_right_click
+        local_presets:SetTall(local_presets:GetTall()+25)
+
+        if write then
+            presets[string.format("%03d-%s", m+1, name)] = preset
+            file.Write("gwater2/presets.txt", util.TableToJSON(presets))
+        end
+    end,
+    save_simple = function(self)
+        local params = self:GetParent():GetParent():GetParent().params
+        local local_presets = self:GetParent():GetParent():GetParent().presets
+
+        local _parameters = params._parameters
+        local _visuals = params._visuals
+        local _interactions = params._interactions
+
+        local preset = {
+            ["CUST/Author"] = LocalPlayer():Name(),
+            ['CUST/Master Reset'] = true
+        }
+        for name,_ in pairs(_parameters) do
+            preset["PHYS/"..name] = get_parameter("PHYS/"..name)
+        end
+        for name,_ in pairs(_visuals) do
+            preset["VISL/"..name] = get_parameter("VISL/"..name)
+        end
+        for name,_ in pairs(_interactions) do
+            preset["INTC/"..name] = get_parameter("INTC/"..name)
+        end
+
+        local frame = styling.create_blocking_frame()
+        frame:SetSize(ScrW()/4, 20*5)
+        frame:Center()
+        local label = frame:Add("DLabel")
+        label:Dock(TOP)
+        label:SetText(_util.get_localised("Presets.save.preset_name"))
+        label:SetFont("GWater2Title")
+        local textarea = frame:Add("DTextEntry")
+        textarea:Dock(TOP)
+        textarea:SetFont("GWater2Param")
+        textarea:SetValue("PresetName")
+        
+        local btnpanel = frame:Add("DPanel")
+        btnpanel:Dock(BOTTOM)
+        btnpanel.Paint = nil
+
+        local confirm = btnpanel:Add("DButton")
+        confirm:Dock(RIGHT)
+        confirm:SetText("")
+        confirm:SetSize(20, 20)
+        confirm:SetImage("icon16/accept.png")
+        confirm.Paint = nil
+        function confirm:DoClick()
+            local name = textarea:GetValue()
+            button_functions.create_preset(local_presets, name, preset)
+            frame:Close()
+            _util.emit_sound("select_ok")
+        end
+
+        local deny = vgui.Create("DButton", btnpanel)
+        deny:Dock(LEFT)
+        deny:SetText("")
+        deny:SetSize(20, 20)
+        deny:SetImage("icon16/cross.png")
+        deny.Paint = nil
+        function deny:DoClick()
+            frame:Close()
+            _util.emit_sound("select_deny")
+        end
+
+        _util.emit_sound("confirm")
     end,
     save_extended = function(self)
         local params = self:GetParent():GetParent():GetParent().params
+        local local_presets = self:GetParent():GetParent():GetParent().presets
 
         local frame = styling.create_blocking_frame()
         frame:SetSize(ScrW()/2, ScrH()/2)
@@ -222,7 +386,9 @@ button_functions = {
         panel:Dock(FILL)
         panel.Paint = nil
 
-        local preset = {}
+        local preset = {
+            ["CUST/Author"] = LocalPlayer():Name()
+        }
 
         local do_overwrite = panel:Add("DCheckBoxLabel")
         do_overwrite:SetText("Master Reset (reset all unchecked parameters to default)")
@@ -241,6 +407,7 @@ button_functions = {
         for name,_ in pairs(_parameters) do paramlist[#paramlist+1] = "PHYS/"..name end
         for name,_ in pairs(_visuals) do paramlist[#paramlist+1] = "VISL/"..name end
         for name,_ in pairs(_interactions) do paramlist[#paramlist+1] = "INTC/"..name end
+
         local _checks = {}
         for k,v in pairs(paramlist) do
             local check = panel:Add("DCheckBoxLabel")
@@ -255,6 +422,11 @@ button_functions = {
             end
             check:SetText(v:sub(0, 4).."/"..real)
             check:Dock(TOP)
+            check.param = v
+            function check:OnChange(value)
+                if not value then preset[self.param] = nil return end
+                preset[self.param] = get_parameter(self.param)
+            end
         end
 
         local qpanel = frame:Add("DPanel")
@@ -300,6 +472,34 @@ button_functions = {
         select_itrc.Paint = button_functions.paint
         select_visl.section = "ITRC"
         select_itrc.DoClick = select_visl.DoClick
+        
+        local btnpanel = frame:Add("DPanel")
+        btnpanel:Dock(BOTTOM)
+        btnpanel.Paint = nil
+
+        local confirm = btnpanel:Add("DButton")
+        confirm:Dock(RIGHT)
+        confirm:SetText("")
+        confirm:SetSize(20, 20)
+        confirm:SetImage("icon16/accept.png")
+        confirm.Paint = nil
+        function confirm:DoClick()
+            local name = textarea:GetValue()
+            button_functions.create_preset(local_presets, name, preset)
+            frame:Close()
+            _util.emit_sound("select_ok")
+        end
+
+        local deny = vgui.Create("DButton", btnpanel)
+        deny:Dock(LEFT)
+        deny:SetText("")
+        deny:SetSize(20, 20)
+        deny:SetImage("icon16/cross.png")
+        deny.Paint = nil
+        function deny:DoClick()
+            frame:Close()
+            _util.emit_sound("select_deny")
+        end
 
         _util.emit_sound("confirm")
     end,
@@ -340,19 +540,7 @@ button_functions = {
         function confirm:DoClick()
             local pd = gwater2.options.read_preset(textarea:GetValue())
             local name, preset = pd[1], pd[2]
-            local m = 0
-            for k,v in SortedPairs(presets) do m = tonumber(k:sub(1, 3)) end
-
-            local selector = local_presets:Add("DButton")
-            selector:SetText(name.." ("..(preset["CUST/Author"] or _util.get_localised("Presets.author_unknown"))..")")
-            selector:Dock(TOP)
-            selector.Paint = button_functions.paint
-            selector.preset = preset
-            selector.DoClick = button_functions.apply_preset
-            local_presets:SetTall(local_presets:GetTall()+25)
-
-            presets[string.format("%03d-%s", m+1, name)] = preset
-            file.Write("gwater2/presets.txt", util.TableToJSON(presets))
+            button_functions.create_preset(local_presets, name, preset)
             frame:Close()
             _util.emit_sound("select_ok")
         end
@@ -421,7 +609,14 @@ local function presets_tab(tabs, params)
     save_button:SetText("Save")
     save_button:Dock(LEFT)
     save_button.Paint = button_functions.paint
-    save_button.DoClick = button_functions.save_extended
+    save_button.DoClick = button_functions.save_simple
+
+    local saveadv_button = presets_control:Add("DButton")
+    saveadv_button:SetText("Save (Advanced)")
+    saveadv_button:Dock(LEFT)
+    saveadv_button:SetWide(saveadv_button:GetWide()*2)
+    saveadv_button.Paint = button_functions.paint
+    saveadv_button.DoClick = button_functions.save_extended
 
     local import_button = presets_control:Add("DButton")
     import_button:SetText("Import")
@@ -430,16 +625,10 @@ local function presets_tab(tabs, params)
     import_button.DoClick = button_functions.import
 
     local_presets:SetTall(0)
-    for name,preset in pairs(presets) do
-        local selector = local_presets:Add("DButton")
-        selector:SetText(string.sub(name, 5).." ("..(preset["CUST/Author"] or _util.get_localised("Presets.author_unknown"))..")")
-        selector:Dock(TOP)
-        selector.Paint = button_functions.paint
-        selector.preset = preset
-        selector.DoClick = button_functions.apply_preset
-        local_presets:SetTall(local_presets:GetTall()+25)
+    for name,preset in SortedPairs(presets) do
+        button_functions.create_preset(local_presets, name:sub(5), preset, false)
     end
-    local_presets:SetTall(local_presets:GetTall()-25)
+    local_presets:SetTall(local_presets:GetTall()-20)
 end
 
 return {presets_tab=presets_tab}
