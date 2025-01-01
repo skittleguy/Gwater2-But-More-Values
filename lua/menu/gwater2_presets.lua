@@ -214,6 +214,7 @@ function gwater2.options.read_preset(preset)
 		type = "Extension w/ Author"
 	end
 	if type == "Extension w/ Author" then
+		notification.AddLegacy("This preset format is deprecated and support for it will be removed. Consider switching to JSON or B64-PI formats.", NOTIFY_GENERIC, 5)
 		local name, data, author = preset_parts[1], preset_parts[3], preset_parts[5]
 		data = data:Split("/")
 		preset = {["CUST/Author"] = author}
@@ -317,6 +318,7 @@ function gwater2.options.read_preset(preset)
 		return {name, preset}
 	end
 	if type == "CustomPresets" then
+        notification.AddLegacy("This preset format is deprecated and support for it will be removed. Consider switching to JSON or B64-PI formats.", NOTIFY_GENERIC, 5)
 		local name, data = preset_parts[1], preset_parts[2]
 		data = data:Split("\\n")
 		preset = {["CUST/Author"] = LocalPlayer():Name()}
