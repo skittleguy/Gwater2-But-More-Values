@@ -175,7 +175,156 @@ function gwater2.options.read_preset(preset)
 		prst["CUST/Author"] = prst["CUST/Author"] or LocalPlayer():Name()
 		return {name, prst}
 	end
-    -- TODO: read extension, extension w/ author and custompresets preset formats
+    -- read older formats. people still use old presets, so we need to support them
+    -- remove in 0.7
+    local preset_parts = preset:Split(',')
+	if type == "Extension" then
+		local name, data = preset_parts[1], preset_parts[3]
+		preset_parts[5] = LocalPlayer():Name()
+		type = "Extension w/ Author"
+	end
+	if type == "Extension w/ Author" then
+		local name, data, author = preset_parts[1], preset_parts[3], preset_parts[5]
+		data = data:Split("/")
+		preset = {["CUST/Author"] = author}
+		for _, part in pairs(data) do
+			local pd = part:Split(":")
+			local name, value = pd[1], pd[2]
+			if value == "" then
+				value = (2^31-1)
+			end
+			if name == "Color" then
+				if value ~= (2^31-1) then value = value:Split(" ") end
+				name = "VISL/"..name
+			end
+			if name == "Cohesion" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "PHYS/"..name
+			end
+			if name == "Adhesion" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "PHYS/"..name
+			end
+			if name == "Viscosity" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "PHYS/"..name
+			end
+			if name == "Surface Tension" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "PHYS/"..name
+			end
+			if name == "Fluid Rest Distance" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "PHYS/"..name
+			end
+			if name == "Dynamic Friction" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "PHYS/"..name
+			end
+			if name == "Anisotropy Scale" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "VISL/"..name
+			end
+			if name == "Reflectance" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "VISL/"..name
+			end
+			if name == "Iterations" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "PERF/"..name
+			end
+			if name == "Substeps" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "PERF/"..name
+			end
+
+			if name == "SwimSpeed" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "INTC/"..name
+			end
+			if name == "SwimFriction" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "INTC/"..name
+			end
+			if name == "SwimBuoyancy" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "INTC/"..name
+			end
+			if name == "DrownTime" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "INTC/"..name
+			end
+			if name == "DrownParticles" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "INTC/"..name
+			end
+			if name == "DrownDamage" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "INTC/"..name
+			end
+			if name == "MultiplyParticles" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "INTC/"..name
+			end
+			if name == "MultiplyWalk" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "INTC/"..name
+			end
+			if name == "MultiplyJump" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "INTC/"..name
+			end
+			preset[name] = value
+		end
+		return {name, preset}
+	end
+	if type == "CustomPresets" then
+		local name, data = preset_parts[1], preset_parts[2]
+		data = data:Split("\\n")
+		preset = {["CUST/Author"] = LocalPlayer():Name()}
+		for _, part in pairs(data) do
+			local pd = part:Split(":")
+			local name, value = pd[1], pd[2]
+			if value == "" then
+				value = (2^31-1)
+			end
+			if name == "Color" then
+				if value ~= (2^31-1) then value = value:Split(" ") end
+				name = "VISL/"..name
+			end
+			if name == "Cohesion" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "PHYS/"..name
+			end
+			if name == "Adhesion" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "PHYS/"..name
+			end
+			if name == "Viscosity" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "PHYS/"..name
+			end
+			if name == "Surface Tension" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "PHYS/"..name
+			end
+			if name == "Fluid Rest Distance" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "PHYS/"..name
+			end
+			if name == "Dynamic Friction" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "PHYS/"..name
+			end
+			if name == "Anisotropy Scale" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "VISL/"..name
+			end
+			---@diagnostic disable-next-line: assign-type-mismatch
+			preset[name] = value
+		end
+		return {name, preset}
+	end
 	return {"", {}}
 end
 
