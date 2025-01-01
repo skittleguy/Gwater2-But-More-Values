@@ -22,7 +22,7 @@ if SERVER then
 end
 
 -- multi language support
-local lang = GetConVar("cl_language"):GetString()
+local lang = GetConVar("gmod_language"):GetString()
 local function load_language(lang)
 	local strings = file.Read("data_static/gwater2/locale/gwater2_".. lang .. ".txt", "THIRDPARTY")
 	if not strings then return false end
@@ -38,7 +38,7 @@ local function load_language(lang)
 	return true
 end
 
-load_language("english") -- fallback
+load_language("en") -- fallback
 if not load_language(lang) then
 	print("[GWater2] Your language is unsupported. Falling back to 100% english.")
 end
