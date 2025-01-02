@@ -385,7 +385,7 @@ local function get_parameter(param)
     })[param:sub(0, 4)]
     if not list_ then return end
     local param_panel = list_[param:sub(6)]
-    if param_panel.mixer then return param_panel.mixer:GetColor():ToTable() end
+    if param_panel.mixer then return {param_panel.mixer:GetColor():Unpack()} end
     if param_panel.check then return param_panel.check:GetChecked() end
     if param_panel.slider then return param_panel.slider:GetValue() end
 end
@@ -439,7 +439,7 @@ button_functions = {
                     local default = gwater2.defaults[name:lower():gsub(" ", "_")]
                     if control.slider then control.slider:SetValue(default) end
                     if control.check then control.check:SetChecked(default) end
-                    if control.mixer then control.mixer:SetColor(default) end
+                    if control.mixer then control.mixer:SetColor(Color(default:Unpack())) end
                 end
             end
         end
