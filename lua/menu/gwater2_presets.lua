@@ -146,36 +146,6 @@ function gwater2.options.detect_preset_type(preset)
 	return nil
 end
 
-local function recalculate_color_from_old(value, preset)
-    if value[1] >= 0 and value[1] <= 255 and
-       value[2] >= 0 and value[2] <= 255 and
-       value[3] >= 0 and value[3] <= 255 and
-       value[4] >= 0 and value[4] <= 255 then
-        return
-    end
-    notification.AddLegacy("This preset color has been converted from old format.\n"..
-                           "Please note that the conversion is not perfect and may result in wrong color.", NOTIFY_GENERIC, 5)
-    local max_deviation = 0
-    for i = 1, 4 do
-        local old_value = value[i]
-        local deviation_above = math.max(0, old_value - 255)
-        local deviation_below = math.max(0, 0 - old_value)
-        local deviation = math.max(deviation_above, deviation_below)
-        max_deviation = math.max(max_deviation, deviation)
-    end
-    local multiplier = 1
-    if max_deviation > 0 then
-        multiplier = 1 + (max_deviation / 255)
-    end
-    multiplier = math.max(0, math.min(3, multiplier))
-    value = {value[1] / multiplier,
-             value[2] / multiplier,
-             value[3] / multiplier,
-             value[4] / multiplier}
-    preset["VISL/Color Value Multiplier"] = multiplier
-    return value
-end
-
 function gwater2.options.read_preset(preset)
 	local type = gwater2.options.detect_preset_type(preset)
 	if type == "JSON" then
@@ -184,6 +154,7 @@ function gwater2.options.read_preset(preset)
 			return {k, v}
 		end
 	end
+    
 	if type == "B64-PI" then
 		local p = util.Decompress(util.Base64Decode(preset))
 		local pd = p:Split("\0")
@@ -205,173 +176,7 @@ function gwater2.options.read_preset(preset)
 		prst["CUST/Author"] = prst["CUST/Author"] or LocalPlayer():Name()
 		return {name, prst}
 	end
-    -- read older formats. people still use old presets, so we need to support them
-    -- remove in 0.7
-    local preset_parts = preset:Split(',')
-	if type == "Extension" then
-		local name, data = preset_parts[1], preset_parts[3]
-		preset_parts[5] = LocalPlayer():Name()
-		type = "Extension w/ Author"
-	end
-	if type == "Extension w/ Author" then
-		notification.AddLegacy("This preset format is deprecated and support for it will be removed. Consider switching to JSON or B64-PI formats.", NOTIFY_GENERIC, 5)
-		local name, data, author = preset_parts[1], preset_parts[3], preset_parts[5]
-		data = data:Split("/")
-		preset = {["CUST/Author"] = author}
-		for _, part in pairs(data) do
-			local pd = part:Split(":")
-			local name, value = pd[1], pd[2]
-			if value == "" then
-				value = (2^31-1)
-			end
-			if name == "Color" then
-				if value ~= (2^31-1) then
-                    value = value:Split(" ")
-                    value = {tonumber(value[1]), tonumber(value[2]),
-                                  tonumber(value[3]), tonumber(value[4])}
-                end
-				name = "VISL/"..name
-                if value ~= (2^31-1) then
-                    value = recalculate_color_from_old(value, preset)
-                end
-			end
-			if name == "Cohesion" then
-				if value ~= (2^31-1) then value = tonumber(value) end
-				name = "PHYS/"..name
-			end
-			if name == "Adhesion" then
-				if value ~= (2^31-1) then value = tonumber(value) end
-				name = "PHYS/"..name
-			end
-			if name == "Viscosity" then
-				if value ~= (2^31-1) then value = tonumber(value) end
-				name = "PHYS/"..name
-			end
-			if name == "Surface Tension" then
-				if value ~= (2^31-1) then value = tonumber(value) end
-				name = "PHYS/"..name
-			end
-			if name == "Fluid Rest Distance" then
-				if value ~= (2^31-1) then value = tonumber(value) end
-				name = "PHYS/"..name
-			end
-			if name == "Dynamic Friction" then
-				if value ~= (2^31-1) then value = tonumber(value) end
-				name = "PHYS/"..name
-			end
-			if name == "Anisotropy Scale" then
-				if value ~= (2^31-1) then value = tonumber(value) end
-				name = "VISL/"..name
-			end
-			if name == "Reflectance" then
-				if value ~= (2^31-1) then value = tonumber(value) end
-				name = "VISL/"..name
-			end
-			if name == "Iterations" then
-				if value ~= (2^31-1) then value = tonumber(value) end
-				name = "PERF/"..name
-			end
-			if name == "Substeps" then
-				if value ~= (2^31-1) then value = tonumber(value) end
-				name = "PERF/"..name
-			end
-
-			if name == "SwimSpeed" then
-				if value ~= (2^31-1) then value = tonumber(value) end
-				name = "INTC/"..name
-			end
-			if name == "SwimFriction" then
-				if value ~= (2^31-1) then value = tonumber(value) end
-				name = "INTC/"..name
-			end
-			if name == "SwimBuoyancy" then
-				if value ~= (2^31-1) then value = tonumber(value) end
-				name = "INTC/"..name
-			end
-			if name == "DrownTime" then
-				if value ~= (2^31-1) then value = tonumber(value) end
-				name = "INTC/"..name
-			end
-			if name == "DrownParticles" then
-				if value ~= (2^31-1) then value = tonumber(value) end
-				name = "INTC/"..name
-			end
-			if name == "DrownDamage" then
-				if value ~= (2^31-1) then value = tonumber(value) end
-				name = "INTC/"..name
-			end
-			if name == "MultiplyParticles" then
-				if value ~= (2^31-1) then value = tonumber(value) end
-				name = "INTC/"..name
-			end
-			if name == "MultiplyWalk" then
-				if value ~= (2^31-1) then value = tonumber(value) end
-				name = "INTC/"..name
-			end
-			if name == "MultiplyJump" then
-				if value ~= (2^31-1) then value = tonumber(value) end
-				name = "INTC/"..name
-			end
-
-			preset[name] = value
-		end
-		return {name, preset}
-	end
-	if type == "CustomPresets" then
-        notification.AddLegacy("This preset format is deprecated and support for it will be removed. Consider switching to JSON or B64-PI formats.", NOTIFY_GENERIC, 5)
-		local name, data = preset_parts[1], preset_parts[2]
-		data = data:Split("\\n")
-		preset = {["CUST/Author"] = LocalPlayer():Name()}
-		for _, part in pairs(data) do
-			local pd = part:Split(":")
-			local name, value = pd[1], pd[2]
-			if value == "" then
-				value = (2^31-1)
-			end
-			if name == "Color" then
-				if value ~= (2^31-1) then
-                    value = value:Split(" ")
-                    value = {tonumber(value[1]), tonumber(value[2]),
-                                  tonumber(value[3]), tonumber(value[4])}
-                end
-				name = "VISL/"..name
-                if value ~= (2^31-1) then
-                    value = recalculate_color_from_old(value, preset)
-                end
-			end
-			if name == "Cohesion" then
-				if value ~= (2^31-1) then value = tonumber(value) end
-				name = "PHYS/"..name
-			end
-			if name == "Adhesion" then
-				if value ~= (2^31-1) then value = tonumber(value) end
-				name = "PHYS/"..name
-			end
-			if name == "Viscosity" then
-				if value ~= (2^31-1) then value = tonumber(value) end
-				name = "PHYS/"..name
-			end
-			if name == "Surface Tension" then
-				if value ~= (2^31-1) then value = tonumber(value) end
-				name = "PHYS/"..name
-			end
-			if name == "Fluid Rest Distance" then
-				if value ~= (2^31-1) then value = tonumber(value) end
-				name = "PHYS/"..name
-			end
-			if name == "Dynamic Friction" then
-				if value ~= (2^31-1) then value = tonumber(value) end
-				name = "PHYS/"..name
-			end
-			if name == "Anisotropy Scale" then
-				if value ~= (2^31-1) then value = tonumber(value) end
-				name = "VISL/"..name
-			end
-			---@diagnostic disable-next-line: assign-type-mismatch
-			preset[name] = value
-		end
-		return {name, preset}
-	end
+    
 	return {"", {}}
 end
 
