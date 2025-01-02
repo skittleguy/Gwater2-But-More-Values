@@ -511,12 +511,21 @@ button_functions = {
         }
         for name,_ in pairs(_parameters) do
             preset["PHYS/"..name] = get_parameter("PHYS/"..name)
+            if get_parameter("PHYS/"..name) == gwater2.defaults[name:lower():gsub(" ", "_")] then
+                preset["PHYS/"..name] = nil
+            end
         end
         for name,_ in pairs(_visuals) do
             preset["VISL/"..name] = get_parameter("VISL/"..name)
+            if get_parameter("VISL/"..name) == gwater2.defaults[name:lower():gsub(" ", "_")] then
+                preset["VISL/"..name] = nil
+            end
         end
         for name,_ in pairs(_interactions) do
             preset["INTC/"..name] = get_parameter("INTC/"..name)
+            if get_parameter("INTC/"..name) == gwater2.defaults[name:lower():gsub(" ", "_")] then
+                preset["INTC/"..name] = nil
+            end
         end
 
         local frame = styling.create_blocking_frame()
@@ -683,6 +692,13 @@ button_functions = {
         confirm.Paint = nil
         function confirm:DoClick()
             local name = textarea:GetValue()
+            if preset["CUST/Master Reset"] then
+                for k,v in pairs(preset) do
+                    local param = k:sub(6):lower():gsub(" ", "_")
+                    if get_parameter(k) ~= gwater2.defaults[param] then continue end
+                    preset[k] = nil
+                end
+            end
             button_functions.create_preset(local_presets, name, preset)
             frame:Close()
             _util.emit_sound("select_ok")
