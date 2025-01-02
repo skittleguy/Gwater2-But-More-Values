@@ -40,7 +40,7 @@ end
 
 load_language("en") -- fallback
 if not load_language(lang) then
-	print("[GWater2] Your language is unsupported. Falling back to 100% english.")
+	print("[GWater2] Your language is unsupported. Falling back to english.")
 end
 
 local function gw2_error(text)
