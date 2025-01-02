@@ -301,16 +301,15 @@ The Patron list is sorted in alphabetical order and will be updated routinely un
 ]]
 
 "gwater2.menu.Credits.text"=[[
-Thanks to everyone here who supported and helped me throughout the development of GWater2!
-
 v-------------------- Credits --------------------v
 
 Meetric      | Creator of GWater2
-googer       | Menu, adv water gun, wire support
+googer       | Entire menu, adv water gun, wire support
 jn           | Water-player interactions, forcefield entity
-Xenthio      | Diffuse particle and lighting improvements
+Xenthio      | Diffuse and lighting improvements
 MyUsername   | Linux help
 Mikey        | Starfallex API
+Joka         | Water gun icon
 Spanky       | Particle stretching code
 AndrewEathan | GWater1 entities
 Nvidia       | FleX library
