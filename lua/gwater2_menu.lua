@@ -15,6 +15,7 @@ gwater2.options = gwater2.options or {
 	menu_key = CreateClientConVar("gwater2_menukey", tostring(KEY_G), true),
 	menu_tab = CreateClientConVar("gwater2_menutab", "1", true),
 	player_collision = CreateClientConVar("gwater2_player_collision", "1", true),
+	render_mirrors = CreateClientConVar("gwater2_render_mirrors", "0", true),
 	diffuse_enabled = CreateClientConVar("gwater2_diffuse_enabled", "1", true),
 
 	config_cache = nil,
@@ -376,9 +377,9 @@ local function create_menu(init)
 		label:SetPos(0, 0)
 		function label:Paint(w, h)
 			local _, height = self:GetContentSize()
-			label:SetTall(math.max(#patrons_table * 20, 1000) + 180)	-- fuck this shit hack
+			label:SetTall(math.max(#patrons_table * 20, 1000) + 440)	-- fuck this shit hack
 
-			local top = math.max(math.floor((tab:GetVBar():GetScroll() - 200) / 20), 1)	-- only draw what we see
+			local top = math.max(math.floor((tab:GetVBar():GetScroll() - 440) / 20), 1)	-- only draw what we see
 			for i = top, math.min(top + 30, #patrons_table) do
 				draw.DrawText(patrons_table[i], "GWater2Param", 6, height + i * 20, supporter_color, TEXT_ALIGN_LEFT)
 			end

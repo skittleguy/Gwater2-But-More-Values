@@ -23,6 +23,7 @@ struct FlexRendererThreadData {
 	//int* render_buffer;
 	int max_particles;
 	float radius;
+	bool cull;	// should we do vvis culling?
 };
 
 class FlexRenderer {
@@ -44,13 +45,11 @@ private:
 	void update_diffuse();
 	void update_cloth();
 public:
-	bool hang = false;	// guess my renderer is emo now
-
 	void draw_water();
 	void draw_diffuse();
 	void draw_cloth();
 
-	void build_meshes(FlexSolver* flex, float diffuse_radius);
+	void build_meshes(FlexSolver* flex, float diffuse_radius, bool cull);
 
 	FlexRenderer();
 	~FlexRenderer();

@@ -188,12 +188,20 @@ Performance
 Performance
 ]]
 
+"gwater2.menu.Performance.Physics"=[[
+Physics
+]]
+
+"gwater2.menu.Performance.Visuals"=[[
+Visuals
+]]
+
 "gwater2.menu.Performance.help"=[[
 This tab has options which can help and alter your performance.
 
 Each option is colored between green and red to indicate its performance hit. All parameters directly impact the GPU.
 
-These options ARE NOT synced and CANNOT be edited by presets because they are strictly performance related.
+These options ARE NOT synced and CANNOT be edited by other players because they are strictly performance related.
 
 Hover over a parameter to reveal its functionality.
 ]]
@@ -301,17 +309,23 @@ The Patron list is sorted in alphabetical order and will be updated routinely un
 ]]
 
 "gwater2.menu.Credits.text"=[[
-Thanks to everyone here who supported and helped me throughout the development of GWater2!
+v-------------------- Credits --------------------v
 
-Credits:
-Meetric (@meetric) - GWater 2 itself, water gun model.
-googer (@googer_)  - Whole menu, Advanced water gun.
-jn (@jn.3103.code) - Water-player interactions, Forcefield
-TODO: add everyone
+Meetric      | Creator of GWater2
+googer       | Entire menu, adv water gun, wire support
+jn           | Water-player interactions, forcefield entity
+Xenthio      | Diffuse and lighting improvements
+MyUsername   | Linux help
+Stickrpg     | Reaction force sigs
+Mikey        | Starfallex API
+Joka         | Water gun icon
+Spanky       | Particle stretching code
+AndrewEathan | GWater1 entities
+Nvidia       | FleX library
+
+v-------------------- Patrons --------------------v
 
 All revenue generated from this project goes directly to my college fund. Thanks so much guys :)
-
------------------------------------------
 ]]
 
 "gwater2.menu.Parameters.Physics Parameters"=[[
@@ -447,7 +461,7 @@ Sound Pitch
 ]]
 
 "gwater2.menu.Parameters.Sound Pitch.desc"=[[
-Controls the pitch the liquid makes. This value is a multiplier, meaning that a value of 2 will be 200%% higher pitch
+Controls the pitch of the liquid.
 ]]
 
 "gwater2.menu.Parameters.Sound Volume"=[[
@@ -455,7 +469,7 @@ Sound Volume
 ]]
 
 "gwater2.menu.Parameters.Sound Volume.desc"=[[
-Controls the volume of the liquid (how loud it is). This value is a multiplier, meaning that a value of 2 will be 200%% higher volume.
+Controls the volume of the liquid. 
 
 Setting this to 0 will disable water sounds
 ]]
@@ -723,6 +737,24 @@ This setting may change the behavior of the liquid due to smaller or larger comp
 Medium-High performance impact.
 ]]
 
+"gwater2.menu.Performance.Mirror Rendering"=[[
+Mirror Rendering
+]]
+
+"gwater2.menu.Performance.Mirror Rendering.desc"=[[
+Enables fluid rendering in reflections like source water and mirrors.
+
+When VRMod is enabled, this setting is set to 1
+
+0 = No reflections
+
+1 = Cheap reflections
+(Frustrum / screen space)
+(This will disable fluid PVS culling)
+
+2 = Expensive reflections 
+(Renders fluid more than once)
+]]
 
 "gwater2.menu.Interactions.SwimSpeed"=[[
 Swim Speed

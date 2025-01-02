@@ -40,7 +40,7 @@ end
 
 load_language("en") -- fallback
 if not load_language(lang) then
-	print("[GWater2] Your language is unsupported. Falling back to 100% english.")
+	print("[GWater2] Your language is unsupported. Falling back to english.")
 end
 
 local function gw2_error(text)
@@ -304,6 +304,7 @@ gwater2.parameters.depth_fix = true
 gwater2.parameters.player_collision = true
 gwater2.parameters.diffuse_enabled = true
 gwater2.parameters.simulation_fps = 60
+gwater2.parameters.mirror_rendering = 0
 
 gwater2.defaults = table.Copy(gwater2.parameters)
 
@@ -325,7 +326,24 @@ timer.Create("gwater2_calcdiffusesound", 0.1, 0, function()
 	local lp = LocalPlayer()
 	if !IsValid(lp) then return end
 
-	if gwater2.parameters.sound_volume <= 0 or gwater2.parameters.sound_pitch <= 0 then return end
+	-- multiplayer water-player interactions
+	if lp:IsListenServerHost() then
+		for _, ply in player.Iterator() do
+			local particles_in_radius = gwater2.solver:GetParticlesInRadius(ply:GetPos() + ply:OBBCenter() / 2, gwater2.solver:GetParameter("fluid_rest_distance") * 3)
+
+			GWATER2_SET_CONTACTS(	-- defined by C++ module
+				ply:EntIndex(), 
+				particles_in_radius
+			)
+		end
+	end
+
+	-- sound calculation
+	if gwater2.parameters.sound_volume <= 0 or gwater2.parameters.sound_pitch <= 0 then 
+		soundpatch_water:Stop()
+		soundpatch_goop:Stop()
+		return 
+	end
 
 	soundpatch_water = soundpatch_water or CreateSound(lp, "gwater2/water_loop.wav")
 	soundpatch_goop = soundpatch_goop or CreateSound(lp, "gwater2/paint_loop.wav")
@@ -348,18 +366,6 @@ timer.Create("gwater2_calcdiffusesound", 0.1, 0, function()
 	else
 		soundpatch_water:Stop()
 		soundpatch_goop:Stop()
-	end
-
-	-- multiplayer water-player interactions
-	if lp:IsListenServerHost() then
-		for _, ply in player.Iterator() do
-			local particles_in_radius = gwater2.solver:GetParticlesInRadius(ply:GetPos() + ply:OBBCenter() / 2, gwater2.solver:GetParameter("fluid_rest_distance") * 3)
-
-			GWATER2_SET_CONTACTS(	-- defined by C++ module
-				ply:EntIndex(), 
-				particles_in_radius
-			)
-		end
 	end
 end)
 
@@ -397,5 +403,5 @@ local function gwater_tick2()
 end
 
 timer.Create("gwater2_tick", 1 / gwater2.options.simulation_fps:GetInt(), 0, gwater_tick2)
-hook.Add("InitPostEntity", "gwater2_addprop", gwater2.reset_solver)
-hook.Add("OnEntityCreated", "gwater2_addprop", function(ent) timer.Simple(0, function() add_prop(ent) end) end)	// timer.0 so data values are setup correctly
+hook.Add("InitPostEntity", "!gwater2_addprop", gwater2.reset_solver)
+hook.Add("OnEntityCreated", "!gwater2_addprop", function(ent) timer.Simple(0, function() add_prop(ent) end) end)	// timer.0 so data values are setup correctly
