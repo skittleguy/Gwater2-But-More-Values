@@ -173,7 +173,7 @@ local visuals = {
 }
 
 local performance = {
-	["001-Physics Parameters"] = {
+	["001-Physics"] = {
 		["004-Iterations"] = {
 			min=1,
 			max=10,
@@ -302,7 +302,7 @@ local performance = {
 			end
 		}
 	},
-	["002-Visual Parameters"] = {
+	["002-Visuals"] = {
 		["006-Blur Passes"] = {
 			min=0,
 			max=4,

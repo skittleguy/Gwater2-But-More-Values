@@ -188,6 +188,14 @@ Performance
 Performance
 ]]
 
+"gwater2.menu.Performance.Physics"=[[
+Physics
+]]
+
+"gwater2.menu.Performance.Visuals"=[[
+Visuals
+]]
+
 "gwater2.menu.Performance.help"=[[
 This tab has options which can help and alter your performance.
 
