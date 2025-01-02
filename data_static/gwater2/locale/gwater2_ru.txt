@@ -970,6 +970,38 @@ diffuse_drag
 коэффициент сопротивления диффузных частиц.
 ]]
 
+"gwater2.menu.Developer.Show absorption debug"=[[
+Показывать дебаг поглощения
+]]
+
+"gwater2.menu.Developer.Show absorption debug.desc"=[[
+показывать текстуру поглощения.
+]]
+
+"gwater2.menu.Developer.Show blur debug"=[[
+Показывать дебаг сглаживания
+]]
+
+"gwater2.menu.Developer.Show blur debug.desc"=[[
+показывать текстуру сглаживания.
+]]
+
+"gwater2.menu.Developer.Show mipmap debug"=[[
+Показывать дебаг мип-карт
+]]
+
+"gwater2.menu.Developer.Show mipmap debug.desc"=[[
+показывать текстуру мип-карт.
+]]
+
+"gwater2.menu.Developer.Show normals debug"=[[
+Показывать дебаг нормалей
+]]
+
+"gwater2.menu.Developer.Show normals debug.desc"=[[
+показывать текстуру нормалей.
+]]
+
 "gwater2.menu.Developer.relaxation_mode"=[[
 relaxation_mode
 ]]

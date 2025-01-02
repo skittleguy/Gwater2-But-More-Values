@@ -995,6 +995,38 @@ diffuse_drag
 drag coefficient of diffuse particles.
 ]]
 
+"gwater2.menu.Developer.Show absorption debug"=[[
+Show absorption debug
+]]
+
+"gwater2.menu.Developer.Show absorption debug.desc"=[[
+show absorption debug texture.
+]]
+
+"gwater2.menu.Developer.Show blur debug"=[[
+Show blur debug
+]]
+
+"gwater2.menu.Developer.Show blur debug.desc"=[[
+show blur debug texture.
+]]
+
+"gwater2.menu.Developer.Show mipmap debug"=[[
+Show mipmap debug
+]]
+
+"gwater2.menu.Developer.Show mipmap debug.desc"=[[
+show mipmap debug texture.
+]]
+
+"gwater2.menu.Developer.Show normals debug"=[[
+Show normals debug
+]]
+
+"gwater2.menu.Developer.Show normals debug.desc"=[[
+show normals debug texture.
+]]
+
 "gwater2.menu.Developer.relaxation_mode"=[[
 relaxation_mode
 ]]

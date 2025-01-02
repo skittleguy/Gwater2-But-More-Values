@@ -248,6 +248,17 @@ local function make_parameter_scratch(tab, locale_parameter_name, parameter_name
 	panel:Dock(TOP)
 	
 	local slider = panel:Add("DNumSlider")
+	function slider.Scratch:GetTextValue()
+		local decimals = self:GetDecimals()
+		if decimals == 0 then
+			return string.format("%i", self:GetFloatValue())
+		end
+		if decimals < 0 then
+			return string.format("%i", math.floor(self:GetFloatValue() / 10^decimals) * 10^decimals)
+		end
+
+		return string.format("%." .. decimals .. "f", self:GetFloatValue())
+	end
 	panel.slider = slider
 	slider:SetMinMax(parameter.min, parameter.max)
 	slider:SetText(get_localised(locale_parameter_name))
@@ -284,18 +295,6 @@ local function make_parameter_scratch(tab, locale_parameter_name, parameter_name
 	slider.PerformLayout = empty
 	
 	slider.TextArea:SizeToContents()
-
-	function slider.Scratch:GetTextValue()
-		local decimals = self:GetDecimals()
-		if decimals == 0 then
-			return string.format("%i", self:GetFloatValue())
-		end
-		if decimals < 0 then
-			return string.format("%i", math.floor(self:GetFloatValue() / 10^decimals) * 10^decimals)
-		end
-
-		return string.format("%." .. decimals .. "f", self:GetFloatValue())
-	end
 
 	-- call custom setup function
 	if parameter.setup then parameter.setup(slider) end

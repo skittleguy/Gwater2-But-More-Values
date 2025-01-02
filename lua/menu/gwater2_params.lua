@@ -555,13 +555,13 @@ local developer = {
 		decimals=2,
 		type="scratch"
 	},
-	["024-drag"] = {
+	["008-drag"] = {
 		min=-1,
 		max=1,
 		decimals=2,
 		type="scratch"
 	},
-	["025-lift"] = {
+	["009-lift"] = {
 		min=-1,
 		max=1,
 		decimals=2,
@@ -657,17 +657,37 @@ local developer = {
 		decimals=2,
 		type="scratch"
 	},
-	["007-relaxation_mode"] = {
+	["026-relaxation_mode"] = {
 		min=0,
 		max=1,
 		decimals=0,
 		type="scratch"
 	},
-	["008-relaxation_factor"] = {
+	["027-relaxation_factor"] = {
 		min=-1,
 		max=1,
 		decimals=2,
 		type="scratch"
+	},
+	["028-Show absorption debug"] = {
+		type="check",
+		func = function(val) GetConVar("gwater2_debug_absorption"):SetBool(val) return true end,
+		setup = function(check) check:SetValue(GetConVar("gwater2_debug_absorption"):GetBool()) end
+	},
+	["029-Show blur debug"] = {
+		type="check",
+		func = function(val) GetConVar("gwater2_debug_blur"):SetBool(val) return true end,
+		setup = function(check) check:SetValue(GetConVar("gwater2_debug_blur"):GetBool()) end
+	},
+	["030-Show mipmap debug"] = {
+		type="check",
+		func = function(val) GetConVar("gwater2_debug_mipmap"):SetBool(val) return true end,
+		setup = function(check) check:SetValue(GetConVar("gwater2_debug_mipmap"):GetBool()) end
+	},
+	["031-Show normals debug"] = {
+		type="check",
+		func = function(val) GetConVar("gwater2_debug_normals"):SetBool(val) return true end,
+		setup = function(check) check:SetValue(GetConVar("gwater2_debug_normals"):GetBool()) end
 	},
 }
 
