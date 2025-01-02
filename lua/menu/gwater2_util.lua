@@ -29,6 +29,8 @@ local function is_hovered_any(panel)
 	return false
 end
 
+local _styling = include("menu/gwater2_styling.lua")
+
 local function emit_sound(type)
 	if not gwater2.options.read_config().sounds then return end
 	surface.PlaySound("gwater2/menu/"..type..".wav")
@@ -283,6 +285,18 @@ local function make_parameter_scratch(tab, locale_parameter_name, parameter_name
 	
 	slider.TextArea:SizeToContents()
 
+	function slider.Scratch:GetTextValue()
+		local decimals = self:GetDecimals()
+		if decimals == 0 then
+			return string.format("%i", self:GetFloatValue())
+		end
+		if decimals < 0 then
+			return string.format("%i", math.floor(self:GetFloatValue() / 10^decimals) * 10^decimals)
+		end
+
+		return string.format("%." .. decimals .. "f", self:GetFloatValue())
+	end
+
 	-- call custom setup function
 	if parameter.setup then parameter.setup(slider) end
 
@@ -292,6 +306,18 @@ local function make_parameter_scratch(tab, locale_parameter_name, parameter_name
 	slider.Slider.Knob.DoClick = slider_functions.onvaluechanged_final
 	slider.OnValueChanged = slider_functions.onvaluechanged
 	panel.Paint = panel_paint
+
+	function slider.Slider.Knob:Paint(w, h)
+		surface.SetDrawColor(0, 0, 0, 125)
+		surface.DrawRect(w/4, 0, w/2, h)
+	
+		if panel.washovered then
+			surface.SetDrawColor(panel.label.fancycolor_hovered or Color(187, 245, 255))
+		else
+			surface.SetDrawColor(panel.label.fancycolor or Color(255, 255, 255))
+		end
+		surface.DrawOutlinedRect(w/4, 0, w/2, h)
+	end
 
 	if not gwater2.parameters[parameter_id] then
 		gwater2.parameters[parameter_id] = slider:GetValue()
@@ -403,6 +429,22 @@ local function make_parameter_check(tab, locale_parameter_name, parameter_name, 
 	button.DoClick = check_functions.reset
 	check.OnChange = check_functions.onvaluechanged
 	panel.Paint = panel_paint
+	function check.Button:Paint(w, h)
+		surface.SetDrawColor(0, 0, 0, 125)
+		surface.DrawRect(0, 0, w, h)
+
+		if panel.washovered then
+			surface.SetDrawColor(panel.label.fancycolor_hovered or Color(187, 245, 255))
+		else
+			surface.SetDrawColor(panel.label.fancycolor or Color(255, 255, 255))
+		end
+	
+		if self:GetChecked() then
+			surface.DrawRect(3, 3, w-6, h-6)
+		end
+
+		surface.DrawOutlinedRect(0, 0, w, h)
+	end
 
 	if not gwater2.parameters[parameter_id] then
 		gwater2.parameters[parameter_id] = check:GetChecked()

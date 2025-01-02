@@ -312,15 +312,18 @@ The Patron list is sorted in alphabetical order and will be updated routinely un
 v-------------------- Credits --------------------v
 
 Meetric      | Creator of GWater2
-googer       | Entire menu, adv water gun, wire support
-jn           | Water-player interactions, forcefield entity
-Xenthio      | Diffuse and lighting improvements
+googer       | Entire menu, advanced water gun,
+             | Wiremod support, Transporter entity,
+jn           | Water-player interactions,
+             | Forcefield entity
+Xenthio      | Diffuse and lighting improvements,
+             | Antialiasing and HDR fixes
 MyUsername   | Linux help
 Stickrpg     | Reaction force sigs
-Mikey        | Starfallex API
+Mikey        | StarfallEx API
 Joka         | Water gun icon
 Spanky       | Particle stretching code
-AndrewEathan | GWater1 entities
+AndrewEathan | GWater1 entities (ported to GW2)
 Nvidia       | FleX library
 
 v-------------------- Patrons --------------------v
