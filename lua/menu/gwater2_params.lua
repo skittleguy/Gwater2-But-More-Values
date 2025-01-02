@@ -205,7 +205,7 @@ local performance = {
 			label:SetColor(label.fancycolor)
 		end
 	},
-	["004-Blur Passes"] = {
+	["006-Blur Passes"] = {
 		min=0,
 		max=4,
 		decimals=0,
@@ -304,7 +304,7 @@ local performance = {
 			end
 		end
 	},
-	["006-Simulation FPS"] = {
+	["004-Simulation FPS"] = {
 		min=30,
 		max=120,
 		decimals=0,
