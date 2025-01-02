@@ -1004,7 +1004,7 @@ relaxation_factor
 ]]
 
 "gwater2.menu.Menu.preview"=[[
-Превью жикости
+Превью жидкости
 ]]
 
 "gwater2.menu.Menu.preview.desc"=[[
