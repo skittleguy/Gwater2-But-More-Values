@@ -164,12 +164,6 @@ local function create_menu(init)
 		_util.emit_sound("reset")
 	end
 
-	local tips = q_access:Add("DLabel")
-	tips:Dock(FILL)
-	function tips:Paint(w, h)
-		draw.RoundedBox(0, 0, 0, w, h, Color(255, 255, 255, 255))
-	end
-
 	local particle_material = nil
 	local pixelated = "hell"
 
