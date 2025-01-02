@@ -12,6 +12,7 @@ if SERVER then
 	util.AddNetworkString("GWATER2_ADDMODEL")
 	util.AddNetworkString("GWATER2_ADDFORCEFIELD")
 	util.AddNetworkString("GWATER2_RESETSOLVER")
+	util.AddNetworkString("GWATER2_REMOVECLOTH")
 
 	util.AddNetworkString("GWATER2_CHANGEPARAMETER")
 	util.AddNetworkString("GWATER2_REQUESTPARAMETERSSNAPSHOT")
@@ -97,6 +98,11 @@ if SERVER then
 			net.Broadcast()
 		end,
 
+		RemoveCloth = function()
+			net.Start("GWATER2_REMOVECLOTH")
+			net.Broadcast()
+		end,
+
 		quick_matrix = function(pos, ang, scale)
 			local mat = Matrix()
 			if pos then mat:SetTranslation(pos) end
@@ -116,6 +122,12 @@ if SERVER then
 		if admin_only:GetBool() and not ply:IsAdmin() then return end
 
 		gwater2.ResetSolver()
+	end)
+
+	net.Receive("GWATER2_REMOVECLOTH", function(len, ply)
+		if admin_only:GetBool() and not ply:IsAdmin() then return end
+
+		gwater2.RemoveCloth()
 	end)
 
 	net.Receive("GWATER2_REQUESTPARAMETERSSNAPSHOT", function(len, ply)
@@ -141,6 +153,11 @@ else	-- CLIENT
 		net.SendToServer()
 	end
 
+	gwater2.RemoveCloth = function()
+		net.Start("GWATER2_REMOVECLOTH")
+		net.SendToServer()
+	end
+
 	local _util = include("menu/gwater2_util.lua")
 
 	-- HUDPaint gets called only AFTER player is ready to receive data
@@ -162,6 +179,10 @@ else	-- CLIENT
 
 	net.Receive("GWATER2_RESETSOLVER", function(len)
 		gwater2.solver:Reset()
+	end)
+
+	net.Receive("GWATER2_REMOVECLOTH", function(len)
+		gwater2.solver:ResetCloth()
 	end)
 
 	net.Receive("GWATER2_ADDCLOTH", function(len)

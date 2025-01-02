@@ -144,22 +144,30 @@ local function create_menu(init)
 
 	local qgun = q_access:Add("DImageButton")
 	qgun:SetImage("icon16/gun.png")
+	qgun:Dock(LEFT)
+	qgun:DockMargin(2, 2, 2, 2)
 	qgun:SetSize(q_access:GetTall() - 4, q_access:GetTall() - 4)
-	qgun:SetPos(2, 2)
-	qgun:SetTooltip("Give yourself watergun swep")
+	qgun:SetTooltip(_util.get_localised("qaccess.Give Watergun"))
 	function qgun:DoClick()
 		RunConsoleCommand("gm_giveswep", "weapon_gw2_watergun")
 	end
 
 	local qreset = q_access:Add("DImageButton")
 	qreset:SetImage("icon16/arrow_refresh.png")
+	qreset:Dock(LEFT)
+	qreset:DockMargin(2, 2, 2, 2)
 	qreset:SetSize(q_access:GetTall() - 4, q_access:GetTall() - 4)
-	qreset:SetPos(2 * 4 + qreset:GetWide(), 2)
-	qreset:SetTooltip("Reset solvers (clean all water)")
+	qreset:SetTooltip(_util.get_localised("qaccess.Reset Solvers"))
 	function qreset:DoClick()
 		gwater2.options.solver:Reset()
 		gwater2.ResetSolver()
 		_util.emit_sound("reset")
+	end
+
+	local tips = q_access:Add("DLabel")
+	tips:Dock(FILL)
+	function tips:Paint(w, h)
+		draw.RoundedBox(0, 0, 0, w, h, Color(255, 255, 255, 255))
 	end
 
 	local particle_material = nil

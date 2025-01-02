@@ -66,7 +66,7 @@ function ENT:SpawnFunction(ply, tr, class)
 	ent:SetStrength(10)
 	ent:SetSpread(1)
 	ent:SetLifetime(0)
-	ent:SetOn(true)
+	ent:SetOn(false)
 	--ent:SetCollisionGroup(COLLISION_GROUP_WORLD)
 	ent:SetMaterial("phoenix_storms/gear")
 

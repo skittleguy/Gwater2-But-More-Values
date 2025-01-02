@@ -453,7 +453,7 @@ local interaction = {
 			setup = function(scratch) scratch:SetValue(gwater2.parameters.force_dampening) end
 		}
 	},
-	["002-Swimming Parameters"] = {
+	["002-Water Interactions"] = {
 		["001-Player Interaction"] = {
 			type="check",
 			func = function(val) return true end,
