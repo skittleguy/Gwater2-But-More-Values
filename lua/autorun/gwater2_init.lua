@@ -328,7 +328,6 @@ timer.Create("gwater2_calcdiffusesound", 0.1, 0, function()
 	-- multiplayer water-player interactions
 	if lp:IsListenServerHost() then
 		for _, ply in player.Iterator() do
-			print(ply)
 			local particles_in_radius = gwater2.solver:GetParticlesInRadius(ply:GetPos() + ply:OBBCenter() / 2, gwater2.solver:GetParameter("fluid_rest_distance") * 3)
 
 			GWATER2_SET_CONTACTS(	-- defined by C++ module
