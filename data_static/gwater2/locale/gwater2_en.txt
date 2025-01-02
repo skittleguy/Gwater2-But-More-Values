@@ -308,6 +308,7 @@ googer       | Entire menu, adv water gun, wire support
 jn           | Water-player interactions, forcefield entity
 Xenthio      | Diffuse and lighting improvements
 MyUsername   | Linux help
+Stickrpg     | Reaction force sigs
 Mikey        | Starfallex API
 Joka         | Water gun icon
 Spanky       | Particle stretching code
