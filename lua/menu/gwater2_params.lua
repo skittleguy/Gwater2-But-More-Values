@@ -174,7 +174,7 @@ local visuals = {
 
 local performance = {
 	["001-Physics"] = {
-		["004-Iterations"] = {
+		["001-Iterations"] = {
 			min=1,
 			max=10,
 			decimals=0,
@@ -187,7 +187,7 @@ local performance = {
 				label:SetColor(label.fancycolor)
 			end
 		},
-		["003-Substeps"] = {
+		["002-Substeps"] = {
 			min=1,
 			max=10,
 			decimals=0,
@@ -200,7 +200,7 @@ local performance = {
 				label:SetColor(label.fancycolor)
 			end
 		},
-		["000-Particle Limit"] = {
+		["004-Particle Limit"] = {
 			min=1,
 			max=1000000,
 			decimals=0,
@@ -280,7 +280,7 @@ local performance = {
 				end
 			end
 		},
-		["001-Simulation FPS"] = {
+		["003-Simulation FPS"] = {
 			min=30,
 			max=120,
 			decimals=0,
@@ -300,7 +300,26 @@ local performance = {
 				label.fancycolor_hovered = Color(255, 200, 127)
 				label:SetColor(label.fancycolor)
 			end
-		}
+		},	
+		["005-Player Collision"] = {
+			type="check",
+			nosync=true,
+			func=function(val)
+				gwater2.options.player_collision:SetBool(val)
+				net.Start("GWATER2_REQUESTCOLLISION")
+				net.WriteBool(val)
+				net.SendToServer()
+				return true
+			end,
+			setup=function(check)
+				local label = check:GetParent().label
+				label.fancycolor = Color(127, 255, 0)
+				label.fancycolor_hovered = Color(200, 255, 127)
+				label:SetColor(label.fancycolor)
+
+				check:SetValue(gwater2.options.player_collision:GetBool())
+			end
+		},
 	},
 	["002-Visuals"] = {
 		["006-Blur Passes"] = {
@@ -375,25 +394,6 @@ local performance = {
 				label:SetColor(label.fancycolor)
 
 				check:SetValue(gwater2.options.depth_fix:GetBool())
-			end
-		},
-		["009-Player Collision"] = {
-			type="check",
-			nosync=true,
-			func=function(val)
-				gwater2.options.player_collision:SetBool(val)
-				net.Start("GWATER2_REQUESTCOLLISION")
-				net.WriteBool(val)
-				net.SendToServer()
-				return true
-			end,
-			setup=function(check)
-				local label = check:GetParent().label
-				label.fancycolor = Color(127, 255, 0)
-				label.fancycolor_hovered = Color(200, 255, 127)
-				label:SetColor(label.fancycolor)
-
-				check:SetValue(gwater2.options.player_collision:GetBool())
 			end
 		},
 		["010-Diffuse Enabled"] = {
