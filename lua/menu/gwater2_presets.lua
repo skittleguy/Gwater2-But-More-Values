@@ -108,7 +108,7 @@ local default_presets = {
 
 local presets
 if file.Exists("DATA", "gwater2/presets.txt") then
-    presets = util.JSONToTable(file.Read("gwater2/presets.txt"))
+    presets = util.JSONToTable(file.Read("gwater2/presets.txt", "DATA"))
 else
     presets = default_presets
 end
@@ -146,6 +146,36 @@ function gwater2.options.detect_preset_type(preset)
 	return nil
 end
 
+local function recalculate_color_from_old(value, preset)
+    if value[1] >= 0 and value[1] <= 255 and
+       value[2] >= 0 and value[2] <= 255 and
+       value[3] >= 0 and value[3] <= 255 and
+       value[4] >= 0 and value[4] <= 255 then
+        return
+    end
+    notification.AddLegacy("This preset color has been converted from old format.\n"..
+                           "Please note that the conversion is not perfect and may result in wrong color.", NOTIFY_GENERIC, 5)
+    local max_deviation = 0
+    for i = 1, 4 do
+        local old_value = value[i]
+        local deviation_above = math.max(0, old_value - 255)
+        local deviation_below = math.max(0, 0 - old_value)
+        local deviation = math.max(deviation_above, deviation_below)
+        max_deviation = math.max(max_deviation, deviation)
+    end
+    local multiplier = 1
+    if max_deviation > 0 then
+        multiplier = 1 + (max_deviation / 255)
+    end
+    multiplier = math.max(0, math.min(3, multiplier))
+    value = {value[1] / multiplier,
+             value[2] / multiplier,
+             value[3] / multiplier,
+             value[4] / multiplier}
+    preset["VISL/Color Value Multiplier"] = multiplier
+    return value
+end
+
 function gwater2.options.read_preset(preset)
 	local type = gwater2.options.detect_preset_type(preset)
 	if type == "JSON" then
@@ -175,16 +205,576 @@ function gwater2.options.read_preset(preset)
 		prst["CUST/Author"] = prst["CUST/Author"] or LocalPlayer():Name()
 		return {name, prst}
 	end
+    -- read older formats. people still use old presets, so we need to support them
+    -- remove in 0.7
+    local preset_parts = preset:Split(',')
+	if type == "Extension" then
+		local name, data = preset_parts[1], preset_parts[3]
+		preset_parts[5] = LocalPlayer():Name()
+		type = "Extension w/ Author"
+	end
+	if type == "Extension w/ Author" then
+		notification.AddLegacy("This preset format is deprecated and support for it will be removed. Consider switching to JSON or B64-PI formats.", NOTIFY_GENERIC, 5)
+		local name, data, author = preset_parts[1], preset_parts[3], preset_parts[5]
+		data = data:Split("/")
+		preset = {["CUST/Author"] = author}
+		for _, part in pairs(data) do
+			local pd = part:Split(":")
+			local name, value = pd[1], pd[2]
+			if value == "" then
+				value = (2^31-1)
+			end
+			if name == "Color" then
+				if value ~= (2^31-1) then
+                    value = value:Split(" ")
+                    value = {tonumber(value[1]), tonumber(value[2]),
+                                  tonumber(value[3]), tonumber(value[4])}
+                end
+				name = "VISL/"..name
+                if value ~= (2^31-1) then
+                    value = recalculate_color_from_old(value, preset)
+                end
+			end
+			if name == "Cohesion" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "PHYS/"..name
+			end
+			if name == "Adhesion" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "PHYS/"..name
+			end
+			if name == "Viscosity" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "PHYS/"..name
+			end
+			if name == "Surface Tension" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "PHYS/"..name
+			end
+			if name == "Fluid Rest Distance" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "PHYS/"..name
+			end
+			if name == "Dynamic Friction" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "PHYS/"..name
+			end
+			if name == "Anisotropy Scale" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "VISL/"..name
+			end
+			if name == "Reflectance" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "VISL/"..name
+			end
+			if name == "Iterations" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "PERF/"..name
+			end
+			if name == "Substeps" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "PERF/"..name
+			end
+
+			if name == "SwimSpeed" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "INTC/"..name
+			end
+			if name == "SwimFriction" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "INTC/"..name
+			end
+			if name == "SwimBuoyancy" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "INTC/"..name
+			end
+			if name == "DrownTime" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "INTC/"..name
+			end
+			if name == "DrownParticles" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "INTC/"..name
+			end
+			if name == "DrownDamage" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "INTC/"..name
+			end
+			if name == "MultiplyParticles" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "INTC/"..name
+			end
+			if name == "MultiplyWalk" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "INTC/"..name
+			end
+			if name == "MultiplyJump" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "INTC/"..name
+			end
+
+			preset[name] = value
+		end
+		return {name, preset}
+	end
+	if type == "CustomPresets" then
+        notification.AddLegacy("This preset format is deprecated and support for it will be removed. Consider switching to JSON or B64-PI formats.", NOTIFY_GENERIC, 5)
+		local name, data = preset_parts[1], preset_parts[2]
+		data = data:Split("\\n")
+		preset = {["CUST/Author"] = LocalPlayer():Name()}
+		for _, part in pairs(data) do
+			local pd = part:Split(":")
+			local name, value = pd[1], pd[2]
+			if value == "" then
+				value = (2^31-1)
+			end
+			if name == "Color" then
+				if value ~= (2^31-1) then
+                    value = value:Split(" ")
+                    value = {tonumber(value[1]), tonumber(value[2]),
+                                  tonumber(value[3]), tonumber(value[4])}
+                end
+				name = "VISL/"..name
+                if value ~= (2^31-1) then
+                    value = recalculate_color_from_old(value, preset)
+                end
+			end
+			if name == "Cohesion" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "PHYS/"..name
+			end
+			if name == "Adhesion" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "PHYS/"..name
+			end
+			if name == "Viscosity" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "PHYS/"..name
+			end
+			if name == "Surface Tension" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "PHYS/"..name
+			end
+			if name == "Fluid Rest Distance" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "PHYS/"..name
+			end
+			if name == "Dynamic Friction" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "PHYS/"..name
+			end
+			if name == "Anisotropy Scale" then
+				if value ~= (2^31-1) then value = tonumber(value) end
+				name = "VISL/"..name
+			end
+			---@diagnostic disable-next-line: assign-type-mismatch
+			preset[name] = value
+		end
+		return {name, preset}
+	end
 	return {"", {}}
 end
 
+local _visuals, _parameters, _interactions
+
+local function get_parameter(param)
+    local list_ = ({
+        ["VISL"] = _visuals,
+        ["PHYS"] = _parameters,
+        ["INTC"] = _interactions
+    })[param:sub(0, 4)]
+    if not list_ then return end
+    local param_panel = list_[param:sub(6)]
+    if param_panel.mixer then return param_panel.mixer:GetColor():ToTable() end
+    if param_panel.check then return param_panel.check:GetChecked() end
+    if param_panel.slider then return param_panel.slider:GetValue() end
+end
+local function set_parameter(param, value)
+    local list_ = ({
+        ["VISL"] = _visuals,
+        ["PHYS"] = _parameters,
+        ["INTC"] = _interactions
+    })[param:sub(0, 4)]
+    if not list_ then return end
+    local param_panel = list_[param:sub(6)]
+    if param_panel.mixer then return param_panel.mixer:SetColor(Color(value[1], value[2], value[3], value[4])) end
+    if param_panel.check then return param_panel.check:SetChecked(value) end
+    if param_panel.slider then return param_panel.slider:SetValue(value) end
+end
+
+local button_functions -- wtf lua
+button_functions = {
+    paint = function(self, w, h)
+        if self:IsHovered() and not self.washovered then
+            self.washovered = true
+            _util.emit_sound("rollover")
+        elseif not self:IsHovered() and self.washovered then
+            self.washovered = false
+        end
+        if self:IsHovered() and not self:IsDown() then
+            self:SetColor(Color(0, 127, 255, 255))
+        elseif self:IsDown() then
+            self:SetColor(Color(63, 190, 255, 255))
+        else
+            self:SetColor(Color(255, 255, 255))
+        end
+        styling.draw_main_background(0, 0, w, h)
+    end,
+    apply_preset = function(self)
+        local params = self:GetParent():GetParent():GetParent().params
+        local preset = self.preset
+
+        _parameters = params._parameters
+        _visuals = params._visuals
+        _interactions = params._interactions
+
+        local paramlist = {}
+        for name,_ in pairs(_parameters) do paramlist[#paramlist+1] = "PHYS/"..name end
+        for name,_ in pairs(_visuals) do paramlist[#paramlist+1] = "VISL/"..name end
+        for name,_ in pairs(_interactions) do paramlist[#paramlist+1] = "INTC/"..name end
+
+        if preset["CUST/Master Reset"] then
+            for _,section in pairs(params) do
+                for name,control in pairs(section) do
+                    local default = gwater2.defaults[name:lower():gsub(" ", "_")]
+                    if control.slider then control.slider:SetValue(default) end
+                    if control.check then control.check:SetChecked(default) end
+                    if control.mixer then control.mixer:SetColor(default) end
+                end
+            end
+        end
+
+        for key,value in pairs(preset) do
+            if key:sub(0, 4) == "CUST" then continue end
+            set_parameter(key, value)
+        end
+        _util.emit_sound("confirm")
+    end,
+    selector_right_click = function(self)
+        local menu = DermaMenu()
+        local clip = menu:AddSubMenu(_util.get_localised("Presets.copy"))
+        clip:AddOption(_util.get_localised("Presets.copy.as_b64pi"), function()
+            local data = self.name .. "\0"
+            for k_,v_ in pairs(self.preset) do
+                local t_ = 'n'
+                if istable(v_) then v_ = util.TableToJSON(v_) t_ = 'j' end
+                if isbool(v_) then v_ = v_ and '1' or '0' t_ = 'b' end
+                data = data .. k_ .. "\1" .. v_ .. "\1" .. t_ .. "\2"
+            end
+            data = data:sub(0, -1)
+            SetClipboardText(util.Base64Encode(util.Compress(data)))
+            _util.emit_sound("confirm")
+        end)
+        clip:AddOption(_util.get_localised("Presets.copy.as_json"), function()
+            SetClipboardText(util.TableToJSON({[self.name]=self.preset}))
+            _util.emit_sound("confirm")
+        end)
+        menu:AddOption(_util.get_localised("Presets.delete"), function()
+            presets[self.id] = nil
+            file.Write("gwater2/presets.txt", util.TableToJSON(presets))
+            self:Remove()
+            _util.emit_sound("confirm")
+        end)
+        menu:Open()
+    end,
+    create_preset = function(local_presets, name, preset, write)
+        if write == nil then write = true end
+        local m = 0
+        for k,v in SortedPairs(presets) do m = tonumber(k:sub(1, 3)) end
+        local selector = local_presets:Add("DButton")
+        selector:SetText(name.." ("..(preset["CUST/Author"] or _util.get_localised("Presets.author_unknown"))..")")
+        selector:Dock(TOP)
+        selector.Paint = button_functions.paint
+        selector.name = name
+        selector.preset = preset
+        selector.id = string.format("%03d-%s", m+1, name)
+        selector.DoClick = button_functions.apply_preset
+        selector.DoRightClick = button_functions.selector_right_click
+        local_presets:SetTall(local_presets:GetTall()+25)
+
+        if write then
+            presets[string.format("%03d-%s", m+1, name)] = preset
+            file.Write("gwater2/presets.txt", util.TableToJSON(presets))
+        end
+    end,
+    save_simple = function(self)
+        local params = self:GetParent():GetParent():GetParent().params
+        local local_presets = self:GetParent():GetParent():GetParent().presets
+
+        _parameters = params._parameters
+        _visuals = params._visuals
+        _interactions = params._interactions
+
+        local preset = {
+            ["CUST/Author"] = LocalPlayer():Name(),
+            ['CUST/Master Reset'] = true
+        }
+        for name,_ in pairs(_parameters) do
+            preset["PHYS/"..name] = get_parameter("PHYS/"..name)
+        end
+        for name,_ in pairs(_visuals) do
+            preset["VISL/"..name] = get_parameter("VISL/"..name)
+        end
+        for name,_ in pairs(_interactions) do
+            preset["INTC/"..name] = get_parameter("INTC/"..name)
+        end
+
+        local frame = styling.create_blocking_frame()
+        frame:SetSize(ScrW()/4, 20*5)
+        frame:Center()
+        local label = frame:Add("DLabel")
+        label:Dock(TOP)
+        label:SetText(_util.get_localised("Presets.save.preset_name"))
+        label:SetFont("GWater2Title")
+        local textarea = frame:Add("DTextEntry")
+        textarea:Dock(TOP)
+        textarea:SetFont("GWater2Param")
+        textarea:SetValue("PresetName")
+        
+        local btnpanel = frame:Add("DPanel")
+        btnpanel:Dock(BOTTOM)
+        btnpanel.Paint = nil
+
+        local confirm = btnpanel:Add("DButton")
+        confirm:Dock(RIGHT)
+        confirm:SetText("")
+        confirm:SetSize(20, 20)
+        confirm:SetImage("icon16/accept.png")
+        confirm.Paint = nil
+        function confirm:DoClick()
+            local name = textarea:GetValue()
+            button_functions.create_preset(local_presets, name, preset)
+            frame:Close()
+            _util.emit_sound("select_ok")
+        end
+
+        local deny = vgui.Create("DButton", btnpanel)
+        deny:Dock(LEFT)
+        deny:SetText("")
+        deny:SetSize(20, 20)
+        deny:SetImage("icon16/cross.png")
+        deny.Paint = nil
+        function deny:DoClick()
+            frame:Close()
+            _util.emit_sound("select_deny")
+        end
+
+        _util.emit_sound("confirm")
+    end,
+    save_extended = function(self)
+        local params = self:GetParent():GetParent():GetParent().params
+        local local_presets = self:GetParent():GetParent():GetParent().presets
+
+        local frame = styling.create_blocking_frame()
+        frame:SetSize(ScrW()/2, ScrH()/2)
+        frame:Center()
+        local label = frame:Add("DLabel")
+        label:Dock(TOP)
+        label:SetText(_util.get_localised("Presets.save.preset_name"))
+        label:SetFont("GWater2Title")
+        local textarea = frame:Add("DTextEntry")
+        textarea:Dock(TOP)
+        textarea:SetFont("GWater2Param")
+        textarea:SetValue("PresetName")
+        local label = frame:Add("DLabel")
+        label:Dock(TOP)
+        label:SetText(_util.get_localised("Presets.save.include_params"))
+        label:SetFont("GWater2Title")
+        local panel = frame:Add("DScrollPanel")
+        panel:Dock(FILL)
+        panel.Paint = nil
+
+        local preset = {
+            ["CUST/Author"] = LocalPlayer():Name()
+        }
+
+        local do_overwrite = panel:Add("DCheckBoxLabel")
+        do_overwrite:SetText("Master Reset (reset all unchecked parameters to default)")
+        do_overwrite:Dock(TOP)
+        function do_overwrite:OnChange(val)
+            if not val then preset['CUST/Master Reset'] = nil return end
+            preset['CUST/Master Reset'] = true
+        end
+        do_overwrite:SetValue(true)
+
+        _parameters = params._parameters
+        _visuals = params._visuals
+        _interactions = params._interactions
+
+        local paramlist = {}
+        for name,_ in pairs(_parameters) do paramlist[#paramlist+1] = "PHYS/"..name end
+        for name,_ in pairs(_visuals) do paramlist[#paramlist+1] = "VISL/"..name end
+        for name,_ in pairs(_interactions) do paramlist[#paramlist+1] = "INTC/"..name end
+
+        local _checks = {}
+        for k,v in pairs(paramlist) do
+            local check = panel:Add("DCheckBoxLabel")
+            _checks[#_checks + 1] = check
+            local real = ""
+            if v:sub(0, 4) == "VISL" then
+                real = _visuals[v:sub(6)].label:GetText()
+            elseif v:sub(0, 4) == "PHYS" then
+                real = _parameters[v:sub(6)].label:GetText()
+            elseif v:sub(0, 4) == "INTC" then
+                real = _interactions[v:sub(6)].label:GetText()
+            end
+            check:SetText(v:sub(0, 4).."/"..real)
+            check:Dock(TOP)
+            check.param = v
+            function check:OnChange(value)
+                if not value then preset[self.param] = nil return end
+                preset[self.param] = get_parameter(self.param)
+            end
+        end
+
+        local qpanel = frame:Add("DPanel")
+        qpanel:Dock(TOP)
+        qpanel.Paint = nil
+
+        local deselect_all = qpanel:Add("DButton")
+        deselect_all:SetText("Deselect all")
+        deselect_all:Dock(LEFT)
+        deselect_all:SizeToContents()
+        deselect_all.Paint = button_functions.paint
+        function deselect_all:DoClick()
+            for _,check in pairs(_checks) do
+                check:SetValue(false)
+            end
+        end
+
+        local select_visl = qpanel:Add("DButton")
+        select_visl:SetText("Select all VISL")
+        select_visl:Dock(LEFT)
+        select_visl:SizeToContents()
+        select_visl.Paint = button_functions.paint
+        select_visl.section = "VISL"
+        function select_visl:DoClick()
+            for _,check in pairs(_checks) do
+                if check:GetText():sub(0,4) ~= self.section then continue end
+                check:SetValue(true)
+            end
+        end
+
+        local select_phys = qpanel:Add("DButton")
+        select_phys:SetText("Select all PHYS")
+        select_phys:Dock(LEFT)
+        select_phys:SizeToContents()
+        select_phys.Paint = button_functions.paint
+        select_phys.section = "PHYS"
+        select_phys.DoClick = select_visl.DoClick
+
+        local select_itrc = qpanel:Add("DButton")
+        select_itrc:SetText("Select all INTC")
+        select_itrc:Dock(LEFT)
+        select_itrc:SizeToContents()
+        select_itrc.Paint = button_functions.paint
+        select_itrc.section = "INTC"
+        select_itrc.DoClick = select_visl.DoClick
+        
+        local btnpanel = frame:Add("DPanel")
+        btnpanel:Dock(BOTTOM)
+        btnpanel.Paint = nil
+
+        local confirm = btnpanel:Add("DButton")
+        confirm:Dock(RIGHT)
+        confirm:SetText("")
+        confirm:SetSize(20, 20)
+        confirm:SetImage("icon16/accept.png")
+        confirm.Paint = nil
+        function confirm:DoClick()
+            local name = textarea:GetValue()
+            button_functions.create_preset(local_presets, name, preset)
+            frame:Close()
+            _util.emit_sound("select_ok")
+        end
+
+        local deny = vgui.Create("DButton", btnpanel)
+        deny:Dock(LEFT)
+        deny:SetText("")
+        deny:SetSize(20, 20)
+        deny:SetImage("icon16/cross.png")
+        deny.Paint = nil
+        function deny:DoClick()
+            frame:Close()
+            _util.emit_sound("select_deny")
+        end
+
+        _util.emit_sound("confirm")
+    end,
+    import = function(self)
+        local local_presets = self:GetParent():GetParent():GetParent().presets
+
+        local frame = styling.create_blocking_frame()
+        frame:SetSize(ScrW()/2, ScrH()/2)
+        frame:Center()
+        local label = frame:Add("DLabel")
+        label:Dock(TOP)
+        label:SetText(_util.get_localised("Presets.import.paste_here"))
+        label:SetFont("GWater2Title")
+        local textarea = frame:Add("DTextEntry")
+        textarea:Dock(FILL)
+        textarea:SetFont("GWater2Param")
+        textarea:SetValue("")
+        textarea:SetMultiline(true)
+        textarea:SetVerticalScrollbarEnabled(true)
+        textarea:SetWrap(true)
+
+        local btnpanel = frame:Add("DPanel")
+        btnpanel:Dock(BOTTOM)
+        btnpanel.Paint = nil
+
+        local label_detect = frame:Add("DLabel")
+        label_detect:SetText("...")
+        label_detect:Dock(BOTTOM)
+        label_detect:SetTall(label_detect:GetTall()*2)
+        label_detect:SetFont("GWater2Param")
+        
+        local confirm = vgui.Create("DButton", btnpanel)
+        confirm:Dock(RIGHT)
+        confirm:SetText("")
+        confirm:SetSize(20, 20)
+        confirm:SetImage("icon16/accept.png")
+        confirm.Paint = nil
+        function confirm:DoClick()
+            local pd = gwater2.options.read_preset(textarea:GetValue())
+            local name, preset = pd[1], pd[2]
+            button_functions.create_preset(local_presets, name, preset)
+            frame:Close()
+            _util.emit_sound("select_ok")
+        end
+
+        function textarea:OnChange()
+            local type = gwater2.options.detect_preset_type(textarea:GetValue())
+            if type == nil then
+                confirm:SetEnabled(false)
+                return label_detect:SetText(_util.get_localised("Presets.import.bad_data"))
+            end
+            confirm:SetEnabled(true)
+            label_detect:SetText(_util.get_localised("Presets.import.detected", type))
+        end
+
+        local deny = vgui.Create("DButton", btnpanel)
+        deny:Dock(LEFT)
+        deny:SetText("")
+        deny:SetSize(20, 20)
+        deny:SetImage("icon16/cross.png")
+        deny.Paint = nil
+        function deny:DoClick()
+            frame:Close()
+            _util.emit_sound("select_deny")
+        end
+
+        _util.emit_sound("confirm")
+    end
+}
+
 local function presets_tab(tabs, params)
-	local tab = vgui.Create("DPanel", tabs)
-	function tab:Paint() end
+    local tab = vgui.Create("DPanel", tabs)
+	tab.Paint = nil
 	tabs:AddSheet(_util.get_localised("Presets.title"), tab, "icon16/images.png").Tab.realname = "Presets"
 	tab = tab:Add("DScrollPanel")
 	tab:Dock(FILL)
-
+	--tab.Paint = function(s, w, h) draw.RoundedBox(0, 0, 0, w, h, Color(255, 255, 255)) end
 	styling.define_scrollbar(tab:GetVBar())
 
 	local _ = tab:Add("DLabel") _:SetText(" ") _:SetFont("GWater2Title") _:Dock(TOP) _:SizeToContents()
@@ -200,479 +790,43 @@ local function presets_tab(tabs, params)
 		_util.make_title_label(tab, _util.get_localised("Presets.critical_fail"))
 		return
 	end
-	local local_presets = tab:Add("DPanel")
-	function local_presets:Paint() end
+    local presets_control = tab:Add("DPanel")
+    presets_control.Paint = nil
+	presets_control:Dock(TOP)
+    presets_control:DockPadding(0, 5, 5, 0)
+
+    local local_presets = tab:Add("DPanel")
+    local_presets.Paint = nil
 	local_presets:Dock(TOP)
-	local mk_save_btn = nil
-	local function mk_selector(k, v, id)
-		local selector = local_presets:Add("DButton")
-		selector.id = id
-		selector:Dock(TOP)
-		selector:SetText(k.." ("..(v["CUST/Author"] or _util.get_localised("Presets.author_unknown"))..")")
-		function selector:Paint(w, h)
-			if self:IsHovered() and not self.washovered then
-				self.washovered = true
-				_util.emit_sound("rollover")
-			elseif not self:IsHovered() and self.washovered then
-				self.washovered = false
-			end
-            if self:IsHovered() and not self:IsDown() then
-            	self:SetColor(Color(0, 127, 255, 255))
-            elseif self:IsDown() then
-            	self:SetColor(Color(63, 190, 255, 255))
-            else
-                self:SetColor(Color(255, 255, 255))
-            end
-            styling.draw_main_background(0, 0, w, h)
-        end
-		function selector:DoClick()
-			_util.emit_sound("confirm")
+    local_presets:DockPadding(0, 5, 5, 0)
 
-			local _parameters = params._parameters
-			local _visuals = params._visuals
-			local _interactions = params._interactions
+    tab.presets = local_presets
+    tab.params = params
 
-			-- temporarily disable sounds while we override all these values
-			local sounds_enabled = gwater2.options.read_config().sounds
-			gwater2.options.read_config().sounds = false
+    local save_button = presets_control:Add("DButton")
+    save_button:SetText("Save")
+    save_button:Dock(LEFT)
+    save_button.Paint = button_functions.paint
+    save_button.DoClick = button_functions.save_simple
 
-			if v["CUST/Master Reset"] then
-				local paramlist = {}
-				for name,_ in pairs(_parameters) do
-					if _.slider then _.slider:SetValue(gwater2.defaults[name:lower():gsub(" ", "_")]) end
-					if _.check then _.check:SetValue(gwater2.defaults[name:lower():gsub(" ", "_")]) end
-					if _.mixer then _.mixer:SetColor(gwater2.defaults[name:lower():gsub(" ", "_")]) end
-				end
-				for name,_ in pairs(_visuals) do
-					if _.slider then _.slider:SetValue(gwater2.defaults[name:lower():gsub(" ", "_")]) end
-					if _.check then _.check:SetValue(gwater2.defaults[name:lower():gsub(" ", "_")]) end
-					if _.mixer then _.mixer:SetColor(gwater2.defaults[name:lower():gsub(" ", "_")]) end
-				end
-				for name,_ in pairs(_interactions) do
-					if _.slider then _.slider:SetValue(gwater2.defaults[name:lower():gsub(" ", "_")]) end
-					if _.check then _.check:SetValue(gwater2.defaults[name:lower():gsub(" ", "_")]) end
-					if _.mixer then _.mixer:SetColor(gwater2.defaults[name:lower():gsub(" ", "_")]) end
-				end
-			end
-			for k,v in pairs(v) do
-				local section = k:sub(0, 4)
-				local name = k:sub(6)
-				if section == "CUST" and name == "Master Reset" then
-					continue
-				end
-				if v == (2^31-1) then
-					v = gwater2.defaults
-				end
+    local saveadv_button = presets_control:Add("DButton")
+    saveadv_button:SetText("Save (Advanced)")
+    saveadv_button:Dock(LEFT)
+    saveadv_button:SetWide(saveadv_button:GetWide()*2)
+    saveadv_button.Paint = button_functions.paint
+    saveadv_button.DoClick = button_functions.save_extended
 
-				if section == "VISL" then
-					if _visuals[name].slider then
-						_visuals[name].slider:SetValue(v)
-					elseif _visuals[name].check then
-						_visuals[name].check:SetValue(v)
-					elseif _visuals[name].mixer then
-						_visuals[name].mixer:SetColor(Color(v[1], v[2], v[3], v[4]))
-					end
-				elseif section == "PHYS" then
-					if _parameters[name].slider then
-						_parameters[name].slider:SetValue(v)
-					elseif _parameters[name].check then
-						_parameters[name].check:SetValue(v)
-					elseif _parameters[name].mixer then
-						_parameters[name].mixer:SetColor(Color(v[1], v[2], v[3], v[4]))
-					end
-				elseif section == "INTC" then
-					if _interactions[name].slider then
-						_interactions[name].slider:SetValue(v)
-					elseif _interactions[name].check then
-						_interactions[name].check:SetValue(v)
-					elseif _interactions[name].mixer then
-						_interactions[name].mixer:SetColor(Color(v[1], v[2], v[3], v[4]))
-					end
-				end
+    local import_button = presets_control:Add("DButton")
+    import_button:SetText("Import")
+    import_button:Dock(RIGHT)
+    import_button.Paint = button_functions.paint
+    import_button.DoClick = button_functions.import
 
-				if section == "VISL" then
-					if name == "Color" then
-						if not v.r or not v.g or not v.B then
-							v = Color(v[1], v[2], v[3], v[4] or 255)
-						end
-						_visuals[name].mixer:SetColor(v)
-						continue
-					end
-					_visuals[name].slider:SetValue(v)
-				elseif section == "PHYS" then
-					_parameters[name].slider:SetValue(v)
-				end
-			end
-
-			gwater2.options.read_config().sounds = sounds_enabled
-		end
-		function selector:DoRightClick()
-			_util.emit_sound("confirm")
-			local menu = DermaMenu()
-			local clip = menu:AddSubMenu(_util.get_localised("Presets.copy"))
-			clip:AddOption(_util.get_localised("Presets.copy.as_b64pi"), function()
-				local data = k .. "\0"
-				for k_,v_ in pairs(v) do
-					local t_ = 'n'
-					if istable(v_) then v_ = util.TableToJSON(v_) t_ = 'j' end
-					if isbool(v_) then v_ = v_ and '1' or '0' t_ = 'b' end
-					data = data .. k_ .. "\1" .. v_ .. "\1" .. t_ .. "\2"
-				end
-				data = data:sub(0, -1)
-				SetClipboardText(util.Base64Encode(util.Compress(data)))
-			end)
-			clip:AddOption(_util.get_localised("Presets.copy.as_json"), function()
-				SetClipboardText(util.TableToJSON({[k]=v}))
-			end)
-			menu:AddOption(_util.get_localised("Presets.delete"), function()
-				presets[selector.id] = nil
-				file.Write("gwater2/presets.txt", util.TableToJSON(presets))
-				selector:Remove()
-			end)
-			menu:Open()
-		end
-		return selector
-	end
-	for k,v in SortedPairs(presets) do
-		mk_selector(k:sub(5), v, k)
-	end
-	local function mk_save_btn()
-		local div = local_presets:Add("DLabel")
-		div:Dock(TOP)
-		div:SetText("")
-		local import_preset = local_presets:Add("DButton")
-		import_preset:Dock(TOP)
-		import_preset:SetText(_util.get_localised("Presets.import_preset"))
-		function import_preset:Paint(w, h)
-			if self:IsHovered() and not self.washovered then
-				self.washovered = true
-				_util.emit_sound("rollover")
-			elseif not self:IsHovered() and self.washovered then
-				self.washovered = false
-			end
-            if self:IsHovered() and not self:IsDown() then
-            	self:SetColor(Color(0, 127, 255, 255))
-            elseif self:IsDown() then
-            	self:SetColor(Color(63, 190, 255, 255))
-            else
-                self:SetColor(Color(255, 255, 255))
-            end
-            styling.draw_main_background(0, 0, w, h)
-        end
-        function import_preset:DoClick()
-			local frame = styling.create_blocking_frame()
-			frame:SetSize(ScrW()/2, ScrH()/2)
-			frame:Center()
-			local label = frame:Add("DLabel")
-			label:Dock(TOP)
-			label:SetText(_util.get_localised("Presets.import.paste_here"))
-			label:SetFont("GWater2Title")
-			local textarea = frame:Add("DTextEntry")
-			textarea:Dock(FILL)
-			textarea:SetFont("GWater2Param")
-			textarea:SetValue("")
-			textarea:SetMultiline(true)
-			textarea:SetVerticalScrollbarEnabled(true)
-			textarea:SetWrap(true)
-
-			local btnpanel = frame:Add("DPanel")
-			btnpanel:Dock(BOTTOM)
-			function btnpanel:Paint() end
-
-			local label_detect = frame:Add("DLabel")
-			label_detect:SetText("...")
-			label_detect:Dock(BOTTOM)
-			label_detect:SetTall(label_detect:GetTall()*2)
-			label_detect:SetFont("GWater2Param")
-			
-			local confirm = vgui.Create("DButton", btnpanel)
-			confirm:Dock(RIGHT)
-			confirm:SetText("")
-			confirm:SetSize(20, 20)
-			confirm:SetImage("icon16/accept.png")
-			confirm.Paint = nil
-			function confirm:DoClick()
-				local pd = gwater2.options.read_preset(textarea:GetValue())
-				local name, preset = pd[1], pd[2]
-				local_presets:GetChildren()[#local_presets:GetChildren()]:Remove()
-				local_presets:GetChildren()[#local_presets:GetChildren()-1]:Remove()
-				local_presets:GetChildren()[#local_presets:GetChildren()-2]:Remove()
-				local m = 0
-				for k,v in SortedPairs(presets) do m = tonumber(k:sub(1, 3)) end
-				mk_selector(name, preset, string.format("%03d-%s", m+1, name))
-				presets[string.format("%03d-%s", m+1, name)] = preset
-				file.Write("gwater2/presets.txt", util.TableToJSON(presets))
-				mk_save_btn()
-				frame:Close()
-				_util.emit_sound("select_ok")
-			end
-
-			function textarea:OnChange()
-				local type = gwater2.options.detect_preset_type(textarea:GetValue())
-				if type == nil then
-					confirm:SetEnabled(false)
-					return label_detect:SetText(_util.get_localised("Presets.import.bad_data"))
-				end
-				confirm:SetEnabled(true)
-				label_detect:SetText(_util.get_localised("Presets.import.detected", type))
-			end
-
-			local deny = vgui.Create("DButton", btnpanel)
-			deny:Dock(LEFT)
-			deny:SetText("")
-			deny:SetSize(20, 20)
-			deny:SetImage("icon16/cross.png")
-			deny.Paint = nil
-			function deny:DoClick()
-				frame:Close()
-				_util.emit_sound("select_deny")
-			end
-
-			_util.emit_sound("confirm")
-		end
-		local save = local_presets:Add("DButton")
-		save:Dock(TOP)
-		save:SetText(_util.get_localised("Presets.save"))
-		function save:Paint(w, h)
-			if self:IsHovered() and not self.washovered then
-				self.washovered = true
-				_util.emit_sound("rollover")
-			elseif not self:IsHovered() and self.washovered then
-				self.washovered = false
-			end
-            if self:IsHovered() and not self:IsDown() then
-            	self:SetColor(Color(0, 127, 255, 255))
-            elseif self:IsDown() then
-            	self:SetColor(Color(63, 190, 255, 255))
-            else
-                self:SetColor(Color(255, 255, 255))
-            end
-            styling.draw_main_background(0, 0, w, h)
-        end
-		function save:DoClick()
-			local frame = styling.create_blocking_frame()
-			frame:SetSize(ScrW()/2, ScrH()/2)
-			frame:Center()
-			local label = frame:Add("DLabel")
-			label:Dock(TOP)
-			label:SetText(_util.get_localised("Presets.save.preset_name"))
-			label:SetFont("GWater2Title")
-			local textarea = frame:Add("DTextEntry")
-			textarea:Dock(TOP)
-			textarea:SetFont("GWater2Param")
-			textarea:SetValue("PresetName")
-			local label = frame:Add("DLabel")
-			label:Dock(TOP)
-			label:SetText(_util.get_localised("Presets.save.include_params"))
-			label:SetFont("GWater2Title")
-			local panel = frame:Add("DScrollPanel")
-			panel:Dock(FILL)
-
-			local preset = {}
-
-			local do_overwrite = panel:Add("DCheckBoxLabel")
-			do_overwrite:SetText("Overwrite all unchecked parameters to defaults")
-			do_overwrite:Dock(TOP)
-			function do_overwrite:OnChange(val)
-				if not val then preset['CUST/Master Reset'] = nil return end
-				preset['CUST/Master Reset'] = true
-			end
-			do_overwrite:SetValue(true)
-
-			local _parameters = params._parameters
-			local _visuals = params._visuals
-			local _interactions = params._interactions
-
-			--panel:SetTall(panel:GetTall()*2)
-			function panel:Paint() end
-			local paramlist = {}
-			for name,_ in pairs(_parameters) do paramlist[#paramlist+1] = "PHYS/"..name end
-			for name,_ in pairs(_visuals) do paramlist[#paramlist+1] = "VISL/"..name end
-			for name,_ in pairs(_interactions) do paramlist[#paramlist+1] = "INTC/"..name end
-			local _checks = {}
-			for k,v in pairs(paramlist) do
-				local check = panel:Add("DCheckBoxLabel")
-				_checks[#_checks + 1] = check
-				local real = ""
-				if v:sub(0, 4) == "VISL" then
-					real = _visuals[v:sub(6)].label:GetText()
-				elseif v:sub(0, 4) == "PHYS" then
-					real = _parameters[v:sub(6)].label:GetText()
-				elseif v:sub(0, 4) == "INTC" then
-					real = _interactions[v:sub(6)].label:GetText()
-				end
-				check:SetText(v:sub(0, 4).."/"..real)
-				check:Dock(TOP)
-				function check:OnChange(val)
-					if val == false then preset[v] = nil return end
-					local section = v:sub(0, 4)
-					local name = v:sub(6)
-					if section == "VISL" then
-						if _visuals[name].slider then
-							preset[v] = _visuals[name].slider:GetValue()
-						elseif _visuals[name].check then
-							preset[v] = _visuals[name].check:GetChecked() or false
-						elseif _visuals[name].mixer then
-							local c = _visuals[name].mixer:GetColor()
-							preset[v] = {c.r, c.g, c.b, c.a}
-						end
-					elseif section == "PHYS" then
-						if _parameters[name].slider then
-							preset[v] = _parameters[name].slider:GetValue()
-						elseif _parameters[name].check then
-							preset[v] = _parameters[name].check:GetChecked() or false
-						elseif _parameters[name].mixer then
-							local c = _parameters[name].mixer:GetColor()
-							preset[v] = {c.r, c.g, c.b, c.a}
-						end
-					elseif section == "INTC" then
-						if _interactions[name].slider then
-							preset[v] = _interactions[name].slider:GetValue()
-						elseif _interactions[name].check then
-							preset[v] = _interactions[name].check:GetChecked() or false
-						elseif _interactions[name].mixer then
-							local c = _interactions[name].mixer:GetColor()
-							preset[v] = {c.r, c.g, c.b, c.a}
-						end
-					end
-				end
-
-				check:SetValue(true)
-			end
-			
-			local btn2panel = frame:Add("DPanel")
-			btn2panel:Dock(TOP)
-			function btn2panel:Paint() end
-
-			local deselect_all = vgui.Create("DButton", btn2panel)
-			deselect_all:SetText("Deselect all")
-			deselect_all:Dock(LEFT)
-			deselect_all:SizeToContents()
-			function deselect_all:Paint(w, h)
-				if self:IsHovered() and not self:IsDown() then
-	            	self:SetColor(Color(0, 127, 255, 255))
-	            elseif self:IsDown() then
-	            	self:SetColor(Color(63, 190, 255, 255))
-	            else
-	                self:SetColor(Color(255, 255, 255))
-	            end
-				styling.draw_main_background(0, 0, w, h)
-			end
-			function deselect_all:DoClick()
-				for _,check in pairs(_checks) do
-					check:SetValue(false)
-				end
-			end
-
-			local select_visl = vgui.Create("DButton", btn2panel)
-			select_visl:SetText("Select all VISL")
-			select_visl:Dock(LEFT)
-			select_visl:SizeToContents()
-			function select_visl:Paint(w, h)
-				if self:IsHovered() and not self:IsDown() then
-	            	self:SetColor(Color(0, 127, 255, 255))
-	            elseif self:IsDown() then
-	            	self:SetColor(Color(63, 190, 255, 255))
-	            else
-	                self:SetColor(Color(255, 255, 255))
-	            end
-				styling.draw_main_background(0, 0, w, h)
-			end
-			function select_visl:DoClick()
-				for _,check in pairs(_checks) do
-					if check:GetText():sub(0,4) == "VISL" then
-						check:SetValue(true)
-					end
-				end
-			end
-
-			local select_phys = vgui.Create("DButton", btn2panel)
-			select_phys:SetText("Select all PHYS")
-			select_phys:Dock(LEFT)
-			select_phys:SizeToContents()
-			function select_phys:Paint(w, h)
-				if self:IsHovered() and not self:IsDown() then
-	            	self:SetColor(Color(0, 127, 255, 255))
-	            elseif self:IsDown() then
-	            	self:SetColor(Color(63, 190, 255, 255))
-	            else
-	                self:SetColor(Color(255, 255, 255))
-	            end
-				styling.draw_main_background(0, 0, w, h)
-			end
-			function select_phys:DoClick()
-				for _,check in pairs(_checks) do
-					if check:GetText():sub(0,4) == "PHYS" then
-						check:SetValue(true)
-					end
-				end
-			end
-
-			local select_itrc = vgui.Create("DButton", btn2panel)
-			select_itrc:SetText("Select all INTC")
-			select_itrc:Dock(LEFT)
-			select_itrc:SizeToContents()
-			function select_itrc:Paint(w, h)
-				if self:IsHovered() and not self:IsDown() then
-	            	self:SetColor(Color(0, 127, 255, 255))
-	            elseif self:IsDown() then
-	            	self:SetColor(Color(63, 190, 255, 255))
-	            else
-	                self:SetColor(Color(255, 255, 255))
-	            end
-				styling.draw_main_background(0, 0, w, h)
-			end
-			function select_itrc:DoClick()
-				for _,check in pairs(_checks) do
-					if check:GetText():sub(0,4) == "INTC" then
-						check:SetValue(true)
-					end
-				end
-			end
-
-			local btnpanel = frame:Add("DPanel")
-			btnpanel:Dock(BOTTOM)
-			function btnpanel:Paint() end
-
-			local confirm = vgui.Create("DButton", btnpanel)
-			confirm:Dock(RIGHT)
-			confirm:SetText("")
-			confirm:SetSize(20, 20)
-			confirm:SetImage("icon16/accept.png")
-			confirm.Paint = nil
-			function confirm:DoClick()
-				preset["CUST/Author"] = LocalPlayer():Name()
-				local_presets:GetChildren()[#local_presets:GetChildren()]:Remove()
-				local_presets:GetChildren()[#local_presets:GetChildren()-1]:Remove()
-				local_presets:GetChildren()[#local_presets:GetChildren()-2]:Remove()
-				local m = 0
-				for k,v in SortedPairs(presets) do m = tonumber(k:sub(1, 3)) end
-				mk_selector(textarea:GetValue(), preset, string.format("%03d-%s", m+1, textarea:GetValue()))
-				presets[string.format("%03d-%s", m+1, textarea:GetValue())] = preset
-				file.Write("gwater2/presets.txt", util.TableToJSON(presets))
-				mk_save_btn()
-				frame:Close()
-				_util.emit_sound("select_ok")
-			end
-
-			local deny = vgui.Create("DButton", btnpanel)
-			deny:Dock(LEFT)
-			deny:SetText("")
-			deny:SetSize(20, 20)
-			deny:SetImage("icon16/cross.png")
-			deny.Paint = nil
-			function deny:DoClick()
-				frame:Close()
-				_util.emit_sound("select_deny")
-			end
-
-			_util.emit_sound("confirm")
-		end
-
-		local_presets:SetTall(local_presets:GetChildren()[1]:GetTall() * #local_presets:GetChildren())
-	end
-	mk_save_btn()
-	return tab
+    local_presets:SetTall(0)
+    for name,preset in SortedPairs(presets) do
+        button_functions.create_preset(local_presets, name:sub(5), preset, false)
+    end
+    local_presets:SetTall(local_presets:GetTall()-20)
 end
 
 return {presets_tab=presets_tab}
