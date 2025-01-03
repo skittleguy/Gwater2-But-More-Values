@@ -510,12 +510,13 @@ void FlexSolver::enable_diffuse(bool enabled) {
 }
 
 // Initializes a solver in a FleX library
-FlexSolver::FlexSolver(NvFlexLibrary* library, int particles) {
+FlexSolver::FlexSolver(NvFlexLibrary* library, int particles, int diffuse_particles) {
 	if (library == nullptr) return;		// Panic
+	if (particles <= 0 || diffuse_particles <= 0) return;	// ^
 
 	NvFlexSetSolverDescDefaults(&solver_description);
 	solver_description.maxParticles = particles;
-	solver_description.maxDiffuseParticles = particles;
+	solver_description.maxDiffuseParticles = diffuse_particles;
 
 	this->library = library;
 	solver = NvFlexCreateSolver(library, &solver_description);

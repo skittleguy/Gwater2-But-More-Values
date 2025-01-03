@@ -152,6 +152,6 @@ public:
 	void disable_bounds();
 	void enable_diffuse(bool enabled);
 
-	FlexSolver(NvFlexLibrary* library, int particles);
+	FlexSolver(NvFlexLibrary* library, int particles, int diffuse_particles);
 	~FlexSolver();
 };

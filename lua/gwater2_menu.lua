@@ -7,7 +7,7 @@ gwater2.VERSION = "0.6b"
 local just_closed = false
 
 gwater2.options = gwater2.options or {
-	solver = FlexSolver(1000), -- that 2D-solver is available to everyone
+	solver = FlexSolver(1000, 1), -- that 2D-solver is available to everyone
 	blur_passes = CreateClientConVar("gwater2_blur_passes", "3", true),
 	absorption = CreateClientConVar("gwater2_absorption", "1", true),
 	depth_fix = CreateClientConVar("gwater2_depth_fix", "0", true),
@@ -68,7 +68,6 @@ end)
 gwater2.options.solver:SetParameter("gravity", 15.24)	-- flip gravity because y axis positive is down
 gwater2.options.solver:SetParameter("static_friction", 0)	-- stop adhesion sticking to front and back walls
 gwater2.options.solver:SetParameter("dynamic_friction", 0)	-- ^
-gwater2.options.solver:SetParameter("diffuse_threshold", math.huge)	-- no diffuse particles allowed in preview
 
 -- regen radius defaults, as it is scaled in the preview
 gwater2.options.solver:SetParameter("radius", 13)

@@ -866,7 +866,7 @@ LUA_FUNCTION(FLEXSOLVER_GetMaxDiffuseParticles) {
 	LUA->CheckType(1, FLEXSOLVER_METATABLE);
 	FlexSolver* flex = GET_FLEXSOLVER(1);
 
-	LUA->PushNumber(flex->get_max_particles());
+	LUA->PushNumber(flex->get_max_diffuse_particles());
 	return 1;
 }
 
@@ -984,9 +984,15 @@ LUA_FUNCTION(FLEXRENDERER_DrawCloth) {
 // must be freed from memory
 LUA_FUNCTION(NewFlexSolver) {
 	LUA->CheckNumber(1);
-	if (LUA->GetNumber(1) <= 0) LUA->ThrowError("Max Particles must be a positive number!");
 
-	FlexSolver* flex = new FlexSolver(FLEX_LIBRARY, LUA->GetNumber(1));
+	int max_particles = LUA->GetNumber(1);
+	if (max_particles <= 0) LUA->ThrowError("Max Particles must be a positive number!");
+
+	int max_diffuse_particles = LUA->GetNumber(2);
+	if (LUA->GetType(2) != Type::Number) max_diffuse_particles = max_particles;
+	if (max_diffuse_particles <= 0) LUA->ThrowError("Max Diffuse Particles must be a positive number!");
+
+	FlexSolver* flex = new FlexSolver(FLEX_LIBRARY, max_particles, max_diffuse_particles);
 	LUA->PushUserType(flex, FLEXSOLVER_METATABLE);
 	LUA->PushMetaTable(FLEXSOLVER_METATABLE);	// Add our meta functions
 	LUA->SetMetaTable(-2);
