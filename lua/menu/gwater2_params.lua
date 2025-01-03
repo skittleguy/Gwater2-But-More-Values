@@ -48,7 +48,7 @@ local parameters = {
 		["007-Timescale"] = {
 			min=0,
 			max=2,
-			decimals=2,
+			decimals=3,
 			type="scratch"
 		}
 	},

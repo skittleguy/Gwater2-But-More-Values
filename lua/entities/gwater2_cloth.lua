@@ -7,7 +7,6 @@ ENT.Base = "base_point"
 
 local xyz = {
 	Vector(50, 50),
-	Vector(100, 100),
 	Vector(200, 200)
 }
 

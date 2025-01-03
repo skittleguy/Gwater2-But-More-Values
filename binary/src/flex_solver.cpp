@@ -21,14 +21,14 @@ void FlexBuffers::destroy() {
 
 // don't ask
 void FlexSolver::reset_diffuse() {
-	hosts.diffuse_count = (int*)NvFlexMap(buffers.diffuse_count, eNvFlexMapWait);
-	NvFlexUnmap(buffers.diffuse_count);
+	
+	//NvFlexGetDiffuseParticles(solver, buffers.diffuse_pos, buffers.diffuse_vel, buffers.diffuse_count);
+	hosts.diffuse_pos = (Vector4D*)NvFlexMap(buffers.diffuse_pos, eNvFlexMapWait);
+	memset(hosts.diffuse_pos, 0, sizeof(Vector4D) * get_active_diffuse());
+	NvFlexUnmap(buffers.diffuse_pos);
 
 	NvFlexSetDiffuseParticles(solver, buffers.diffuse_pos, buffers.diffuse_vel, 0);
-	
-	hosts.diffuse_count = (int*)NvFlexMap(buffers.diffuse_count, eNvFlexMapWait);
 	hosts.diffuse_count[0] = 0;
-	NvFlexUnmap(buffers.diffuse_count);
 }
 
 //int diff = Max(n - copy_description->elementCount, 0);
@@ -70,7 +70,7 @@ int FlexSolver::get_active_triangles() {
 }
 
 int FlexSolver::get_active_diffuse() {
-	return hosts.diffuse_count[0];
+	return diffuse_enabled ? hosts.diffuse_count[0] : 0;
 }
 
 int FlexSolver::get_max_particles() {
