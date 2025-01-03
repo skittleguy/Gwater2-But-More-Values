@@ -1026,7 +1026,6 @@ LUA_FUNCTION(NewFlexRenderer) {
 	return 1;
 }
 
-// TODO: REMOVE!!!
 LUA_FUNCTION(GWATER2_SET_CONTACTS) {
 	LUA->CheckNumber(1);	// index
 	LUA->CheckNumber(2);	// contacts

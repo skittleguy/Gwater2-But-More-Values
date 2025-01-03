@@ -306,10 +306,12 @@ Credits
 This tab has a list of all people who helped in development of GWater 2 directly or indirectly.
 
 The Patron list is sorted in alphabetical order and will be updated routinely until release.
+
+All revenue generated from this project goes directly to my college fund. Thanks so much guys :)
 ]]
 
 "gwater2.menu.Credits.text"=[[
-v-------------------- Developers --------------------v
+v------------------ Developers ------------------v
 
 Meetric      | Creator of GWater2
 googer       | Entire menu, adv water gun, Wiremod support, Transporter
@@ -325,8 +327,6 @@ AndrewEathan | GWater1 entities
 Nvidia       | FleX library
 
 v-------------------- Patrons --------------------v
-
-All revenue generated from this project goes directly to my college fund. Thanks so much guys :)
 ]]
 
 "gwater2.menu.Parameters.Physics Parameters"=[[
