@@ -6,14 +6,23 @@
 
 // DYNAMIC: "FLASHLIGHTSHADOWS"			"0..1" 
 
+/*
+	I am very new to GPU archetecture and shader optimization.
+
+	Please for your own sake, do not copy or reference any of this file. 
+	This is genuinely the most garbage piece of code I've ever written
+*/
+
 #include "common_flashlight_fxc.h"
 #include "shader_constant_register_map.h" 
+//#include "common_vertexlitgeneric_dx9.h"
 
-float2 SCR_S		: register(c0);
-float RADIUS		: register(c1);
-float IOR 			: register(c2);
-float REFLECTANCE 	: register(c3);
-float4 COLOR2		: register(c4);
+float2 SCR_S			: register(c0);
+float RADIUS			: register(c1);
+float IOR 				: register(c2);
+float REFLECTANCE 		: register(c3);
+float4 COLOR2			: register(c4);
+float3 cAmbientCube[6]	: register(c5);
 
 PixelShaderLightInfo cLightInfo[3]			: register(PSREG_LIGHT_INFO_ARRAY); // c20 - c25, 2 registers each - 6 registers total (4th light spread across w's)
 const float4 g_ShadowTweaks					: register(c26); // PSREG_ENVMAP_TINT__SHADOW_TWEAKS is supposed to be c2, we're using that already, so use c26 instead
@@ -63,13 +72,31 @@ float3 do_flashlight(PS_INPUT i, float3 normal) {
 	float3 diffuse = float3(0, 0, 0);
 	float4 flashlightSpacePosition = mul(float4(i.pos, 1.0f), g_FlashlightWorldToTexture);
 	if (flashlightSpacePosition.z > 0) {
-		DoSpecularFlashlight(g_FlashlightPos, i.pos, flashlightSpacePosition, normal,
-			g_FlashlightAttenuationFactors.xyz, g_FlashlightAttenuationFactors.w,
-			FlashlightSampler, ShadowDepthSampler, NormalizeRandRotSampler, FLASHLIGHTDEPTHFILTERMODE, FLASHLIGHTSHADOWS, true, i.P * SCR_S,
-			SpecularExponent, -i.view_dir, false, FRAMEBUFFER, 0, g_ShadowTweaks,
+		DoSpecularFlashlight(
+			g_FlashlightPos,
+			i.pos, 
+			flashlightSpacePosition, 
+			normal,
+			g_FlashlightAttenuationFactors.xyz, 
+			g_FlashlightAttenuationFactors.w,
+			FlashlightSampler, 
+			ShadowDepthSampler, 
+			NormalizeRandRotSampler, 
+			FLASHLIGHTDEPTHFILTERMODE, 
+			FLASHLIGHTSHADOWS, 
+			true, 
+			i.P * SCR_S,
+			SpecularExponent, 
+			-i.view_dir, 
+			false, 
+			FRAMEBUFFER, 
+			0, 
+			g_ShadowTweaks,
 
 			// These two values are output
-			diffuse, reflected);
+			diffuse, 
+			reflected
+		);
 	}
 
 	#if OPAQUE
@@ -120,9 +147,30 @@ float3 do_cubemap(PS_INPUT i, float3 normal) {
 	#endif
 }
 
-// not accurate!
-float3 do_diffuse(float3 normal) {
-	return COLOR2.xyz * (dot(normal, SUN_DIR) * 0.4 + 0.6);
+float3 do_diffuse(PS_INPUT i, float3 normal) {
+	return COLOR2.xyz * (dot(normal, SUN_DIR) * 0.4 + 0.6);	// not accurate!
+
+	// include "common_vertexlitgeneric_dx9.h" to use
+	// may cause seizures
+	/*return COLOR2.xyz * pow(PixelShaderDoLighting(
+		i.pos, 
+		normal,
+		float3( 0.0f, 0.0f, 0.0f ), 
+		false, 
+		true, 
+		i.lightAtten,
+		cAmbientCube, 
+		NormalizeRandRotSampler, 
+		NUM_LIGHTS, 
+		cLightInfo, 
+		true,
+
+		// These are dummy parameters:
+		false, 
+		1.0f,
+		false, 
+		NormalizeRandRotSampler //supposed to be BaseTextureSampler?
+	), 1 / 2.2);*/
 }
 
 float3 do_refraction(PS_INPUT i, float3 normal) {
@@ -153,7 +201,7 @@ float4 main(PS_INPUT i) : COLOR {
 
 	// Final lighting calculations
 	#if OPAQUE
-		return final_output(do_diffuse(smoothed_normal) + do_specular(i, smoothed_normal));
+		return final_output(do_diffuse(i, smoothed_normal) + do_specular(i, smoothed_normal));
 
 	#else // Translucent
 		// incorrect fresnel calculation, but looks better

@@ -309,7 +309,7 @@ The Patron list is sorted in alphabetical order and will be updated routinely un
 ]]
 
 "gwater2.menu.Credits.text"=[[
-v-------------------- Credits --------------------v
+v-------------------- Developers --------------------v
 
 Meetric      | Creator of GWater2
 googer       | Entire menu, adv water gun, Wiremod support, Transporter

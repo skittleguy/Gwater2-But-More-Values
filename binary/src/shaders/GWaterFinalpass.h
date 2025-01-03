@@ -65,9 +65,6 @@ SHADER_DRAW {
 		pShaderShadow->EnableTexture(SHADER_SAMPLER0, true);	// Smoothed normals texture
 		pShaderShadow->EnableTexture(SHADER_SAMPLER1, true);	// Screen texture
 		pShaderShadow->EnableTexture(SHADER_SAMPLER2, true);	// Cubemap
-		//if (g_pHardwareConfig->GetHDRType() != HDR_TYPE_NONE) {
-			//pShaderShadow->EnableSRGBRead(SHADER_SAMPLER2, true);	// Doesn't seem to do anything?
-		//}
 		pShaderShadow->EnableTexture(SHADER_SAMPLER3, true);	// Depth
 
 		int nShadowFilterMode = 0;
@@ -120,6 +117,7 @@ SHADER_DRAW {
 		pShaderAPI->SetPixelShaderConstant(2, &ior);
 		pShaderAPI->SetPixelShaderConstant(3, &reflectance);
 		pShaderAPI->SetPixelShaderConstant(4, color2_normalized);
+		pShaderAPI->SetPixelShaderStateAmbientLightCube(5, false);
 
 		/*
 		CMatRenderContextPtr pRenderContext(materials);
