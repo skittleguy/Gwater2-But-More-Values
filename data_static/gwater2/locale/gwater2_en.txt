@@ -518,7 +518,7 @@ Swimming Parameters
 ]]
 
 "gwater2.menu.Visuals.Diffuse Threshold"=[[
-Diffuse Threshold
+Foam Threshold
 ]]
 
 "gwater2.menu.Visuals.Diffuse Threshold.desc"=[[
@@ -546,7 +546,7 @@ Controls the maximum visual size that particles are allowed to stretch between p
 ]]
 
 "gwater2.menu.Visuals.Diffuse Lifetime"=[[
-Diffuse Lifetime
+Foam Lifetime
 ]]
 
 "gwater2.menu.Visuals.Diffuse Lifetime.desc"=[[
@@ -586,7 +586,7 @@ Making this value 0 will turn off stretching.
 ]]
 
 "gwater2.menu.Visuals.Color Value Multiplier"=[[
-Color Value Multiplier
+Brightness
 ]]
 
 "gwater2.menu.Visuals.Color Value Multiplier.desc"=[[
