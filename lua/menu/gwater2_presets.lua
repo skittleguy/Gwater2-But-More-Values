@@ -32,6 +32,7 @@ local default_presets = {
 		["PHYS/Cohesion"]=0.45,
 		["PHYS/Adhesion"]=0.15,
 		["PHYS/Viscosity"]=1,
+        ["PHYS/Radius"]=2,
 		["PHYS/Surface Tension"]=0,
 		["PHYS/Fluid Rest Distance"]=0.55,
 		["CUST/Master Reset"]=true,
@@ -154,7 +155,7 @@ function gwater2.options.read_preset(preset)
 			return {k, v}
 		end
 	end
-    
+
 	if type == "B64-PI" then
 		local p = util.Decompress(util.Base64Decode(preset))
 		local pd = p:Split("\0")

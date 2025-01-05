@@ -161,6 +161,11 @@ end
 -- collisions will lerp from positions they were at a long time ago if no particles have been initialized for a while
 local no_lerp = false
 
+-- should this entity collide with water?
+local function should_collide(ent)	
+	return ent:GetCollisionGroup() != COLLISION_GROUP_WORLD and bit.band(ent:GetSolidFlags(), FSOLID_NOT_SOLID) == 0
+end
+
 gwater2 = {
 	solver = FlexSolver(100000),
 	renderer = FlexRenderer(),
@@ -188,7 +193,7 @@ gwater2 = {
 
 				gwater2.solver:SetColliderPos(index, ent:GetPos(), no_lerp)
 				gwater2.solver:SetColliderAng(index, ent:GetAngles(), no_lerp)
-				gwater2.solver:SetColliderEnabled(index, ent:GetCollisionGroup() != COLLISION_GROUP_WORLD and bit.band(ent:GetSolidFlags(), FSOLID_NOT_SOLID) == 0)
+				gwater2.solver:SetColliderEnabled(index, should_collide(ent))
 			else
 				-- horrible code for proper ragdoll collision. Still breaks half the time. Fuck source
 				local bone_index = ent:TranslatePhysBoneToBone(rep)
@@ -211,11 +216,11 @@ gwater2 = {
 					return 
 				end
 
-				local should_collide = ent:GetCollisionGroup() != COLLISION_GROUP_WORLD and bit.band(ent:GetSolidFlags(), FSOLID_NOT_SOLID) == 0
+				local collisions_enabled = should_collide(ent)
 				if ent:IsPlayer() then
-					gwater2.solver:SetColliderEnabled(index, should_collide and ent:GetNW2Bool("GWATER2_COLLISION", true))
+					gwater2.solver:SetColliderEnabled(index, collisions_enabled and ent:GetNW2Bool("GWATER2_COLLISION", true))
 				else
-					gwater2.solver:SetColliderEnabled(index, should_collide)
+					gwater2.solver:SetColliderEnabled(index, collisions_enabled)
 				end
 			end
 		end
@@ -329,7 +334,10 @@ timer.Create("gwater2_calcdiffusesound", 0.1, 0, function()
 	-- multiplayer water-player interactions
 	if lp:IsListenServerHost() then
 		for _, ply in player.Iterator() do
-			local particles_in_radius = gwater2.solver:GetParticlesInRadius(ply:GetPos() + ply:OBBCenter() / 2, gwater2.solver:GetParameter("fluid_rest_distance") * 3)
+			local particles_in_radius = 0
+			if should_collide(ply) then
+				particles_in_radius = gwater2.solver:GetParticlesInRadius(ply:GetPos() + ply:OBBCenter() / 2, gwater2.solver:GetParameter("fluid_rest_distance") * 3)
+			end
 
 			GWATER2_SET_CONTACTS(	-- defined by C++ module
 				ply:EntIndex(), 
