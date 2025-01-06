@@ -32,7 +32,6 @@ local blur_scale = CreateClientConVar("gwater2_blur_scale", "1", true)
 
 local debug_absorption = CreateClientConVar("gwater2_debug_absorption", "0", false)
 local debug_normals = CreateClientConVar("gwater2_debug_normals", "0", false)
-local debug_blur = CreateClientConVar("gwater2_debug_blur", "0", false)
 local debug_mipmap = CreateClientConVar("gwater2_debug_mipmap", "0", false)
 
 -- sets up a lighting origin in sourceengine
@@ -225,7 +224,6 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	local dbg = 0
 	if debug_absorption:GetBool() then render.DrawTextureToScreenRect(cache_absorption, ScrW() * 0.75, (ScrH() / 4) * dbg, ScrW() / 4, ScrH() / 4); dbg = dbg + 1 end
 	if debug_normals:GetBool() then render.DrawTextureToScreenRect(cache_normals, ScrW() * 0.75, (ScrH() / 4) * dbg, ScrW() / 4, ScrH() / 4); dbg = dbg + 1 end
-	if debug_blur:GetBool() then render.DrawTextureToScreenRect(cache_blur, ScrW() * 0.75, (ScrH() / 4) * dbg, ScrW() / 4, ScrH() / 4); dbg = dbg + 1 end
 	if debug_mipmap:GetBool() then render.DrawTextureToScreenRect(cache_mipmap, ScrW() * 0.75, (ScrH() / 4) * dbg, ScrW() / 4, ScrH() / 4); dbg = dbg + 1 end
 
 	--render.DrawTextureToScreenRect(cache_absorption, 0, 0, ScrW() / 4, ScrH() / 4)

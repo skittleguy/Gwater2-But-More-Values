@@ -674,11 +674,6 @@ local developer = {
 		func = function(val) GetConVar("gwater2_debug_absorption"):SetBool(val) return true end,
 		setup = function(check) check:SetValue(GetConVar("gwater2_debug_absorption"):GetBool()) end
 	},
-	["029-Show blur debug"] = {
-		type="check",
-		func = function(val) GetConVar("gwater2_debug_blur"):SetBool(val) return true end,
-		setup = function(check) check:SetValue(GetConVar("gwater2_debug_blur"):GetBool()) end
-	},
 	["030-Show mipmap debug"] = {
 		type="check",
 		func = function(val) GetConVar("gwater2_debug_mipmap"):SetBool(val) return true end,
