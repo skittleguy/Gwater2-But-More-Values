@@ -989,14 +989,6 @@ diffuse_drag
 показывать текстуру поглощения.
 ]]
 
-"gwater2.menu.Developer.Show blur debug"=[[
-Показывать дебаг сглаживания
-]]
-
-"gwater2.menu.Developer.Show blur debug.desc"=[[
-показывать текстуру сглаживания.
-]]
-
 "gwater2.menu.Developer.Show mipmap debug"=[[
 Показывать дебаг мип-карт
 ]]

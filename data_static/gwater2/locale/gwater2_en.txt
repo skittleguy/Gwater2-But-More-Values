@@ -1002,14 +1002,6 @@ Show absorption debug
 show absorption debug texture.
 ]]
 
-"gwater2.menu.Developer.Show blur debug"=[[
-Show blur debug
-]]
-
-"gwater2.menu.Developer.Show blur debug.desc"=[[
-show blur debug texture.
-]]
-
 "gwater2.menu.Developer.Show mipmap debug"=[[
 Show mipmap debug
 ]]

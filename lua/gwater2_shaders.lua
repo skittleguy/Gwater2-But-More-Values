@@ -197,6 +197,7 @@ hook.Add("VRMod_Start", "gwater2_vrmodsupport", function(ply)
 end)
 
 -- gwater2 shader pipeline
+local vrmod_material = Material("models/wireframe")
 hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky3d)	--PreDrawViewModels
 	if sky3d then return end	-- dont render in skybox
 	if gwater2.solver:GetActiveParticles() < 1 then return end
@@ -207,6 +208,16 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 		if mirrors == 0 and render.GetRenderTarget() then return end
 		gwater2.renderer:BuildMeshes(gwater2.solver, 0.25, true)
 	end
+
+	do_cloth()
+
+	-- vrmod is fucked. do this for now
+	if vrmod and vrmod.IsPlayerInVR(LocalPlayer()) then
+		render.SetMaterial(vrmod_material)
+		gwater2.renderer:DrawWater()
+		
+		return 
+	end
 	
 	-- Clear render targets
 	render.ClearRenderTarget(cache_normals, Color(0, 0, 0, 0))
@@ -214,7 +225,6 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	render.ClearRenderTarget(cache_absorption, Color(0, 0, 0, 0))
 	render.ClearRenderTarget(cache_blur, Color(0, 0, 0, 0))
 
-	do_cloth()
 	do_absorption()
 	do_diffuse_inside()
 	do_normals()
