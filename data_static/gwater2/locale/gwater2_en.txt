@@ -313,8 +313,8 @@ All revenue generated from this project goes directly to my college fund. Thanks
 "gwater2.menu.Credits.text"=[[
 v------------------ Developers ------------------v
 
-Meetric      | Creator of GWater2
-googer       | Entire menu, adv water gun, Wiremod support, Transporter
+Meetric      | Main Developer
+googer       | Menu rewrite, adv water gun, Wiremod support, Transporter
 jn           | Water-player interactions, Forcefield entity
 Xenthio      | Diffuse and lighting improvements, VVIS culling
 MyUsername   | Linux help
