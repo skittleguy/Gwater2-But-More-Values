@@ -98,10 +98,10 @@ If you wish to compile it yourself, simply follow these steps.
 4. Now, build the project like normal.
 
 > [!TIP]
-> If you need help with compiling, feel free to look at the github workflkow source code
+> If you need help with compiling, feel free to look at the github workflow source code
 
 > [!NOTE]
-> By default, this repo builds for the x86-64 branch of GMod. If you wish to compile for the main branch, you will need to remove the gmcommon submodule and *recursively* re-clone the main branch version found here https://github.com/danielga/garrysmod_common
+> By default, this repo builds for the x86-64 branch of GMod. If you wish to compile for the main branch, you will need to remove the gmcommon submodule and *recursively* re-clone the main branch version, found here https://github.com/danielga/garrysmod_common
 
 > [!CAUTION]
 > Although Linux builds successfully, it throws errors during runtime, which I do not know how to fix. (pls help)\
