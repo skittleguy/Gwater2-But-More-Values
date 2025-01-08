@@ -1,28 +1,39 @@
 # GWater2 [![made with - mee++](https://img.shields.io/badge/made_with-mee%2B%2B-2ea44f)](https://)
 
-## Table of Contents
+# Table of Contents
 - [Overview](#overview)
 - [Features](#features)
 - [Requirements](#requirements)
 - [Installation](#installation-steps)
 - [Technical Details](#technical-details)
-- [Compilation](#compilation-steps)
+- [Compilation](#compilation)
 - [Credits](#credits)
 - [Extras](#extras)
 
-## Overview
-**GWater2** Is a fluid simulation mod for Garry's Mod. It adds the ability to spawn and create a multitude of different fluids that flow in real time.\
+# Overview
+**GWater2** Is a fluid simulation mod for Garry's Mod. It adds the ability to spawn and create a multitude of different liquids that flow in real time.\
 Due to the complex nature of simulating and rendering fluid dynamics, the backend of this mod requires a binary module. See [Technical Details](#technical-details) for more information.
 
 Installation steps can be found [here](#installation-steps)
 
-## Features
-**GWater2** comes with a bunch of SWEPs and Entities to mess with, and a menu to change fluid behavior.
+# Features
+**GWater2** comes with a bunch of SWEPs and Entities to mess with, and a menu to change fluid behavior.\
 Multiplayer is supported, and menu options (fluid parameters) are synced.
+
+- Cloth
+- Reaction Forces
+- Swimming
+- Foam / bubbles
+- Surface Smoothing
+- Multiplayer support
+- SENTs / Entities
+- Menu
+	- lots of options and preset saving
+- Sound
 
 TODO
 
-## Requirements
+# Requirements
 > [!IMPORTANT]
 > In order to run **GWater2** you MUST have a DirectX11 capable graphics card
 
@@ -51,20 +62,52 @@ If this is all gibberish to you, essentially any graphics card manufactured late
 | Linux   | Any | Intel  | ❔ |
 | MacOS   | Any | Mac    | ❔ |
 
-## Installation Steps
+# Installation Steps
 TODO
 
-## Technical details
-Unlike most other Garry's mod addons, **GWater2** uses a binary module. Although powerful, the default GLua API isn't able to do everything required to simulate and render fluid dynamics.
-Backend particle physics is calculated via [Nvidia FleX](https://github.com/NVIDIAGameWorks/FleX). A GPU accelerated particle system for liquids.
+# Technical details
+Unlike most other Garry's mod addons, **GWater2** uses a binary module. The GLua API, although powerful, isn't able to do everything required to simulate and render fluid dynamics.\
+Backend particle physics is calculated via [Nvidia FleX](https://github.com/NVIDIAGameWorks/FleX), a GPU accelerated particle system for liquids.\
 Custom shaders were created in HLSL, compiled using [ShaderCompile](https://github.com/SCell555/ShaderCompile), and are injected during runtime.
 
 TODO
 
-### Compilation steps
-TODO
+# Compilation
+This repository is set up with a [github actions](https://github.com/meetric1/gwater2/actions/workflows/windows.yml), which automatically compiles new modules for you.\
+Feel free to download new module versions from there
 
-## Credits
+If you wish to compile it yourself, simply follow these steps.
+1. *Recursively* clone this repository into your desired folder. (`git clone https://github.com/meetric1/gwater2 --recursive`)
+	> [!WARNING]
+	>  This repo is quite large (upwards of 1 gb), as it includes some submodules needed for compilation
+2. Download [premake5](https://premake.github.io/download)
+	- If you are on Windows, add the executable to PATH or copy it into this repositories ./binary directory 
+		- If copied correctly, premake5.exe should be in the same folder as premake5.lua
+	- On Linux, you should just be able to install it via your package manager. If that doesn't work, just download it directly, chmod the executable, and place it into ./binary
+3. CD into the repository ./binary directory and run `premake5` and your desired build system. 
+	- I use Visual Studio 2022, so I would run `premake5 vs2022`
+	- Linux users would run `premake5 gmake`
+	- [List of supported build systems](https://premake.github.io/docs/Using-Premake#using-premake-to-generate-project-files)
+		- I am honestly unsure how new your build system needs to be. I'd personally just make sure to use vs2015 or later
+		> [!CAUTION]
+		> Extremely new versions of visual studio may cause errors during compilation. This can be fixed by manually altering the gmcommon source code or by using vs2019
+4. Now, build the project like normal.
+
+> [!TIP]
+> If you need help with compiling, feel free to look at the github workflkow source code
+
+> [!NOTE]
+> By default, this repo builds for the x86-64 branch of GMod. If you wish to compile for the main branch, you will need to remove the gmcommon submodule and *recursively* re-clone the main branch version
+> Found here https://github.com/danielga/garrysmod_common
+
+> [!NOTE]
+> Linux ONLY builds for 64 bit, since it is the only version supported by FleX
+
+> [!IMPORTANT]
+> Although Linux builds successfully, it throws errors during runtime, which I do not know how to fix (pls help)
+> See https://github.com/meetric1/gwater2/issues/1 for more information
+
+# Credits
 - Meetric      | Main Developer
 - googer       | Menu rewrite, adv water gun, Wiremod support, Transporter
 - jn           | Water-player interactions, Forcefield entity
@@ -79,5 +122,5 @@ TODO
 - Kodya        | Swimming code
 - Nvidia       | FleX library
 
-## Extras
+# Extras
 Please consider checking out [Gelly](https://github.com/gelly-gmod/gelly), another GMod fluid addon made in parallel alongside **GWater2**
