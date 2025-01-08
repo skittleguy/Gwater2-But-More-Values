@@ -21,9 +21,9 @@ Multiplayer is supported, and menu options (fluid parameters) are synced.
 
 ## Requirements
 > [!IMPORTANT]
-> In order to run **GWater2** You must have a DirectX11 capable graphics card
+> In order to run **GWater2** You MUST have a DirectX11 capable graphics card
 
-Capable cards include:
+A capable card must have:
 `Nvidia Driver version 396.45` (or higher)
 OR
 `AMD Software version 16.9.1` (or higher)
@@ -33,10 +33,10 @@ OR
 If this is all gibberish to you, essentially any graphics card manufactured later than 2012 will work just fine.
 
 ### Supported systems
-✅ = Fully Supported
-⚠️ = Half Supported (Must be ran under proton)
-❌ = Not supported
-❔ = Untested
+✅ = Fully Supported__
+⚠️ = Half Supported (Must be ran under proton)__
+❌ = Not supported__
+❔ = Untested__
 
 | OS | GMod Branch | GPU | Supported |
 | --- | --- | --- | --- |
@@ -59,19 +59,19 @@ Custom shaders were created in HLSL, compiled using [ShaderCompile](https://gith
 TODO: add more technical info
 
 ## Credits
-- Meetric      | Main Developer
-- googer       | Menu rewrite, adv water gun, Wiremod support, Transporter
-- jn           | Water-player interactions, Forcefield entity
-- Xenthio      | Diffuse and lighting improvements, VVIS culling
-- MyUsername   | Linux help
-- Stickrpg     | Reaction force sigs
-- Mikey        | StarfallEx API
-- Joka         | Water gun icon
-- Spanky       | Particle stretching code
-- PotatoOS     | Quaternion math
-- AndrewEathan | GWater1 entities
-- Kodya        | Swimming code
-- Nvidia       | FleX library
+| Meetric      | Main Developer |
+| googer       | Menu rewrite, adv water gun, Wiremod support, Transporter |
+| jn           | Water-player interactions, Forcefield entity |
+| Xenthio      | Diffuse and lighting improvements, VVIS culling |
+| MyUsername   | Linux help |
+| Stickrpg     | Reaction force sigs |
+| Mikey        | StarfallEx API |
+| Joka         | Water gun icon |
+| Spanky       | Particle stretching code |
+| PotatoOS     | Quaternion math |
+| AndrewEathan | GWater1 entities |
+| Kodya        | Swimming code |
+| Nvidia       | FleX library |
 
 ## Extras
 Please consider checking out [Gelly](https://github.com/gelly-gmod/gelly), another GMod fluid addon made in parallel alongside **GWater2**
