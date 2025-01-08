@@ -121,7 +121,7 @@ Spanky       | Particle stretching code
 PotatoOS     | Quaternion math
 AndrewEathan | GWater1 entities
 Kodya        | Swimming code
-Nvidia       | FleX library
+Patrons      | Generously supporting my work :)
 ```
 
 # Extras
