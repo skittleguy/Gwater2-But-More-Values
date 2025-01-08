@@ -96,7 +96,9 @@ If you wish to compile it yourself, simply follow these steps.
 	- [List of supported build systems](https://premake.github.io/docs/Using-Premake#using-premake-to-generate-project-files)
 		- I am honestly unsure how new your build system needs to be. I'd personally just make sure to use vs2015 or later
 4. Now, build the project like normal.
-
+   - On Windows, open the .sln file, go to the top taskbar, Build -> Build Solution
+   - On Linux, run `make config=release_x86_64`
+   
 > [!TIP]
 > If you need help with compiling, feel free to look at the github workflow source code
 
