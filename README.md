@@ -6,6 +6,7 @@
 - [Requirements](#requirements)
 - [Installation](#installation-steps)
 - [Technical Details](#technical-details)
+- [Compilation](#compilation-steps)
 - [Credits](#credits)
 - [Extras](#extras)
 
@@ -23,7 +24,7 @@ TODO
 
 ## Requirements
 > [!IMPORTANT]
-> In order to run **GWater2** You MUST have a DirectX11 capable graphics card
+> In order to run **GWater2** you MUST have a DirectX11 capable graphics card
 
 A capable card must have:\
 `Nvidia Driver version 396.45` (or higher)\
@@ -58,6 +59,9 @@ Unlike most other Garry's mod addons, **GWater2** uses a binary module. Although
 Backend particle physics is calculated via [Nvidia FleX](https://github.com/NVIDIAGameWorks/FleX). A GPU accelerated particle system for liquids.
 Custom shaders were created in HLSL, compiled using [ShaderCompile](https://github.com/SCell555/ShaderCompile), and are injected during runtime.
 
+TODO
+
+### Compilation steps
 TODO
 
 ## Credits
