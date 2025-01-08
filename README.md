@@ -10,7 +10,7 @@
 - [Extras](#extras)
 
 ## Overview
-***GWater2** Is a fluid simulation mod for Garry's Mod. It adds the ability to spawn and create a multitude of different fluids that flow in real time.
+**GWater2** Is a fluid simulation mod for Garry's Mod. It adds the ability to spawn and create a multitude of different fluids that flow in real time.
 Due to the complex nature of simulating and rendering fluid dynamics, the backend of this mod requires a binary module. See [Technical Details](#technical-details) for more information.
 
 Installation steps can be found [here](#installation-steps)
@@ -20,8 +20,10 @@ Installation steps can be found [here](#installation-steps)
 Multiplayer is supported, and menu options (fluid parameters) are synced.
 
 ## Requirements
-[!IMPORTANT]
-In order to run **GWater2** You must have a DirectX11 capable graphics card with:
+> [!IMPORTANT]
+> In order to run **GWater2** You must have a DirectX11 capable graphics card
+
+Capable cards include:
 `Nvidia Driver version 396.45` (or higher)
 OR
 `AMD Software version 16.9.1` (or higher)
