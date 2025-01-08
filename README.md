@@ -79,19 +79,19 @@ Feel free to download new module versions from there
 > [!WARNING]
 >  This repo is quite large (upwards of 1 gb), as it includes some submodules needed for compilation
 
-> [!CAUTION]
+> [!WARNING]
 > Extremely new versions of visual studio may cause errors during compilation. This can be fixed by manually altering the gmcommon source code or by using vs2019
 
 If you wish to compile it yourself, simply follow these steps.
 1. *Recursively* clone this repository into your desired folder. 
-	- (`git clone https://github.com/meetric1/gwater2 --recursive`)
+	- Example command: `git clone https://github.com/meetric1/gwater2 --recursive`
 2. Download [premake5](https://premake.github.io/download)
 	- If you are on Windows, add the executable to PATH or copy it into this repositories ./binary directory 
 		- If copied correctly, premake5.exe should be in the same folder as premake5.lua
 	- On Linux, you should just be able to install it via your package manager. If that doesn't work, just download it directly, chmod the executable, and place it into ./binary
 3. CD into the repositories ./binary directory and run `premake5` with your desired build system. 
 	- I use Visual Studio 2022, so I would do `premake5 vs2022`
-	- Linux users would do `premake5 gmake`
+	- Linux users would do `./premake5 gmake`
 	- [List of supported build systems](https://premake.github.io/docs/Using-Premake#using-premake-to-generate-project-files)
 		- I am honestly unsure how new your build system needs to be. I'd personally just make sure to use vs2015 or later
 4. Now, build the project like normal.
@@ -102,27 +102,26 @@ If you wish to compile it yourself, simply follow these steps.
 > [!NOTE]
 > By default, this repo builds for the x86-64 branch of GMod. If you wish to compile for the main branch, you will need to remove the gmcommon submodule and *recursively* re-clone the main branch version found here https://github.com/danielga/garrysmod_common
 
-> [!NOTE]
-> Linux ONLY builds for 64 bit, since it is the only version supported by FleX
-
 > [!CAUTION]
-> Although Linux builds successfully, it throws errors during runtime, which I do not know how to fix (pls help)
+> Although Linux builds successfully, it throws errors during runtime, which I do not know how to fix (pls help)\
 > See https://github.com/meetric1/gwater2/issues/1 for more information
 
 # Credits
-- Meetric      | Main Developer
-- googer       | Menu rewrite, adv water gun, Wiremod support, Transporter
-- jn           | Water-player interactions, Forcefield entity
-- Xenthio      | Diffuse and lighting improvements, VVIS culling
-- MyUsername   | Linux help
-- Stickrpg     | Reaction force sigs
-- Mikey        | StarfallEx API
-- Joka         | Water gun icon
-- Spanky       | Particle stretching code
-- PotatoOS     | Quaternion math
-- AndrewEathan | GWater1 entities
-- Kodya        | Swimming code
-- Nvidia       | FleX library
+```
+Meetric      | Main Developer
+googer       | Menu rewrite, adv water gun, Wiremod support, Transporter
+jn           | Water-player interactions, Forcefield entity
+Xenthio      | Diffuse and lighting improvements, VVIS culling
+MyUsername   | Linux help
+Stickrpg     | Reaction force sigs
+Mikey        | StarfallEx API
+Joka         | Water gun icon
+Spanky       | Particle stretching code
+PotatoOS     | Quaternion math
+AndrewEathan | GWater1 entities
+Kodya        | Swimming code
+Nvidia       | FleX library
+```
 
 # Extras
 Please consider checking out [Gelly](https://github.com/gelly-gmod/gelly), another GMod fluid addon made in parallel alongside **GWater2**
