@@ -1,6 +1,6 @@
 # GWater2 [![made with - mee++](https://img.shields.io/badge/made_with-mee%2B%2B-2ea44f)](https://)
 
-## Table Of Contents
+## Table of Contents
 - [Overview](#overview)
 - [Features](#features)
 - [Requirements](#requirements)
@@ -10,14 +10,16 @@
 - [Extras](#extras)
 
 ## Overview
-**GWater2** Is a fluid simulation mod for Garry's Mod. It adds the ability to spawn and create a multitude of different fluids that flow in real time.
+**GWater2** Is a fluid simulation mod for Garry's Mod. It adds the ability to spawn and create a multitude of different fluids that flow in real time.\
 Due to the complex nature of simulating and rendering fluid dynamics, the backend of this mod requires a binary module. See [Technical Details](#technical-details) for more information.
 
 Installation steps can be found [here](#installation-steps)
 
 ## Features
-**GWater2** comes with a bunch of SWEPs and Entities to mess with, and a menu to change fluid behavior (default key = G).
+**GWater2** comes with a bunch of SWEPs and Entities to mess with, and a menu to change fluid behavior.
 Multiplayer is supported, and menu options (fluid parameters) are synced.
+
+TODO
 
 ## Requirements
 > [!IMPORTANT]
@@ -28,7 +30,7 @@ A capable card must have:\
 OR\
 `AMD Software version 16.9.1` (or higher)\
 OR\
-`Intel® Graphics version 15.33.43.4425` (or higher)\
+`Intel® Graphics version 15.33.43.4425` (or higher)
 
 If this is all gibberish to you, essentially any graphics card manufactured later than 2012 will work just fine.
 
@@ -36,7 +38,7 @@ If this is all gibberish to you, essentially any graphics card manufactured late
 ✅ = Fully Supported\
 ⚠️ = Half Supported (Must be ran under proton)\
 ❌ = Not supported\
-❔ = Untested\
+❔ = Untested
 
 | OS | GMod Branch | GPU | Supported |
 | --- | --- | --- | --- |
@@ -56,7 +58,7 @@ Unlike most other Garry's mod addons, **GWater2** uses a binary module. Although
 Backend particle physics is calculated via [Nvidia FleX](https://github.com/NVIDIAGameWorks/FleX). A GPU accelerated particle system for liquids.
 Custom shaders were created in HLSL, compiled using [ShaderCompile](https://github.com/SCell555/ShaderCompile), and are injected during runtime.
 
-TODO: add more technical info
+TODO
 
 ## Credits
 - Meetric      | Main Developer
