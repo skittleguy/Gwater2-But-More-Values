@@ -2,7 +2,7 @@
 ![waterflowing](https://github.com/user-attachments/assets/80888b54-62a9-47fa-9ca1-fae9a6ae453f)
 
 **GWater2** Is a fluid simulation mod for Garry's Mod. It adds the ability to spawn and create a multitude of different liquids that flow in real time.\
-Due to the complex nature of simulating and rendering fluid dynamics, the backend of this mod requires a binary module. See [Technical Details](#technical-details) for more information.
+Due to the complex nature of simulating and rendering fluid dynamics, the backend of this mod requires a binary module. 
 
 Installation steps can be found [here](#installation)
 
@@ -11,7 +11,6 @@ Installation steps can be found [here](#installation)
 - [Features](#features)
 - [Requirements](#requirements)
 - [Installation](#installation)
-- [Technical Details](#technical-details)
 - [Compilation](#compilation)
 - [Credits](#credits)
 - [Extras](#extras)
@@ -65,13 +64,14 @@ If this is all gibberish to you, essentially any graphics card manufactured late
 # Installation
 TODO
 
+<!--
 # Technical details
 Unlike most other Garry's mod addons, **GWater2** uses a binary module. The GLua API, although impressive, isn't powerful enough to simulate and render fluid dynamics.
 
 Backend particle physics is calculated via [Nvidia FleX](https://github.com/NVIDIAGameWorks/FleX), a GPU accelerated particle system for liquids.\
 Custom shaders were created in HLSL, compiled using [ShaderCompile](https://github.com/SCell555/ShaderCompile), and are injected during runtime.
 
-TODO
+TODO-->
 
 # Compilation
 This repository is set up with a [github actions](https://github.com/meetric1/gwater2/actions), which automatically compiles new modules for you.\
