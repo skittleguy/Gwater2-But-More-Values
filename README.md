@@ -1,7 +1,11 @@
 # GWater2 [![made with - mee++](https://img.shields.io/badge/made_with-mee%2B%2B-2ea44f)](https://)
+**GWater2** Is a fluid simulation mod for Garry's Mod. It adds the ability to spawn and create a multitude of different liquids that flow in real time.\
+Due to the complex nature of simulating and rendering fluid dynamics, the backend of this mod requires a binary module. See [Technical Details](#technical-details) for more information.
+
+Installation steps can be found [here](#installation)
 
 # Table of Contents
-- [Overview](#overview)
+- [Overview](#gwater2)
 - [Features](#features)
 - [Requirements](#requirements)
 - [Installation](#installation)
@@ -9,12 +13,6 @@
 - [Compilation](#compilation)
 - [Credits](#credits)
 - [Extras](#extras)
-
-# Overview
-**GWater2** Is a fluid simulation mod for Garry's Mod. It adds the ability to spawn and create a multitude of different liquids that flow in real time.\
-Due to the complex nature of simulating and rendering fluid dynamics, the backend of this mod requires a binary module. See [Technical Details](#technical-details) for more information.
-
-Installation steps can be found [here](#installation)
 
 # Features
 **GWater2** comes with a bunch of SWEPs and Entities to mess with, and a menu to change fluid behavior.\
@@ -66,14 +64,15 @@ If this is all gibberish to you, essentially any graphics card manufactured late
 TODO
 
 # Technical details
-Unlike most other Garry's mod addons, **GWater2** uses a binary module. The GLua API, although powerful, isn't able to do everything required to simulate and render fluid dynamics.\
+Unlike most other Garry's mod addons, **GWater2** uses a binary module. The GLua API, although impressive, isn't powerful enough to simulate and render fluid dynamics.
+
 Backend particle physics is calculated via [Nvidia FleX](https://github.com/NVIDIAGameWorks/FleX), a GPU accelerated particle system for liquids.\
 Custom shaders were created in HLSL, compiled using [ShaderCompile](https://github.com/SCell555/ShaderCompile), and are injected during runtime.
 
 TODO
 
 # Compilation
-This repository is set up with a [github actions](https://github.com/meetric1/gwater2/actions/workflows/windows.yml), which automatically compiles new modules for you.\
+This repository is set up with a [github actions](https://github.com/meetric1/gwater2/actions), which automatically compiles new modules for you.\
 Feel free to download new module versions from there
 
 > [!WARNING]
@@ -103,7 +102,7 @@ If you wish to compile it yourself, simply follow these steps.
 > By default, this repo builds for the x86-64 branch of GMod. If you wish to compile for the main branch, you will need to remove the gmcommon submodule and *recursively* re-clone the main branch version found here https://github.com/danielga/garrysmod_common
 
 > [!CAUTION]
-> Although Linux builds successfully, it throws errors during runtime, which I do not know how to fix (pls help)\
+> Although Linux builds successfully, it throws errors during runtime, which I do not know how to fix. (pls help)\
 > See https://github.com/meetric1/gwater2/issues/1 for more information
 
 # Credits
