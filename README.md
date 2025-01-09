@@ -10,7 +10,7 @@ Installation steps can be found [here](#installation)
 - [Overview](#gwater2)
 - [Features](#features)
 - [Requirements](#requirements)
-- [Installation](#supported-systems)	<!-- centers screen on installation steps -->
+- [Installation](#installation)
 - [Compilation](#compilation)
 - [Credits](#credits)
 - [Extras](#extras)
@@ -80,19 +80,9 @@ If this is all gibberish to you, essentially any graphics card manufactured late
 | MacOS   | Any | Mac    | ❔ |
 
 # Installation
-### For Windows (Installer):
-1. Subscribe to the workshop item, and close the game
-2. Go to the releases tab, and download the .bat installer
-3. Run it. Type 1 to install
-4. TODO
 
-### For Windows (Manual, if installer fails)
-1. Subscribe to the workshop item, and close the game
-2. TODO
-
-### For Linux:
-1. Native Linux currently does not work. See [Compilation](#compilation) for more information
-2. For now, use proton and follow the Windows installation steps
+### For Normal Users:
+1. Go to the [releases tab](https://github.com/meetric1/gwater2/releases) and read the instructions
 
 ### For Developers:
 1. cd to `GarrysMod/garrysmod/addons/`
@@ -173,6 +163,7 @@ PotatoOS     | Quaternion math
 AndrewEathan | GWater1 entities
 Kodya        | Swimming code
 Patrons      | Generously supporting my work :)
+Nvidia       | FleX Particle Library
 ```
 
 # Extras
