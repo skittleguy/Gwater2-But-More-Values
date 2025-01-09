@@ -80,24 +80,25 @@ If this is all gibberish to you, essentially any graphics card manufactured late
 | MacOS   | Any | Mac    | ❔ |
 
 # Installation
-- For Windows (Installer):
-	1. Subscribe to the workshop item, and close the game
-	2. Go to the releases tab, and download the .bat installer
-	3. Run it. Type 1 to install
+### For Windows (Installer):
+1. Subscribe to the workshop item, and close the game
+2. Go to the releases tab, and download the .bat installer
+3. Run it. Type 1 to install
+4. TODO
 
-- For Windows (Manual, if installer fails)
-	1. Subscribe to the workshop item, and close the game
-	2. TODO
+### For Windows (Manual, if installer fails)
+1. Subscribe to the workshop item, and close the game
+2. TODO
 
-- For Linux:
-	1. Native Linux currently does not work. See [Compilation](#compilation) for more information
-	2. For now, use proton and follow the Windows installation steps
+### For Linux:
+1. Native Linux currently does not work. See [Compilation](#compilation) for more information
+2. For now, use proton and follow the Windows installation steps
 
-- For Developers:
-	1. cd to `GarrysMod/garrysmod/addons/`
-	2. run `git clone https://github.com/meetric1/gwater2` in a terminal.
-	3. Unsubscribe to the workshop version if you have it installed
-	4. If you wish to work on the C++, make sure to clone recursively. See [Compilation](#compilation) for more info
+### For Developers:
+1. cd to `GarrysMod/garrysmod/addons/`
+2. run `git clone https://github.com/meetric1/gwater2` in a terminal.
+3. Unsubscribe to the workshop version if you have it installed
+4. If you wish to work on the C++, make sure to clone recursively. See [Compilation](#compilation) for more info
 
 <!--
 # Technical details
@@ -142,7 +143,7 @@ If you wish to compile it yourself, simply follow these steps.
 > If you need help with compiling, feel free to look at the github workflow source code
 
 > [!NOTE]
-> By default, this repo builds for the x86-64 branch of GMod. If you wish to compile for the main branch, you will need to remove the gmcommon submodule and *recursively* re-clone the main branch version, found [here](https://github.com/danielga/garrysmod_common)\
+> By default, this repo builds for the x86-64 branch of GMod. If you wish to compile for the main branch, you will need to remove the gmcommon submodule and *recursively* re-clone the main branch version, found [here](https://github.com/danielga/garrysmod_common).\
 > After that, you will need to add a preprocessor definition, `GMOD_MAIN`. This can be done in visual studio by going to the project properties -> Preprocessor -> Preprocessor Definitions
 
 >[!NOTE]
