@@ -379,6 +379,8 @@ Viscosity
 Controls how much particles resist movement.
 
 Higher values look more like honey or syrup, while lower values look like water or oil.
+
+This parameter will make liquid sound goopier
 ]]
 
 "gwater2.menu.Parameters.Radius"=[[

@@ -10,7 +10,7 @@ Installation steps can be found [here](#installation)
 - [Overview](#gwater2)
 - [Features](#features)
 - [Requirements](#requirements)
-- [Installation](#installation)
+- [Installation](#supported-systems)	<!-- centers screen on installation steps -->
 - [Compilation](#compilation)
 - [Credits](#credits)
 - [Extras](#extras)
@@ -19,18 +19,36 @@ Installation steps can be found [here](#installation)
 **GWater2** comes with a bunch of SWEPs and Entities to mess with, and a menu to change fluid behavior.\
 Multiplayer is supported, and menu options (fluid parameters) are synced.
 
-- Cloth
-- Reaction Forces
-- Swimming
-- Foam / bubbles
-- Surface Smoothing
+Features include:
+- The fastest fluid rendering achieved inside sourceengine
+- Reaction Forces (Water can force objects around)
+- Swimming / player interactions with liquids
+- Liquid sounds
+- Foam & bubble particles
 - Multiplayer support
-- SENTs / Entities
-- Menu
-	- lots of options and preset saving
-- Sound
-
-TODO
+- Spawnable dynamic cloth
+- Custom menu, with:
+	- Multiplayer syncing
+	- Lots of options and settings to mess with
+	- preset saving
+- Custom SWEPs, including:
+	- Water gun, modeled by me
+	- Part the seas, now you can roleplay as moses!
+	- Advanced water gun (courtesy of googer_)
+- Custom SENTs, including:
+	- Black hole (forcefield)
+	- Bluetooth host
+	- Spawnable cubes
+	- Spawnable spheres
+	- Spawnable cloth
+	- Drain (removes water)
+	- Emitter
+	- Forcefield
+	- Mentos with cola (from GWater1)
+	- Rain Emitter (minature rainclouds)
+	- Shower head (another emitter)
+	- Transmuter (turns entities into water)
+	- Transporter
 
 # Requirements
 > [!IMPORTANT]
@@ -62,7 +80,22 @@ If this is all gibberish to you, essentially any graphics card manufactured late
 | MacOS   | Any | Mac    | ❔ |
 
 # Installation
-TODO
+- For Windows (Installer):
+	1. Go to the releases tab, and download the .bat installer
+	2. Run it. Type 1 to install
+
+- For Windows (Manual, if installer fails)
+	1. TODO
+
+- For Linux:
+	1. Native Linux currently does not work. See [Compilation](#compilation) for more information
+	2. For now, use proton and follow the Windows installation steps
+
+- For Developers (DEVELOPERS ONLY):
+	1. cd to `GarrysMod/garrysmod/addons/`
+	2. run `git clone https://github.com/meetric1/gwater2` in a terminal.
+	3. Unsubscribe to the workshop version if you have it installed
+	4. If you wish to work on the C++, make sure to clone recursively. See [Compilation](#compilation) for more info
 
 <!--
 # Technical details
@@ -75,7 +108,9 @@ TODO-->
 
 # Compilation
 This repository is set up with a [github actions](https://github.com/meetric1/gwater2/actions), which automatically compiles new modules for you.\
-Feel free to download new module versions from there
+Feel free to download new module versions from there.
+
+Compiled modules should go in `GarrysMod/garrysmod/lua/bin`.
 
 > [!WARNING]
 >  This repo is quite large (upwards of 1 gb), as it includes some submodules needed for compilation
@@ -98,12 +133,15 @@ If you wish to compile it yourself, simply follow these steps.
 4. Now, build the project like normal.
    - On Windows, open the .sln file, go to the top taskbar, Build -> Build Solution
    - On Linux, run `make config=release_x86_64`
-   
+
 > [!TIP]
 > If you need help with compiling, feel free to look at the github workflow source code
 
 > [!NOTE]
 > By default, this repo builds for the x86-64 branch of GMod. If you wish to compile for the main branch, you will need to remove the gmcommon submodule and *recursively* re-clone the main branch version, found here https://github.com/danielga/garrysmod_common
+
+>[!NOTE]
+> Linux builds end in `.dll`. __THIS IS INTENTIONAL!__ Blame Garry for the weird syntax
 
 > [!CAUTION]
 > Although Linux builds successfully, it throws errors during runtime, which I do not know how to fix. (pls help)\
