@@ -215,7 +215,7 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	if vrmod and vrmod.IsPlayerInVR(LocalPlayer()) then
 		render.SetMaterial(vrmod_material)
 		gwater2.renderer:DrawWater()
-		
+
 		return 
 	end
 	

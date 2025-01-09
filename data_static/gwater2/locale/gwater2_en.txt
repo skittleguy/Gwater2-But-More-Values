@@ -112,34 +112,21 @@ Thank you for downloading gwater2 beta! This menu is the interface that you will
 
 Make sure to read the changelog to see what has been updated!
 
-Changelog (v0.6b):
+Changelog (v1.0):
 
-- Added some new Entities and SWEPs
+- Added mirror rendering option to performance setting
 
-- Added sound
+- Fixed potential crashing during particle resets
 
-- Added lighting to diffuse particles
+- "Fixed" VR bricking the gmod renderer
 
-- Added Water gun model
+- Fixed presets saving color improperly
 
-- Added support to custom physobjs (prop resizer)
+- Fixed multiplayer not working on some hardware
 
-- Added Multiplayer support.
-+ Menu sliders are now synced
+- Fixed AdminOnly setting not functioning
 
-- Added nice little particle HUD near top of screen
-
-- Revamped menu. Includes:
-+ multi-lanauge support
-+ QOL settings like player collision toggle
-+ Added presets tab
-+ More menu options
-
-- Added internal linux support. (The module compiles, but Nvidia is really pissy and so far I havent been able to get gwater2 working ingame.)
-
-- Minor optimizations with higher particle limits
-
-- Bugfixes and potential crash fixes
+- Fixed developer tab settings breaking for other clients
 
 ]]
 
