@@ -81,17 +81,19 @@ If this is all gibberish to you, essentially any graphics card manufactured late
 
 # Installation
 - For Windows (Installer):
-	1. Go to the releases tab, and download the .bat installer
-	2. Run it. Type 1 to install
+	1. Subscribe to the workshop item, and close the game
+	2. Go to the releases tab, and download the .bat installer
+	3. Run it. Type 1 to install
 
 - For Windows (Manual, if installer fails)
-	1. TODO
+	1. Subscribe to the workshop item, and close the game
+	2. TODO
 
 - For Linux:
 	1. Native Linux currently does not work. See [Compilation](#compilation) for more information
 	2. For now, use proton and follow the Windows installation steps
 
-- For Developers (DEVELOPERS ONLY):
+- For Developers:
 	1. cd to `GarrysMod/garrysmod/addons/`
 	2. run `git clone https://github.com/meetric1/gwater2` in a terminal.
 	3. Unsubscribe to the workshop version if you have it installed
@@ -107,6 +109,8 @@ Custom shaders were created in HLSL, compiled using [ShaderCompile](https://gith
 TODO-->
 
 # Compilation
+
+### Module compilation
 This repository is set up with a [github actions](https://github.com/meetric1/gwater2/actions), which automatically compiles new modules for you.\
 Feel free to download new module versions from there.
 
@@ -138,7 +142,8 @@ If you wish to compile it yourself, simply follow these steps.
 > If you need help with compiling, feel free to look at the github workflow source code
 
 > [!NOTE]
-> By default, this repo builds for the x86-64 branch of GMod. If you wish to compile for the main branch, you will need to remove the gmcommon submodule and *recursively* re-clone the main branch version, found here https://github.com/danielga/garrysmod_common
+> By default, this repo builds for the x86-64 branch of GMod. If you wish to compile for the main branch, you will need to remove the gmcommon submodule and *recursively* re-clone the main branch version, found here https://github.com/danielga/garrysmod_common\
+> After that, you will need to add a preprocessor definition, `GMOD_MAIN`. This can be done in visual studio by going to the project properties -> Preprocessor -> Preprocessor Definitions
 
 >[!NOTE]
 > Linux builds end in `.dll`. __THIS IS INTENTIONAL!__ Blame Garry for the weird syntax
@@ -146,6 +151,11 @@ If you wish to compile it yourself, simply follow these steps.
 > [!CAUTION]
 > Although Linux builds successfully, it throws errors during runtime, which I do not know how to fix. (pls help)\
 > See https://github.com/meetric1/gwater2/issues/1 for more information
+
+### Shader Compilation
+Custom shaders were created in HLSL (`./binary/src/shaders/hlsl`), and were compiled using [ShaderCompile](https://github.com/SCell555/ShaderCompile).
+
+Documentation on how to compile them can be found here: https://developer.valvesoftware.com/wiki/Shader_Authoring
 
 # Credits
 ```
