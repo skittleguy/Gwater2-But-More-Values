@@ -170,6 +170,7 @@ local function do_finalpass()
 
 	-- Setup water material parameters
 	water:SetFloat("$radius", radius * 1.5)
+	water:SetFloat("$reflectance", blur_passes:GetBool() and 0.7 or 0)
 	water:SetTexture("$normaltexture", cache_normals)
 	water:SetTexture("$depthtexture", cache_absorption)
 	render.SetMaterial(water)
