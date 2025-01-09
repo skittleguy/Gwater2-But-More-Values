@@ -142,11 +142,11 @@ If you wish to compile it yourself, simply follow these steps.
 > If you need help with compiling, feel free to look at the github workflow source code
 
 > [!NOTE]
-> By default, this repo builds for the x86-64 branch of GMod. If you wish to compile for the main branch, you will need to remove the gmcommon submodule and *recursively* re-clone the main branch version, found here https://github.com/danielga/garrysmod_common \
+> By default, this repo builds for the x86-64 branch of GMod. If you wish to compile for the main branch, you will need to remove the gmcommon submodule and *recursively* re-clone the main branch version, found [here](https://github.com/danielga/garrysmod_common)\
 > After that, you will need to add a preprocessor definition, `GMOD_MAIN`. This can be done in visual studio by going to the project properties -> Preprocessor -> Preprocessor Definitions
 
 >[!NOTE]
-> Linux builds end in `.dll`. __THIS IS INTENTIONAL!__ Blame Garry for the weird syntax
+> Linux builds end in `.dll` __THIS IS INTENTIONAL!__ Blame Garry for the weird syntax
 
 > [!CAUTION]
 > Although Linux builds successfully, it throws errors during runtime, which I do not know how to fix. (pls help)\
