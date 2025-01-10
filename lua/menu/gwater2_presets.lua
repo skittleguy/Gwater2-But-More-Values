@@ -125,25 +125,7 @@ function gwater2.options.detect_preset_type(preset)
 			return nil
 		end
 	end
-
-
-	local preset_parts = preset:Split(',')
-
-	if preset_parts[2] == '' and preset_parts[3] ~= nil then
-		if preset_parts[4] == '' and preset_parts[5] ~= nil and preset_parts[5] ~= '' then
-			return "Extension w/ Author"
-		end
-		if preset_parts[4] ~= nil then
-			return nil
-		end
-		return "Extension"
-	end
-	if preset_parts[2] ~= '' and preset_parts[2] ~= nil then
-		if preset_parts[3] ~= nil then
-			return nil
-		end
-		return "CustomPresets"
-	end
+	
 	return nil
 end
 
@@ -191,7 +173,7 @@ local function get_parameter(param)
     })[param:sub(0, 4)]
     if not list_ then return end
     local param_panel = list_[param:sub(6)]
-    if param_panel.mixer then return {param_panel.mixer:GetColor():Unpack()} end
+    if param_panel.mixer then local c = param_panel.mixer:GetColor() return {c.r, c.g, c.b, c.a} end -- GetColor returns color without metatable, damnit
     if param_panel.check then return param_panel.check:GetChecked() end
     if param_panel.slider then return param_panel.slider:GetValue() end
 end
