@@ -1,14 +1,16 @@
+
+(Don't translate this)
 This is the gwater localization file. Everything in this file is added as a language string to gmod.
 Note that the translation cannot be longer than 4000 bytes (1 english character is 1 byte).
-Input format:
-```
-Don't forget to remove the / around the = sign !
-“key_here"/=/[[
-translation here
-]]
-```
-Use decent language, be literate and don't be a barbarian. :)
 
+Input format:
+"key_here"[[
+Your translation here
+]]
+
+Do NOT edit 'key_here'
+
+Use decent language, be literate and don't be a barbarian. :)
 
 ------------------------
 -------- ERRORS --------
@@ -37,7 +39,7 @@ If you are 100%% sure you have installed it correctly, restart the game a few ti
 ]]
 
 "gwater2.error.modulefailedtoload.3"=[[
-Feel free to ask for help if the issue persists. PLEASE provide entire error message, including the upcoming 3 lines when asking for help:
+Feel free to ask for help if the issue persists. PLEASE provide the upcoming 3 lines when asking for help:
 
 Error: %s
 BRANCH: %s
