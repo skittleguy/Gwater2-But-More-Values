@@ -168,14 +168,14 @@ Nvidia       | FleX Particle Library
 The **GWater2** menu supports language localization.\
 If you wish to translate the menu into your native language, clone (or download) this repo, and go to `data_static/gwater2/locale/`\
 Find out your language id by going [here](https://wiki.facepunch.com/gmod/Addon_Localization#supportedlanguages)\
-Then, copy `gwater2_en.txt`, and rename it (for example, spanish would be `gwater2_es-ES.txt`) and start translating.\
+Then, copy `gwater2_en.txt`, and rename it (for example, Spanish would be `gwater2_es-ES.txt`) and start translating.\
 Once done, make a PR here, or make a discussion on the steam page, or DM me on [discord](https://discord.gg/xWvhfargMY)
 
 **Please refrain from using ChatGPT for translations, as it usually messes up sentence inflection**
 
 Thanks to these people for translating the menu into their native language. 
 ```
-Gandzhalex & ebany_v_rot & googer_ | Russian (Русский)
+Gandzhalex & Zeetric & googer_ | Russian (Русский)
 ```
 
 # Extras
