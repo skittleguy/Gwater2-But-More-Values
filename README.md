@@ -4,8 +4,6 @@
 **GWater2** Is a fluid simulation mod for Garry's Mod. It adds the ability to spawn and create a multitude of different liquids that flow in real time.\
 Due to the complex nature of simulating and rendering fluid dynamics, the backend of this mod requires a binary module. 
 
-Installation steps can be found [here](#installation)
-
 # Table of Contents
 - [Overview](#gwater2)
 - [Features](#features)
@@ -30,7 +28,8 @@ Features include:
 - Custom menu, with:
 	- Multiplayer syncing
 	- Lots of options and settings to mess with
-	- preset saving
+	- Preset saving
+	- Language localization support
 - Custom SWEPs, including:
 	- Water gun, modeled by me
 	- Part the seas, now you can roleplay as moses!
@@ -143,8 +142,8 @@ If you wish to compile it yourself, simply follow these steps.
 > Although Linux builds successfully, it throws errors during runtime, which I do not know how to fix. (pls help)\
 > See https://github.com/meetric1/gwater2/issues/1 for more information
 
-### Shader Compilation
-Custom shaders were created in HLSL (`./binary/src/shaders/hlsl`), and were compiled using [ShaderCompile](https://github.com/SCell555/ShaderCompile).
+### Shader compilation
+Custom shaders were created in HLSL, and compiled using [ShaderCompile](https://github.com/SCell555/ShaderCompile).
 
 Documentation on how to compile them can be found here: https://developer.valvesoftware.com/wiki/Shader_Authoring
 
