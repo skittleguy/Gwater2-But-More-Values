@@ -703,8 +703,8 @@ FPS симуляции
 Реакционные силы должны быть включены, чтобы этот параметр работал. 	
 ]]
 
-"gwater2.menu.Interactions.Swimming Parameters"=[[
-Параметры плавания
+"gwater2.menu.Interactions.Water Interactions"=[[
+Взаимодействия жидкости
 ]]
 
 "gwater2.menu.Interactions.Player Interaction"=[[
