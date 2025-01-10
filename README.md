@@ -1,4 +1,5 @@
-# GWater2 [![made with - mee++](https://img.shields.io/badge/made_with-mee%2B%2B-2ea44f)](https://)
+# GWater2 [![made with - mee++](https://img.shields.io/badge/made_with-mee%2B%2B-2ea44f)](https://github.com/meetric1/gwater2)
+[![Not a bug -- A feature](https://forthebadge.com/images/badges/not-a-bug-a-feature.png)](https://github.com/meetric1/gwater2)
 ![waterflowing](https://github.com/user-attachments/assets/80888b54-62a9-47fa-9ca1-fae9a6ae453f)
 
 **GWater2** Is a fluid simulation mod for Garry's Mod. It adds the ability to spawn and create a multitude of different liquids that flow in real time.\
@@ -35,19 +36,17 @@ Features include:
 	- Part the seas, now you can roleplay as moses!
 	- Advanced water gun (courtesy of googer_)
 - Custom SENTs, including:
-	- Black hole (forcefield)
-	- Bluetooth host
-	- Spawnable cubes
-	- Spawnable spheres
-	- Spawnable cloth
+	- Black hole (forcefield variant)
+	- Bluetooth hose
+	- Spawnable liquid cubes, spheres and cloth
 	- Drain (removes water)
-	- Emitter
-	- Forcefield
+	- Emitter (creates water)
+	- Forcefield (forces water around)
 	- Mentos with cola (from GWater1)
 	- Rain Emitter (minature rainclouds)
-	- Shower head (another emitter)
+	- Shower head (smaller emitter)
 	- Transmuter (turns entities into water)
-	- Transporter
+	- Transporter (linked drain and emitter)
 
 # Requirements
 > [!IMPORTANT]
