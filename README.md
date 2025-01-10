@@ -26,7 +26,7 @@ Features include:
 - Foam & bubble particles
 - Multiplayer support
 - Spawnable dynamic cloth
-- Custom menu, with:
+- Custom menu (default key = G), with:
 	- Multiplayer syncing
 	- Lots of options and settings to mess with
 	- Preset saving
