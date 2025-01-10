@@ -770,7 +770,7 @@ FPS симуляции
 ]]
 
 "gwater2.menu.Interactions.MultiplyWalk"=[[
-Множитель скорости ходьбы
+Множитель скорости
 ]]
 
 "gwater2.menu.Interactions.MultiplyWalk.desc"=[[
@@ -778,7 +778,7 @@ FPS симуляции
 ]]
 
 "gwater2.menu.Interactions.MultiplyJump"=[[
-Множитель силы прыжка
+Множитель прыжка
 ]]
 
 "gwater2.menu.Interactions.MultiplyJump.desc"=[[
