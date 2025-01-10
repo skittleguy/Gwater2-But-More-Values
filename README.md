@@ -153,6 +153,7 @@ googer       | Menu rewrite, adv water gun, Wiremod support, Transporter
 jn           | Water-player interactions, Forcefield entity
 Xenthio      | Diffuse and lighting improvements, VVIS culling
 MyUsername   | Linux help
+Kegan	     | Linux help
 Stickrpg     | Reaction force sigs
 Mikey        | StarfallEx API
 Joka         | Water gun icon
