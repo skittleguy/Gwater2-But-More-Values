@@ -45,7 +45,7 @@ goto prompt
 :install
 pushd %gmod_dir%
 echo Downloading gwater2...
-powershell -command [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest 'https://github.com/meetric1/gwater2/releases/download/1.0/gwater2_1.0.zip' -Out gwater2.zip
+powershell -command [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest 'https://github.com/meetric1/gwater2/releases/download/v1.0/gwater2_1.0.zip' -Out gwater2.zip
 
 if not exist gwater2.zip (
 	echo Download failed, Invalid Link

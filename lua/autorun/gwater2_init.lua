@@ -347,14 +347,14 @@ timer.Create("gwater2_calcdiffusesound", 0.1, 0, function()
 	end
 
 	-- sound calculation
-	if gwater2.parameters.sound_volume <= 0 or gwater2.parameters.sound_pitch <= 0 then 
+	soundpatch_water = soundpatch_water or CreateSound(lp, "gwater2/water_loop.wav")
+	soundpatch_goop = soundpatch_goop or CreateSound(lp, "gwater2/paint_loop.wav")
+	
+	if gwater2.solver:GetActiveParticles() <= 0 or gwater2.parameters.sound_volume <= 0 or gwater2.parameters.sound_pitch <= 0 then 
 		soundpatch_water:Stop()
 		soundpatch_goop:Stop()
 		return 
 	end
-
-	soundpatch_water = soundpatch_water or CreateSound(lp, "gwater2/water_loop.wav")
-	soundpatch_goop = soundpatch_goop or CreateSound(lp, "gwater2/paint_loop.wav")
 
 	local percent = gwater2.solver:GetActiveDiffuseParticles() / gwater2.solver:GetMaxDiffuseParticles()
 	if percent > 0.001 then
