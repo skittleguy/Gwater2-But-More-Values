@@ -1,5 +1,4 @@
 # GWater2 [![made with - mee++](https://img.shields.io/badge/made_with-mee%2B%2B-2ea44f)](https://github.com/meetric1/gwater2)
-[![Not a bug -- A feature](https://forthebadge.com/images/badges/not-a-bug-a-feature.png)](https://github.com/meetric1/gwater2)
 ![waterflowing](https://github.com/user-attachments/assets/80888b54-62a9-47fa-9ca1-fae9a6ae453f)
 
 **GWater2** Is a fluid simulation mod for Garry's Mod. It adds the ability to spawn and create a multitude of different liquids that flow in real time.\
