@@ -1,10 +1,26 @@
+This is the gwater localization file. Everything in this file is added as a language string to gmod.
+Note that the translation cannot be longer than 4000 bytes (1 english character is 1 byte).
+Input format:
+```
+Don't forget to remove the / around the = sign !
+“key_here"/=/[[
+translation here
+]]
+```
+Use decent language, be literate and don't be a barbarian. :)
+
+
+------------------------
+-------- ERRORS --------
+------------------------
+
 "gwater2.error.modulenotinstalled"=[[
 !!!PLEASE READ ME!!!
 
 GWATER2 FAILED TO FIND MODULE!
 
-This likely means you did not install the GWater2 dll files.
-Please install the binaries and ensure the gwater2 dlls are in GarrysMod/garrysmod/lua/bin.
+This likely means you did not install the GWater2 DLL files.
+Please install the binaries and ensure the GWater2 DLLs are in GarrysMod/garrysmod/lua/bin.
 Note that GWater2 does NOT natively work on Linux or Mac systems.
 ]]
 
@@ -17,11 +33,11 @@ Please check your installation and restart the game.
 ]]
 
 "gwater2.error.modulefailedtoload.2"=[[
-If you are 100%% sure you have installed it correctly, restart the game a few times. This is a problem with Garry's code and I cannot fix it
+If you are 100%% sure you have installed it correctly, restart the game a few times. This is a problem with Garry's code and I cannot fix it.
 ]]
 
 "gwater2.error.modulefailedtoload.3"=[[
-Feel free to ask for help if the issue persists. PLEASE Provide the upcoming 3 lines when asking for help:
+Feel free to ask for help if the issue persists. PLEASE provide entire error message, including the upcoming 3 lines when asking for help:
 
 Error: %s
 BRANCH: %s
@@ -34,20 +50,28 @@ Failed to load! Please check the Problems menu for more information (ESC menu ->
 
 "gwater2.gun.adv.notloaded"=[[
 GWater2 failed to load!
-Check console for errors
+Check console and Problems menu (ESC menu -> bottom left) for errors
 ]]
 
+------------------------
+------ WATER GUN -------
+------------------------
+
 "gwater2.gun.adv.controls.lclk"=[[
-Left-Click to Spawn Particles
+Left-Click to spawn particles
 ]]
 
 "gwater2.gun.adv.controls.rclk"=[[
-Right-Click to Open Gun Menu
+Right-Click to open gun menu
 ]]
 
 "gwater2.gun.adv.controls.reload"=[[
-Reload to Remove All
+Reload to remove all
 ]]
+
+------------------------
+------- ENTITIES -------
+------------------------
 
 "gwater2.ent.drain.side"=[[
 THIS SIDE
@@ -95,6 +119,21 @@ Particles in queue: %s
 Linked to %s
 ]]
 
+--------------------------------------------
+--------------------------------------------
+----                MENU                ----
+----  This section contains by far the  ----
+---- most amount of translation strings ----
+----  When translating, be careful as   ----
+----   mistakes there are more noticed  ----
+----          by the end user           ----
+--------------------------------------------
+--------------------------------------------
+
+------------------------
+------- TAB INFO -------
+------------------------
+
 "gwater2.menu.title"=[[
 GWater2 (%s)
 ]]
@@ -108,7 +147,7 @@ Welcome to GWater2 (v%s)
 ]]
 
 "gwater2.menu.About Tab.welcome"=[[
-Thank you for downloading gwater2 beta! This menu is the interface that you will be using to control everything about gwater. So get used to it! :D
+Thank you for downloading gwater2! This menu is the interface that you will be using to control everything about gwater. So get used to it! :D
 
 Make sure to read the changelog to see what has been updated!
 
@@ -175,14 +214,6 @@ Performance
 Performance
 ]]
 
-"gwater2.menu.Performance.Physics"=[[
-Physics
-]]
-
-"gwater2.menu.Performance.Visuals"=[[
-Visuals
-]]
-
 "gwater2.menu.Performance.help"=[[
 This tab has options which can help and alter your performance.
 
@@ -237,50 +268,6 @@ Preset tab, load, edit and save any fluids you make.
 Right clicking on a preset will let you delete or copy its information (to be sent to friends if desired)
 ]]
 
-"gwater2.menu.Presets.import_preset"=[[
-Import preset
-]]
-
-"gwater2.menu.Presets.import.paste_here"=[[
-Paste preset here
-]]
-
-"gwater2.menu.Presets.import.detected"=[[
-Detected: %s preset
-]]
-
-"gwater2.menu.Presets.import.bad_data"=[[
-Data is malformed or preset type is unknown.
-]]
-
-"gwater2.menu.Presets.save"=[[
-Save preset
-]]
-
-"gwater2.menu.Presets.save.preset_name"=[[
-Preset name
-]]
-
-"gwater2.menu.Presets.save.include_params"=[[
-Included parameters:
-]]
-
-"gwater2.menu.Presets.copy"=[[
-Copy to clipboard
-]]
-
-"gwater2.menu.Presets.copy.as_json"=[[
-...as JSON
-]]
-
-"gwater2.menu.Presets.copy.as_b64pi"=[[
-...as B64-PI
-]]
-
-"gwater2.menu.Presets.delete"=[[
-Delete
-]]
-
 "gwater2.menu.Credits.title"=[[
 Credits
 ]]
@@ -316,6 +303,10 @@ Nvidia       | FleX library
 
 v-------------------- Patrons --------------------v
 ]]
+
+------------------------
+------ PARAMETERS ------
+------------------------
 
 "gwater2.menu.Parameters.Physics Parameters"=[[
 Physics Parameters
@@ -465,47 +456,9 @@ Controls the volume of the liquid.
 Setting this to 0 will disable water sounds
 ]]
 
-"gwater2.menu.Interactions.Reaction Force Parameters"=[[
-Reaction Force Parameters
-]]
-
-"gwater2.menu.Interactions.Force Buoyancy"=[[
-Force Buoyancy
-]]
-
-"gwater2.menu.Interactions.Force Buoyancy.desc"=[[
-Buoyant force which is applied to props in water.
-
-The implementation is by no means accurate and probably should not be used for prop boats.
-
-Reaction forces must be enabled for this parameter to do anything
-]]
-
-"gwater2.menu.Interactions.Force Dampening"=[[
-Force Dampening
-]]
-
-"gwater2.menu.Interactions.Force Dampening.desc"=[[
-Dampening force applied to props.
-
-Helps a little bit if props tend to bounce on the water surface.
-
-Reaction forces must be enabled for this parameter to do anything
-]]
-
-"gwater2.menu.Interactions.Force Multiplier"=[[
-Force Multiplier
-]]
-
-"gwater2.menu.Interactions.Force Multiplier.desc"=[[
-Determines the amount of force which is applied to props by water.
-
-Reaction forces must be enabled for this parameter to do anything
-]]
-
-"gwater2.menu.Interactions.Swimming Parameters"=[[
-Swimming Parameters
-]]
+------------------------
+------- VISUALS --------
+------------------------
 
 "gwater2.menu.Visuals.Diffuse Threshold"=[[
 Foam Threshold
@@ -527,14 +480,6 @@ The alpha (transparency) channel controls the amount of color absorption.
 An alpha value of 255 (all the way up) will make the fluid opaque.
 ]]
 
-"gwater2.menu.Developer.Anisotropy Max"=[[
-Anisotropy Max
-]]
-
-"gwater2.menu.Developer.Anisotropy Max.desc"=[[
-Controls the maximum visual size that particles are allowed to stretch between particles.
-]]
-
 "gwater2.menu.Visuals.Diffuse Lifetime"=[[
 Foam Lifetime
 ]]
@@ -547,14 +492,6 @@ This is affected by the Timescale parameter.
 Setting this to 0 will spawn no diffuse particles
 ]]
 
-"gwater2.menu.Developer.Anisotropy Min"=[[
-Anisotropy Min
-]]
-
-"gwater2.menu.Developer.Anisotropy Min.desc"=[[
-Controls the minimum visual size that particles can be.
-]]
-
 "gwater2.menu.Visuals.Reflectance"=[[
 Reflectance
 ]]
@@ -563,16 +500,6 @@ Reflectance
 Changes how reflective water is.
 
 Internally this is linked to the IOR (Index Of Refraction).
-]]
-
-"gwater2.menu.Developer.Anisotropy Scale"=[[
-Anisotropy Scale
-]]
-
-"gwater2.menu.Developer.Anisotropy Scale.desc"=[[
-Controls the visual size of stretching between particles.
-
-Making this value 0 will turn off stretching.
 ]]
 
 "gwater2.menu.Visuals.Color Value Multiplier"=[[
@@ -585,36 +512,16 @@ Multiplies the current water color.
 Setting this to anything higher than 1 will make liquid appear to glow.
 ]]
 
-"gwater2.menu.Performance.Blur Passes"=[[
-Blur Passes
+------------------------
+----- PERFORMANCE ------
+------------------------
+
+"gwater2.menu.Performance.Physics"=[[
+Physics
 ]]
 
-"gwater2.menu.Performance.Blur Passes.desc"=[[
-Controls the number of blur passes done per frame. More passes creates a smoother water surface. 0 passes will do no blurring.
-
-Low performance impact.
-]]
-
-"gwater2.menu.Interactions.Player Interaction"=[[
-Player interaction
-]]
-
-"gwater2.menu.Interactions.Player Interaction.desc"=[[
-When enabled, players can physically interact with water.
-
-Enables things like swimming and the walk/jump multipliers
-]]
-
-"gwater2.menu.Interactions.Reaction Forces"=[[
-Prop interaction
-]]
-
-"gwater2.menu.Interactions.Reaction Forces.desc"=[[
-When enabled, water can force props around.
-
-This is by no means accurate and uses some very botched math, so expect instability.
-
-Performance heavy parameter, beefy computer required.
+"gwater2.menu.Performance.Visuals"=[[
+Visuals
 ]]
 
 "gwater2.menu.Performance.Absorption"=[[
@@ -747,6 +654,84 @@ When VRMod is enabled, this setting is set to 1
 (Renders fluid more than once)
 ]]
 
+"gwater2.menu.Performance.Blur Passes"=[[
+Blur Passes
+]]
+
+"gwater2.menu.Performance.Blur Passes.desc"=[[
+Controls the number of blur passes done per frame. More passes creates a smoother water surface. 0 passes will do no blurring.
+
+Low performance impact.
+]]
+
+------------------------
+----- INTERACTIONS -----
+------------------------
+
+"gwater2.menu.Interactions.Reaction Force Parameters"=[[
+Reaction Force Parameters
+]]
+
+"gwater2.menu.Interactions.Force Buoyancy"=[[
+Force Buoyancy
+]]
+
+"gwater2.menu.Interactions.Force Buoyancy.desc"=[[
+Buoyant force which is applied to props in water.
+
+The implementation is by no means accurate and probably should not be used for prop boats.
+
+Reaction forces must be enabled for this parameter to do anything
+]]
+
+"gwater2.menu.Interactions.Force Dampening"=[[
+Force Dampening
+]]
+
+"gwater2.menu.Interactions.Force Dampening.desc"=[[
+Dampening force applied to props.
+
+Helps a little bit if props tend to bounce on the water surface.
+
+Reaction forces must be enabled for this parameter to do anything
+]]
+
+"gwater2.menu.Interactions.Force Multiplier"=[[
+Force Multiplier
+]]
+
+"gwater2.menu.Interactions.Force Multiplier.desc"=[[
+Determines the amount of force which is applied to props by water.
+
+Reaction forces must be enabled for this parameter to do anything
+]]
+
+"gwater2.menu.Interactions.Swimming Parameters"=[[
+Swimming Parameters
+]]
+
+"gwater2.menu.Interactions.Player Interaction"=[[
+Player interaction
+]]
+
+"gwater2.menu.Interactions.Player Interaction.desc"=[[
+When enabled, players can physically interact with water.
+
+Enables things like swimming and the walk/jump multipliers
+]]
+
+"gwater2.menu.Interactions.Reaction Forces"=[[
+Prop interaction
+]]
+
+"gwater2.menu.Interactions.Reaction Forces.desc"=[[
+When enabled, water can force props around.
+
+This is by no means accurate and uses some very botched math, so expect instability.
+
+Performance heavy parameter, beefy computer required.
+]]
+
 "gwater2.menu.Interactions.SwimSpeed"=[[
 Swim Speed
 ]]
@@ -811,6 +796,84 @@ Touch Damage
 How much damage is done while in water.
 
 Negative values will heal you.
+]]
+
+------------------------
+------- PRESETS --------
+------------------------
+
+"gwater2.menu.Presets.import_preset"=[[
+Import preset
+]]
+
+"gwater2.menu.Presets.import.paste_here"=[[
+Paste preset here
+]]
+
+"gwater2.menu.Presets.import.detected"=[[
+Detected: %s preset
+]]
+
+"gwater2.menu.Presets.import.bad_data"=[[
+Data is malformed or preset type is unknown.
+]]
+
+"gwater2.menu.Presets.save"=[[
+Save preset
+]]
+
+"gwater2.menu.Presets.save.preset_name"=[[
+Preset name
+]]
+
+"gwater2.menu.Presets.save.include_params"=[[
+Included parameters:
+]]
+
+"gwater2.menu.Presets.copy"=[[
+Copy to clipboard
+]]
+
+"gwater2.menu.Presets.copy.as_json"=[[
+...as JSON
+]]
+
+"gwater2.menu.Presets.copy.as_b64pi"=[[
+...as B64-PI
+]]
+
+"gwater2.menu.Presets.delete"=[[
+Delete
+]]
+
+------------------------
+----- РАЗРАБОТЧИК ------
+------------------------
+
+"gwater2.menu.Developer.Anisotropy Max"=[[
+Anisotropy Max
+]]
+
+"gwater2.menu.Developer.Anisotropy Max.desc"=[[
+Controls the maximum visual size that particles are allowed to stretch between particles.
+]]
+
+"gwater2.menu.Developer.Anisotropy Min"=[[
+Anisotropy Min
+]]
+
+"gwater2.menu.Developer.Anisotropy Min.desc"=[[
+Controls the minimum visual size that particles can be.
+]]
+
+"gwater2.menu.Developer.Anisotropy Scale"=[[
+Anisotropy Scale
+]]
+
+"gwater2.menu.Developer.Anisotropy Scale.desc"=[[
+Controls the visual size of stretching between particles.
+
+Making this value 0 will turn off stretching.
 ]]
 
 "gwater2.menu.Developer.static_friction"=[[
@@ -1029,6 +1092,10 @@ relaxation_factor
 controls the relaxation factor for global particle interaction. can cause explosions
 ]]
 
+------------------------
+--------- МЕНЮ ---------
+------------------------
+
 "gwater2.menu.Menu.title"=[[
 Menu
 ]]
@@ -1089,6 +1156,10 @@ gwater2_adminonly (0-1)
 IN CONSOLE
 ]]
 
+------------------------
+-------- РАЗНОЕ --------
+------------------------
+
 "gwater2.menu.Fluid Preview.title"=[[
 Fluid Preview
 ]]
@@ -1096,6 +1167,10 @@ Fluid Preview
 "gwater2.menu.Explanation Area.title"=[[
 Explanation Area
 ]]
+
+------------------------
+------ WATER GUN -------
+------------------------
 
 "gwater2.menu.WaterGun.Velocity"=[[
 Particle Velocity
