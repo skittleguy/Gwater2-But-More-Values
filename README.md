@@ -11,6 +11,7 @@ Due to the complex nature of simulating and rendering fluid dynamics, the backen
 - [Installation](#installation)
 - [Compilation](#compilation)
 - [Credits](#credits)
+- [Translating](#translating)
 - [Extras](#extras)
 
 # Features
@@ -114,10 +115,10 @@ If you wish to compile it yourself, simply follow these steps.
 1. *Recursively* clone this repository into your desired folder. 
 	- Example command: `git clone https://github.com/meetric1/gwater2 --recursive`
 2. Download [premake5](https://premake.github.io/download)
-	- If you are on Windows, add the executable to PATH or copy it into this repositories ./binary directory 
+	- If you are on Windows, add the executable to PATH or copy it into this repositories `binary` directory 
 		- If copied correctly, premake5.exe should be in the same folder as premake5.lua
-	- On Linux, you should just be able to install it via your package manager. If that doesn't work, just download it directly, chmod the executable, and place it into ./binary
-3. CD into the repositories ./binary directory and run `premake5` with your desired build system. 
+	- On Linux, you should just be able to install it via your package manager. If that doesn't work, just download it directly, chmod the executable, and place it into `binary`
+3. CD into the repositories `binary` directory and run `premake5` with your desired build system. 
 	- I use Visual Studio 2022, so I would do `premake5 vs2022`
 	- Linux users would do `./premake5 gmake`
 	- [List of supported build systems](https://premake.github.io/docs/Using-Premake#using-premake-to-generate-project-files)
@@ -161,6 +162,20 @@ AndrewEathan | GWater1 entities
 Kodya        | Swimming code
 Patrons      | Generously supporting my work :)
 Nvidia       | FleX Particle Library
+```
+
+# Translating
+The **GWater2** menu supports language localization.\
+If you wish to translate, clone (or download) this repo, and go to `data_static/gwater2/locale/`\
+Find out your language id by doing `gmod_language` in the gmod console.\
+Then, copy `gwater2_en.txt`, rename it `gwater2_<LANGUAGE ID>` and start translating.\
+Once done, make a PR here, make a discussion on the steam page, or DM me on [discord](https://discord.gg/xWvhfargMY)
+
+**Please refrain from using ChatGPT for translations, as it usually messes up sentence inflection**
+
+Thanks to these people for translating the menu into their native language. 
+```
+Gandzhalex & ebany_v_rot & googer_ | Russian (Русский)
 ```
 
 # Extras
