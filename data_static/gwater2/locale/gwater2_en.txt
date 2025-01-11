@@ -274,8 +274,7 @@ All revenue generated from this project goes directly to my college fund. Thanks
 ]]
 
 "gwater2.menu.Credits.text"=[[
-v------------------ Developers ------------------v
-
+v------------+----- Developers ------------------v
 Meetric      | Main Developer
 googer       | Menu rewrite, adv water gun, Wiremod support, Transporter
 jn           | Water-player interactions, Forcefield entity
@@ -289,8 +288,7 @@ PotatoOS     | Quaternion math
 AndrewEathan | GWater1 entities
 Kodya        | Swimming code
 Nvidia       | FleX library
-
-v-------------------- Patrons --------------------v
+v------------+------- Patrons -------------------v
 ]]
 
 ------------------------
@@ -840,7 +838,7 @@ Delete
 ]]
 
 ------------------------
------ РАЗРАБОТЧИК ------
+------ DEVELOPER -------
 ------------------------
 
 "gwater2.menu.Developer.Anisotropy Max"=[[
@@ -1086,7 +1084,7 @@ controls the relaxation factor for global particle interaction. can cause explos
 ]]
 
 ------------------------
---------- МЕНЮ ---------
+--------- MENU ---------
 ------------------------
 
 "gwater2.menu.Menu.title"=[[
