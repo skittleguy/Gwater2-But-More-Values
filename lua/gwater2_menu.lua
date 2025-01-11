@@ -518,7 +518,7 @@ local function create_menu(init)
 				slider:GetParent().dlabel = label
 				_soundpack_label = label
 				label:Dock(BOTTOM)
-				label:SetText(gwater2.options.read_config().menusp)
+				label:SetText(gwater2.options.read_config().menusp or "default")
 				label:SetFont("GWater2Text")
 				slider:GetParent():SetTall(slider:GetParent():GetTall() * 2)
 	        	slider:SetValue(soundpacks[gwater2.options.read_config().menusp])
