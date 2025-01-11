@@ -282,7 +282,7 @@ local function make_parameter_scratch(tab, locale_parameter_name, parameter_name
 	local button = panel:Add("DImageButton")
 	panel.button = button
 	button:Dock(RIGHT)
-	button:SetImage("gwater2/icons/reset.png")
+	button:SetImage("icon16/arrow_refresh.png")
 	button:SizeToContents()
 	button:SetKeepAspect(true)
 	button:SetStretchToFit(false)
@@ -299,8 +299,6 @@ local function make_parameter_scratch(tab, locale_parameter_name, parameter_name
 
 	-- call custom setup function
 	if parameter.setup then parameter.setup(slider) end
-
-	if panel.label.fancycolor then button:SetColor(panel.label.fancycolor) end
 
 	gwater2.options.initialised[parameter_id] = {parameter, slider}
 
@@ -367,7 +365,7 @@ local function make_parameter_color(tab, locale_parameter_name, parameter_name, 
 	local button = panel:Add("DImageButton")
 	panel.button = button
 	button:Dock(RIGHT)
-	button:SetImage("gwater2/icons/reset.png")
+	button:SetImage("icon16/arrow_refresh.png")
 	button:SizeToContents()
 	button:SetKeepAspect(true)
 	button:SetStretchToFit(false)
@@ -377,8 +375,6 @@ local function make_parameter_color(tab, locale_parameter_name, parameter_name, 
 	panel:SizeToContents()
 
 	if parameter.setup then parameter.setup(mixer) end
-
-	if panel.label.fancycolor then button:SetColor(panel.label.fancycolor) end
 
 	gwater2.options.initialised[parameter_id] = {parameter, mixer}
 
@@ -418,7 +414,7 @@ local function make_parameter_check(tab, locale_parameter_name, parameter_name, 
 	local button = panel:Add("DImageButton")
 	panel.button = button
 	button:Dock(RIGHT)
-	button:SetImage("gwater2/icons/reset.png")
+	button:SetImage("icon16/arrow_refresh.png")
 	button:SizeToContents()
 	button:SetKeepAspect(true)
 	button:SetStretchToFit(false)
@@ -433,8 +429,6 @@ local function make_parameter_check(tab, locale_parameter_name, parameter_name, 
 	pcall(check_functions.init_setvalue, panel)
 	-- if we can't get parameter, let's hope .setup() does that for us
 	if parameter.setup then parameter.setup(check) end
-
-	if panel.label.fancycolor then button:SetColor(panel.label.fancycolor) end
 
 	gwater2.options.initialised[parameter_id] = {parameter, check}
 
