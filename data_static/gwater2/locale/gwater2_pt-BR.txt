@@ -164,7 +164,7 @@ Em cada aba, essa area terá informação útil
 Por exemplo:
 Clicando qualquer lugar fora do menu, ou re-apertando o botão do menu irá fechá-lo.
 
-Make sure to read this area!
+Lembre-se de ler essa area!
 ]]
 
 "gwater2.menu.Parameters.title"=[[
