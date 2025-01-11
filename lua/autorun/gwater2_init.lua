@@ -280,8 +280,8 @@ hook.Add("HUDPaint", "gwater2_status", function()
 	end
 	if gwater2.solver:GetActiveParticles() <= 0 and frac >= 1 then return end
 	local text = format_int(gwater2.solver:GetActiveParticles()) .. " / " .. format_int(gwater2.solver:GetMaxParticles())
-	draw.DrawText(text, "CloseCaption_Normal", ScrW()/2+2, 18-18*(1-frac), Color(0, 0, 0, 255*frac), TEXT_ALIGN_CENTER)
-	draw.DrawText(text, "CloseCaption_Normal", ScrW()/2, 16-18*(1-frac), ColorAlpha(color_white, 255*frac), TEXT_ALIGN_CENTER)
+	draw.DrawText(text, "GWater2Text", ScrW()/2+2, 18-18*(1-frac), Color(0, 0, 0, 255*frac), TEXT_ALIGN_CENTER)
+	draw.DrawText(text, "GWater2Text", ScrW()/2, 16-18*(1-frac), ColorAlpha(color_white, 255*frac), TEXT_ALIGN_CENTER)
 
 	last = math.Approach(last, gwater2.solver:GetActiveParticles(), FrameTime()*100000)
 	local part_frac = last / gwater2.solver:GetMaxParticles()

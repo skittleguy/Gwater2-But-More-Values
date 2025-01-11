@@ -342,10 +342,11 @@ function SWEP:PostDrawViewModel(vm, weapon, ply)
 	cam.Start3D2D(pos, ang, 0.03)
 		local frac = gwater2.solver:GetActiveParticles() / gwater2.solver:GetMaxParticles()
 		local text = format_int(gwater2.solver:GetActiveParticles()) .. " / " .. format_int(gwater2.solver:GetMaxParticles())
+		surface.SetFont("GWater2Text")
 		local w,_ = surface.GetTextSize(
 			format_int(gwater2.solver:GetMaxParticles()).." / "..format_int(gwater2.solver:GetMaxParticles()))
-		draw.DrawText(text, "CloseCaption_Normal", 4, -24, Color(0, 0, 0, 255), TEXT_ALIGN_CENTER)
-		draw.DrawText(text, "CloseCaption_Normal", 2, -26, color_white, TEXT_ALIGN_CENTER)
+		draw.DrawText(text, "GWater2Text", 4, -24, Color(0, 0, 0, 255), TEXT_ALIGN_CENTER)
+		draw.DrawText(text, "GWater2Text", 2, -26, color_white, TEXT_ALIGN_CENTER)
 		draw.RoundedBox(8, -w/2, 0, frac*w, 20, Color(255, 255, 255, 255))
 	cam.End3D2D()
 
