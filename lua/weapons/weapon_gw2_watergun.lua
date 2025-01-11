@@ -2,7 +2,7 @@ SWEP.PrintName = "Water Gun"
     
 SWEP.Author = "Meetric" 
 SWEP.Purpose = "Water Gun"
-SWEP.Instructions = "Right Click to spawn water. Left click to spawn BIG water. Reload to reset"
+SWEP.Instructions = "Left Click to spawn water. Right click to spawn BIG water. Reload to reset"
 SWEP.Category = "GWater2" 
 SWEP.DrawAmmo       = true
 SWEP.DrawCrosshair	= true
