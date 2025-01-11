@@ -250,7 +250,7 @@ button_functions = {
                 data = data .. k_ .. "\1" .. v_ .. "\1" .. t_ .. "\2"
             end
             data = data:sub(0, -1)
-            SetClipboardText(util.Base64Encode(util.Compress(data), true))
+            SetClipboardText(util.Base64Encode(util.Compress(data)))
             _util.emit_sound("confirm")
         end)
         clip:AddOption(_util.get_localised("Presets.copy.as_json"), function()
@@ -272,7 +272,6 @@ button_functions = {
         local selector = local_presets:Add("DButton")
         selector:SetText(name.." ("..(preset["CUST/Author"] or _util.get_localised("Presets.author_unknown"))..")")
         selector:Dock(TOP)
-        selector:DockMargin(0, 5, 0, 0)
         selector.Paint = button_functions.paint
         selector.name = name
         selector.preset = preset
@@ -320,38 +319,14 @@ button_functions = {
         local frame = styling.create_blocking_frame()
         frame:SetSize(ScrW()/4, 20*5)
         frame:Center()
-        frame:ShowCloseButton(false)
         local label = frame:Add("DLabel")
         label:Dock(TOP)
         label:SetText(_util.get_localised("Presets.save.preset_name"))
         label:SetFont("GWater2Title")
         local textarea = frame:Add("DTextEntry")
         textarea:Dock(TOP)
-        textarea:SetFont("GWater2Text")
-        textarea:SetValue("")
-
-        function textarea:Paint(w, h)
-            styling.draw_main_background(0, 0, w, h)
-
-            local text = self:GetText()
-            local real = self:GetText()
-
-            local textcolor = Color(255, 255, 255)
-
-            if text:Trim() == "" then
-                text = "PresetName"
-                textcolor = Color(127, 127, 127)
-            end
-
-            if text ~= real then self:SetText(text) self:InvalidateLayout(true) end
-		    if not self:HasFocus() then
-                textcolor.r = textcolor.r - 32
-                textcolor.g = textcolor.g - 32
-                textcolor.b = textcolor.b - 32
-            end
-            self:DrawTextEntryText(textcolor, self:GetHighlightColor(), self:GetCursorColor())
-		    if text ~= real then self:SetText(real) end
-        end
+        textarea:SetFont("GWater2Param")
+        textarea:SetValue("PresetName")
         
         local btnpanel = frame:Add("DPanel")
         btnpanel:Dock(BOTTOM)
@@ -390,15 +365,14 @@ button_functions = {
         local frame = styling.create_blocking_frame()
         frame:SetSize(ScrW()/2, ScrH()/2)
         frame:Center()
-        frame:ShowCloseButton(false)
         local label = frame:Add("DLabel")
         label:Dock(TOP)
         label:SetText(_util.get_localised("Presets.save.preset_name"))
         label:SetFont("GWater2Title")
         local textarea = frame:Add("DTextEntry")
         textarea:Dock(TOP)
-        textarea:SetFont("GWater2Text")
-        textarea:SetValue("")
+        textarea:SetFont("GWater2Param")
+        textarea:SetValue("PresetName")
         local label = frame:Add("DLabel")
         label:Dock(TOP)
         label:SetText(_util.get_localised("Presets.save.include_params"))
@@ -406,60 +380,19 @@ button_functions = {
         local panel = frame:Add("DScrollPanel")
         panel:Dock(FILL)
         panel.Paint = nil
-        styling.define_scrollbar(panel:GetVBar())
-
-        function textarea:Paint(w, h)
-            styling.draw_main_background(0, 0, w, h)
-
-            local text = self:GetText()
-            local real = self:GetText()
-
-            local textcolor = Color(255, 255, 255)
-
-            if text:Trim() == "" then
-                text = "PresetName"
-                textcolor = Color(127, 127, 127)
-            end
-
-            if text ~= real then self:SetText(text) self:InvalidateLayout(true) end
-		    if not self:HasFocus() then
-                textcolor.r = textcolor.r - 32
-                textcolor.g = textcolor.g - 32
-                textcolor.b = textcolor.b - 32
-            end
-            self:DrawTextEntryText(textcolor, self:GetHighlightColor(), self:GetCursorColor())
-		    if text ~= real then self:SetText(real) end
-        end
 
         local preset = {
-            ["CUST/Author"] = LocalPlayer():Name(),
-            ["CUST/Master Reset"] = true
+            ["CUST/Author"] = LocalPlayer():Name()
         }
 
         local do_overwrite = panel:Add("DCheckBoxLabel")
         do_overwrite:SetText("Master Reset (reset all unchecked parameters to default)")
         do_overwrite:Dock(TOP)
-        do_overwrite:SetValue(true)
         function do_overwrite:OnChange(val)
-            _util.emit_sound("toggle")
             if not val then preset['CUST/Master Reset'] = nil return end
+            preset['CUST/Master Reset'] = true
         end
-        function do_overwrite.Button:Paint(w, h)
-            surface.SetDrawColor(0, 0, 0, 125)
-            surface.DrawRect(0, 0, w, h)
-    
-            if panel.washovered then
-                surface.SetDrawColor(Color(187, 245, 255))
-            else
-                surface.SetDrawColor(Color(255, 255, 255))
-            end
-        
-            if self:GetChecked() then
-                surface.DrawRect(3, 3, w-6, h-6)
-            end
-    
-            surface.DrawOutlinedRect(0, 0, w, h)
-        end
+        do_overwrite:SetValue(true)
 
         _parameters = params._parameters
         _visuals = params._visuals
@@ -486,25 +419,8 @@ button_functions = {
             check:Dock(TOP)
             check.param = v
             function check:OnChange(value)
-                _util.emit_sound("toggle")
                 if not value then preset[self.param] = nil return end
                 preset[self.param] = get_parameter(self.param)
-            end
-            function check.Button:Paint(w, h)
-                surface.SetDrawColor(0, 0, 0, 125)
-                surface.DrawRect(0, 0, w, h)
-        
-                if panel.washovered then
-                    surface.SetDrawColor(Color(187, 245, 255))
-                else
-                    surface.SetDrawColor(Color(255, 255, 255))
-                end
-            
-                if self:GetChecked() then
-                    surface.DrawRect(3, 3, w-6, h-6)
-                end
-        
-                surface.DrawOutlinedRect(0, 0, w, h)
             end
         end
 
@@ -595,21 +511,17 @@ button_functions = {
         local frame = styling.create_blocking_frame()
         frame:SetSize(ScrW()/2, ScrH()/2)
         frame:Center()
-        frame:ShowCloseButton(false)
         local label = frame:Add("DLabel")
         label:Dock(TOP)
         label:SetText(_util.get_localised("Presets.import.paste_here"))
         label:SetFont("GWater2Title")
         local textarea = frame:Add("DTextEntry")
         textarea:Dock(FILL)
-        textarea:SetFont("GWater2TextMono")
+        textarea:SetFont("GWater2Param")
         textarea:SetValue("")
         textarea:SetMultiline(true)
         textarea:SetVerticalScrollbarEnabled(true)
         textarea:SetWrap(true)
-        textarea:SetTextColor(Color(255, 255, 255))
-        textarea:SetHighlightColor(Color(0, 63, 127))
-        textarea:SetCursorColor(Color(255, 255, 255))
 
         local btnpanel = frame:Add("DPanel")
         btnpanel:Dock(BOTTOM)
@@ -619,30 +531,7 @@ button_functions = {
         label_detect:SetText("...")
         label_detect:Dock(BOTTOM)
         label_detect:SetTall(label_detect:GetTall()*2)
-        label_detect:SetFont("GWater2Text")
-
-        function textarea:Paint(w, h)
-            styling.draw_main_background(0, 0, w, h)
-
-            local text = self:GetText()
-            local real = self:GetText()
-
-            local textcolor = Color(255, 255, 255)
-
-            if text:Trim() == "" then
-                text = "XQAAAQBqAAAAAAAAAAA8m8sMJEzJD+CML7quBW4ieyP3/vPCaGBR6ECz9pQ50fIcjbaPF0y1FUIDsk+OWvlv9n6G2X73gRe7bJxbgBOtRb3d4xkAj4SpZjBDS+sFRbI5aRg4fLWdLh1lxKqyZBkKahU="
-                textcolor = Color(127, 127, 127)
-            end
-
-            if text ~= real then self:SetText(text) self:InvalidateLayout(true) end
-		    if not self:HasFocus() then
-                textcolor.r = textcolor.r - 32
-                textcolor.g = textcolor.g - 32
-                textcolor.b = textcolor.b - 32
-            end
-            self:DrawTextEntryText(textcolor, self:GetHighlightColor(), self:GetCursorColor())
-		    if text ~= real then self:SetText(real) end
-        end
+        label_detect:SetFont("GWater2Param")
         
         local confirm = vgui.Create("DButton", btnpanel)
         confirm:Dock(RIGHT)
@@ -651,33 +540,21 @@ button_functions = {
         confirm:SetImage("icon16/accept.png")
         confirm.Paint = nil
         function confirm:DoClick()
-            for _,p in ipairs(string.Split(textarea:GetValue(), "\n\n")) do
-                local pd = gwater2.options.read_preset(p)
-                local name, preset = pd[1], pd[2]
-                button_functions.create_preset(local_presets, name, preset)
-            end
+            local pd = gwater2.options.read_preset(textarea:GetValue())
+            local name, preset = pd[1], pd[2]
+            button_functions.create_preset(local_presets, name, preset)
             frame:Close()
             _util.emit_sound("select_ok")
         end
 
         function textarea:OnChange()
-            if textarea:GetValue():Trim() == "" then return label_detect:SetText("...") end
-            local detected = {}
-            local multiple = false
-            for _,p in ipairs(string.Split(textarea:GetValue(), "\n\n")) do
-                if _ > 1 then multiple = true end
-                local type = gwater2.options.detect_preset_type(p)
-                if type == nil then
-                    confirm:SetEnabled(false)
-                    return label_detect:SetText(_util.get_localised("Presets.import.bad_data", _))
-                end
-                if not table.HasValue(detected, type) then
-                    detected[#detected+1] = type
-                end
+            local type = gwater2.options.detect_preset_type(textarea:GetValue())
+            if type == nil then
+                confirm:SetEnabled(false)
+                return label_detect:SetText(_util.get_localised("Presets.import.bad_data"))
             end
-            
             confirm:SetEnabled(true)
-            label_detect:SetText(_util.get_localised("Presets.import.detected"..(multiple and ".multiple" or ""), table.concat(detected, ",")))
+            label_detect:SetText(_util.get_localised("Presets.import.detected", type))
         end
 
         local deny = vgui.Create("DButton", btnpanel)
