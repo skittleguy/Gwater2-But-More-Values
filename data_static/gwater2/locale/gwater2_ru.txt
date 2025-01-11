@@ -799,9 +799,12 @@ FPS симуляции
 "gwater2.menu.Presets.import.detected"=[[
 Обнаружен: пресет %s
 ]]
+"gwater2.menu.Presets.import.detected.multiple"=[[
+Обнаружены: пресеты %s
+]]
 
 "gwater2.menu.Presets.import.bad_data"=[[
-Информация поверждена или вип пресета неизвестен.
+Информация повреждена или тип пресета неизвестен около пресета №%d.
 ]]
 
 "gwater2.menu.Presets.save"=[[

@@ -803,8 +803,12 @@ Paste preset here
 Detected: %s preset
 ]]
 
+"gwater2.menu.Presets.import.detected.multiple"=[[
+Detected: %s presets
+]]
+
 "gwater2.menu.Presets.import.bad_data"=[[
-Data is malformed or preset type is unknown.
+Data is malformed or preset type is unknown at preset #%d
 ]]
 
 "gwater2.menu.Presets.save"=[[

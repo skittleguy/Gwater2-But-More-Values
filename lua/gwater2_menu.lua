@@ -575,6 +575,22 @@ local function create_menu(init)
 		cfg.sounds = sounds
 	end
 
+	function tabs.tabScroller.btnLeft:Paint(w, h)
+		styling.draw_main_background(0, 0, w, h) styling.draw_main_background(0, 0, w, h)
+		surface.SetDrawColor(255, 255, 255, 255)
+
+		surface.DrawLine(w/2-w/6, h/2, w/2+w/6, 4)
+		surface.DrawLine(w/2-w/6, h/2, w/2+w/6, h-4)
+	end
+
+	function tabs.tabScroller.btnRight:Paint(w, h)
+		styling.draw_main_background(0, 0, w, h) styling.draw_main_background(0, 0, w, h)
+		surface.SetDrawColor(255, 255, 255, 255)
+
+		surface.DrawLine(w/2-w/6, 4, w/2+w/6, h/2)
+		surface.DrawLine(w/2-w/6, h-4, w/2+w/6, h/2)
+	end
+
 	return frame
 end
 
