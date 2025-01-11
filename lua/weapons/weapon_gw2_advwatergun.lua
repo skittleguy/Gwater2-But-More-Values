@@ -36,13 +36,13 @@ SWEP.WorldModel			= "models/weapons/w_pistol.mdl"
 SWEP.UseHands           = true
 
 if CLIENT then
-	SWEP.ParticleVelocity = CreateClientConVar("gwater2_gun_velocity",  10, true, true, "",   0,  100)
-	SWEP.ParticleDistance = CreateClientConVar("gwater2_gun_distance", 250, true, true, "", 100, 1000)
-	SWEP.ParticleSpread   = CreateClientConVar("gwater2_gun_spread",     1, true, true, "", 0.1,   10)
+	SWEP.ParticleVelocity = CreateClientConVar("gwater2_gun_velocity",  "10", true, true, "",   0,  100)
+	SWEP.ParticleDistance = CreateClientConVar("gwater2_gun_distance", "250", true, true, "", 100, 1000)
+	SWEP.ParticleSpread   = CreateClientConVar("gwater2_gun_spread",     "1", true, true, "", 0.1,   10)
 
 	-- 1 is cylinder (default) (introduced in 0.5b iirc)
 	-- 2 is box (introduced in 0.1b)
-	SWEP.SpawnMode  = CreateClientConVar("gwater2_gun_spawnmode", 1, true, true, "", 1, 2)
+	SWEP.SpawnMode  = CreateClientConVar("gwater2_gun_spawnmode", "1", true, true, "", 1, 2)
 end
 
 local function fuckgarry(w, s)
@@ -62,9 +62,10 @@ end
 function SWEP:PrimaryAttack()
 	if not gwater2 then return end
 	if CLIENT then return end
-	if not self:GetOwner():IsPlayer() then return end -- someone gave weapon to a non-player!!
-
 	local owner = self:GetOwner()
+	if not owner:IsPlayer() then return end -- someone gave weapon to a non-player!!
+	---@cast owner Player
+
 	local forward = owner:GetAimVector()
 	
 	local pos = util.QuickTrace(owner:EyePos(),
@@ -245,6 +246,7 @@ create_frame = function(self)
         frame:SetTitle("GWater 2 " .. gwater2.VERSION .. ": Water Gun Menu")
 
         frame:SetScreenLock(true)
+		---@diagnostic disable-next-line: inject-field
         function frame:Paint(w, h)
             -- darker background
             styling.draw_main_background(0, 0, w, h)
@@ -264,10 +266,12 @@ create_frame = function(self)
         new_close_btn:SetSize(20, 20)
         new_close_btn:SetText("")
 
+		---@diagnostic disable-next-line: inject-field
         function new_close_btn:DoClick()
             frame:Close()
         end
 
+		---@diagnostic disable-next-line: inject-field
         function new_close_btn:Paint(w, h)
             if self:IsHovered() then
                 surface.SetDrawColor(255, 0, 0, 127)
@@ -282,6 +286,7 @@ create_frame = function(self)
 
 	local create = RealTime()
 	local panel = frame:Add("DPanel")
+	---@diagnostic disable-next-line: inject-field
 	function panel:Paint()
 		if not gwater2.options.read_config().animations then return end
 

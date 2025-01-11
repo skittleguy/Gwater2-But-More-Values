@@ -64,7 +64,7 @@ local function do_absorption()
 
 	-- depth absorption (disabled when opaque liquids are enabled)
 	local _, _, _, a = water:GetVector4D("$color2")
-	if water_volumetric:GetFloat("$alpha") != 0 and a > 0 and a < 255 then
+	if water_volumetric:GetFloat("$alpha") ~= 0 and a > 0 and a < 255 then
 		-- ANTIALIAS FIX! (courtesy of Xenthio)
 			-- how it works: 
 			-- Clear the main rendertarget, keeping depth
@@ -114,10 +114,12 @@ local function do_normals()
 	render.SetStencilWriteMask(0xFF)
 	render.SetStencilTestMask(0xFF)
 	render.SetStencilReferenceValue(1)
+	---@diagnostic disable: param-type-mismatch
 	render.SetStencilCompareFunction(STENCIL_ALWAYS)
 	render.SetStencilFailOperation(STENCIL_KEEP)
 	render.SetStencilZFailOperation(STENCIL_KEEP)
 	render.SetStencilPassOperation(STENCIL_REPLACE)
+	---@diagnostic enable: param-type-mismatch
 	render.ClearStencil()
 	render.SetStencilEnable(true)
 
@@ -129,8 +131,10 @@ local function do_normals()
 	render.ClearDepth()
 	gwater2.renderer:DrawWater()
 	render.PopRenderTarget()
+	---@diagnostic disable-next-line: param-type-mismatch
 	render.SetRenderTargetEx(1, nil)
 
+	---@diagnostic disable-next-line: param-type-mismatch
 	render.SetStencilCompareFunction(STENCIL_EQUAL)
 	render.SetStencilEnable(false)
 	
@@ -183,7 +187,7 @@ local function do_finalpass()
 end
 
 hook.Add("RenderScene", "gwater2_render", function(eye_pos, eye_angles, fov)
-	if gwater2.options.render_mirrors:GetInt() != 1 then return end
+	if gwater2.options.render_mirrors:GetInt() ~= 1 then return end
 
 	cam.Start3D(eye_pos, eye_angles, fov)
 		gwater2.renderer:BuildMeshes(gwater2.solver, 0.25, false)
@@ -192,7 +196,7 @@ end)
 
 -- vrmod does not render to the main RT, force enable mirror rendering
 hook.Add("VRMod_Start", "gwater2_vrmodsupport", function(ply)
-	if ply != LocalPlayer() then return end
+	if ply ~= LocalPlayer() then return end
 
 	gwater2.options.render_mirrors:SetInt(1)
 end)
@@ -205,7 +209,7 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 
  	-- dont render in mirrors unless specified
 	local mirrors = gwater2.options.render_mirrors:GetInt()
-	if mirrors != 1 then
+	if mirrors ~= 1 then
 		if mirrors == 0 and render.GetRenderTarget() then return end
 		gwater2.renderer:BuildMeshes(gwater2.solver, 0.25, true)
 	end
@@ -213,6 +217,7 @@ hook.Add("PostDrawOpaqueRenderables", "gwater2_render", function(depth, sky, sky
 	do_cloth()
 
 	-- vrmod is fucked. do this for now
+	---@diagnostic disable-next-line: undefined-global
 	if vrmod and vrmod.IsPlayerInVR(LocalPlayer()) then
 		render.SetMaterial(vrmod_material)
 		gwater2.renderer:DrawWater()

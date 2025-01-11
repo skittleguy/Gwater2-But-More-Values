@@ -7,7 +7,8 @@ gwater2.VERSION = "1.0"
 local just_closed = false
 
 gwater2.options = gwater2.options or {
-	solver = FlexSolver(1000, 1), -- that 2D-solver is available to everyone
+	---@diagnostic disable-next-line: undefined-global
+	solver = FlexSolver(1000, 1),
 	blur_passes = CreateClientConVar("gwater2_blur_passes", "3", true),
 	absorption = CreateClientConVar("gwater2_absorption", "1", true),
 	depth_fix = CreateClientConVar("gwater2_depth_fix", "0", true),
@@ -94,6 +95,7 @@ local function create_menu(init)
 	frame:Center()
 	frame:MakePopup()
 	frame:SetScreenLock(true)
+	---@diagnostic disable-next-line: inject-field
 	function frame:Paint(w, h)
 		-- darker background
 		styling.draw_main_background(0, 0, w, h)
@@ -111,11 +113,13 @@ local function create_menu(init)
 	new_close_btn:SetSize(20, 20)
 	new_close_btn:SetText("")
 
+	---@diagnostic disable-next-line: inject-field
 	function new_close_btn:DoClick()
 		frame:SetVisible(false)
 		just_closed = false
 	end
 
+	---@diagnostic disable-next-line: inject-field
 	function new_close_btn:Paint(w, h)
 		if self:IsHovered() then
 			surface.SetDrawColor(255, 0, 0, 127)
@@ -148,6 +152,7 @@ local function create_menu(init)
 	local q_access = vgui.Create("DPanel", frame)
 	q_access:Dock(BOTTOM)
 	q_access:DockMargin(0, 5, 0, 0)
+	---@diagnostic disable-next-line: inject-field
 	function q_access:Paint(w, h) styling.draw_main_background(0, 0, w, h) end
 
 	local qgun = q_access:Add("DImageButton")
@@ -156,6 +161,7 @@ local function create_menu(init)
 	qgun:DockMargin(2, 2, 2, 2)
 	qgun:SetSize(q_access:GetTall() - 4, q_access:GetTall() - 4)
 	qgun:SetTooltip(_util.get_localised("qaccess.Give Watergun"))
+	---@diagnostic disable-next-line: inject-field
 	function qgun:DoClick()
 		RunConsoleCommand("gm_giveswep", "weapon_gw2_watergun")
 	end
@@ -166,6 +172,7 @@ local function create_menu(init)
 	qreset:DockMargin(2, 2, 2, 2)
 	qreset:SetSize(q_access:GetTall() - 4, q_access:GetTall() - 4)
 	qreset:SetTooltip(_util.get_localised("qaccess.Reset Solvers"))
+	---@diagnostic disable-next-line: inject-field
 	function qreset:DoClick()
 		gwater2.options.solver:Reset()
 		gwater2.ResetSolver()
@@ -192,6 +199,7 @@ local function create_menu(init)
 		return floor_x, floor_y, w1, ceil_x, floor_y, w2, floor_x, ceil_y, w3, ceil_x, ceil_y, w4
 	end
 
+	---@diagnostic disable-next-line: inject-field
 	function sim_preview:Paint(w, h)
 		styling.draw_main_background(0, 0, w, h)
 		local x, y = sim_preview:LocalToScreen(0, 0)
@@ -216,6 +224,7 @@ local function create_menu(init)
 			})
 		end
 
+		if not particle_material then return end
 		surface.SetMaterial(particle_material)
 
 		local pixelate = gwater2.options.read_config().pixelate_preview 
@@ -270,8 +279,10 @@ local function create_menu(init)
 	reset:SetText("")
 	reset:SetImage("icon16/arrow_refresh.png")
 	reset:SetWide(reset:GetTall())
+	---@diagnostic disable-next-line: inject-field
 	reset.Paint = nil
 	reset:SetPos(5, 5)
+	---@diagnostic disable-next-line: inject-field
 	function reset:DoClick()
 		gwater2.options.solver:Reset()
 		_util.emit_sound("reset")
@@ -279,6 +290,7 @@ local function create_menu(init)
 
 	if not gwater2.options.read_config().preview then
 		sim_preview:SetVisible(false)
+		---@diagnostic disable-next-line: param-type-mismatch
 		divider:SetLeft(nil)
 		divider:SetLeftWidth(0)
 		divider:SetLeftMin(0)
@@ -286,6 +298,7 @@ local function create_menu(init)
 	end
 
 	help_text:SetSize(frame:GetWide()*0.25, help_text:GetTall())
+	---@diagnostic disable-next-line: inject-field
 	function help_text:Paint(w, h)
 		styling.draw_main_background(0, 0, w, h)
 		draw.DrawText(_util.get_localised("Explanation Area.title"), "GWater2Title", help_text:GetWide() / 2 + 1, 6, Color(0, 0, 0), TEXT_ALIGN_CENTER)
@@ -293,6 +306,7 @@ local function create_menu(init)
 	end
 	--tabs:Dock(FILL)
 	tabs:SetFadeTime(0)
+	---@diagnostic disable-next-line: cast-local-type
 	help_text = help_text:Add("DLabel")
 	help_text:Dock(FILL)
 	help_text:DockMargin(5, 5, 5, 5)
@@ -301,18 +315,22 @@ local function create_menu(init)
 	help_text:SetColor(Color(255, 255, 255))
 	help_text:SetContentAlignment(7)
 	help_text:SetFont("GWater2Param")
+	---@diagnostic disable-next-line: inject-field
 	function tabs:Paint(w, h) styling.draw_main_background(0, 23, w, h-23) end
 
+	---@diagnostic disable-next-line: inject-field
 	function frame:OnKeyCodePressed(key)
 		if key ~= gwater2.options.menu_key:GetInt() then return end
 		frame:SetVisible(false)
 		just_closed = true
 	end
 
+	---@diagnostic disable-next-line: inject-field
 	frame.tabs = tabs
 
 	local function about_tab(tabs)
 		local tab = vgui.Create("DPanel", tabs)
+		---@diagnostic disable-next-line: inject-field
 		function tab:Paint() end
 		tabs:AddSheet(_util.get_localised("About Tab.title"), tab, "icon16/exclamation.png").Tab.realname = "About Tab"
 		tab = tab:Add("DScrollPanel")
@@ -321,6 +339,7 @@ local function create_menu(init)
 		styling.define_scrollbar(tab:GetVBar())
 
 		local _ = tab:Add("DLabel") _:SetText(" ") _:SetFont("GWater2Title") _:Dock(TOP) _:SizeToContents()
+		---@diagnostic disable-next-line: inject-field
 		function _:Paint(w, h)
 			draw.DrawText(_util.get_localised("About Tab.titletext", gwater2.VERSION), "GWater2Title", 6, 6, Color(0, 0, 0), TEXT_ALIGN_LEFT)
 			draw.DrawText(_util.get_localised("About Tab.titletext", gwater2.VERSION), "GWater2Title", 5, 5, Color(187, 245, 255), TEXT_ALIGN_LEFT)
@@ -348,6 +367,7 @@ local function create_menu(init)
 
 	local function credits_tab(tabs)
 		local tab = vgui.Create("DPanel", tabs)
+		---@diagnostic disable-next-line: inject-field
 		function tab:Paint() end
 
 		tabs:AddSheet(_util.get_localised("Credits.title"), tab, "icon16/award_star_gold_3.png").Tab.realname = "Credits"
@@ -357,6 +377,7 @@ local function create_menu(init)
 		styling.define_scrollbar(tab:GetVBar())
 
 		local _ = tab:Add("DLabel") _:SetText(" ") _:SetFont("GWater2Title") _:Dock(TOP) _:SizeToContents()
+		---@diagnostic disable-next-line: inject-field
 		function _:Paint(w, h)
 			draw.DrawText(_util.get_localised("Credits.titletext"), "GWater2Title", 6, 6, Color(0, 0, 0), TEXT_ALIGN_LEFT)
 			draw.DrawText(_util.get_localised("Credits.titletext"), "GWater2Title", 5, 5, Color(187, 245, 255), TEXT_ALIGN_LEFT)
@@ -375,7 +396,7 @@ local function create_menu(init)
 		local patrons_table = {"<Failed to load patron data!>"}
 		
 		file.AsyncRead("data_static/gwater2/patrons.txt", "THIRDPARTY", function(name, path, status, data)
-			if status != FSASYNC_OK then return end
+			if status ~= FSASYNC_OK then return end
 			patrons_table = string.Split(data, "\n")
 		end)
 
@@ -385,10 +406,12 @@ local function create_menu(init)
 		local supporter_color = Color(171, 255, 163)
 		
 		label:SetPos(0, 0)
+		---@diagnostic disable-next-line: inject-field
 		function label:Paint(w, h)
 			local _, height = self:GetContentSize()
 			label:SetTall(math.max(#patrons_table * 20, 1000) + 440)	-- fuck this shit hack
 
+			---@diagnostic disable-next-line: undefined-field
 			local top = math.max(math.floor((tab:GetVBar():GetScroll() - 440) / 20), 1)	-- only draw what we see
 			for i = top, math.min(top + 30, #patrons_table) do
 				draw.DrawText(patrons_table[i], "GWater2Param", 6, height + i * 20, supporter_color, TEXT_ALIGN_LEFT)
@@ -400,16 +423,19 @@ local function create_menu(init)
 
 	local function menu_tab(tabs)
 		local tab = vgui.Create("DPanel", tabs)
+		---@diagnostic disable-next-line: inject-field
 		function tab:Paint() end
 
 		tabs:AddSheet(_util.get_localised("Menu.title"), tab, "icon16/css_valid.png").Tab.realname = "Menu"
 		tab = tab:Add("DScrollPanel")
 		tab:Dock(FILL)
+		---@diagnostic disable-next-line: inject-field
 		tab.help_text = tabs.help_text
 
 		styling.define_scrollbar(tab:GetVBar())
 
 		local _ = tab:Add("DLabel") _:SetText(" ") _:SetFont("GWater2Title") _:Dock(TOP) _:SizeToContents()
+		---@diagnostic disable-next-line: inject-field
 		function _:Paint(w, h)
 			draw.DrawText(_util.get_localised("Menu.titletext"), "GWater2Title", 6, 6, Color(0, 0, 0), TEXT_ALIGN_LEFT)
 			draw.DrawText(_util.get_localised("Menu.titletext"), "GWater2Title", 5, 5, Color(187, 245, 255), TEXT_ALIGN_LEFT)
@@ -447,6 +473,7 @@ local function create_menu(init)
 	        	gwater2.options.write_config({["preview"]=val})
 	        	sim_preview:SetVisible(val)
 	        	if not val then
+					---@diagnostic disable-next-line: param-type-mismatch
 	        		divider:SetLeft(nil)
 	        		divider:SetLeftWidth(0)
 					divider:SetLeftMin(0)
@@ -496,12 +523,14 @@ local function create_menu(init)
 		end
 	end
 
+	---@diagnostic disable-next-line: inject-field
 	tabs.help_text = help_text
 
 	help_text:SetText(_util.get_localised("About Tab.help"))
 	
 	about_tab(tabs)
 
+	---@diagnostic disable-next-line: inject-field
 	frame.params = {}	-- need to pass by reference into presets
 	frame.params._parameters = paramstabs.parameters_tab(tabs)
 	frame.params._visuals = paramstabs.visuals_tab(tabs)
@@ -543,11 +572,13 @@ local function create_menu(init)
 		end
 	end
 
+	---@diagnostic disable-next-line: inject-field
 	tabs.Items = tabs.Items or {}
 
 	-- force docking to work properly
 	tabs:SetActiveTab(tabs.Items[gwater2.options.menu_tab:GetInt() ~= 1 and 1 or 2].Tab)
 
+	---@diagnostic disable-next-line: inject-field
 	function tabs:OnActiveTabChanged(_, new)
 		help_text:SetText(_util.get_localised(new.realname..".help"))
 		for k, v in ipairs(self.Items) do
@@ -564,7 +595,7 @@ local function create_menu(init)
 
 	local cfg, sounds
 	if init then
-		cfg = gwater2.options.read_config()
+		cfg = gwater2.options.read_config() or {sounds=true}
 		sounds = cfg.sounds
 		cfg.sounds = false
 	end
@@ -623,6 +654,7 @@ concommand.Add("gwater2_menu", function()
 
 		-- play sound and animate properly
 		_util.emit_sound("select")
+		---@diagnostic disable-next-line: inject-field
 		tabs:GetActiveTab().lastpush = RealTime()
 
 		-- should we show tabs?
@@ -633,7 +665,7 @@ concommand.Add("gwater2_menu", function()
 		items[3].Tab:SetVisible(tabs_enabled) -- visuals
 		items[4].Tab:SetVisible(tabs_enabled) -- interactions
 		items[5].Tab:SetVisible(tabs_enabled) -- presets
-		items[9].Tab:SetVisible(tabs_enabled and GetConVar("developer"):GetInt() != 0) -- developer
+		items[9].Tab:SetVisible(tabs_enabled and GetConVar("developer"):GetInt() ~= 0) -- developer
 
 		return
 	end
@@ -653,9 +685,11 @@ end)
 
 hook.Add("PopulateToolMenu", "gwater2_menu", function()
     spawnmenu.AddToolMenuOption("Utilities", "gwater2", "gwater2_menu", "Menu Options", "", "", function(panel)
+		---@diagnostic disable: undefined-field
 		panel:ClearControls()
 		panel:Button("Open Menu", "gwater2_menu")
         panel:KeyBinder("Menu Key", "gwater2_menukey")
+		---@diagnostic enable: undefined-field
 	end)
 end)
 
@@ -672,14 +706,14 @@ end)
 function gwater2.open_menu(ply, key)
 	if !game.SinglePlayer() and !IsFirstTimePredicted() then return end
 
-	if key != gwater2.options.menu_key:GetInt() or just_closed == true then return end
+	if key ~= gwater2.options.menu_key:GetInt() or just_closed == true then return end
 	RunConsoleCommand("gwater2_menu")
 end
 
 function gwater2.close_menu(ply, key)
 	if !game.SinglePlayer() and !IsFirstTimePredicted() then return end
 
-	if key != gwater2.options.menu_key:GetInt() then return end
+	if key ~= gwater2.options.menu_key:GetInt() then return end
 	just_closed = false
 end
 

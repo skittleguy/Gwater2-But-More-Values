@@ -254,9 +254,12 @@ local performance = {
 					confirm:SetPos(600 * (3/4) - 10, 0)
 					confirm:SetSize(20, 20)
 					confirm:SetImage("icon16/accept.png")
+					---@diagnostic disable-next-line: inject-field
 					confirm.Paint = nil
+					---@diagnostic disable-next-line: inject-field
 					function confirm:DoClick() 
 						gwater2.solver:Destroy()
+						---@diagnostic disable-next-line: undefined-global
 						gwater2.solver = FlexSolver(slider:GetValue())
 						for name, value in pairs(gwater2.parameters) do
 							_util.set_gwater_parameter(name, value)
@@ -270,7 +273,9 @@ local performance = {
 					deny:SetPos(600 * (1/4) - 10, 0)
 					deny:SetSize(20, 20)
 					deny:SetImage("icon16/cross.png")
+					---@diagnostic disable-next-line: inject-field
 					deny.Paint = nil
+					---@diagnostic disable-next-line: inject-field
 					function deny:DoClick() 
 						frame:Close()
 						_util.emit_sound("select_deny")
@@ -425,7 +430,7 @@ local interaction = {
 				return true 
 			end,
 			setup=function(check) 
-				check:SetChecked(gwater2.solver:GetParameter("reaction_forces") != 0) 
+				check:SetChecked(gwater2.solver:GetParameter("reaction_forces") ~= 0) 
 			end
 		},
 		["002-Force Multiplier"] = {

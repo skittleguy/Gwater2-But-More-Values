@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-field, undefined-global
 AddCSLuaFile()
 
 ENT.Type = "anim"

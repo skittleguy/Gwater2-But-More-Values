@@ -38,6 +38,7 @@ end
 
 local function init_tab(tabs, tab_name, image, recursive)
 	local tab = vgui.Create("DPanel", tabs)
+	---@diagnostic disable-next-line: inject-field
 	function tab:Paint() end
 	tabs:AddSheet(util.get_localised(tab_name .. ".title"), tab, image).Tab.realname = tab_name
 	tab = tab:Add("DScrollPanel")
@@ -46,6 +47,7 @@ local function init_tab(tabs, tab_name, image, recursive)
 	styling.define_scrollbar(tab:GetVBar())
 
 	local _ = tab:Add("DLabel") _:SetText(" ") _:SetFont("GWater2Title") _:Dock(TOP) _:SizeToContents()
+	---@diagnostic disable-next-line: inject-field
 	function _:Paint(w, h)
 		draw.DrawText(util.get_localised(tab_name .. ".titletext"), "GWater2Title", 6, 6, Color(0, 0, 0), TEXT_ALIGN_LEFT)
 		draw.DrawText(util.get_localised(tab_name .. ".titletext"), "GWater2Title", 5, 5, Color(187, 245, 255), TEXT_ALIGN_LEFT)

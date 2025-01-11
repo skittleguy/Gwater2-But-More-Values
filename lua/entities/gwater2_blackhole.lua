@@ -1,3 +1,5 @@
+---@diagnostic disable: undefined-field, undefined-global
+
 -- subject for removal? maybe add a bool in forcefield to make it look like a black hole?
 
 AddCSLuaFile()

@@ -18,6 +18,7 @@ if SERVER then
 	util.AddNetworkString("GWATER2_REQUESTPARAMETERSSNAPSHOT")
 	util.AddNetworkString("GWATER2_REQUESTCOLLISION")
 
+	---@diagnostic disable-next-line: lowercase-global
 	gwater2 = {
 		parameters = {},
 

@@ -132,5 +132,5 @@ function SWEP:PostDrawViewModel(vm, weapon, ply)
 		return 
 	end
 
-	self.Weapon:SetClip1(gwater2.solver:GetMaxParticles() - gwater2.solver:GetActiveParticles())
+	self:SetClip1(gwater2.solver:GetMaxParticles() - gwater2.solver:GetActiveParticles())
 end
