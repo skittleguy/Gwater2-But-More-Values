@@ -125,8 +125,9 @@ end
 function SWEP:PostDrawViewModel(vm, weapon, ply)
 	if !gwater2 then 
 		cam.Start2D()
-			local a = 255 * (math.sin(CurTime() * 2) + 1) / 2
-			draw.DrawText("Failed to load GWater2!", "Trebuchet24", ScrW() / 2, ScrH() / 2 - 36, Color(255, 50, 50, a), TEXT_ALIGN_CENTER)
+			local a = 255*(math.sin(CurTime()*2)+1)/2
+			draw.DrawText(language.GetPhrase("gwater2.gun.adv.notloaded"), "Trebuchet24", ScrW() / 2 + 1, ScrH() / 2 - 36 + 1, Color(0, 0, 0, a), TEXT_ALIGN_CENTER)
+			draw.DrawText(language.GetPhrase("gwater2.gun.adv.notloaded"), "Trebuchet24", ScrW() / 2, ScrH() / 2 - 36, Color(255, 0, 0, a), TEXT_ALIGN_CENTER)
 		cam.End2D()
 
 		return 
