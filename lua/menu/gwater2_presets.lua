@@ -601,7 +601,7 @@ button_functions = {
         label:SetFont("GWater2Title")
         local textarea = frame:Add("DTextEntry")
         textarea:Dock(FILL)
-        textarea:SetFont("GWater2Text")
+        textarea:SetFont("GWater2TextMono")
         textarea:SetValue("")
         textarea:SetMultiline(true)
         textarea:SetVerticalScrollbarEnabled(true)
