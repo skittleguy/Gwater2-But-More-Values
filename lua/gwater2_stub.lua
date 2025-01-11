@@ -4,11 +4,13 @@ local flexsolver_stub = {plimit = 0, flimit = 0, pcur = 0, fcur = 0, parms = {}}
 function FlexSolver(part_limit, foam_limit)
     local flexsolver = table.Copy(flexsolver_stub)
     flexsolver.plimit = part_limit
-    flexsolver.flimit = foam_limit
+    flexsolver.flimit = foam_limit or part_limit
+    flexsolver.pcur = math.floor(part_limit / 2)
     return flexsolver    
 end
 
--- bounds and tick
+-- destroy, bounds and tick
+function flexsolver_stub:Destroy() end
 function flexsolver_stub:InitBounds(mins, maxs) end
 function flexsolver_stub:Tick(delta) end
 
