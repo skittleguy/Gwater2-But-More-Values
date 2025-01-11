@@ -4,7 +4,9 @@ AddCSLuaFile()
 
 gwater2 = nil
 
-local load_stub = system.IsLinux() or system.IsOSX()
+local toload = (BRANCH == "x86-64" or BRANCH == "chromium") and "gwater2" or "gwater2_main" -- carrying
+
+local load_stub = not util.IsBinaryModuleInstalled(toload) and (system.IsLinux() or system.IsOSX())
 -- whether to load stub instead of actual module
 -- useful for testing lua side of gw2 on native linux gmod
 
@@ -60,7 +62,6 @@ local function gw2_error(text)
 end
 
 if not load_stub then
-	local toload = (BRANCH == "x86-64" or BRANCH == "chromium") and "gwater2" or "gwater2_main" -- carrying
 	if !util.IsBinaryModuleInstalled(toload) then
 		gw2_error(string.format(
 			"===========================================================\n\n" ..

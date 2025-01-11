@@ -300,7 +300,7 @@ local function create_menu(init)
 	help_text:SetWrap(true)
 	help_text:SetColor(Color(255, 255, 255))
 	help_text:SetContentAlignment(7)
-	help_text:SetFont("GWater2Param")
+	help_text:SetFont("GWater2Text")
 	function tabs:Paint(w, h) styling.draw_main_background(0, 23, w, h-23) end
 
 	function frame:OnKeyCodePressed(key)
@@ -334,7 +334,7 @@ local function create_menu(init)
 		label:SetTextInset(5, 5)
 		label:SetWrap(true)
 		label:SetContentAlignment(7)
-		label:SetFont("GWater2Param")
+		label:SetFont("GWater2Text")
 		
 		label:SetPos(0, 0)
 		label:SetTall(800)
@@ -370,7 +370,7 @@ local function create_menu(init)
 		label:SetTextInset(5, 5)
 		label:SetWrap(true)
 		label:SetContentAlignment(7)
-		label:SetFont("GWater2Param")
+		label:SetFont("GWater2TextMono")
 
 		local patrons_table = {"<Failed to load patron data!>"}
 		
@@ -391,7 +391,7 @@ local function create_menu(init)
 
 			local top = math.max(math.floor((tab:GetVBar():GetScroll() - 440) / 20), 1)	-- only draw what we see
 			for i = top, math.min(top + 30, #patrons_table) do
-				draw.DrawText(patrons_table[i], "GWater2Param", 6, height + i * 20, supporter_color, TEXT_ALIGN_LEFT)
+				draw.DrawText(patrons_table[i], "GWater2Text", 6, height + i * 20, supporter_color, TEXT_ALIGN_LEFT)
 			end
 		end
 
@@ -516,6 +516,7 @@ local function create_menu(init)
 	for _,tab in pairs(tabs:GetItems()) do
 		local rt = tab
 		tab = tab.Tab
+		tab:SetFont("GWater2TextSmall")
 		function tab:Paint(w, h)
 			styling.draw_main_background(0, 0, w - 4, self:IsActive() and h - 4 or h)
 			if tab.lastpush ~= nil then
@@ -594,8 +595,50 @@ local function create_menu(init)
 	return frame
 end
 
-surface.CreateFont("GWater2Param", {
-    font = (system.IsWindows() and "Space Mono" or "SpaceMonoRegular.ttf"), 
+surface.CreateFont("GWater2TextSmall", {
+    font = (system.IsWindows() and "Roboto" or "RobotoVariable.ttf"), 
+	--font = (system.IsWindows() and "Space Mono" or "SpaceMonoRegular.ttf"), 
+	--font = (system.IsWindows() and "Titillium Web" or "TitilliumWeb-Regular.ttf"), 
+    extended = false,
+    size = 16,
+    weight = 500,
+    blursize = 0,
+    scanlines = 0,
+    antialias = true,
+    underline = false,
+    italic = false,
+    strikeout = false,
+    symbol = false,
+    rotary = false,
+    shadow = false,
+    additive = false,
+    outline = false,
+})
+
+surface.CreateFont("GWater2Text", {
+    font = (system.IsWindows() and "Roboto" or "RobotoVariable.ttf"), 
+	--font = (system.IsWindows() and "Space Mono" or "SpaceMonoRegular.ttf"), 
+	--font = (system.IsWindows() and "Titillium Web" or "TitilliumWeb-Regular.ttf"), 
+    extended = false,
+    size = 20,
+    weight = 500,
+    blursize = 0,
+    scanlines = 0,
+    antialias = true,
+    underline = false,
+    italic = false,
+    strikeout = false,
+    symbol = false,
+    rotary = false,
+    shadow = false,
+    additive = false,
+    outline = false,
+})
+
+surface.CreateFont("GWater2TextMono", {
+    font = (system.IsWindows() and "Roboto Mono" or "RobotoMonoVariable.ttf"), 
+	--font = (system.IsWindows() and "Space Mono" or "SpaceMonoRegular.ttf"), 
+	--font = (system.IsWindows() and "Titillium Web" or "TitilliumWeb-Regular.ttf"), 
     extended = false,
     size = 20,
     weight = 500,
@@ -613,7 +656,8 @@ surface.CreateFont("GWater2Param", {
 })
 
 surface.CreateFont("GWater2Title", {
-    font = (system.IsWindows() and "coolvetica" or "coolvetica.ttf"), 
+    font = (system.IsWindows() and "Roboto" or "RobotoVariable.ttf"), 
+	--font = (system.IsWindows() and "coolvetica" or "coolvetica.ttf"),
     extended = false,
     size = 24,
     weight = 500,

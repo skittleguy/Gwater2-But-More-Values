@@ -265,7 +265,7 @@ local function make_parameter_scratch(tab, locale_parameter_name, parameter_name
 
 	local label = slider.Label
 	panel.label = label
-	label:SetFont("GWater2Param")
+	label:SetFont("GWater2Text")
 	label:SizeToContents()
 	label:SetWidth(label:GetSize() * 1.1)
 	label:SetColor(Color(255, 255, 255))
@@ -338,7 +338,7 @@ local function make_parameter_color(tab, locale_parameter_name, parameter_name, 
 	panel.label = label
 	label:SetText(get_localised(locale_parameter_name))
 	label:SetColor(Color(255, 255, 255))
-	label:SetFont("GWater2Param")
+	label:SetFont("GWater2Text")
 	label:Dock(LEFT)
 	label:SetMouseInputEnabled(true)
 	label:SizeToContents()
@@ -397,7 +397,7 @@ local function make_parameter_check(tab, locale_parameter_name, parameter_name, 
 	panel.label = label
 	label:SetText(get_localised(locale_parameter_name))
 	label:SetColor(Color(255, 255, 255))
-	label:SetFont("GWater2Param")
+	label:SetFont("GWater2Text")
 	label:Dock(LEFT)
 	label:SetMouseInputEnabled(true)
 	label:SizeToContents()
