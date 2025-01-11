@@ -1167,6 +1167,14 @@ Fluid Preview
 Explanation Area
 ]]
 
+"gwater2.menu.qaccess.Reset Solvers"=[[
+Reset solvers (clean all water)
+]]
+
+"gwater2.menu.qaccess.Give Watergun"=[[
+Give yourself watergun swep
+]]
+
 ------------------------
 ------ WATER GUN -------
 ------------------------

@@ -386,7 +386,7 @@ Ses Perdesi
 ]]
 
 "gwater2.menu.Parameters.Sound Pitch.desc"=[[
-Sesin perdesini değiştirir. 2=200% (1=100%)
+Sesin perdesini değiştirir. 2=200%% (1=100%%)
 ]]
 
 "gwater2.menu.Parameters.Sound Volume"=[[
@@ -394,7 +394,7 @@ Ses Seviyesi
 ]]
 
 "gwater2.menu.Parameters.Sound Volume.desc"=[[
-İsimden belli. 2=200% (1=100%)
+İsimden belli. 2=200%% (1=100%%)
 
 0 sesi kapatır.
 ]]
@@ -451,7 +451,7 @@ Bunu 1'den yüksek bir değere ayarlamak sıvının parlıyor gibi görünmesini
 ]]
 
 ------------------------
------ PERFORMANS ------
+------ PERFORMANS ------
 ------------------------
 
 "gwater2.menu.Performance.Physics"=[[
@@ -596,7 +596,7 @@ Düşük performans etkisi.
 ]]
 
 ------------------------
------ INTEAKSYONLAR -----
+---- INTEAKSYONLAR -----
 ------------------------
 
 "gwater2.menu.Interactions.Reaction Force Parameters"=[[
@@ -721,7 +721,7 @@ Negativ sayılar size can verir.
 ]]
 
 ------------------------
-------- ÖN AYARLAR --------
+------ ÖN AYARLAR ------
 ------------------------
 
 "gwater2.menu.Presets.import_preset"=[[
@@ -850,7 +850,7 @@ Menü'nün sesini değiştirir - menüyle interaksiyon yapılınca gelen sesler
 ]]
 
 ------------------------
---------- DİĞER ---------
+-------- DİĞER ---------
 ------------------------
 
 "gwater2.menu.Fluid Preview.title"=[[
@@ -859,6 +859,14 @@ Menü'nün sesini değiştirir - menüyle interaksiyon yapılınca gelen sesler
 
 "gwater2.menu.Explanation Area.title"=[[
 Anlatılma Alanı
+]]
+
+"gwater2.menu.qaccess.Reset Solvers"=[[
+Çözücüleri Sıfırla
+]]
+
+"gwater2.menu.qaccess.Give Watergun"=[[
+Su Tabancasını Ver
 ]]
 
 ------------------------
