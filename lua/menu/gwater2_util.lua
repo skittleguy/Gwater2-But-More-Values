@@ -279,12 +279,13 @@ local function make_parameter_scratch(tab, locale_parameter_name, parameter_name
 	-- if we can't get parameter, let's hope .setup() does that for us
 	slider:SetDecimals(parameter.decimals)
 
-	local button = panel:Add("DButton")
+	local button = panel:Add("DImageButton")
 	panel.button = button
-	button:SetText("")
-	button:SetImage("icon16/arrow_refresh.png")
-	button:SetWide(button:GetTall())
 	button:Dock(RIGHT)
+	button:SetImage("gwater2/icons/reset.png")
+	button:SizeToContents()
+	button:SetKeepAspect(true)
+	button:SetStretchToFit(false)
 	button.Paint = nil
 	button.DoClick = slider_functions.reset
 
@@ -298,6 +299,8 @@ local function make_parameter_scratch(tab, locale_parameter_name, parameter_name
 
 	-- call custom setup function
 	if parameter.setup then parameter.setup(slider) end
+
+	if panel.label.fancycolor then button:SetColor(panel.label.fancycolor) end
 
 	gwater2.options.initialised[parameter_id] = {parameter, slider}
 
@@ -361,17 +364,22 @@ local function make_parameter_color(tab, locale_parameter_name, parameter_name, 
 	mixer:SetWangs(true)
 	-- mixer:SetColor(gwater2.parameters[parameter_id]) 
 
-	local button = panel:Add("DButton")
+	local button = panel:Add("DImageButton")
 	panel.button = button
 	button:Dock(RIGHT)
-	button:SetText("")
-	button:SetImage("icon16/arrow_refresh.png")
-	button:SetWide(button:GetTall())
+	button:SetImage("gwater2/icons/reset.png")
+	button:SizeToContents()
+	button:SetKeepAspect(true)
+	button:SetStretchToFit(false)
 	button.Paint = nil
+	button.DoClick = color_functions.reset
 
 	panel:SizeToContents()
 
 	if parameter.setup then parameter.setup(mixer) end
+
+	if panel.label.fancycolor then button:SetColor(panel.label.fancycolor) end
+
 	gwater2.options.initialised[parameter_id] = {parameter, mixer}
 
 	-- TODO: find something to reset editing to false when user stops editing color
@@ -407,13 +415,15 @@ local function make_parameter_check(tab, locale_parameter_name, parameter_name, 
 	check:Dock(FILL)
 	check:DockMargin(5, 0, 5, 0)
 	check:SetText("")
-	local button = panel:Add("DButton")
+	local button = panel:Add("DImageButton")
 	panel.button = button
 	button:Dock(RIGHT)
-	button:SetText("")
-	button:SetImage("icon16/arrow_refresh.png")
-	button:SetWide(button:GetTall())
+	button:SetImage("gwater2/icons/reset.png")
+	button:SizeToContents()
+	button:SetKeepAspect(true)
+	button:SetStretchToFit(false)
 	button.Paint = nil
+	button.DoClick = check_functions.reset
 
 	local parameter_id = string.lower(parameter_name):gsub(" ", "_")
 	panel.parameter = parameter_id
@@ -423,6 +433,9 @@ local function make_parameter_check(tab, locale_parameter_name, parameter_name, 
 	pcall(check_functions.init_setvalue, panel)
 	-- if we can't get parameter, let's hope .setup() does that for us
 	if parameter.setup then parameter.setup(check) end
+
+	if panel.label.fancycolor then button:SetColor(panel.label.fancycolor) end
+
 	gwater2.options.initialised[parameter_id] = {parameter, check}
 
 	button.DoClick = check_functions.reset
