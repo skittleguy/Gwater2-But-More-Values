@@ -250,7 +250,7 @@ button_functions = {
                 data = data .. k_ .. "\1" .. v_ .. "\1" .. t_ .. "\2"
             end
             data = data:sub(0, -1)
-            SetClipboardText(util.Base64Encode(util.Compress(data)))
+            SetClipboardText(util.Base64Encode(util.Compress(data), true))
             _util.emit_sound("confirm")
         end)
         clip:AddOption(_util.get_localised("Presets.copy.as_json"), function()
