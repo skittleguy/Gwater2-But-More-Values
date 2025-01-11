@@ -33,7 +33,7 @@ local _styling = include("menu/gwater2_styling.lua")
 
 local function emit_sound(type)
 	if not gwater2.options.read_config().sounds then return end
-	surface.PlaySound("gwater2/menu/"..type..".wav")
+	surface.PlaySound("gwater2/menu/packs/"..(gwater2.options.read_config().menusp or "default").."/"..type..".wav")
 end
 
 local function set_gwater_parameter(option, val, ply)

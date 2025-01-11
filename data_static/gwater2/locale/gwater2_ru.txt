@@ -1145,12 +1145,21 @@ gwater2_adminonly (0-1)
 В КОНСОЛИ
 ]]
 
+"gwater2.menu.Menu.soundpack"=[[
+Пак Звуков Меню
+]]
+
+"gwater2.menu.Menu.soundpack.desc"=[[
+Выбирает пак звуков меню - звуки которые играют когда вы взаимодействуете с меню.
+]]
+
+
 ------------------------
 -------- РАЗНОЕ --------
 ------------------------
 
 "gwater2.menu.Fluid Preview.title"=[[
-Предпросмотр жидкости
+Предпросмотр
 ]]
 
 "gwater2.menu.Explanation Area.title"=[[

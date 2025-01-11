@@ -480,7 +480,7 @@ local function create_menu(init)
 	        end
     	})
 
-		if LocalPlayer():IsSuperAdmin() then
+		if LocalPlayer():IsListenServerHost() then
 			_util.make_parameter_check(tab, "Menu.admin_only", "Admin Only", {
 				nosync=true,
 				func=function(val)
@@ -494,6 +494,39 @@ local function create_menu(init)
 				end
 			})
 		end
+
+		local soundpacks = {
+			[1] = "default", ["default"] = 1
+		}
+
+		for _, pack in ipairs(select(-1, file.Find("sound/gwater2/menu/packs/*", "GAME"))) do
+			if pack == "default" then continue end
+			soundpacks[#soundpacks+1] = pack
+			soundpacks[pack] = #soundpacks
+		end
+		local _soundpack_label
+		_util.make_parameter_scratch(tab, "Menu.soundpack", "Sound Pack", {
+			nosync=true,
+	        func=function(val)
+	        	gwater2.options.write_config({["menusp"]=soundpacks[val] or "default"})
+				_soundpack_label:SetText(soundpacks[val] or "default")
+	        	return true
+	        end,
+	        setup=function(slider)
+	        	slider:GetParent().button:Remove()
+				local label = slider:GetParent():Add("DLabel")
+				slider:GetParent().dlabel = label
+				_soundpack_label = label
+				label:Dock(BOTTOM)
+				label:SetText(gwater2.options.read_config().menusp)
+				label:SetFont("GWater2Text")
+				slider:GetParent():SetTall(slider:GetParent():GetTall() * 2)
+	        	slider:SetValue(soundpacks[gwater2.options.read_config().menusp])
+	        	return true
+	        end,
+			min=1,
+			max=#soundpacks
+    	})
 	end
 
 	tabs.help_text = help_text

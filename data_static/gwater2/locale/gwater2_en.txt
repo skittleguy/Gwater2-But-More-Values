@@ -1149,8 +1149,16 @@ gwater2_adminonly (0-1)
 IN CONSOLE
 ]]
 
+"gwater2.menu.Menu.soundpack"=[[
+Menu Soundpack
+]]
+
+"gwater2.menu.Menu.soundpack.desc"=[[
+Selects menu soundpack - sounds that play when you interact with menu.
+]]
+
 ------------------------
--------- РАЗНОЕ --------
+--------- MISC ---------
 ------------------------
 
 "gwater2.menu.Fluid Preview.title"=[[
