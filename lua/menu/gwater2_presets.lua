@@ -279,7 +279,7 @@ button_functions = {
         selector.id = string.format("%03d-%s", m+1, name)
         selector.DoClick = button_functions.apply_preset
         selector.DoRightClick = button_functions.selector_right_click
-        local_presets:SetTall(local_presets:GetTall()+25)
+        local_presets:SetTall(local_presets:GetTall()+30)
 
         if write then
             presets[string.format("%03d-%s", m+1, name)] = preset
