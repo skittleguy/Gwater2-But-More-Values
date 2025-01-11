@@ -265,7 +265,7 @@ button_functions = {
         end)
         menu:Open()
     end,
-    create_preset = function(local_presets, name, preset, write)
+    create_preset = function(local_presets, name, preset, write, fullid)
         if write == nil then write = true end
         local m = 0
         for k,v in SortedPairs(presets) do m = tonumber(k:sub(1, 3)) end
@@ -276,7 +276,7 @@ button_functions = {
         selector.Paint = button_functions.paint
         selector.name = name
         selector.preset = preset
-        selector.id = string.format("%03d-%s", m+1, name)
+        selector.id = fullid or string.format("%03d-%s", m+1, name)
         selector.DoClick = button_functions.apply_preset
         selector.DoRightClick = button_functions.selector_right_click
         local_presets:SetTall(local_presets:GetTall()+30)
@@ -751,7 +751,7 @@ local function presets_tab(tabs, params)
 
     local_presets:SetTall(0)
     for name,preset in SortedPairs(presets) do
-        button_functions.create_preset(local_presets, name:sub(5), preset, false)
+        button_functions.create_preset(local_presets, name:sub(5), preset, false, name)
     end
     local_presets:SetTall(local_presets:GetTall()-20)
 end
