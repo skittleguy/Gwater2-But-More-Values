@@ -1,14 +1,13 @@
 
-(Don't translate this)
 This is the gwater localization file. Everything in this file is added as a language string to gmod.
 Note that the translation cannot be longer than 4000 bytes (1 english character is 1 byte).
 
 Input format:
-"key_here"[[
+"gwater2.key_here"=[[
 Your translation here
 ]]
 
-Do NOT edit 'key_here'
+Do NOT edit 'gwater2.key_here'
 
 Use decent language, be literate and don't be a barbarian. :)
 
