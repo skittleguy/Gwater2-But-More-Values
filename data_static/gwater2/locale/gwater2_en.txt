@@ -154,19 +154,7 @@ Make sure to read the changelog to see what has been updated!
 
 Changelog (v1.0):
 
-- Added mirror rendering option to performance setting
-
-- Fixed potential crashing during particle resets
-
-- "Fixed" VR bricking the gmod renderer
-
-- Fixed presets saving color improperly
-
-- Fixed multiplayer not working on some hardware
-
-- Fixed AdminOnly setting not functioning
-
-- Fixed developer tab settings breaking for other clients
+- Initial Release
 
 ]]
 
@@ -278,7 +266,7 @@ Credits
 ]]
 
 "gwater2.menu.Credits.help"=[[
-This tab has a list of all people who helped in development of GWater 2 directly or indirectly.
+This tab has a list of all people who helped in development of GWater2 directly or indirectly.
 
 The Patron list is sorted in alphabetical order and will be updated routinely until release.
 
