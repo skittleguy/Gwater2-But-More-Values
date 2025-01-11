@@ -176,13 +176,10 @@ Once done, make a PR here, or make a discussion on the steam page, or DM me on [
 
 Thanks to these people for translating the menu into their native language. 
 ```
-+----------------+-------------------+
-| Gandzhalex     | Russian (Русский) |
-| Zeetric        | Russian (Русский) |
-| googer_        | Russian (Русский) |
-+----------------+-------------------+
-| pigeondriver45 | Turkish (Türkçe)  |
-+----------------+-------------------+
+Gandzhalex     | Russian (Русский)
+Zeetric        | Russian (Русский)
+googer_        | Russian (Русский)
+pigeondriver45 | Turkish (Türkçe)
 ```
 
 # Extras
