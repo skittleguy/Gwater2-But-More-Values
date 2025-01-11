@@ -1,7 +1,5 @@
 AddCSLuaFile()
----@diagnostic disable-next-line: undefined-global
 local checkluatype = SF.CheckLuaType
----@diagnostic disable-next-line: undefined-global
 local registerprivilege = SF.Permissions.registerPrivilege
 
 -- TODO: rewrite? not sure if that's compatible with 0.6b
@@ -10,7 +8,6 @@ local registerprivilege = SF.Permissions.registerPrivilege
 -- @name gwaterlib
 -- @class library
 -- @libtbl gwater_library
----@diagnostic disable-next-line: undefined-global
 SF.RegisterLibrary("gwaterlib")
 
 local function main(instance)
@@ -79,15 +76,12 @@ local function main(instance)
 		end
 	end
 
-	---@diagnostic disable: undefined-global
-
 	--- Called before the GWater solver ticks
 	-- You should use this hook to apply forces to the particles
 	-- @name gwater2_pretick
 	-- @class hook
 	-- @client
 	SF.hookAdd("gwater2_pretick")
-	---@diagnostic enable: undefined-global
 end
 
 return main

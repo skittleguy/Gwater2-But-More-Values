@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-field, undefined-global
 AddCSLuaFile()
 
 ENT.Base			= "base_gmodentity"

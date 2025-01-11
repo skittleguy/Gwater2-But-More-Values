@@ -53,11 +53,6 @@ function SWEP:create_black_holes(strength)
 	end
 
 	local owner = self:GetOwner()
-	---@diagnostic disable-next-line: undefined-field
-	if not owner.GetAimVector then return end -- not an npc, nor a player
-	---@cast owner NPC
-	-- ^ keep luals happy, npcs are close enough to players
-	
 	local start_pos = owner:GetPos() + owner:OBBCenter() / 2
 	local end_pos = util.QuickTrace(start_pos, (owner:GetAimVector() * Vector(1, 1, 0)):GetNormalized() * 10000, owner).HitPos
 	local max_points = math.floor(start_pos:Distance(end_pos) / 250)
@@ -68,7 +63,6 @@ function SWEP:create_black_holes(strength)
 		for i = 0, 1 do
 			local black_hole = ents.Create("gwater2_blackhole")
 			black_hole:SetPos(LerpVector(points / max_points, start_pos, end_pos) + Vector(0, 0, i * 500))
-			---@diagnostic disable: undefined-field
 			black_hole:SetRadius(300)
 			black_hole:SetStrength(strength)
 			black_hole:SetMode(1)
@@ -78,7 +72,6 @@ function SWEP:create_black_holes(strength)
 			black_hole:DrawShadow(false)
 			black_hole:SetRenderMode(RENDERMODE_NONE)
 			black_hole:GetPhysicsObject():EnableMotion(false)
-			---@diagnostic enable: undefined-field
 			table.insert(self.BLACK_HOLES, black_hole)
 		end
 		points = points + 1

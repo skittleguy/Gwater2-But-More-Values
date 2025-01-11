@@ -1,6 +1,7 @@
 AddCSLuaFile()
 
----@diagnostic disable-next-line: lowercase-global
+-- do return end
+
 gwater2 = nil
 
 if SERVER then 
@@ -25,12 +26,12 @@ local lang = GetConVar("gmod_language"):GetString()
 local function load_language(lang)
 	local strings = file.Read("data_static/gwater2/locale/gwater2_".. lang .. ".txt", "THIRDPARTY")
 	if not strings then return false end
-	--[[
+	/* 
 	matches strings like this:
 		"KEY"=[[
 		VALUE
 		]]
-	--]]
+	*/
 	for k, v in string.gmatch(strings, '"(.-)"=%[%[%s*(.-)%s*%]%]') do 
 		language.Add(k, v) 
 	end
@@ -162,15 +163,12 @@ local no_lerp = false
 
 -- should this entity collide with water?
 local function should_collide(ent)	
-	return ent:GetCollisionGroup() ~= COLLISION_GROUP_WORLD and bit.band(ent:GetSolidFlags(), FSOLID_NOT_SOLID) == 0
+	return ent:GetCollisionGroup() != COLLISION_GROUP_WORLD and bit.band(ent:GetSolidFlags(), FSOLID_NOT_SOLID) == 0
 end
 
----@diagnostic disable-next-line: lowercase-global
 gwater2 = {
-	---@diagnostic disable: undefined-global
 	solver = FlexSolver(100000),
 	renderer = FlexRenderer(),
-	---@diagnostic enable: undefined-global
 	cloth_pos = Vector(),
 	parameters = {},
 	defaults = {},
@@ -181,16 +179,14 @@ gwater2 = {
 		if !IsValid(ent) then 
 			gwater2.solver:RemoveCollider(id)
 		else 
-			---@diagnostic disable-next-line: undefined-field
-			if not ent.GWATER2_IS_RAGDOLL then
+			if !ent.GWATER2_IS_RAGDOLL then
 
 				-- custom physics objects may be networked and initialized after the entity was created
-				if ent.GWATER2_PHYSOBJ or ent:GetPhysicsObjectCount() ~= 0 then
+				if ent.GWATER2_PHYSOBJ or ent:GetPhysicsObjectCount() != 0 then
 					local phys = ent:GetPhysicsObject()	-- slightly expensive operation
 
-					if !IsValid(ent.GWATER2_PHYSOBJ) or ent.GWATER2_PHYSOBJ ~= phys then	-- we know physics object was recreated with a PhysicsInit* function
+					if !IsValid(ent.GWATER2_PHYSOBJ) or ent.GWATER2_PHYSOBJ != phys then	-- we know physics object was recreated with a PhysicsInit* function
 						add_prop(ent)	-- internally cleans up entity colliders
-						---@diagnostic disable-next-line: inject-field
 						ent.GWATER2_PHYSOBJ = phys
 					end
 				end
@@ -265,13 +261,11 @@ local show_time, hide_time, last = nil, CurTime() - 1, 0
 hook.Add("HUDPaint", "gwater2_status", function()
 	local frac
 	if gwater2.solver:GetActiveParticles() <= 0 then
-		---@diagnostic disable-next-line: cast-local-type
 		show_time = nil
 		hide_time = hide_time or CurTime()
 		frac = 1-math.ease.InCirc(math.min(1, CurTime()-hide_time))
 	else
 		show_time = show_time or CurTime()
-		---@diagnostic disable-next-line: cast-local-type
 		hide_time = nil
 		frac = math.ease.OutCirc(math.min(1, CurTime()-show_time))
 	end
@@ -345,7 +339,6 @@ timer.Create("gwater2_calcdiffusesound", 0.1, 0, function()
 				particles_in_radius = gwater2.solver:GetParticlesInRadius(ply:GetPos() + ply:OBBCenter() / 2, gwater2.solver:GetParameter("fluid_rest_distance") * 3)
 			end
 
-			---@diagnostic disable-next-line: undefined-global
 			GWATER2_SET_CONTACTS(	-- defined by C++ module
 				ply:EntIndex(), 
 				particles_in_radius
@@ -419,5 +412,4 @@ end
 
 timer.Create("gwater2_tick", 1 / gwater2.options.simulation_fps:GetInt(), 0, gwater_tick2)
 hook.Add("InitPostEntity", "!gwater2_addprop", gwater2.reset_solver)
--- timer.0 so data values are setup correctly
-hook.Add("OnEntityCreated", "!gwater2_addprop", function(ent) timer.Simple(0, function() add_prop(ent) end) end)
+hook.Add("OnEntityCreated", "!gwater2_addprop", function(ent) timer.Simple(0, function() add_prop(ent) end) end)	// timer.0 so data values are setup correctly
