@@ -595,7 +595,7 @@ local function create_menu(init)
 end
 
 surface.CreateFont("GWater2Param", {
-    font = "Space Mono", 
+    font = (system.IsWindows() and "Space Mono" or "SpaceMonoRegular.ttf"), 
     extended = false,
     size = 20,
     weight = 500,
@@ -613,7 +613,7 @@ surface.CreateFont("GWater2Param", {
 })
 
 surface.CreateFont("GWater2Title", {
-    font = "coolvetica", 
+    font = (system.IsWindows() and "coolvetica" or "coolvetica.ttf"), 
     extended = false,
     size = 24,
     weight = 500,
