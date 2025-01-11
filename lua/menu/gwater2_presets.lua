@@ -272,6 +272,7 @@ button_functions = {
         local selector = local_presets:Add("DButton")
         selector:SetText(name.." ("..(preset["CUST/Author"] or _util.get_localised("Presets.author_unknown"))..")")
         selector:Dock(TOP)
+        selector:DockMargin(0, 5, 0, 0)
         selector.Paint = button_functions.paint
         selector.name = name
         selector.preset = preset
