@@ -4,7 +4,7 @@ AddCSLuaFile()
 
 gwater2 = nil
 
-local load_stub = false
+local load_stub = system.IsLinux() or system.IsOSX()
 -- whether to load stub instead of actual module
 -- useful for testing lua side of gw2 on native linux gmod
 
