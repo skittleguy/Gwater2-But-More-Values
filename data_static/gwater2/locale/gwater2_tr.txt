@@ -216,15 +216,15 @@ Suyun eşyaları ve oyuncuyu nasıl etkilediğini değiştiren parametrelerdir.
 ]]
 
 "gwater2.menu.Presets.title"=[[
-Kişi-Tarafından Yapılan Sıvılar
+Ön Ayarlar
 ]]
 
 "gwater2.menu.Presets.titletext"=[[
-Kişi-Tarafından Yapılan Sıvılar
+Ön Ayarlar
 ]]
 
 "gwater2.menu.Presets.help"=[[
-Kişi-Tarafından Yapılan Sıvılar, Yaptığın sıvıları kaydet ve yükle
+Ön Ayarlar, Yaptığın sıvıları kaydet ve yükle
 
 Bir kişi tarafından yapılan sıvıya sağ-tıklatırsanız bunun bilgilerini kopyalayabilir yada silebilirsiniz.
 ]]
@@ -725,11 +725,11 @@ Negativ sayılar size can verir.
 ------------------------
 
 "gwater2.menu.Presets.import_preset"=[[
-Kişi-Tarafından Yapılan Sıvıları Içeriye Aktar
+Ön ayarı içe aktar
 ]]
 
 "gwater2.menu.Presets.import.paste_here"=[[
-Kişi-Tarafından Yapılan Sıvılar'ı Yapıştırın
+Ön ayarı buraya yapıştırın
 ]]
 
 "gwater2.menu.Presets.import.detected"=[[
@@ -745,7 +745,7 @@ Bilgiler bozuk veya ön ayar tipi burda bilimiyor: #%d
 ]]
 
 "gwater2.menu.Presets.save"=[[
-Ayarları Sıvılar'ı Kaydet
+Ön ayarı kaydet
 ]]
 
 "gwater2.menu.Presets.save.preset_name"=[[
@@ -823,7 +823,7 @@ Perfonmansa azcık yardım eder.
 ]]
 
 "gwater2.menu.Menu.pixelate_preview"=[[
-Sıvının Menüdeki Görümünününü Pixelleştir
+Sıvının Menüdeki Görümününü Pixelleştir
 ]]
 
 "gwater2.menu.Menu.pixelate_preview.desc"=[[
@@ -837,7 +837,7 @@ Admin Menüsü
 "gwater2.menu.Menu.admin_only.desc"=[[
 Admin Menüsünü Açıp Kapatır.
 
-NOT:SADECE SUNUCU SAHİBİ BUNU DEĞİŞTİREBİLİR. BU AYAR ÇALIŞMIYORSA BUNU KNSOLA YAZIN;
+NOT:SADECE SUNUCU SAHİBİ BUNU DEĞİŞTİREBİLİR. BU AYAR ÇALIŞMIYORSA BUNU KONSOLA YAZIN;
 gwater2_adminonly (0-1)
 ]]
 
