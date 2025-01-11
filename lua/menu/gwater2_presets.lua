@@ -108,7 +108,7 @@ local default_presets = {
 }
 
 local presets
-if file.Exists("DATA", "gwater2/presets.txt") then
+if file.Exists("gwater2/presets.txt", "DATA") then
     presets = util.JSONToTable(file.Read("gwater2/presets.txt", "DATA"))
 else
     presets = default_presets
