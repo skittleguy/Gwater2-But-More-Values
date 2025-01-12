@@ -34,7 +34,7 @@ Por favor verifique a sua instalação e reinicie o jogo.
 ]]
 
 "gwater2.error.modulefailedtoload.2"=[[
-Se você tem 100% de certeza que você instalou corretamente, reincie o jogo algumas vezes. Esse é um problema com o código do Garry e eu não posso consertar.
+Se você tem 100%% de certeza que você instalou corretamente, reincie o jogo algumas vezes. Esse é um problema com o código do Garry e eu não posso consertar.
 ]]
 
 "gwater2.error.modulefailedtoload.3"=[[
