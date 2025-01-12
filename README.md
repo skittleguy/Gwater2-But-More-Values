@@ -181,6 +181,7 @@ Zeetric        | Russian
 googer_        | Russian
 pigeondriver45 | Turkish
 Cast_E         | Brazilian Portuguese
+SCRENG R       | Spanish
 ```
 
 # Extras
