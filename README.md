@@ -182,7 +182,10 @@ googer_        | Russian
 pigeondriver45 | Turkish
 Cast_E         | Brazilian Portuguese
 SCRENG R       | Spanish
-Dark           | Hungarian
+DarkSM         | Hungarian
+ErickMaksimets | Ukranian
+Hexak12        | Polish
+TheOnly8Z      | Simplified Chinese
 ```
 
 # Extras
