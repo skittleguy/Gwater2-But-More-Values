@@ -1,15 +1,15 @@
 
-To jest plik lokalizacyjny gwater. Wszystko w tym pliku jest dodawane jako ciąg językowy do gmod.
-Zauważ, że tłumaczenie nie może być dłuższe niż 4000 bajtów (1 angielski znak to 1 bajt).
+This is the gwater localization file. Everything in this file is added as a language string to gmod.
+Note that the translation cannot be longer than 4000 bytes (1 english character is 1 byte).
 
-Format wejściowy:
-"gwater2.key_here"=[[ 
-Twoje tłumaczenie tutaj 
+Input format:
+"gwater2.key_here"=[[
+Your translation here
 ]]
 
-NIE edytuj 'gwater2.key_here'
+Do NOT edit 'gwater2.key_here'
 
-Używaj przyzwoitego języka, bądź piśmienny i nie bądź barbarzyńcą. :)
+Use decent language, be literate and don't be a barbarian. :)
 
 ------------------------
 -------- ERRORS --------
