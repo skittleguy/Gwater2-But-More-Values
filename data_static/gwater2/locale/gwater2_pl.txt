@@ -4,7 +4,7 @@ Note that the translation cannot be longer than 4000 bytes (1 english character 
 
 Input format:
 "gwater2.key_here"=[[
-Your translation here
+data_static/gwater2/locale/gwater2_pl.txt
 ]]
 
 Do NOT edit 'gwater2.key_here'
