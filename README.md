@@ -183,7 +183,7 @@ pigeondriver45 | Turkish
 Cast_E         | Brazilian Portuguese
 SCRENG R       | Spanish
 DarkSM         | Hungarian
-ErickMaksimets | Ukranian
+ErickMaksimets | Ukrainian
 Hexak12        | Polish
 TheOnly8Z      | Simplified Chinese
 ```
