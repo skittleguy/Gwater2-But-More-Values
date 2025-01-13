@@ -952,7 +952,7 @@ Alpha 值（透明度）控制颜色吸收量。
 ]]
 
 "gwater2.menu.Developer.particle_collision_margin.desc"=[[
-搜索粒子邻居的半径，对快速移动的例子有帮助
+搜索粒子邻居的半径，对快速移动的粒子有帮助
 ]]
 
 "gwater2.menu.Developer.shape_collision_margin"=[[
