@@ -10,44 +10,44 @@ local _util = include("menu/gwater2_util.lua")
 local parameters = {
 	["001-Physics Parameters"] = {
 		["001-Adhesion"] = {
-			min=0,
-			max=0.2,
+			min=-2.2,
+			max=2.2,
 			decimals=3,
 			type="scratch"
 		},
 		["002-Cohesion"] = {
-			min=0,
-			max=2,
+			min=-20,
+			max=20,
 			decimals=3,
 			type="scratch"
 		},
 		["003-Radius"] = {
-			min=1,
-			max=100,
+			min=-20,
+			max=200,
 			decimals=1,
 			type="scratch"
 		},
 		["004-Gravity"] = {
-			min=-30.48,
-			max=30.48,
+			min=-50.48,
+			max=50.48,
 			decimals=2,
 			type="scratch"
 		},
 		["005-Viscosity"] = {
-			min=0,
-			max=20,
+			min=-20,
+			max=200,
 			decimals=2,
 			type="scratch"
 		},
 		["006-Surface Tension"] = {
-			min=0,
-			max=1,
+			min=-10,
+			max=100,
 			decimals=3,
 			type="scratch"
 		},
 		["007-Timescale"] = {
 			min=0,
-			max=2,
+			max=10,
 			decimals=3,
 			type="scratch"
 		}
@@ -60,14 +60,14 @@ local parameters = {
 			type="scratch"
 		},
 		["001-Fluid Rest Distance"] = {
-			min=0.55,
-			max=0.85,
+			min=0.1,
+			max=5,
 			decimals=2,
 			type="scratch"
 		},
 		["003-Dynamic Friction"] = {
 			min=0,
-			max=1,
+			max=10,
 			decimals=2,
 			type="scratch"
 		},
@@ -81,7 +81,7 @@ local parameters = {
 	["003-Sound Parameters"] = {
 		["001-Sound Pitch"] = {
 			min=0,
-			max=2,
+			max=20,
 			decimals=2,
 			type="scratch",
 			setup = function(slider)
@@ -93,7 +93,7 @@ local parameters = {
 		},
 		["002-Sound Volume"] = {
 			min=0,
-			max=2,
+			max=200,
 			decimals=2,
 			type="scratch",
 			setup = function(slider)
@@ -108,13 +108,13 @@ local parameters = {
 local visuals = {
 	["001-Diffuse Threshold"] = {
 		min=1,
-		max=500,
+		max=1000,
 		decimals=1,
 		type="scratch"
 	},
 	["002-Diffuse Lifetime"] = {
 		min=0,
-		max=20,
+		max=200,
 		decimals=1,
 		type="scratch"
 	},
@@ -136,8 +136,8 @@ local visuals = {
 	},
 	["007-Color Value Multiplier"] = {
 		type="scratch",
-		min=0,
-		max=3,
+		min=-20,
+		max=200,
 		decimals=2,
 		setup=function(scratch)
 			scratch:SetValue(gwater2.parameters.color_value_multiplier)
@@ -156,8 +156,8 @@ local visuals = {
 	},
 	["008-Reflectance"] = {
 		type="scratch",
-		min=1,
-		max=10,
+		min=-20,
+		max=200,
 		decimals=3,
 		func=function(val)
 			local finalpass = Material("gwater2/finalpass")
@@ -176,7 +176,7 @@ local performance = {
 	["001-Physics"] = {
 		["001-Iterations"] = {
 			min=1,
-			max=10,
+			max=20,
 			decimals=0,
 			type="scratch",
 			nosync=true,
@@ -189,7 +189,7 @@ local performance = {
 		},
 		["002-Substeps"] = {
 			min=1,
-			max=10,
+			max=20,
 			decimals=0,
 			type="scratch",
 			nosync=true,
@@ -281,8 +281,8 @@ local performance = {
 			end
 		},
 		["003-Simulation FPS"] = {
-			min=30,
-			max=120,
+			min=1,
+			max=400,
 			decimals=-1,
 			type="scratch",
 			nosync=true,
@@ -324,7 +324,7 @@ local performance = {
 	["002-Visuals"] = {
 		["006-Blur Passes"] = {
 			min=0,
-			max=4,
+			max=10,
 			decimals=0,
 			type="scratch",
 			nosync=true,
@@ -343,7 +343,7 @@ local performance = {
 		},
 		["005-Mirror Rendering"] = {
 			min=0,
-			max=2,
+			max=10,
 			decimals=0,
 			type="scratch",
 			nosync=true,
@@ -430,7 +430,7 @@ local interaction = {
 		},
 		["002-Force Multiplier"] = {
 			min=0.001,
-			max=0.025,
+			max=5.000,
 			decimals=3,
 			type="scratch",
 			func = function(val) return true end,
@@ -438,7 +438,7 @@ local interaction = {
 		},
 		["003-Force Buoyancy"] = {
 			min=0,
-			max=500,
+			max=1000,
 			decimals=1,
 			type="scratch",
 			func = function(val) return true end,
@@ -446,7 +446,7 @@ local interaction = {
 		},
 		["004-Force Dampening"] = {
 			min=0,
-			max=1,
+			max=20,
 			decimals=2,
 			type="scratch",
 			func = function(val) return true end,
@@ -462,8 +462,8 @@ local interaction = {
 		-- all of these parameters are server-side only. let's tell our code that we handled them already
 		["003-SwimSpeed"] = {
 			type="scratch",
-			min=-20,
-			max=100,
+			min=-100,
+			max=500,
 			decimals=0,
 			func=function(val) return true end,
 			setup=function(scratch) scratch:SetValue(gwater2.parameters['swimspeed'] or scratch:GetValue()) end
@@ -471,15 +471,15 @@ local interaction = {
 		["004-SwimFriction"] = {
 			type="scratch",
 			min=0,
-			max=0.75,
+			max=20,
 			decimals=3,
 			func=function(val) return true end,
 			setup=function(scratch) scratch:SetValue(gwater2.parameters['swimfriction'] or scratch:GetValue()) end
 		},
 		["005-SwimBuoyancy"] = {
 			type="scratch",
-			min=-2,
-			max=2,
+			min=-20,
+			max=20,
 			decimals=2,
 			func=function(val) return true end,
 			setup=function(scratch) scratch:SetValue(gwater2.parameters['swimbuoyancy'] or scratch:GetValue()) end
@@ -494,24 +494,24 @@ local interaction = {
 		},
 		["008-MultiplyWalk"] = {
 			type="scratch",
-			min=0,
-			max=2,
+			min=-20,
+			max=200,
 			decimals=2,
 			func=function(val) return true end,
 			setup=function(scratch) scratch:SetValue(gwater2.parameters['multiplywalk'] or scratch:GetValue()) end
 		},
 		["009-MultiplyJump"] = {
 			type="scratch",
-			min=0,
-			max=2,
+			min=-20,
+			max=200,
 			decimals=2,
 			func=function(val) return true end,
 			setup=function(scratch) scratch:SetValue(gwater2.parameters['multiplyjump'] or scratch:GetValue()) end
 		},
 		["010-TouchDamage"] = {
 			type="scratch",
-			min=-10,
-			max=10,
+			min=-100,
+			max=100,
 			decimals=0,
 			func=function(val) return true end,
 			setup=function(scratch) scratch:SetValue(gwater2.parameters['touchdamage'] or scratch:GetValue()) end
